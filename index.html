@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="https://i.ibb.co/RpP5SXHr/image.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Timer in top right corner without box -->
+        <div class="top-right-clock">
+            <button id="timerButton" class="timer-button" title="Set timer to close app">
+                <i class="fas fa-clock"></i>
+                <span id="timerDisplay" class="timer-display"></span>
+            </button>
+        </div>
+        
+        <div class="theme-toggle">
+            <button id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+            <div class="listening-stats">
+                <i class="fas fa-headphones"></i>
+                <span id="listeningTime">0m</span>
+            </div>
+        </div>
+        <div class="tabs">
+            <button class="tab active" data-tab="library">Library</button>
+            <button class="tab" data-tab="playlists">Playlists</button>
+        </div>
+        <div class="tab-content">
+            <!-- Library Tab -->
+            <div class="tab-pane active" id="library">
+                <div class="library-manager">
+                    <!-- Combined search and modify library into a single row -->
+                    <div class="search-section">
+                        <input type="text" id="librarySearch" placeholder="Search songs...">
+                        <button id="modifyLibraryBtn" class="action-button">
+                            <i class="fas fa-edit"></i> Modify Library
+                        </button>
+                    </div>
+                    <div id="songLibrary" class="song-list">
+                        <!-- Songs will be dynamically added here -->
+                    </div>
+                    <!-- YouTube search suggestion will appear here when no results are found -->
+                    <div id="youtubeSearchSuggestion" class="youtube-search-suggestion" style="display: none;">
+                        <div class="search-suggestion-content">
+                            <i class="fab fa-youtube"></i>
+                            <span>Not finding what you're looking for?</span>
+                            <span class="search-query"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Playlists Tab -->
+            <div class="tab-pane" id="playlists">
+                <div class="playlist-manager">
+                    <div class="create-playlist">
+                        <input type="text" id="newPlaylistName" placeholder="New Playlist Name">
+                        <button id="createPlaylistBtn">Create Playlist</button>
+                    </div>
+                    <div id="playlistContainer" class="playlist-container">
+                        <!-- Playlists will be dynamically added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+      
+        <div id="libraryModificationModal" class="modal">
+            <div class="modal-content">
+                <span id="closeLibraryModal" class="close-btn">&times;</span>
+                <h2>Modify Library</h2>
+
+                <div class="add-song-section">
+                    <h3>Add Song</h3>
+                    <div class="input-group">
+                        <input type="text" id="songName" placeholder="Song Name">
+                        <input type="text" id="songUrl" placeholder="YouTube URL">
+                        <button id="addSongBtn">Add to Library</button>
+                    </div>
+                </div>
+
+                <div class="import-export-section">
+                    <h3>Import/Export</h3>
+                    <div class="bulk-actions">
+                        <button id="importLibraryBtn" title="Import songs from text">
+                            <i class="fas fa-file-import"></i> Import Songs
+                        </button>
+                        <button id="exportLibraryBtn" title="Export library to text">
+                            <i class="fas fa-file-export"></i> Export Songs
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Playlist Edit Modal -->
+        <div id="playlistEditModal" class="modal">
+            <div class="modal-content">
+                <span id="closePlaylistModal" class="close-btn">&times;</span>
+                <h2 id="currentPlaylistName">Playlist Name</h2>
+                <div class="playlist-edit-section">
+                    <div class="search-library-section">
+                        <input type="text" id="searchSongsToAdd" placeholder="Search songs to add...">
+                        <div id="librarySearchResults" class="search-results"></div>
+                    </div>
+                    <div class="current-playlist-songs">
+                        <h3>Playlist Songs</h3>
+                        <div id="currentPlaylistSongs"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="timerModal" class="modal">
+            <div class="modal-content timer-modal-content">
+                <span id="closeTimerModal" class="close-btn">&times;</span>
+                <h2>Set Timer to Close App</h2>
+                <div class="timer-options">
+                    <button data-time="0.5">30 sec</button>
+                    <button data-time="1">1 min</button>
+                    <button data-time="2.5">2.5 min</button>
+                    <button data-time="5">5 min</button>
+                    <button data-time="10">10 min</button>
+                    <button data-time="15">15 min</button>
+                </div>
+                <div class="custom-timer">
+                    <input type="number" id="customTimerInput" placeholder="Custom minutes" step="0.1" min="0.1">
+                    <button id="setCustomTimer">Set</button>
+                </div>
+                <div class="specific-time-section" id="specificTimeSection">
+                    <h3>Set Specific Stop Time</h3>
+                    <div class="specific-time-input">
+                        <input type="time" id="specificTimeInput">
+                        <button id="setSpecificTime">Set</button>
+                    </div>
+                </div>
+                <div class="timer-status">
+                    <span id="timerStatus">No timer set</span>
+                    <button id="cancelTimer" style="display: none">Cancel Timer</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Playlist Sidebar -->
+        <div id="currentPlaylistSidebar" class="playlist-sidebar">
+            <div class="sidebar-header">
+                <h3 id="sidebarPlaylistName">Now Playing</h3>
+                <button id="closeSidebarBtn"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="sidebarPlaylistSongs" class="sidebar-songs-list">
+                <!-- Songs in current playlist will be listed here -->
+            </div>
+        </div>
+
+        <!-- Now Playing Section -->
+        <div class="now-playing">
+            <!-- Progress Bar Added -->
+            <div class="music-progress">
+                <input 
+                    type="range" 
+                    id="musicProgressBar" 
+                    min="0" 
+                    max="100" 
+                    value="0" 
+                    step="0.1"
+                >
+                <div id="timeDisplay" class="time-display">0:00/0:00</div>
+            </div>
+            <div class="now-playing-info">
+                <div class="current-song">
+                    <span id="currentSongName">No Song Playing</span>
+                </div>
+                <div class="next-song">
+                    <span>Next: </span>
+                    <span id="nextSongName">-</span>
+                </div>
+            </div>
+            <div class="player-controls">
+                <button id="prevBtn"><i class="fas fa-step-backward"></i></button>
+                <button id="playPauseBtn"><i class="fas fa-play"></i></button>
+                <button id="nextBtn"><i class="fas fa-step-forward"></i></button>
+                <button id="loopBtn"><i class="fas fa-redo"></i></button>
+                <button id="showPlaylistBtn"><i class="fas fa-list"></i></button>
+                
+                <!-- Added playback speed control -->
+                <div class="speed-control">
+                    <button id="speedBtn">1x</button>
+                    <div class="speed-options" id="speedOptions">
+                        <div class="speed-option" data-speed="0.25">0.25x</div>
+                        <div class="speed-option" data-speed="0.5">0.5x</div>
+                        <div class="speed-option" data-speed="0.75">0.75x</div>
+                        <div class="speed-option" data-speed="1">1x</div>
+                        <div class="speed-option" data-speed="1.25">1.25x</div>
+                        <div class="speed-option" data-speed="1.5">1.5x</div>
+                        <div class="speed-option" data-speed="1.75">1.75x</div>
+                        <div class="speed-option" data-speed="2">2x</div>
+                    </div>
+                </div>
+            </div>
+            <div class="volume-control">
+                <i class="fas fa-volume-down"></i>
+                <input 
+                    type="range" 
+                    id="volumeSlider" 
+                    min="0" 
+                    max="100" 
+                    value="50"
+                >
+                <i class="fas fa-volume-up"></i>
+            </div>
+        </div>
+        
+        <!-- Layout Toggle Button -->
+        <div class="layout-toggle">
+            <button id="layoutToggleBtn" title="Change controls layout">
+                <i class="fas fa-arrows-alt-h"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- YouTube Player Container (Hidden) -->
+    <div id="ytPlayer"></div>
+    
+    <!-- Watermark -->
+    <div class="watermark">Made by fishareverysmart</div>
+
+    <!-- YouTube Iframe API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    
+    <!-- Main Script -->
+    <script src="script.js"></script>
+</body>
+</html>
