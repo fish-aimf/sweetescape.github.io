@@ -1043,27 +1043,41 @@ class AdvancedMusicPlayer {
     saveSongLibrary() {
         return new Promise((resolve, reject) => {
             if (!this.db) {
-                reject('Database not initialized');
+                reject(new Error('Database not initialized'));
                 return;
             }
-            
-            const transaction = this.db.transaction(['songLibrary'], 'readwrite');
-            const store = transaction.objectStore('songLibrary');
-            
-            store.clear();
-            
-            this.songLibrary.forEach(song => {
-                store.add(song);
-            });
-            
-            transaction.oncomplete = () => {
-                resolve();
-            };
-            
-            transaction.onerror = (event) => {
-                console.error('Error saving song library:', event.target.error);
-                reject('Could not save song library');
-            };
+
+            try {
+                const transaction = this.db.transaction(['songLibrary'], 'readwrite');
+                const store = transaction.objectStore('songLibrary');
+
+                const clearRequest = store.clear();
+
+                clearRequest.onsuccess = () => {
+                    console.log("Song library cleared successfully");
+
+                    let addedCount = 0;
+                    for (const song of this.songLibrary) {
+                        store.add(song);
+                        addedCount++;
+                    }
+
+                    console.log(`Added ${addedCount} songs to library`);
+                };
+
+                transaction.oncomplete = () => {
+                    console.log("Transaction completed successfully");
+                    resolve();
+                };
+
+                transaction.onerror = (event) => {
+                    console.error('Error saving song library:', event.target.error);
+                    reject(new Error('Failed to save song library: ' + event.target.error.message));
+                };
+            } catch (error) {
+                console.error('Exception in saveSongLibrary:', error);
+                reject(error);
+            }
         });
     }
 
@@ -1076,23 +1090,22 @@ class AdvancedMusicPlayer {
     }
 
     extractYouTubeId(url) {
-        const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
-        const match = url.match(regExp);
-        return (match && match[7].length === 11) ? match[7] : null;
-    }
-    startListeningTimeTracking() {
-        if (this.listeningTimeInterval) {
-            clearInterval(this.listeningTimeInterval);
-        }
-        this.listeningTimeInterval = setInterval(() => {
-            if (this.isPlaying && this.ytPlayer && this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
-                this.listeningTime++;
-                this.updateListeningTimeDisplay();
-                this.saveListeningTime();
+        if (!url) return null;
+
+        const patterns = [
+            /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i, 
+            /^([^"&?\/\s]{11})$/i 
+        ];
+
+        for (const pattern of patterns) {
+            const match = url.match(pattern);
+            if (match && match[1]) {
+                return match[1];
             }
-        }, 1000);
+        }
+
+        return null;
     }
-  
     updateListeningTimeDisplay() {
         if (!this.listeningTimeDisplay) return;
         const seconds = this.listeningTime % 60;
@@ -1195,6 +1208,7 @@ class AdvancedMusicPlayer {
         document.body.appendChild(modal);
     }
 
+    
     importLibrary(importText) {
         if (!importText.trim()) {
             alert('Please enter songs to import.');
@@ -1204,57 +1218,164 @@ class AdvancedMusicPlayer {
         const lines = importText.split('\n').filter(line => line.trim());
         const importedSongs = [];
         const failedImports = [];
+        const duplicates = [];
+        const existingIds = new Set(this.songLibrary.map(song => song.id));
 
-        lines.forEach(line => {
-            const lastCommaIndex = line.lastIndexOf(',');
-            if (lastCommaIndex === -1) {
+        const generateUniqueId = () => {
+            let newId;
+            do {
+                newId = Date.now() + Math.floor(Math.random() * 10000);
+            } while (existingIds.has(newId));
+
+            existingIds.add(newId); 
+            return newId;
+        };
+
+        lines.forEach((line, index) => {
+            try {
+                const lastCommaIndex = line.lastIndexOf(',');
+
+                if (lastCommaIndex === -1) {
+                    failedImports.push(line);
+                    return;
+                }
+
+                const songName = line.substring(0, lastCommaIndex).trim();
+                const songUrl = line.substring(lastCommaIndex + 1).trim();
+
+                if (!songName || !songUrl) {
+                    failedImports.push(line);
+                    return;
+                }
+
+                if (!songUrl.includes('youtube.com/watch') && !songUrl.includes('youtu.be/')) {
+                    failedImports.push(line);
+                    return;
+                }
+
+                let videoId = null;
+
+                const vParam = songUrl.match(/[?&]v=([^&]+)/);
+                if (vParam && vParam[1]) {
+                    videoId = vParam[1];
+                }
+                else if (songUrl.includes('youtu.be/')) {
+                    const parts = songUrl.split('youtu.be/');
+                    if (parts.length > 1) {
+                        videoId = parts[1].split('?')[0].split('&')[0].trim();
+                    }
+                }
+
+                if (!videoId) {
+                    failedImports.push(line);
+                    return;
+                }
+
+                if (this.songLibrary.some(song => song.videoId === videoId)) {
+                    duplicates.push(line);
+                    return;
+                }
+
+                const newSong = {
+                    id: generateUniqueId(),
+                    name: songName,
+                    videoId: videoId,
+                    favorite: false,
+                    addedOn: new Date().toISOString()
+                };
+
+                importedSongs.push(newSong);
+            } catch (error) {
                 failedImports.push(line);
-                return;
             }
-
-            const songName = line.substring(0, lastCommaIndex).trim();
-            const songUrl = line.substring(lastCommaIndex + 1).trim();
-
-            if (!songName || !songUrl) {
-                failedImports.push(line);
-                return;
-            }
-
-            const videoId = this.extractYouTubeId(songUrl);
-            if (!videoId) {
-                failedImports.push(line);
-                return;
-            }
-            if (this.songLibrary.some(song => song.videoId === videoId)) {
-                return;
-            }
-
-            const newSong = {
-                id: Date.now() + Math.floor(Math.random() * 1000), 
-                name: songName,
-                videoId: videoId
-            };
-
-            importedSongs.push(newSong);
         });
 
         if (importedSongs.length > 0) {
-            this.songLibrary = [...this.songLibrary, ...importedSongs];
-            this.saveSongLibrary()
+            
+            this.addImportedSongsOneByOne(importedSongs)
                 .then(() => {
                     this.renderSongLibrary();
-                    this.updatePlaylistSelection();
-                    alert(`Successfully imported ${importedSongs.length} songs. ${failedImports.length > 0 ? `Failed to import ${failedImports.length} entries.` : ''}`);
+
+                    if (typeof this.updatePlaylistSelection === 'function') {
+                        this.updatePlaylistSelection();
+                    }
+
+                    let message = `Successfully imported ${importedSongs.length} songs.`;
+                    if (duplicates.length > 0) {
+                        message += ` Skipped ${duplicates.length} duplicate(s).`;
+                    }
+                    if (failedImports.length > 0) {
+                        message += ` Failed to import ${failedImports.length} song(s).`;
+                    }
+
+                    alert(message);
                 })
                 .catch(error => {
                     console.error('Error saving imported songs:', error);
-                    alert('Failed to save imported songs. Please try again.');
+                    alert('Error occurred. Please try again.');
                 });
         } else {
-            alert(`No new songs were imported. ${failedImports.length > 0 ? `Failed to import ${failedImports.length} entries.` : ''}`);
+            let message = 'No new songs were imported.';
+            if (duplicates.length > 0) {
+                message += ` Found ${duplicates.length} duplicate(s).`;
+            }
+            if (failedImports.length > 0) {
+                message += ` Failed to parse ${failedImports.length} line(s).`;
+            }
+
+            alert(message);
         }
     }
+  
+  
+    addImportedSongsOneByOne(importedSongs) {
+        return new Promise((resolve, reject) => {
+            if (!this.db) {
+                reject(new Error('Database not initialized'));
+                return;
+            }
 
+            this.songLibrary = [...this.songLibrary, ...importedSongs];
+
+            const transaction = this.db.transaction(['songLibrary'], 'readwrite');
+            const store = transaction.objectStore('songLibrary');
+
+            let successCount = 0;
+
+            importedSongs.forEach(song => {
+                try {
+                    const getRequest = store.get(song.id);
+
+                    getRequest.onsuccess = () => {
+                        if (getRequest.result) {
+                            song.id = Date.now() + Math.floor(Math.random() * 10000) + successCount;
+                        }
+
+                        const addRequest = store.add(song);
+
+                        addRequest.onsuccess = () => {
+                            successCount++;
+                        };
+
+                        addRequest.onerror = (e) => {
+                            console.error("Failed to add song:", e.target.error);
+                        };
+                    };
+                } catch (e) {
+                    console.error("Error adding song:", e);
+                }
+            });
+
+            transaction.oncomplete = () => {
+                resolve();
+            };
+
+            transaction.onerror = (event) => {
+                console.error('Transaction error:', event.target.error);
+                resolve();
+            };
+        });
+    }
     showImportModal() {
         const modal = document.createElement('div');
         modal.classList.add('modal');
@@ -1272,7 +1393,7 @@ class AdvancedMusicPlayer {
         heading.textContent = 'Import Songs';
 
         const instructions = document.createElement('p');
-        instructions.textContent = 'Paste songs in format: "Song name, YouTube URL" (one per line)';
+        instructions.textContent = 'Paste songs in format: "Song name, YouTube URL" (one per line)2';
 
         const textarea = document.createElement('textarea');
         textarea.placeholder = 'Song Name, https://www.youtube.com/watch?v=videoId\nAnother Song, https://www.youtube.com/watch?v=anotherVideoId';
