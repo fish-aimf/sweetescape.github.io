@@ -673,6 +673,10 @@ class AdvancedMusicPlayer {
     }
 
     deletePlaylist(playlistId) {
+        const playlist = this.playlists.find(p => p.id === playlistId);
+        if (!playlist) return;
+        const confirmDelete = confirm(`Are you sure you want to delete the playlist "${playlist.name}"?`);
+        if (!confirmDelete) return;
         if (this.currentPlaylist && this.currentPlaylist.id === playlistId) {
             if (this.ytPlayer) {
                 this.ytPlayer.stopVideo();
@@ -682,7 +686,6 @@ class AdvancedMusicPlayer {
             this.updatePlayerUI();
             this.hideSidebar();
         }
-        
         this.playlists = this.playlists.filter(p => p.id !== playlistId);
         this.savePlaylists()
             .then(() => {
@@ -1393,7 +1396,7 @@ class AdvancedMusicPlayer {
         heading.textContent = 'Import Songs';
 
         const instructions = document.createElement('p');
-        instructions.textContent = 'Paste songs in format: "Song name, YouTube URL" (one per line)2';
+        instructions.textContent = 'Paste songs in format: "Song name, YouTube URL" (one per line)';
 
         const textarea = document.createElement('textarea');
         textarea.placeholder = 'Song Name, https://www.youtube.com/watch?v=videoId\nAnother Song, https://www.youtube.com/watch?v=anotherVideoId';
