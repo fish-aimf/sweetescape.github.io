@@ -673,10 +673,6 @@ class AdvancedMusicPlayer {
     }
 
     deletePlaylist(playlistId) {
-        const playlist = this.playlists.find(p => p.id === playlistId);
-        if (!playlist) return;
-        const confirmDelete = confirm(`Are you sure you want to delete the playlist "${playlist.name}"?`);
-        if (!confirmDelete) return;
         if (this.currentPlaylist && this.currentPlaylist.id === playlistId) {
             if (this.ytPlayer) {
                 this.ytPlayer.stopVideo();
@@ -686,6 +682,7 @@ class AdvancedMusicPlayer {
             this.updatePlayerUI();
             this.hideSidebar();
         }
+        
         this.playlists = this.playlists.filter(p => p.id !== playlistId);
         this.savePlaylists()
             .then(() => {
@@ -1395,16 +1392,37 @@ class AdvancedMusicPlayer {
         const heading = document.createElement('h2');
         heading.textContent = 'Import Songs';
 
+        const selectContainer = document.createElement('div');
+        selectContainer.classList.add('select-container');
+
+        const selectLabel = document.createElement('label');
+        selectLabel.textContent = 'Select playlist: ';
+        selectLabel.htmlFor = 'preloadedLists';
+
+        const preloadedSelect = document.createElement('select');
+        preloadedSelect.id = 'preloadedLists';
+        preloadedSelect.classList.add('playlist-select');
+
+        const customOption = document.createElement('option');
+        customOption.value = 'custom';
+        customOption.textContent = 'Custom';
+        preloadedSelect.appendChild(customOption);
+
+        selectContainer.appendChild(selectLabel);
+        selectContainer.appendChild(preloadedSelect);
+
         const instructions = document.createElement('p');
         instructions.textContent = 'Paste songs in format: "Song name, YouTube URL" (one per line)';
 
         const textarea = document.createElement('textarea');
+        textarea.id = 'importSongsTextarea';
         textarea.placeholder = 'Song Name, https://www.youtube.com/watch?v=videoId\nAnother Song, https://www.youtube.com/watch?v=anotherVideoId';
         textarea.style.width = '100%';
         textarea.style.height = '200px';
 
         const importBtn = document.createElement('button');
         importBtn.textContent = 'Import Songs';
+        importBtn.classList.add('import-btn');
         importBtn.onclick = () => {
             this.importLibrary(textarea.value);
             modal.remove();
@@ -1412,12 +1430,15 @@ class AdvancedMusicPlayer {
 
         modalContent.appendChild(closeBtn);
         modalContent.appendChild(heading);
+        modalContent.appendChild(selectContainer);
         modalContent.appendChild(instructions);
         modalContent.appendChild(textarea);
         modalContent.appendChild(importBtn);
         modal.appendChild(modalContent);
 
         document.body.appendChild(modal);
+
+        this.loadFileList(preloadedSelect, textarea);
     }
     handleDragStart(e) {
         e.currentTarget.classList.add('dragging');
@@ -1587,7 +1608,62 @@ class AdvancedMusicPlayer {
         this.elements.libraryModificationModal.style.display = 'none';
     }
 
+    loadFileList(selectElement, textareaElement) {
+        fetch('filelist.txt')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to load file list');
+                }
+                return response.text();
+            })
+            .then(fileList => {
+                const files = fileList.split('\n').filter(file => file.trim() !== '');
 
+                files.forEach(file => {
+                    const option = document.createElement('option');
+                    option.value = file.trim();
+                    option.textContent = file.trim();
+                    selectElement.appendChild(option);
+                });
+
+                selectElement.addEventListener('change', () => {
+                    const selectedValue = selectElement.value;
+
+                    if (selectedValue === 'custom') {
+                        textareaElement.value = '';
+                    } else {
+                        this.loadSongFile(selectedValue, textareaElement);
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error loading file list:', error);
+                const errorMessage = document.createElement('p');
+                errorMessage.textContent = 'Could not load predefined song lists. You can still paste your songs manually.';
+                errorMessage.style.color = 'red';
+                selectElement.parentNode.appendChild(errorMessage);
+            });
+    }
+
+    loadSongFile(fileName, textareaElement) {
+        textareaElement.value = 'Loading...';
+
+        fetch(`${fileName}.txt`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Failed to load ${fileName}.txt`);
+                }
+                return response.text();
+            })
+            .then(content => {
+                textareaElement.value = content;
+            })
+            .catch(error => {
+                console.error(`Error loading song file ${fileName}:`, error);
+                textareaElement.value = '';
+                alert(`Could not load the song list: ${fileName}`);
+            });
+    }
   
   
   
