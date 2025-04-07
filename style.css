@@ -676,7 +676,7 @@ body {
 }
 
 .timer-button:hover {
-    opacity: 1.0;  /* Increased from 0.4 to 0.8 for better hover visibility */
+    opacity: 1.0;  
 }
 
 .timer-modal-content {
@@ -1248,7 +1248,6 @@ body.dark-mode .thumbnail-preview {
 }
 
 
-/* Watermark styles */
 .watermark {
     position: fixed;
     bottom: 50%;
@@ -1346,4 +1345,58 @@ body.dark-mode .watermark {
 
 .input-row button:hover {
     background-color: #3367d6;
+}
+
+
+
+
+.select-container {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.select-container label {
+    font-size: 14px;
+}
+
+.playlist-select {
+    padding: 1px 6px;  
+    border-radius: 3px;
+    border: 1px solid #ddd;
+    font-size: 13px; 
+    flex-grow: 1;
+    max-width: 250px;
+    height: 22px; 
+    line-height: 1;  
+}
+
+.playlist-select option {
+    padding: 1px 6px;
+}
+
+#importSongsTextarea {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 10px 0;
+}
+
+.import-btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    background-color: var(--primary-color, #4a90e2);
+    color: white;
+    margin-top: 10px;
+}
+
+.import-btn:hover {
+    opacity: 0.9;
 }
