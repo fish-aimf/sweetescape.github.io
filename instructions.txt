@@ -1,0 +1,46 @@
+Welcome to sweetescape, an alternative independantly developed music player that stores your songs in your browser.
+
+-This website requires an internet connection to function.
+
+-Hold down on playlist songs to temparily exclude a song
+
+-Double tap the name of a song in the library to change its details
+
+-Change names of playlists by clicking it in playlist edit modal
+
+-Change position of playlist by holding down and dragging
+
+-Timer button on top right sets time for music to stop
+
+-You can import your own custom songs with the import songs button
+
+-You can add lyrics under modify song you can make lyrics from lyric-maker.html
+
+Hotkeys
+==================
+
+P - Toggle light/dark mode  
+
+H - Toggle control bar  
+
+Space / K - Start/Stop playback  
+
+A / Left Arrow - Previous song  
+
+D / Right Arrow - Next song  
+
+- - Decrease volume (small increments)  
+
++ - Increase volume (small increments)  
+
+L - Loop  
+
+R - Refresh song  
+
+Up / Down Arrow - Adjust volume  
+
+M / Tab - Toggle playlist display
+
+B - Toggle disguise page
+
+Q - Toggle tabs
