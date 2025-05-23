@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karaoke Lyric Player</title>
+    <style>
+        :root {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --accent-color: #3A6B35;
+            --hover-color: #4D7C46;
+            --border-color: #444;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        .karaoke-player {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+        
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--bg-primary);
+        }
+        
+        #videoContainer {
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+        
+        #videoContainer iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        textarea, input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: var(--accent-color);
+            color: var(--text-primary);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: var(--hover-color);
+        }
+        
+        button:disabled {
+            background-color: #444;
+            color: #888;
+            cursor: not-allowed;
+        }
+        
+        #currentTime {
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        #lyricsDisplay {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--bg-primary);
+            min-height: 300px;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+        
+        .lyric-line {
+            padding: 8px 10px;
+            margin: 5px 0;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+        
+        .lyric-line.active {
+            background-color: var(--accent-color);
+            color: var(--text-primary);
+            font-weight: bold;
+            font-size: 1.2rem;
+            transform: scale(1.02);
+        }
+        
+        .lyric-line:not(.active) {
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="karaoke-player">
+        <h1>Karaoke Lyric Player</h1>
+        
+        <div class="section">
+            <h2>Add YouTube Video</h2>
+            <input type="text" id="youtubeLink" placeholder="Paste YouTube URL here">
+            <button onclick="lyricPlayer.loadVideo()">Load Video</button>
+        </div>
+        
+        <div class="section">
+            <h2>Enter Timed Lyrics</h2>
+            <textarea id="timedLyricsInput" placeholder="Enter your timed lyrics here. Format: 'Lyric line [MM:SS]' (one per line)"></textarea>
+            <button onclick="lyricPlayer.processLyrics()">Load Lyrics</button>
+        </div>
+        
+        <div id="videoContainer"></div>
+        
+        <div id="currentTime">0:00</div>
+        
+        <div class="section">
+            <button id="playButton" onclick="lyricPlayer.togglePlay()" disabled>Play</button>
+            <button onclick="lyricPlayer.restartVideo()" disabled id="restartButton">Restart</button>
+        </div>
+        
+        <div id="lyricsDisplay"></div>
+    </div>
+    
+    <script>
+        const lyricPlayer = {
+            player: null,
+            initialized: false,
+            lyrics: [],
+            timings: [],
+            timeUpdateInterval: null,
+            currentHighlightedIndex: -1,
+            
+            init: function() {
+                if (this.initialized) return;
+                
+                if (typeof YT === 'undefined') {
+                    const tag = document.createElement('script');
+                    tag.src = "https://www.youtube.com/iframe_api";
+                    const firstScriptTag = document.getElementsByTagName('script')[0];
+                    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+                    window.onYouTubeIframeAPIReady = () => {};
+                }
+                
+                this.initialized = true;
+            },
+            
+            loadVideo: function() {
+                const videoUrl = document.getElementById("youtubeLink").value.trim();
+                if (!videoUrl) {
+                    alert("Please enter a YouTube URL");
+                    return;
+                }
+                
+                const videoId = this.extractVideoId(videoUrl);
+                if (!videoId) {
+                    alert("Invalid YouTube URL");
+                    return;
+                }
+                
+                if (this.player) {
+                    this.player.destroy();
+                }
+                
+                this.player = new YT.Player('videoContainer', {
+                    height: '390',
+                    width: '640',
+                    videoId: videoId,
+                    playerVars: {
+                        'playsinline': 1,
+                        'controls': 1
+                    },
+                    events: {
+                        'onStateChange': this.onPlayerStateChange.bind(this),
+                        'onReady': () => {
+                            document.getElementById('playButton').disabled = false;
+                            document.getElementById('restartButton').disabled = false;
+                        }
+                    }
+                });
+            },
+            
+            extractVideoId: function(url) {
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                const match = url.match(regExp);
+                return (match && match[2].length === 11) ? match[2] : null;
+            },
+            
+            processLyrics: function() {
+                const lyricsText = document.getElementById("timedLyricsInput").value.trim();
+                if (!lyricsText) {
+                    alert("Please enter timed lyrics");
+                    return;
+                }
+                
+                this.lyrics = [];
+                this.timings = [];
+                
+                const lines = lyricsText.split('\n').filter(line => line.trim() !== '');
+                
+                for (const line of lines) {
+                    const match = line.match(/(.*)\s*\[(\d+):(\d+)\]/);
+                    
+                    if (match) {
+                        const lyric = match[1].trim();
+                        const minutes = parseInt(match[2]);
+                        const seconds = parseInt(match[3]);
+                        const timeInSeconds = minutes * 60 + seconds;
+                        
+                        this.lyrics.push(lyric);
+                        this.timings.push(timeInSeconds);
+                    }
+                }
+                
+                if (this.lyrics.length === 0) {
+                    alert("No valid timed lyrics found. Please use the format: 'Lyric line [MM:SS]'");
+                    return;
+                }
+                
+                this.renderLyrics();
+            },
+            
+            renderLyrics: function() {
+                const lyricsDisplay = document.getElementById("lyricsDisplay");
+                lyricsDisplay.innerHTML = "";
+                
+                for (let i = 0; i < this.lyrics.length; i++) {
+                    const lineElement = document.createElement("div");
+                    lineElement.className = "lyric-line";
+                    lineElement.textContent = this.lyrics[i];
+                    lineElement.id = `lyric-${i}`;
+                    lyricsDisplay.appendChild(lineElement);
+                }
+            },
+            
+            onPlayerStateChange: function(event) {
+                if (event.data === YT.PlayerState.PLAYING) {
+                    this.startTimeUpdate();
+                    document.getElementById('playButton').textContent = "Pause";
+                } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+                    clearInterval(this.timeUpdateInterval);
+                    document.getElementById('playButton').textContent = "Play";
+                }
+            },
+            
+            startTimeUpdate: function() {
+                clearInterval(this.timeUpdateInterval);
+                this.timeUpdateInterval = setInterval(() => {
+                    if (this.player && this.player.getCurrentTime) {
+                        const currentTime = this.player.getCurrentTime();
+                        document.getElementById('currentTime').textContent = this.formatTime(currentTime);
+                        this.updateHighlightedLyric(currentTime);
+                    }
+                }, 100);
+            },
+            
+            togglePlay: function() {
+                if (!this.player) return;
+                
+                const state = this.player.getPlayerState();
+                if (state === YT.PlayerState.PLAYING) {
+                    this.player.pauseVideo();
+                } else {
+                    this.player.playVideo();
+                }
+            },
+            
+            restartVideo: function() {
+                if (!this.player) return;
+                this.player.seekTo(0);
+                this.player.playVideo();
+            },
+            
+            formatTime: function(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = Math.floor(seconds % 60);
+                return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+            },
+            
+            updateHighlightedLyric: function(currentTime) {
+                if (!this.lyrics.length || !this.timings.length) return;
+                
+                let highlightIndex = -1;
+                
+                for (let i = 0; i < this.timings.length; i++) {
+                    if (currentTime >= this.timings[i]) {
+                        if (i === this.timings.length - 1 || currentTime < this.timings[i + 1]) {
+                            highlightIndex = i;
+                        }
+                    }
+                }
+                
+                if (highlightIndex !== this.currentHighlightedIndex) {
+                    const allLines = document.querySelectorAll(".lyric-line");
+                    allLines.forEach(line => line.classList.remove("active"));
+                    
+                    if (highlightIndex !== -1) {
+                        const currentElement = document.getElementById(`lyric-${highlightIndex}`);
+                        if (currentElement) {
+                            currentElement.classList.add("active");
+                            currentElement.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center'
+                            });
+                        }
+                    }
+                    
+                    this.currentHighlightedIndex = highlightIndex;
+                }
+            }
+        };
+        
+        window.addEventListener('load', () => lyricPlayer.init());
+    </script>
+</body>
+</html>
