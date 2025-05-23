@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karaoke Timing Tool</title>
+    <style>
+        :root {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --accent-color: #3A6B35;
+            --hover-color: #4D7C46;
+            --border-color: #444;
+        }
+        
+        .karaoke-tool * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .karaoke-tool {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 15px;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .karaoke-tool h1, 
+        .karaoke-tool h2, 
+        .karaoke-tool h3 {
+            color: var(--text-primary);
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+        }
+        
+        .karaoke-tool h1 {
+            text-align: center;
+            font-size: 1.8rem;
+        }
+        
+        .karaoke-tool .section {
+            margin-bottom: 15px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--bg-primary);
+        }
+        
+        .karaoke-tool button {
+            background-color: var(--accent-color);
+            color: var(--text-primary);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .karaoke-tool button:hover {
+            background-color: var(--hover-color);
+        }
+        
+        .karaoke-tool button:disabled {
+            background-color: #444;
+            color: #888;
+            cursor: not-allowed;
+        }
+        
+        .karaoke-tool textarea, 
+        .karaoke-tool input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 15px;
+            margin-bottom: 10px;
+            font-family: inherit;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        
+        .karaoke-tool textarea {
+            height: 120px;
+            resize: vertical;
+        }
+        
+        .karaoke-tool #videoContainer {
+            margin-bottom: 15px;
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .karaoke-tool #videoContainer iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .karaoke-tool .lyrics-box {
+            text-align: center;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        
+        .karaoke-tool #prevLine {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .karaoke-tool #currentLine {
+            font-size: 1.2rem;
+            font-weight: bold;
+            min-height: 40px;
+            background-color: var(--accent-color);
+            color: var(--text-primary);
+            padding: 12px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .karaoke-tool #nextLine {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .karaoke-tool .tab {
+            display: none;
+        }
+        
+        .karaoke-tool .tab.active {
+            display: block;
+        }
+        
+        .karaoke-tool .progress-item {
+            background-color: var(--bg-primary);
+            border-left: 3px solid var(--accent-color);
+            padding: 8px 10px;
+            margin-bottom: 5px;
+            border-radius: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .karaoke-tool #currentTime {
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: center;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+        
+        .karaoke-tool .navbar {
+            display: flex;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        
+        .karaoke-tool .nav-item {
+            padding: 8px 15px;
+            cursor: pointer;
+            background-color: var(--bg-primary);
+            border: none;
+            flex: 1;
+            text-align: center;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        
+        .karaoke-tool .nav-item.active {
+            background-color: var(--accent-color);
+            color: var(--text-primary);
+        }
+        
+        .karaoke-tool ::placeholder {
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="karaoke-tool" id="karaoke-timing-tool">
+        <h1>Karaoke Timing Tool</h1>
+        
+        <div class="navbar">
+            <button class="nav-item active" onclick="karaokeTimingTool.showTab('setupTab')">1. Setup</button>
+            <button class="nav-item" onclick="karaokeTimingTool.showTab('recordTab')">2. Record</button>
+            <button class="nav-item" onclick="karaokeTimingTool.showTab('exportTab')">3. Export</button>
+        </div>
+        
+        <div id="setupTab" class="tab active">
+            <div class="section">
+                <h2>Add YouTube Video</h2>
+                <input type="text" id="youtubeLink" placeholder="Paste YouTube URL here">
+                <button onclick="karaokeTimingTool.loadVideo()">Load Video</button>
+            </div>
+            
+            <div class="section">
+                <h2>Enter Lyrics</h2>
+                <textarea id="lyricsInput" placeholder="Enter your lyrics here. Put each line on a new line."></textarea>
+                <button onclick="karaokeTimingTool.prepareLyrics()">Prepare Lyrics</button>
+            </div>
+            
+            <button onclick="karaokeTimingTool.showTab('recordTab')">Next: Record Timing</button>
+        </div>
+        
+        <div id="recordTab" class="tab">
+            <div id="videoContainer"></div>
+            
+            <div id="prevLine" class="lyrics-box"></div>
+            <div id="currentLine" class="lyrics-box">Press "Start Recording" when ready</div>
+            <div id="nextLine" class="lyrics-box"></div>
+            
+            <div id="currentTime">0:00</div>
+            
+            <div class="section">
+                <button id="startRecording" onclick="karaokeTimingTool.startRecording()">Start Recording</button>
+                <button id="markLine" onclick="karaokeTimingTool.markCurrentLine()" disabled>Mark Line (or Space)</button>
+                <button id="finishRecording" onclick="karaokeTimingTool.finishRecording()" disabled>Finish Recording</button>
+            </div>
+            
+            <div id="progressContainer">
+                <h3>Progress</h3>
+            </div>
+        </div>
+        
+        <div id="exportTab" class="tab">
+            <h2>Export Timed Lyrics</h2>
+            
+            <div class="section">
+                <h3>Preview</h3>
+                <div id="previewContainer"></div>
+            </div>
+            
+            <div class="section">
+                <h3>Timed Lyrics</h3>
+                <textarea id="exportOutput" readonly></textarea>
+                <button onclick="karaokeTimingTool.copyToClipboard()">Copy to Clipboard</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const karaokeTimingTool = {
+            player: null,
+            lyrics: [],
+            timings: [],
+            currentLineIndex: -1,
+            isRecording: false,
+            initialized: false,
+            timeUpdateInterval: null,
+            
+            init: function() {
+                if (this.initialized) return;
+                
+                if (typeof YT === 'undefined') {
+                    const tag = document.createElement('script');
+                    tag.src = "https://www.youtube.com/iframe_api";
+                    const firstScriptTag = document.getElementsByTagName('script')[0];
+                    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+                    window.onYouTubeIframeAPIReady = () => console.log("YouTube API Ready");
+                }
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === ' ' && this.isRecording && !document.getElementById('markLine').disabled) {
+                        e.preventDefault();
+                        this.markCurrentLine();
+                    }
+                });
+                
+                this.initialized = true;
+            },
+            
+            showTab: function(tabId) {
+                const container = document.getElementById('karaoke-timing-tool');
+                container.querySelectorAll(".tab, .nav-item").forEach(el => el.classList.remove("active"));
+                container.querySelector(`#${tabId}`).classList.add("active");
+                
+                container.querySelectorAll(".nav-item").forEach(item => {
+                    if (item.textContent.toLowerCase().includes(tabId.replace('Tab', ''))) {
+                        item.classList.add("active");
+                    }
+                });
+            },
+            
+            loadVideo: function() {
+                const videoUrl = document.getElementById("youtubeLink").value.trim();
+                if (!videoUrl) {
+                    alert("Please enter a YouTube URL");
+                    return;
+                }
+                
+                const videoId = this.extractVideoId(videoUrl);
+                if (!videoId) {
+                    alert("Invalid YouTube URL");
+                    return;
+                }
+                
+                if (this.player) {
+                    this.player.destroy();
+                }
+                
+                this.player = new YT.Player('videoContainer', {
+                    height: '390',
+                    width: '640',
+                    videoId: videoId,
+                    playerVars: {
+                        'playsinline': 1,
+                        'controls': 1
+                    },
+                    events: {
+                        'onStateChange': this.onPlayerStateChange.bind(this)
+                    }
+                });
+                
+                alert("Video loaded successfully!");
+            },
+            
+            extractVideoId: function(url) {
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                const match = url.match(regExp);
+                return (match && match[2].length === 11) ? match[2] : null;
+            },
+            
+            onPlayerStateChange: function(event) {
+                if (event.data === YT.PlayerState.PLAYING) {
+                    clearInterval(this.timeUpdateInterval);
+                    this.timeUpdateInterval = setInterval(() => {
+                        if (this.player && this.player.getCurrentTime) {
+                            document.getElementById('currentTime').textContent = this.formatTime(this.player.getCurrentTime());
+                        }
+                    }, 100);
+                }
+            },
+            
+            formatTime: function(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = Math.floor(seconds % 60);
+                return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+            },
+            
+            prepareLyrics: function() {
+                const lyricsText = document.getElementById("lyricsInput").value.trim();
+                if (!lyricsText) {
+                    alert("Please enter lyrics");
+                    return;
+                }
+                
+                this.lyrics = lyricsText.split('\n').filter(line => line.trim() !== '');
+                
+                const progressContainer = document.getElementById("progressContainer");
+                progressContainer.innerHTML = '<h3>Progress</h3>';
+                
+                this.lyrics.forEach((line, index) => {
+                    const lineElement = document.createElement("div");
+                    lineElement.className = "progress-item";
+                    lineElement.innerHTML = `
+                        <span>${index + 1}. ${line}</span>
+                        <span id="time-${index}">Not timed</span>
+                    `;
+                    progressContainer.appendChild(lineElement);
+                });
+                
+                this.timings = Array(this.lyrics.length).fill(null);
+                this.currentLineIndex = -1;
+                
+                this.updateLyricsDisplay();
+                
+                alert("Lyrics prepared! Go to the Record tab to start timing.");
+                this.showTab("recordTab");
+            },
+            
+            updateLyricsDisplay: function() {
+                const prevLineElement = document.getElementById("prevLine");
+                const currentLineElement = document.getElementById("currentLine");
+                const nextLineElement = document.getElementById("nextLine");
+                
+                if (!this.isRecording) {
+                    currentLineElement.textContent = "Press \"Start Recording\" when ready";
+                    prevLineElement.textContent = "";
+                    nextLineElement.textContent = "";
+                    return;
+                }
+                
+                if (this.currentLineIndex === -1) {
+                    // Before first line is marked
+                    currentLineElement.textContent = "[Press Space to start the first lyric]";
+                    prevLineElement.textContent = "";
+                    nextLineElement.textContent = this.lyrics[0] || "";
+                } else if (this.currentLineIndex >= this.lyrics.length) {
+                    // After all lines are marked
+                    currentLineElement.textContent = "Recording complete!";
+                    prevLineElement.textContent = this.lyrics[this.lyrics.length - 1] || "";
+                    nextLineElement.textContent = "";
+                } else {
+                    // Currently showing line at currentLineIndex
+                    currentLineElement.textContent = this.lyrics[this.currentLineIndex];
+                    
+                    if (this.currentLineIndex > 0) {
+                        prevLineElement.textContent = this.lyrics[this.currentLineIndex - 1];
+                    } else {
+                        prevLineElement.textContent = "";
+                    }
+                    
+                    if (this.currentLineIndex < this.lyrics.length - 1) {
+                        nextLineElement.textContent = this.lyrics[this.currentLineIndex + 1];
+                    } else {
+                        nextLineElement.textContent = "";
+                    }
+                }
+            },
+            
+            startRecording: function() {
+                if (!this.player || !this.lyrics.length) {
+                    alert("Please load a video and prepare lyrics first");
+                    return;
+                }
+                
+                this.player.playVideo();
+                this.timings = Array(this.lyrics.length).fill(null);
+                this.currentLineIndex = -1;
+                this.isRecording = true;
+                
+                document.getElementById("startRecording").disabled = true;
+                document.getElementById("markLine").disabled = false;
+                document.getElementById("finishRecording").disabled = false;
+                
+                this.updateLyricsDisplay();
+            },
+            
+            markCurrentLine: function() {
+                if (!this.isRecording) return;
+                
+                const currentTime = this.player.getCurrentTime();
+                
+                // Update the NEXT line with current time - this is when it STARTS being displayed
+                this.currentLineIndex++;
+                
+                if (this.currentLineIndex < this.lyrics.length) {
+                    // Save the current time for the line that is ABOUT to be displayed
+                    this.timings[this.currentLineIndex] = currentTime;
+                    
+                    const timeElement = document.getElementById(`time-${this.currentLineIndex}`);
+                    if (timeElement) {
+                        timeElement.textContent = this.formatTime(currentTime);
+                    }
+                    
+                    this.updateLyricsDisplay();
+                } else {
+                    this.finishRecording();
+                }
+            },
+            
+            finishRecording: function() {
+                this.isRecording = false;
+                clearInterval(this.timeUpdateInterval);
+                
+                document.getElementById("startRecording").disabled = false;
+                document.getElementById("markLine").disabled = true;
+                document.getElementById("finishRecording").disabled = true;
+                
+                this.updateLyricsDisplay();
+                this.generateExport();
+                
+                alert("Recording complete! Go to the Export tab to get your timed lyrics.");
+                this.showTab("exportTab");
+            },
+            
+            generateExport: function() {
+                if (!this.lyrics.length || !this.timings.length) {
+                    alert("No lyrics or timings available");
+                    return;
+                }
+                
+                const previewContainer = document.getElementById("previewContainer");
+                const exportOutput = document.getElementById("exportOutput");
+                
+                previewContainer.innerHTML = "";
+                let exportText = "";
+                
+                for (let i = 0; i < this.lyrics.length; i++) {
+                    if (this.timings[i] === null) continue;
+                    
+                    const timeString = this.formatTime(this.timings[i]);
+                    const formattedLine = `${this.lyrics[i]} [${timeString}]`;
+                    
+                    const lineElement = document.createElement("div");
+                    lineElement.className = "progress-item";
+                    lineElement.textContent = formattedLine;
+                    previewContainer.appendChild(lineElement);
+                    
+                    exportText += formattedLine + "\n";
+                }
+                
+                exportOutput.value = exportText;
+            },
+            
+            copyToClipboard: function() {
+                const exportOutput = document.getElementById("exportOutput");
+                exportOutput.select();
+                document.execCommand("copy");
+                alert("Copied to clipboard!");
+            }
+        };
+        
+        window.addEventListener('load', () => karaokeTimingTool.init());
+    </script>
+</body>
+</html>
