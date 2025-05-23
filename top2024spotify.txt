@@ -1,3 +1,4 @@
+top 100 spotify songs in 2024{
 call me by your name, https://www.youtube.com/watch?v=6swmTBVI83k
 someone like you, https://www.youtube.com/watch?v=hLQl3WQQoQ0
 roses, https://www.youtube.com/watch?v=mBZdHuZCfic
@@ -97,3 +98,16 @@ sunflower, https://www.youtube.com/watch?v=ApXoWvfEYVU
 someone you loved, https://www.youtube.com/watch?v=zABLecsR5UE
 shape of you, https://www.youtube.com/watch?v=JGwWNGJdvx8
 blinding lights, https://www.youtube.com/watch?v=4NRXx6U8ABQ
+}
+top 10 spotify songs in 2024{
+believer, https://www.youtube.com/watch?v=7wtfhZwyrcc
+dance monkey, https://www.youtube.com/watch?v=q0hyYWKXF0Q
+stay, https://www.youtube.com/watch?v=kTJczUoc26U
+one dance, https://www.youtube.com/watch?v=ki0Ocze98U8
+as it was, https://www.youtube.com/watch?v=H5v3kku4y6Q
+starboy, https://www.youtube.com/watch?v=34Na4j8AVgA
+sunflower, https://www.youtube.com/watch?v=ApXoWvfEYVU
+someone you loved, https://www.youtube.com/watch?v=zABLecsR5UE
+shape of you, https://www.youtube.com/watch?v=JGwWNGJdvx8
+blinding lights, https://www.youtube.com/watch?v=4NRXx6U8ABQ
+}
