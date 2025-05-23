@@ -2,74 +2,141 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" type="image/png" href="https://i.ibb.co/RpP5SXHr/image.png">
+    <link rel="icon" type="image/png" href="https://i.ibb.co/Z6bL2pjr/9088fe71-b07d-4aab-a74a-b16bc8109905-removalai-preview.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Music</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="app-container">
-        <!-- Timer in top right corner without box -->
-        <div class="top-right-clock">
+        <div class="theme-toggle">
+            <button id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
             <button id="timerButton" class="timer-button" title="Set timer to close app">
                 <i class="fas fa-clock"></i>
                 <span id="timerDisplay" class="timer-display"></span>
             </button>
         </div>
         
-        <div class="theme-toggle">
-            <button id="themeToggle">
-                <i class="fas fa-moon"></i>
-            </button>
-            <div class="listening-stats">
-                <i class="fas fa-headphones"></i>
-                <span id="listeningTime">0m</span>
-            </div>
+        <div class="listening-stats">
+            <i class="fas fa-headphones"></i>
+            <span id="listeningTime">0m</span>
         </div>
-        <div class="tabs">
-            <button class="tab active" data-tab="library">Library</button>
-            <button class="tab" data-tab="playlists">Playlists</button>
-        </div>
-        <div class="tab-content">
-            <!-- Library Tab -->
-            <div class="tab-pane active" id="library">
-                <div class="library-manager">
-                    <!-- Combined search and modify library into a single row -->
-                    <div class="search-section">
-                        <input type="text" id="librarySearch" placeholder="Search songs...">
-                        <button id="modifyLibraryBtn" class="action-button">
-                            <i class="fas fa-edit"></i> Modify Library
-                        </button>
+        
+        <!-- Main container for side-by-side layout -->
+        <div class="main-container">
+            <!-- Additional Details Panel (Left Side) -->
+            <div id="additionalDetails" class="additional-details">
+                <!-- Content will be rendered dynamically via JavaScript -->
+                <h3 class="additional-details-header">Music Explorer</h3>
+                
+                <div class="additional-details-section">
+                    <h4 class="section-title">Recommended</h4>
+                    <div class="details-items-list">
+                        <div class="details-item">
+                            <div class="details-item-thumbnail">
+                                <i class="fas fa-music"></i>
+                            </div>
+                            <div class="details-item-info">
+                                <div class="details-item-name">Recently Played</div>
+                            </div>
+                        </div>
+                        <div class="details-item">
+                            <div class="details-item-thumbnail">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                            <div class="details-item-info">
+                                <div class="details-item-name">Favorites</div>
+                            </div>
+                        </div>
                     </div>
-                    <div id="songLibrary" class="song-list">
-                        <!-- Songs will be dynamically added here -->
-                    </div>
-                    <!-- YouTube search suggestion will appear here when no results are found -->
-                    <div id="youtubeSearchSuggestion" class="youtube-search-suggestion" style="display: none;">
-                        <div class="search-suggestion-content">
-                            <i class="fab fa-youtube"></i>
-                            <span>Not finding what you're looking for?</span>
-                            <span class="search-query"></span>
+                </div>
+                
+                <div class="additional-details-section">
+                    <h4 class="section-title">Genres</h4>
+                    <div class="details-items-list">
+                        <div class="details-item">
+                            <div class="details-item-thumbnail">
+                                <i class="fas fa-guitar"></i>
+                            </div>
+                            <div class="details-item-info">
+                                <div class="details-item-name">Rock</div>
+                            </div>
+                        </div>
+                        <div class="details-item">
+                            <div class="details-item-thumbnail">
+                                <i class="fas fa-music"></i>
+                            </div>
+                            <div class="details-item-info">
+                                <div class="details-item-name">Pop</div>
+                            </div>
+                        </div>
+                        <div class="details-item">
+                            <div class="details-item-thumbnail">
+                                <i class="fas fa-drum"></i>
+                            </div>
+                            <div class="details-item-info">
+                                <div class="details-item-name">Electronic</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Playlists Tab -->
-            <div class="tab-pane" id="playlists">
-                <div class="playlist-manager">
-                    <div class="create-playlist">
-                        <input type="text" id="newPlaylistName" placeholder="New Playlist Name">
-                        <button id="createPlaylistBtn">Create Playlist</button>
+            <!-- Player Area (Right Side) -->
+            <div class="player-area">
+                <div class="tabs">
+                    <button class="tab active" data-tab="library">Library</button>
+                    <button class="tab" data-tab="playlists">Playlists</button>
+                    <button class="tab" data-tab="lyrics">Lyrics</button>
+                </div>
+                <div class="tab-content">
+                    <!-- Library Tab -->
+                    <div class="tab-pane active" id="library">
+                        <div class="library-manager">
+                            <!-- Combined search and modify library into a single row -->
+                            <div class="search-section">
+                                <input type="text" id="librarySearch" placeholder="Search songs...">
+                                <button id="modifyLibraryBtn" class="action-button">
+                                    <i class="fas fa-edit"></i> Modify Library
+                                </button>
+                            </div>
+                            <div id="songLibrary" class="song-list">
+                            </div>
+                            <div id="youtubeSearchSuggestion" class="youtube-search-suggestion" style="display: none;">
+                                <div class="search-suggestion-content">
+                                    <i class="fab fa-youtube"></i>
+                                    <span>Not finding what you're looking for?</span>
+                                    <span class="search-query"></span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div id="playlistContainer" class="playlist-container">
-                        <!-- Playlists will be dynamically added here -->
+                    
+                    <!-- Playlists Tab -->
+                    <div class="tab-pane" id="playlists">
+                        <div class="playlist-manager">
+                            <div class="create-playlist">
+                                <input type="text" id="newPlaylistName" placeholder="New Playlist Name">
+                                <button id="createPlaylistBtn">Create Playlist</button>
+                            </div>
+                            <div id="playlistContainer" class="playlist-container">
+                            </div>
+                        </div>
                     </div>
+                    <div class="tab-pane" id="lyrics">
+                      <div class="lyrics-container">
+                          <div class="lyrics-content" id="lyricsContent">
+                              <p class="no-lyrics-message">No song playing or no lyrics available</p>
+                          </div>
+                      </div>
+                  </div>
                 </div>
             </div>
         </div>
-
       
         <div id="libraryModificationModal" class="modal">
             <div class="modal-content">
@@ -99,7 +166,6 @@
             </div>
         </div>
 
-        <!-- Playlist Edit Modal -->
         <div id="playlistEditModal" class="modal">
             <div class="modal-content">
                 <span id="closePlaylistModal" class="close-btn">&times;</span>
@@ -150,11 +216,18 @@
         <!-- Current Playlist Sidebar -->
         <div id="currentPlaylistSidebar" class="playlist-sidebar">
             <div class="sidebar-header">
-                <h3 id="sidebarPlaylistName">Now Playing</h3>
-                <button id="closeSidebarBtn"><i class="fas fa-times"></i></button>
+                <div class="sidebar-title-section">
+                    <h3 id="sidebarPlaylistName">Now Playing</h3>
+                    <span id="playlistTotalDuration" class="playlist-duration">0 songs</span>
+                </div>
+                <div class="sidebar-controls">
+                    <button id="loopPlaylistBtn" class="loop-playlist-btn" title="Loop Playlist">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button id="closeSidebarBtn"><i class="fas fa-times"></i></button>
+                </div>
             </div>
             <div id="sidebarPlaylistSongs" class="sidebar-songs-list">
-                <!-- Songs in current playlist will be listed here -->
             </div>
         </div>
 
@@ -187,8 +260,8 @@
                 <button id="nextBtn"><i class="fas fa-step-forward"></i></button>
                 <button id="loopBtn"><i class="fas fa-redo"></i></button>
                 <button id="showPlaylistBtn"><i class="fas fa-list"></i></button>
-                
-                <!-- Added playback speed control -->
+              
+                <!-- playback speed control -->
                 <div class="speed-control">
                     <button id="speedBtn">1x</button>
                     <div class="speed-options" id="speedOptions">
@@ -216,6 +289,12 @@
             </div>
         </div>
         
+        <div class="control-bar-toggle">
+            <button id="toggleControlBarBtn" title="Toggle Control Bar">
+                <i class="fas fa-eye-slash"></i>
+            </button>
+        </div>
+        
         <!-- Layout Toggle Button -->
         <div class="layout-toggle">
             <button id="layoutToggleBtn" title="Change controls layout">
@@ -223,17 +302,14 @@
             </button>
         </div>
     </div>
-
-    <!-- YouTube Player Container (Hidden) -->
+    
     <div id="ytPlayer"></div>
     
-    <!-- Watermark -->
     <div class="watermark">Made by fishareverysmart</div>
-
-    <!-- YouTube Iframe API -->
     <script src="https://www.youtube.com/iframe_api"></script>
-    
-    <!-- Main Script -->
     <script src="script.js"></script>
+  
+  
+    
 </body>
 </html>
