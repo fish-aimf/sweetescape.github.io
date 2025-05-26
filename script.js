@@ -36,6 +36,7 @@ class AdvancedMusicPlayer {
         this.priorityModeActive = false;
         this.titleObserver = null;
         this.recentlyPlayedSongs = [];
+        
         this.recentlyPlayedPlaylists = [];
 
 
@@ -51,10 +52,12 @@ class AdvancedMusicPlayer {
             this.setupYouTubePlayer();
             this.initializeElements();
             this.setupEventListeners();
+            
             this.initializeTheme();
             this.setupKeyboardControls(); 
             this.renderInitialState();
             this.renderAdditionalDetails();
+            this.setupLyricsTabContextMenu();
             
         }).catch(error => {
             console.error('Error initializing music player:', error);
@@ -210,7 +213,7 @@ class AdvancedMusicPlayer {
         this.handleCloseLibraryModal = this.closeLibraryModal.bind(this);
         this.handleToggleControlBar = this.toggleControlBar.bind(this);
         this.handleToggleTheme = this.toggleTheme.bind(this);
-      
+        
         this.handleToggleSpeedOptions = this.toggleSpeedOptions.bind(this);
         this.handleSpeedOptionClick = (e) => this.setPlaybackSpeed(parseFloat(e.target.dataset.speed));
         this.handleImportLibrary = this.showImportModal.bind(this);
@@ -3422,6 +3425,8 @@ class AdvancedMusicPlayer {
 
         const section = document.createElement('div');
         section.classList.add('additional-details-section');
+        section.setAttribute('data-section-title', title);
+
         const sectionTitle = document.createElement('h3');
         sectionTitle.textContent = title;
         sectionTitle.classList.add('section-title');
@@ -3429,6 +3434,16 @@ class AdvancedMusicPlayer {
             sectionTitle.style.cursor = 'pointer';
             sectionTitle.addEventListener('click', () => {
                 this.showRecentlyPlayedModal();
+            });
+        } else if (title === 'Suggested') {
+            sectionTitle.style.cursor = 'pointer';
+            sectionTitle.addEventListener('click', () => {
+                this.refreshSpecificSection('Suggested');
+            });
+        } else if (title === 'Your Picks') {
+            sectionTitle.style.cursor = 'pointer';
+            sectionTitle.addEventListener('click', () => {
+                this.refreshSpecificSection('Your Picks');
             });
         }
 
@@ -3476,6 +3491,83 @@ class AdvancedMusicPlayer {
 
         section.appendChild(itemsList);
         this.elements.additionalDetails.appendChild(section);
+    }
+    refreshSpecificSection(sectionTitle) {
+        if (!this.elements.additionalDetails) return;
+        const sectionToRefresh = this.elements.additionalDetails.querySelector(`[data-section-title="${sectionTitle}"]`);
+        if (!sectionToRefresh) return;
+
+        let newItems = [];
+        let type = 'song';
+        if (sectionTitle === 'Suggested') {
+            if (this.songLibrary.length > 0) {
+                newItems = this.getRandomItems(this.songLibrary, 2);
+            }
+        } else if (sectionTitle === 'Your Picks') {
+            const favoriteSongs = this.songLibrary.filter(song => song.favorite);
+            if (favoriteSongs.length > 0) {
+                newItems = this.getRandomItems(favoriteSongs, 2);
+            }
+        }
+
+        if (newItems.length === 0) return;
+
+        const itemsList = sectionToRefresh.querySelector('.details-items-list');
+        if (!itemsList) return;
+        itemsList.innerHTML = '';
+        newItems.forEach(item => {
+            const itemElement = document.createElement('div');
+            itemElement.classList.add('details-item');
+            const thumbnail = document.createElement('div');
+            thumbnail.classList.add('details-item-thumbnail');
+
+            if (type === 'song') {
+                const thumbnailImg = document.createElement('img');
+                thumbnailImg.src = item.thumbnailUrl || `https://img.youtube.com/vi/${item.videoId}/default.jpg`;
+                thumbnailImg.alt = item.name;
+                thumbnailImg.onerror = function() {
+                    this.src = 'https://placehold.it/120x90/333/fff?text=No+Image';
+                };
+                thumbnail.appendChild(thumbnailImg);
+            } else {
+                const playlistIcon = document.createElement('i');
+                playlistIcon.classList.add('fa', 'fa-list');
+                thumbnail.appendChild(playlistIcon);
+            }
+
+            const itemInfo = document.createElement('div');
+            itemInfo.classList.add('details-item-info');
+
+            const itemName = document.createElement('div');
+            itemName.classList.add('details-item-name');
+            itemName.textContent = item.name;
+            itemInfo.appendChild(itemName);
+
+            itemElement.addEventListener('click', () => {
+                if (type === 'song') {
+                    this.playSong(item.id);
+                } else {
+                    this.playPlaylist(item.id);
+                }
+            });
+
+            itemElement.appendChild(thumbnail);
+            itemElement.appendChild(itemInfo);
+            itemsList.appendChild(itemElement);
+        });
+    }
+
+    refreshSuggestedSongs() {
+        if (this.songLibrary.length > 0) {
+            this.renderAdditionalDetails();
+        }
+    }
+
+    refreshYourPicks() {
+        const favoriteSongs = this.songLibrary.filter(song => song.favorite);
+        if (favoriteSongs.length > 0) {
+            this.renderAdditionalDetails();
+        }
     }
     getRandomItems(array, count) {
         if (array.length <= count) {
@@ -3797,6 +3889,197 @@ renderLyricsTab() {
 
             this.currentHighlightedLyricIndex = highlightIndex;
         }
+    }
+    openLyricsLibraryModal() {
+        const modal = document.createElement('div');
+        modal.classList.add('lyrics-library-modal');
+        modal.style.display = 'flex';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.7)';
+        modal.style.zIndex = '1000';
+        modal.style.justifyContent = 'center';
+        modal.style.alignItems = 'center';
+
+        const modalContent = document.createElement('div');
+        modalContent.classList.add('modal-content');
+        modalContent.style.backgroundColor = 'var(--bg-secondary)';
+        modalContent.style.color = 'var(--text-primary)';
+        modalContent.style.padding = '20px';
+        modalContent.style.borderRadius = '5px';
+        modalContent.style.width = '90%';
+        modalContent.style.maxWidth = '800px';
+        modalContent.style.maxHeight = '80vh';
+        modalContent.style.overflowY = 'auto';
+        modalContent.style.boxShadow = '0 0 15px rgba(0,0,0,0.3)';
+        modalContent.style.position = 'relative';
+        const headerContainer = document.createElement('div');
+        headerContainer.style.position = 'sticky';
+        headerContainer.style.top = '0';
+        headerContainer.style.backgroundColor = 'var(--bg-secondary)';
+        headerContainer.style.paddingBottom = '10px';
+        headerContainer.style.marginBottom = '10px';
+        headerContainer.style.borderBottom = '1px solid var(--border-color)';
+        headerContainer.style.display = 'flex';
+        headerContainer.style.justifyContent = 'space-between';
+        headerContainer.style.alignItems = 'center';
+        headerContainer.style.zIndex = '10';
+
+        const header = document.createElement('h3');
+        header.textContent = 'Songs with Lyrics';
+        header.style.margin = '0';
+        header.style.color = 'var(--text-primary)';
+
+        const closeBtn = document.createElement('span');
+        closeBtn.innerHTML = '&times;';
+        closeBtn.style.fontSize = '24px';
+        closeBtn.style.cursor = 'pointer';
+        closeBtn.style.color = 'var(--text-primary)';
+        closeBtn.style.lineHeight = '24px';
+        closeBtn.onclick = () => modal.remove();
+
+        headerContainer.appendChild(header);
+        headerContainer.appendChild(closeBtn);
+        const contentContainer = document.createElement('div');
+        contentContainer.style.display = 'flex';
+        contentContainer.style.flexDirection = 'column';
+        contentContainer.style.gap = '10px';
+
+        const songsWithLyrics = this.songLibrary.filter(song => song.lyrics && song.lyrics.trim() !== '');
+
+        if (songsWithLyrics.length === 0) {
+            const noLyricsMessage = document.createElement('div');
+            noLyricsMessage.textContent = 'No songs with lyrics found. Add lyrics to your songs to see them here.';
+            noLyricsMessage.style.textAlign = 'center';
+            noLyricsMessage.style.color = 'var(--text-secondary)';
+            noLyricsMessage.style.padding = '20px';
+            contentContainer.appendChild(noLyricsMessage);
+        } else {
+            songsWithLyrics.forEach(song => {
+                const songItem = document.createElement('div');
+                songItem.style.display = 'flex';
+                songItem.style.alignItems = 'center';
+                songItem.style.padding = '10px';
+                songItem.style.backgroundColor = 'var(--bg-primary)';
+                songItem.style.borderRadius = '5px';
+                songItem.style.border = '1px solid var(--border-color)';
+                songItem.style.gap = '10px';
+                const songInfo = document.createElement('div');
+                songInfo.style.flex = '1';
+                songInfo.style.minWidth = '0'; 
+                const songName = document.createElement('div');
+                songName.textContent = song.name;
+                songName.style.fontWeight = 'bold';
+                songName.style.color = 'var(--text-primary)';
+                songName.style.overflow = 'hidden';
+                songName.style.textOverflow = 'ellipsis';
+                songName.style.whiteSpace = 'nowrap';
+
+                const lyricsPreview = document.createElement('div');
+                const firstLine = song.lyrics.split('\n')[0]?.replace(/\[.*?\]/g, '').trim() || 'No preview available';
+                lyricsPreview.textContent = firstLine.length > 50 ? firstLine.substring(0, 50) + '...' : firstLine;
+                lyricsPreview.style.color = 'var(--text-secondary)';
+                lyricsPreview.style.fontSize = '0.9em';
+                lyricsPreview.style.overflow = 'hidden';
+                lyricsPreview.style.textOverflow = 'ellipsis';
+                lyricsPreview.style.whiteSpace = 'nowrap';
+
+                songInfo.appendChild(songName);
+                songInfo.appendChild(lyricsPreview);
+                const buttonContainer = document.createElement('div');
+                buttonContainer.style.display = 'flex';
+                buttonContainer.style.gap = '5px';
+                buttonContainer.style.flexShrink = '0';
+                const copyBtn = document.createElement('button');
+                copyBtn.textContent = 'Copy';
+                copyBtn.style.padding = '5px 10px';
+                copyBtn.style.fontSize = '0.8em';
+                copyBtn.style.backgroundColor = 'var(--accent-color)';
+                copyBtn.style.color = 'white';
+                copyBtn.style.border = 'none';
+                copyBtn.style.borderRadius = '3px';
+                copyBtn.style.cursor = 'pointer';
+                copyBtn.style.transition = 'background-color 0.3s';
+
+                copyBtn.addEventListener('mouseover', () => {
+                    copyBtn.style.backgroundColor = 'var(--hover-color)';
+                });
+
+                copyBtn.addEventListener('mouseout', () => {
+                    copyBtn.style.backgroundColor = 'var(--accent-color)';
+                });
+
+                copyBtn.onclick = () => {
+                    navigator.clipboard.writeText(song.lyrics).then(() => {
+                        const originalText = copyBtn.textContent;
+                        copyBtn.textContent = 'Copied!';
+                        copyBtn.style.backgroundColor = '#4CAF50';
+                        setTimeout(() => {
+                            copyBtn.textContent = originalText;
+                            copyBtn.style.backgroundColor = 'var(--accent-color)';
+                        }, 1000);
+                    }).catch(err => {
+                        console.error('Failed to copy lyrics:', err);
+                        alert('Failed to copy lyrics to clipboard');
+                    });
+                };
+                const editBtn = document.createElement('button');
+                editBtn.textContent = 'Edit';
+                editBtn.style.padding = '5px 10px';
+                editBtn.style.fontSize = '0.8em';
+                editBtn.style.backgroundColor = '#6c757d';
+                editBtn.style.color = 'white';
+                editBtn.style.border = 'none';
+                editBtn.style.borderRadius = '3px';
+                editBtn.style.cursor = 'pointer';
+                editBtn.style.transition = 'background-color 0.3s';
+
+                editBtn.addEventListener('mouseover', () => {
+                    editBtn.style.backgroundColor = '#5a6268';
+                });
+
+                editBtn.addEventListener('mouseout', () => {
+                    editBtn.style.backgroundColor = '#6c757d';
+                });
+
+                editBtn.onclick = () => {
+                    modal.remove();
+                    this.openSongEditModal(song.id);
+                };
+
+                buttonContainer.appendChild(copyBtn);
+                buttonContainer.appendChild(editBtn);
+
+                songItem.appendChild(songInfo);
+                songItem.appendChild(buttonContainer);
+                contentContainer.appendChild(songItem);
+            });
+        }
+
+        modalContent.appendChild(headerContainer);
+        modalContent.appendChild(contentContainer);
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        };
+    }
+
+    setupLyricsTabContextMenu() {
+        const lyricsTab = document.querySelector('.tab[data-tab="lyrics"]');
+        if (!lyricsTab) return;
+
+        lyricsTab.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            this.openLyricsLibraryModal();
+        });
+
+        lyricsTab.title = 'rightclick to view lyric library';
     }
 
     
@@ -4221,191 +4504,213 @@ renderLyricsTab() {
 
         loadVideo();
     }
-cleanup() {
-    [
-        this.progressInterval,
-        this.listeningTimeInterval,
-        this.longPressTimer,
-        this.titleScrollInterval
-    ].forEach(timer => {
-        if (timer) {
-            clearInterval(timer);
-        }
-    });
-
-    this.progressInterval = null;
-    this.listeningTimeInterval = null;
-    this.longPressTimer = null;
-    this.titleScrollInterval = null;
-
-    if (this.ytPlayer && typeof this.ytPlayer.destroy === 'function') {
-        this.ytPlayer.destroy();
-        this.ytPlayer = null;
-    }
-
-    document.title = this.originalTitle;
-    const faviconLink = document.querySelector('link[rel="icon"]');
-    if (faviconLink && this.originalFavicon) {
-        faviconLink.href = this.originalFavicon;
-    }
-
-    if (this.titleObserver) {
-        this.titleObserver.disconnect();
-        this.titleObserver = null;
-    }
-
-    const existingModal = document.querySelector('.recently-played-modal-bg');
-    if (existingModal) {
-        document.body.removeChild(existingModal);
-    }
-
-    if (this.elements) {
-        const eventBindings = [
-            [this.elements.toggleControlBarBtn, 'click', this.handleToggleControlBar],
-            [this.elements.modifyLibraryBtn, 'click', this.handleOpenLibraryModal],
-            [this.elements.closeLibraryModalBtn, 'click', this.handleCloseLibraryModal],
-            [this.elements.importLibraryBtn, 'click', this.handleImportLibrary],
-            [this.elements.exportLibraryBtn, 'click', this.handleExportLibrary],
-            [this.elements.loopPlaylistBtn, 'click', this.handleTogglePlaylistLoop],
-            [this.elements.addSongBtn, 'click', this.handleAddSong],
-            [this.elements.createPlaylistBtn, 'click', this.handleCreatePlaylist],
-            [this.elements.closePlaylistModalBtn, 'click', this.handleClosePlaylistModal],
-            [this.elements.addSongToPlaylistBtn, 'click', this.handleAddSongToPlaylist],
-            [this.elements.playPauseBtn, 'click', this.handleTogglePlayPause],
-            [this.elements.prevBtn, 'click', this.handlePlayPrevious],
-            [this.elements.nextBtn, 'click', this.handlePlayNext],
-            [this.elements.loopBtn, 'click', this.handleToggleLoop],
-            [this.elements.showPlaylistBtn, 'click', this.handleToggleSidebar],
-            [this.elements.closeSidebarBtn, 'click', this.handleToggleSidebar],
-            [this.elements.themeToggle, 'click', this.handleToggleTheme],
-            [this.elements.speedBtn, 'click', this.handleToggleSpeedOptions],
-            [this.elements.librarySearch, 'input', this.handleFilterLibrary],
-            [this.elements.librarySearch, 'keydown', this.handleLibrarySearchKeydown],
-            [this.elements.searchSongsToAdd, 'input', this.handleSearchSongsToAdd],
-            [this.elements.songUrlInput, 'input', this.handleSongUrlInput],
-            [this.elements.songUrlInput, 'keydown', this.handleSongUrlKeydown],
-            [this.elements.newPlaylistName, 'keydown', this.handleNewPlaylistNameKeydown],
-            [this.elements.volumeSlider, 'input', this.handleVolumeChange],
-            [this.elements.progressBar, 'click', this.handleSeekMusic]
-        ];
-
-        eventBindings.forEach(([element, event, handler]) => {
-            if (element) {
-                element.removeEventListener(event, handler);
+    cleanup() {
+        [
+            this.progressInterval,
+            this.listeningTimeInterval,
+            this.longPressTimer,
+            this.titleScrollInterval
+        ].forEach(timer => {
+            if (timer) {
+                clearInterval(timer);
             }
         });
 
-        document.querySelectorAll('.speed-option').forEach(option => {
-            option.removeEventListener('click', this.handleSpeedOptionClick);
-        });
+        this.progressInterval = null;
+        this.listeningTimeInterval = null;
+        this.longPressTimer = null;
+        this.titleScrollInterval = null;
 
-        if (this.elements.tabs) {
-            this.elements.tabs.forEach(tab => {
-                if (tab._boundSwitchTab) {
-                    tab.removeEventListener('click', tab._boundSwitchTab);
-                    delete tab._boundSwitchTab;
+        if (this.ytPlayer && typeof this.ytPlayer.destroy === 'function') {
+            this.ytPlayer.destroy();
+            this.ytPlayer = null;
+        }
+
+        document.title = this.originalTitle;
+        const faviconLink = document.querySelector('link[rel="icon"]');
+        if (faviconLink && this.originalFavicon) {
+            faviconLink.href = this.originalFavicon;
+        }
+
+        if (this.titleObserver) {
+            this.titleObserver.disconnect();
+            this.titleObserver = null;
+        }
+
+        const existingModal = document.querySelector('.recently-played-modal-bg');
+        if (existingModal) {
+            document.body.removeChild(existingModal);
+        }
+
+        const existingLyricsModal = document.querySelector('.lyrics-library-modal');
+        if (existingLyricsModal) {
+            document.body.removeChild(existingLyricsModal);
+        }
+
+        if (this.elements) {
+            const eventBindings = [
+                [this.elements.toggleControlBarBtn, 'click', this.handleToggleControlBar],
+                [this.elements.modifyLibraryBtn, 'click', this.handleOpenLibraryModal],
+                [this.elements.closeLibraryModalBtn, 'click', this.handleCloseLibraryModal],
+                [this.elements.importLibraryBtn, 'click', this.handleImportLibrary],
+                [this.elements.exportLibraryBtn, 'click', this.handleExportLibrary],
+                [this.elements.loopPlaylistBtn, 'click', this.handleTogglePlaylistLoop],
+                [this.elements.addSongBtn, 'click', this.handleAddSong],
+                [this.elements.createPlaylistBtn, 'click', this.handleCreatePlaylist],
+                [this.elements.closePlaylistModalBtn, 'click', this.handleClosePlaylistModal],
+                [this.elements.addSongToPlaylistBtn, 'click', this.handleAddSongToPlaylist],
+                [this.elements.playPauseBtn, 'click', this.handleTogglePlayPause],
+                [this.elements.prevBtn, 'click', this.handlePlayPrevious],
+                [this.elements.nextBtn, 'click', this.handlePlayNext],
+                [this.elements.loopBtn, 'click', this.handleToggleLoop],
+                [this.elements.showPlaylistBtn, 'click', this.handleToggleSidebar],
+                [this.elements.closeSidebarBtn, 'click', this.handleToggleSidebar],
+                [this.elements.themeToggle, 'click', this.handleToggleTheme],
+                [this.elements.speedBtn, 'click', this.handleToggleSpeedOptions],
+                [this.elements.librarySearch, 'input', this.handleFilterLibrary],
+                [this.elements.librarySearch, 'keydown', this.handleLibrarySearchKeydown],
+                [this.elements.searchSongsToAdd, 'input', this.handleSearchSongsToAdd],
+                [this.elements.songUrlInput, 'input', this.handleSongUrlInput],
+                [this.elements.songUrlInput, 'keydown', this.handleSongUrlKeydown],
+                [this.elements.newPlaylistName, 'keydown', this.handleNewPlaylistNameKeydown],
+                [this.elements.volumeSlider, 'input', this.handleVolumeChange],
+                [this.elements.progressBar, 'click', this.handleSeekMusic]
+            ];
+
+            eventBindings.forEach(([element, event, handler]) => {
+                if (element) {
+                    element.removeEventListener(event, handler);
+                }
+            });
+
+            document.querySelectorAll('.speed-option').forEach(option => {
+                option.removeEventListener('click', this.handleSpeedOptionClick);
+            });
+
+            if (this.elements.tabs) {
+                this.elements.tabs.forEach(tab => {
+                    if (tab._boundSwitchTab) {
+                        tab.removeEventListener('click', tab._boundSwitchTab);
+                        delete tab._boundSwitchTab;
+                    }
+                });
+            }
+
+            const lyricsTab = document.querySelector('.tab[data-tab="lyrics"]');
+            if (lyricsTab) {
+                const newLyricsTab = lyricsTab.cloneNode(true);
+                if (lyricsTab.parentNode) {
+                    lyricsTab.parentNode.replaceChild(newLyricsTab, lyricsTab);
+                }
+            }
+
+            const playlistItems = document.querySelectorAll('.playlist-item');
+            if (playlistItems.length > 0) {
+                playlistItems.forEach(item => {
+                    item.removeEventListener('dragstart', this.handlePlaylistDragStart);
+                    item.removeEventListener('dragover', this.handlePlaylistDragOver);
+                    item.removeEventListener('drop', this.handlePlaylistDrop);
+                });
+            }
+
+            const sectionTitles = document.querySelectorAll('.section-title');
+            sectionTitles.forEach(title => {
+                if (title.textContent === 'Recently Listened To' || 
+                    title.textContent === 'Suggested' || 
+                    title.textContent === 'Your Picks') {
+                    const newTitle = title.cloneNode(true);
+                    if (title.parentNode) {
+                        title.parentNode.replaceChild(newTitle, title);
+                    }
+                }
+            });
+
+            const detailsItems = document.querySelectorAll('.details-item');
+            detailsItems.forEach(item => {
+                const newItem = item.cloneNode(true);
+                if (item.parentNode) {
+                    item.parentNode.replaceChild(newItem, item);
+                }
+            });
+
+            const recentlyPlayedItems = document.querySelectorAll('.recently-played-item');
+            recentlyPlayedItems.forEach(item => {
+                const newItem = item.cloneNode(true);
+                if (item.parentNode) {
+                    item.parentNode.replaceChild(newItem, item);
+                }
+            });
+
+            const settingsInputs = document.querySelectorAll('.recently-played-settings-input');
+            settingsInputs.forEach(input => {
+                const newInput = input.cloneNode(true);
+                if (input.parentNode) {
+                    input.parentNode.replaceChild(newInput, input);
                 }
             });
         }
 
-        const playlistItems = document.querySelectorAll('.playlist-item');
-        if (playlistItems.length > 0) {
-            playlistItems.forEach(item => {
-                item.removeEventListener('dragstart', this.handlePlaylistDragStart);
-                item.removeEventListener('dragover', this.handlePlaylistDragOver);
-                item.removeEventListener('drop', this.handlePlaylistDrop);
-            });
-        }
+        this.closeIndexedDB();
+        this.playlists = [];
+        this.songLibrary = [];
+        this.recentlyPlayedSongs = []; 
+        this.recentlyPlayedPlaylists = [];
+        this.recentlyPlayedLimit = 20; 
+        this.temporarilySkippedSongs.clear();
+        this.isPlaying = false;
+        this.isLooping = false;
+        this.isSidebarVisible = false;
+        this.currentPlaylist = null;
+        this.currentSongIndex = 0;
+        this.currentSpeed = 1;
+        this.listeningTime = 0;
+        this.currentDisguiseIndex = -1;
+        this.priorityModeActive = false;
 
-        const sectionTitles = document.querySelectorAll('.section-title');
-        sectionTitles.forEach(title => {
-            if (title.textContent === 'Recently Listened To') {
-                const newTitle = title.cloneNode(true);
-                if (title.parentNode) {
-                    title.parentNode.replaceChild(newTitle, title);
-                }
-            }
-        });
+        this.handleAddSong = null;
+        this.handleFilterLibrary = null;
+        this.handleLibrarySearchKeydown = null;
+        this.handleCreatePlaylist = null;
+        this.handleClosePlaylistModal = null;
+        this.handleSearchSongsToAdd = null;
+        this.handleAddSongToPlaylist = null;
+        this.handleSeekMusic = null;
+        this.handleTogglePlayPause = null;
+        this.handlePlayPrevious = null;
+        this.handlePlayNext = null;
+        this.handleToggleLoop = null;
+        this.handlePlaylistDragStart = null;
+        this.handlePlaylistDragOver = null;
+        this.handlePlaylistDrop = null;
+        this.handleVolumeChange = null;
+        this.handleToggleSidebar = null;
+        this.handleOpenLibraryModal = null;
+        this.handleCloseLibraryModal = null;
+        this.handleToggleControlBar = null;
+        this.handleToggleTheme = null;
+        this.handleToggleSpeedOptions = null;
+        this.handleSpeedOptionClick = null;
+        this.handleImportLibrary = null;
+        this.handleExportLibrary = null;
+        this.handleTogglePlaylistLoop = null;
+        this.handleSongUrlInput = null;
+        this.handleSongUrlKeydown = null;
+        this.handleNewPlaylistNameKeydown = null;
 
-        const recentlyPlayedItems = document.querySelectorAll('.recently-played-item');
-        recentlyPlayedItems.forEach(item => {
-            const newItem = item.cloneNode(true);
-            if (item.parentNode) {
-                item.parentNode.replaceChild(newItem, item);
-            }
-        });
-
-        const settingsInputs = document.querySelectorAll('.recently-played-settings-input');
-        settingsInputs.forEach(input => {
-            const newInput = input.cloneNode(true);
-            if (input.parentNode) {
-                input.parentNode.replaceChild(newInput, input);
-            }
-        });
+        console.log('Player resources cleaned up successfully');
     }
 
-    this.closeIndexedDB();
-    this.playlists = [];
-    this.songLibrary = [];
-    this.recentlyPlayedSongs = []; 
-    this.recentlyPlayedPlaylists = [];
-    this.recentlyPlayedLimit = 20; 
-    this.temporarilySkippedSongs.clear();
-    this.isPlaying = false;
-    this.isLooping = false;
-    this.isSidebarVisible = false;
-    this.currentPlaylist = null;
-    this.currentSongIndex = 0;
-    this.currentSpeed = 1;
-    this.listeningTime = 0;
-    this.currentDisguiseIndex = -1;
-    this.priorityModeActive = false;
-
-    this.handleAddSong = null;
-    this.handleFilterLibrary = null;
-    this.handleLibrarySearchKeydown = null;
-    this.handleCreatePlaylist = null;
-    this.handleClosePlaylistModal = null;
-    this.handleSearchSongsToAdd = null;
-    this.handleAddSongToPlaylist = null;
-    this.handleSeekMusic = null;
-    this.handleTogglePlayPause = null;
-    this.handlePlayPrevious = null;
-    this.handlePlayNext = null;
-    this.handleToggleLoop = null;
-    this.handlePlaylistDragStart = null;
-    this.handlePlaylistDragOver = null;
-    this.handlePlaylistDrop = null;
-    this.handleVolumeChange = null;
-    this.handleToggleSidebar = null;
-    this.handleOpenLibraryModal = null;
-    this.handleCloseLibraryModal = null;
-    this.handleToggleControlBar = null;
-    this.handleToggleTheme = null;
-    this.handleToggleSpeedOptions = null;
-    this.handleSpeedOptionClick = null;
-    this.handleImportLibrary = null;
-    this.handleExportLibrary = null;
-    this.handleTogglePlaylistLoop = null;
-    this.handleSongUrlInput = null;
-    this.handleSongUrlKeydown = null;
-    this.handleNewPlaylistNameKeydown = null;
-
-    console.log('Player resources cleaned up successfully');
-}
-
-closeIndexedDB() {
-    if (this.db) {
-        try {
-            this.db.close();
-            console.log('IndexedDB connection closed');
-            this.db = null;
-        } catch (error) {
-            console.error('Error closing IndexedDB:', error);
+    closeIndexedDB() {
+        if (this.db) {
+            try {
+                this.db.close();
+                console.log('IndexedDB connection closed');
+                this.db = null;
+            } catch (error) {
+                console.error('Error closing IndexedDB:', error);
+            }
         }
     }
-}
-
 }
 
 
