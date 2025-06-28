@@ -13,3 +13,4 @@
 - **M / Tab** — Toggle playlist display
 - **B** — disguise page
 - **Q** — Toggle through tabs
+- **U** — Youtube video open
