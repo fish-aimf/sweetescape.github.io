@@ -44,3 +44,5 @@ M / Tab - Toggle playlist display
 B - Toggle disguise page
 
 Q - Toggle tabs
+
+U - Open Video
