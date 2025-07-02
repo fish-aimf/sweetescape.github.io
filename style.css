@@ -1895,7 +1895,7 @@ body {
 /* Duplicate toggle container */
 .duplicate-toggle-container {
     margin: 30px 0;
-    padding: 2px 0;
+    padding: 0px 0;
     border-bottom: 20px solid var(--border-color);
 }
 
@@ -1903,7 +1903,7 @@ body {
 .playlist-action-btn {
     display: block;
     width: 100%;
-    padding: 8px 12px;
+    padding: 8px 1px;
     margin-top: 4px;
     background-color: var(--background-secondary);
     color: var(--text-primary);
