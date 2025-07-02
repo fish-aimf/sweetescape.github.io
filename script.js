@@ -988,59 +988,55 @@ class AdvancedMusicPlayer {
     this.elements.playlistEditModal.style.display = "block";
   }
   createDuplicateToggle() {
-    let toggleContainer = document.querySelector(".duplicate-toggle-container");
-    if (!toggleContainer) {
-      toggleContainer = document.createElement("div");
-      toggleContainer.className = "duplicate-toggle-container";
-
-      const duplicatesBtn = document.createElement("button");
-      duplicatesBtn.className = "playlist-action-btn";
-      duplicatesBtn.id = "allowDuplicatesBtn";
-      this.updateDuplicatesButtonText(duplicatesBtn);
-      duplicatesBtn.addEventListener("click", () => {
-        this.allowDuplicates = !this.allowDuplicates;
-        this.saveSetting("allowDuplicates", this.allowDuplicates);
+      let toggleContainer = document.querySelector(".duplicate-toggle-container");
+      if (!toggleContainer) {
+        toggleContainer = document.createElement("div");
+        toggleContainer.className = "duplicate-toggle-container";
+        const duplicatesBtn = document.createElement("button");
+        duplicatesBtn.className = "playlist-action-btn";
+        duplicatesBtn.id = "allowDuplicatesBtn";
         this.updateDuplicatesButtonText(duplicatesBtn);
-        const playlistId = parseInt(
-          this.elements.currentPlaylistName.dataset.playlistId
+        duplicatesBtn.addEventListener("click", () => {
+          this.allowDuplicates = !this.allowDuplicates;
+          this.saveSetting("allowDuplicates", this.allowDuplicates);
+          this.updateDuplicatesButtonText(duplicatesBtn);
+          const playlistId = parseInt(
+            this.elements.currentPlaylistName.dataset.playlistId
+          );
+          const playlist = this.playlists.find((p) => p.id === playlistId);
+          if (playlist) {
+            this.renderLibrarySearchResults(playlist);
+          }
+        });
+        toggleContainer.appendChild(duplicatesBtn);
+        const clearDuplicatesBtn = document.createElement("button");
+        clearDuplicatesBtn.className = "playlist-action-btn";
+        clearDuplicatesBtn.textContent = "Clear Duplicates";
+        clearDuplicatesBtn.addEventListener("click", () => {
+          this.clearPlaylistDuplicates();
+        });
+        toggleContainer.appendChild(clearDuplicatesBtn);
+        const reverseBtn = document.createElement("button");
+        reverseBtn.className = "playlist-action-btn";
+        reverseBtn.textContent = "Reverse Position";
+        reverseBtn.addEventListener("click", () => {
+          this.reversePlaylistOrder();
+        });
+        toggleContainer.appendChild(reverseBtn);
+        const searchContainer = this.elements.searchSongsToAdd.parentElement;
+        searchContainer.insertBefore(
+          toggleContainer,
+          this.elements.librarySearchResults.nextSibling
         );
-        const playlist = this.playlists.find((p) => p.id === playlistId);
-        if (playlist) {
-          this.renderLibrarySearchResults(playlist);
+      } else {
+        const duplicatesBtn = toggleContainer.querySelector(
+          "#allowDuplicatesBtn"
+        );
+        if (duplicatesBtn) {
+          this.updateDuplicatesButtonText(duplicatesBtn);
         }
-      });
-      toggleContainer.appendChild(duplicatesBtn);
-
-      const clearDuplicatesBtn = document.createElement("button");
-      clearDuplicatesBtn.className = "playlist-action-btn";
-      clearDuplicatesBtn.textContent = "Clear Duplicates";
-      clearDuplicatesBtn.addEventListener("click", () => {
-        this.clearPlaylistDuplicates();
-      });
-      toggleContainer.appendChild(clearDuplicatesBtn);
-
-      const reverseBtn = document.createElement("button");
-      reverseBtn.className = "playlist-action-btn";
-      reverseBtn.textContent = "Reverse Position";
-      reverseBtn.addEventListener("click", () => {
-        this.reversePlaylistOrder();
-      });
-      toggleContainer.appendChild(reverseBtn);
-
-      const searchContainer = this.elements.searchSongsToAdd.parentElement;
-      searchContainer.insertBefore(
-        toggleContainer,
-        this.elements.librarySearchResults
-      );
-    } else {
-      const duplicatesBtn = toggleContainer.querySelector(
-        "#allowDuplicatesBtn"
-      );
-      if (duplicatesBtn) {
-        this.updateDuplicatesButtonText(duplicatesBtn);
       }
     }
-  }
 
   updateDuplicatesButtonText(button) {
     if (this.allowDuplicates) {
@@ -2423,7 +2419,6 @@ class AdvancedMusicPlayer {
       alert("Please enter songs to import.");
       return;
     }
-
     const lines = importText.split("\n").filter((line) => line.trim());
     const importedSongs = [];
     const failedImports = [];
@@ -2432,56 +2427,49 @@ class AdvancedMusicPlayer {
     const existingVideoIds = new Set(
       this.songLibrary.map((song) => song.videoId)
     );
+    const currentImportVideoIds = new Set();
     const playlists = [];
     let currentPlaylist = null;
     let isPlaylistFormat = false;
-
     const generateUniqueId = () => {
       let newId;
       do {
         newId = Date.now() + Math.floor(Math.random() * 10000);
       } while (existingIds.has(newId));
-
       existingIds.add(newId);
       return newId;
     };
-
     const findExistingSongByVideoId = (videoId) => {
       return this.songLibrary.find((song) => song.videoId === videoId);
     };
-
+    const findImportedSongByVideoId = (videoId) => {
+      return importedSongs.find((song) => song.videoId === videoId);
+    };
     const extractVideoId = (url) => {
       if (!url) return null;
-
       const vParam = url.match(/[?&]v=([^&]+)/);
       if (vParam && vParam[1]) {
         return vParam[1];
       }
-
       if (url.includes("youtu.be/")) {
         const parts = url.split("youtu.be/");
         if (parts.length > 1) {
           return parts[1].split("?")[0].split("&")[0].trim();
         }
       }
-
       return null;
     };
-
     for (const line of lines) {
       if (line.includes("{")) {
         isPlaylistFormat = true;
         break;
       }
     }
-
     if (isPlaylistFormat) {
       const playlistRegex = /^(.+?)\{$/;
       const closeBraceRegex = /^\}$/;
-
       lines.forEach((line) => {
         const playlistMatch = line.match(playlistRegex);
-
         if (playlistMatch) {
           const playlistName = playlistMatch[1].trim();
           currentPlaylist = {
@@ -2494,14 +2482,11 @@ class AdvancedMusicPlayer {
         } else if (currentPlaylist) {
           try {
             const parsed = this.parseSongLine(line);
-
             if (!parsed) {
               failedImports.push(`${line} (invalid format)`);
               return;
             }
-
             const { songName, songUrl, author } = parsed;
-
             if (
               !songUrl.includes("youtube.com") &&
               !songUrl.includes("youtu.be")
@@ -2509,21 +2494,27 @@ class AdvancedMusicPlayer {
               failedImports.push(`${line} (not a YouTube URL)`);
               return;
             }
-
             const videoId = extractVideoId(songUrl);
             if (!videoId) {
               failedImports.push(`${line} (invalid YouTube URL)`);
               return;
             }
-
             const existingSong = findExistingSongByVideoId(videoId);
-
+            const importedSong = findImportedSongByVideoId(videoId);
             if (existingSong) {
               duplicates.push(line);
               currentPlaylist.songs.push({
                 videoId: videoId,
                 name: existingSong.name,
                 author: existingSong.author || "",
+                entryId: Date.now() + Math.random() * 10000,
+              });
+            } else if (importedSong) {
+              duplicates.push(line);
+              currentPlaylist.songs.push({
+                videoId: videoId,
+                name: importedSong.name,
+                author: importedSong.author || "",
                 entryId: Date.now() + Math.random() * 10000,
               });
             } else {
@@ -2536,10 +2527,9 @@ class AdvancedMusicPlayer {
                 lyrics: "",
                 addedOn: new Date().toISOString(),
               };
-
               importedSongs.push(newSong);
               existingVideoIds.add(videoId);
-
+              currentImportVideoIds.add(videoId);
               currentPlaylist.songs.push({
                 videoId: videoId,
                 name: songName,
@@ -2557,14 +2547,11 @@ class AdvancedMusicPlayer {
       lines.forEach((line) => {
         try {
           const parsed = this.parseSongLine(line);
-
           if (!parsed) {
             failedImports.push(`${line} (invalid format)`);
             return;
           }
-
           const { songName, songUrl, author } = parsed;
-
           if (
             !songUrl.includes("youtube.com") &&
             !songUrl.includes("youtu.be")
@@ -2572,18 +2559,18 @@ class AdvancedMusicPlayer {
             failedImports.push(`${line} (not a YouTube URL)`);
             return;
           }
-
           const videoId = extractVideoId(songUrl);
           if (!videoId) {
             failedImports.push(`${line} (invalid YouTube URL)`);
             return;
           }
-
-          if (existingVideoIds.has(videoId)) {
+          if (
+            existingVideoIds.has(videoId) ||
+            currentImportVideoIds.has(videoId)
+          ) {
             duplicates.push(line);
             return;
           }
-
           const newSong = {
             id: generateUniqueId(),
             name: songName,
@@ -2593,25 +2580,22 @@ class AdvancedMusicPlayer {
             lyrics: "",
             addedOn: new Date().toISOString(),
           };
-
           importedSongs.push(newSong);
           existingVideoIds.add(videoId);
+          currentImportVideoIds.add(videoId);
         } catch (error) {
           console.error("Error processing song:", error);
           failedImports.push(`${line} (processing error)`);
         }
       });
     }
-
     const processPromises = [];
-
     if (importedSongs.length > 0) {
       processPromises.push(this.addImportedSongsOneByOne(importedSongs));
     }
     if (playlists.length > 0) {
       processPromises.push(this.createImportedPlaylists(playlists));
     }
-
     Promise.all(processPromises)
       .then(() => {
         this.renderSongLibrary();
@@ -2619,7 +2603,6 @@ class AdvancedMusicPlayer {
           this.updatePlaylistSelection();
         }
         this.renderPlaylists();
-
         let message = "";
         if (importedSongs.length > 0) {
           message += `Successfully imported ${importedSongs.length} new songs. `;
@@ -2637,7 +2620,6 @@ class AdvancedMusicPlayer {
         if (!message) {
           message = "No new content was imported.";
         }
-
         alert(message);
       })
       .catch((error) => {
