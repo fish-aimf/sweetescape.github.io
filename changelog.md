@@ -171,3 +171,6 @@
 - improved update progress bar still it wont work for mobile
 -tried to add user setting failed
 - fixed import cos theres a few duplicate issues
+- also fixed the issue in styles.
+- need to fix leaking memory
+- fixed issue where load song library isnt working after i updated the export and import the last time
