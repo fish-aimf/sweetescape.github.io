@@ -139,4 +139,35 @@
 - fixed so now they show 3 songs in the recently played
 - made the recentlyplayed open a modal 
 - made it save 20 songs in recently played
+- author added
 - fixed the whole cleanup function incase the siteis closed when the modal is still open
+- made pressing recently played and your picks refresh their individual sections hard to pull off
+- added the lyric library model when rightclicked the lyric tab
+- made Set Timer to Close App word be white instead of dark green
+- optimized performance and power
+- databases saved together
+- added debouncing and better rerendering and only resorts the list when needed
+-much faster dom updates
+-  reduced useless function called
+-fixed bug since i forgot to contents in loadplaylists efore deleting ensure fav playlist
+- added sync favonload as replacement
+- added 3 buttons. allow duplicates delete duplicates and reverse playlist
+- added randomize playlist shuffle. very hardto get css right
+- fixed major bug where I forgot to update how savelyrics work after i added author.
+- simple change where i just allowed seraching for author in the playlist edit model will also show up the author's song
+- modified import library so it can import author as well
+- autofills empty name if link is pasted in
+- accepeted youtu.be/ link shorterners. when extracting url
+- forgot to say i added a couple of premade imports
+- added a dropdown menu so export can keep up with import that was very difficult
+- added the export library to text, export songs w playlist those are easy
+- reorganized export file structure
+- export playlist added was so hard
+- opens select playlist to export
+- improved select playlist to export style as it wasnt visible in light mode
+- works
+- moved buttons playlist modification to bottom below the results
+- improved cleanup but cleanup is still leaking a lot
+- improved update progress bar still it wont work for mobile
+-tried to add user setting failed
+- fixed import cos theres a few duplicate issues
