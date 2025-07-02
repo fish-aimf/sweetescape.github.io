@@ -1894,7 +1894,7 @@ body {
 
 /* Duplicate toggle container */
 .duplicate-toggle-container {
-    margin: -20px 0;
+    margin: 20px 0;
     padding: 9px 0;
     border-bottom: 20px solid var(--border-color);
 }
