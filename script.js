@@ -5709,249 +5709,321 @@ handleTouchEnd(e) {
   }
 
   cleanup() {
-    [
-      this.progressInterval,
-      this.listeningTimeInterval,
-      this.longPressTimer,
-      this.titleScrollInterval,
-    ].forEach((timer) => {
-      if (timer) {
-        clearInterval(timer);
+  console.log("Starting cleanup process...");
+
+  // Clear all intervals and timers
+  const timers = [
+    this.progressInterval,
+    this.listeningTimeInterval,
+    this.longPressTimer,
+    this.titleScrollInterval,
+  ];
+
+  timers.forEach((timer, index) => {
+    if (timer) {
+      clearInterval(timer);
+      clearTimeout(timer); // Also clear in case it's a timeout
+    }
+  });
+
+  // Reset timer references
+  this.progressInterval = null;
+  this.listeningTimeInterval = null;
+  this.longPressTimer = null;
+  this.titleScrollInterval = null;
+
+  // Clean up YouTube player
+  if (this.ytPlayer) {
+    try {
+      if (typeof this.ytPlayer.destroy === "function") {
+        this.ytPlayer.destroy();
+      } else if (typeof this.ytPlayer.stopVideo === "function") {
+        this.ytPlayer.stopVideo();
       }
-    });
-
-    this.progressInterval = null;
-    this.listeningTimeInterval = null;
-    this.longPressTimer = null;
-    this.titleScrollInterval = null;
-
-    if (this.ytPlayer && typeof this.ytPlayer.destroy === "function") {
-      this.ytPlayer.destroy();
+    } catch (error) {
+      console.warn("Error destroying YouTube player:", error);
+    } finally {
       this.ytPlayer = null;
     }
+  }
 
-    document.title = this.originalTitle;
+  // Restore original page appearance
+  this.restoreOriginalPageState();
+
+  // Disconnect observers
+  if (this.titleObserver) {
+    this.titleObserver.disconnect();
+    this.titleObserver = null;
+  }
+
+  // Remove modal elements
+  this.removeModalElements();
+
+  // Remove all event listeners
+  this.removeEventListeners();
+
+  // Clean up DOM event listeners for dynamically created elements
+  this.cleanupDynamicElements();
+
+  // Close IndexedDB connection
+  this.closeIndexedDB();
+
+  // Reset all state variables
+  this.resetStateVariables();
+
+  // Remove any remaining references
+  this.clearReferences();
+
+  console.log("Player resources cleaned up successfully");
+}
+
+restoreOriginalPageState() {
+  try {
+    // Restore original title and favicon
+    if (this.originalTitle) {
+      document.title = this.originalTitle;
+    }
+    
     const faviconLink = document.querySelector('link[rel="icon"]');
     if (faviconLink && this.originalFavicon) {
       faviconLink.href = this.originalFavicon;
     }
-
-    if (this.titleObserver) {
-      this.titleObserver.disconnect();
-      this.titleObserver = null;
-    }
-
-    const existingModal = document.querySelector(".recently-played-modal-bg");
-    if (existingModal) {
-      document.body.removeChild(existingModal);
-    }
-
-    const existingLyricsModal = document.querySelector(".lyrics-library-modal");
-    if (existingLyricsModal) {
-      document.body.removeChild(existingLyricsModal);
-    }
-
-    if (this.elements) {
-      const eventBindings = [
-        [
-          this.elements.toggleControlBarBtn,
-          "click",
-          this.handleToggleControlBar,
-        ],
-        [this.elements.modifyLibraryBtn, "click", this.handleOpenLibraryModal],
-        [
-          this.elements.closeLibraryModalBtn,
-          "click",
-          this.handleCloseLibraryModal,
-        ],
-        [this.elements.importLibraryBtn, "click", this.handleImportLibrary],
-        [this.elements.exportLibraryBtn, "click", this.handleExportLibrary],
-        [this.elements.loopPlaylistBtn, "click", this.handleTogglePlaylistLoop],
-        [this.elements.addSongBtn, "click", this.handleAddSong],
-        [this.elements.createPlaylistBtn, "click", this.handleCreatePlaylist],
-        [
-          this.elements.closePlaylistModalBtn,
-          "click",
-          this.handleClosePlaylistModal,
-        ],
-        [
-          this.elements.addSongToPlaylistBtn,
-          "click",
-          this.handleAddSongToPlaylist,
-        ],
-        [this.elements.playPauseBtn, "click", this.handleTogglePlayPause],
-        [this.elements.prevBtn, "click", this.handlePlayPrevious],
-        [this.elements.nextBtn, "click", this.handlePlayNext],
-        [this.elements.loopBtn, "click", this.handleToggleLoop],
-        [this.elements.showPlaylistBtn, "click", this.handleToggleSidebar],
-        [this.elements.closeSidebarBtn, "click", this.handleToggleSidebar],
-        [this.elements.themeToggle, "click", this.handleToggleTheme],
-        [this.elements.speedBtn, "click", this.handleToggleSpeedOptions],
-        [this.elements.librarySearch, "input", this.handleFilterLibrary],
-        [
-          this.elements.librarySearch,
-          "keydown",
-          this.handleLibrarySearchKeydown,
-        ],
-        [this.elements.searchSongsToAdd, "input", this.handleSearchSongsToAdd],
-        [this.elements.songUrlInput, "input", this.handleSongUrlInput],
-        [this.elements.songUrlInput, "keydown", this.handleSongUrlKeydown],
-        [this.elements.songAuthorInput, "input", this.handleSongAuthorInput],
-        [
-          this.elements.songAuthorInput,
-          "keydown",
-          this.handleSongAuthorKeydown,
-        ],
-        [
-          this.elements.newPlaylistName,
-          "keydown",
-          this.handleNewPlaylistNameKeydown,
-        ],
-        [this.elements.volumeSlider, "input", this.handleVolumeChange],
-        [this.elements.progressBar, "click", this.handleSeekMusic],
-      ];
-
-      eventBindings.forEach(([element, event, handler]) => {
-        if (element) {
-          element.removeEventListener(event, handler);
-        }
-      });
-
-      document.querySelectorAll(".speed-option").forEach((option) => {
-        option.removeEventListener("click", this.handleSpeedOptionClick);
-      });
-
-      if (this.elements.tabs) {
-        this.elements.tabs.forEach((tab) => {
-          if (tab._boundSwitchTab) {
-            tab.removeEventListener("click", tab._boundSwitchTab);
-            delete tab._boundSwitchTab;
-          }
-        });
-      }
-
-      const lyricsTab = document.querySelector('.tab[data-tab="lyrics"]');
-      if (lyricsTab) {
-        const newLyricsTab = lyricsTab.cloneNode(true);
-        if (lyricsTab.parentNode) {
-          lyricsTab.parentNode.replaceChild(newLyricsTab, lyricsTab);
-        }
-      }
-
-      const playlistItems = document.querySelectorAll(".playlist-item");
-      if (playlistItems.length > 0) {
-        playlistItems.forEach((item) => {
-          item.removeEventListener("dragstart", this.handlePlaylistDragStart);
-          item.removeEventListener("dragover", this.handlePlaylistDragOver);
-          item.removeEventListener("drop", this.handlePlaylistDrop);
-        });
-      }
-
-      const sectionTitles = document.querySelectorAll(".section-title");
-      sectionTitles.forEach((title) => {
-        if (
-          title.textContent === "Recently Listened To" ||
-          title.textContent === "Suggested" ||
-          title.textContent === "Your Picks"
-        ) {
-          const newTitle = title.cloneNode(true);
-          if (title.parentNode) {
-            title.parentNode.replaceChild(newTitle, title);
-          }
-        }
-      });
-
-      const detailsItems = document.querySelectorAll(".details-item");
-      detailsItems.forEach((item) => {
-        const newItem = item.cloneNode(true);
-        if (item.parentNode) {
-          item.parentNode.replaceChild(newItem, item);
-        }
-      });
-
-      const recentlyPlayedItems = document.querySelectorAll(
-        ".recently-played-item"
-      );
-      recentlyPlayedItems.forEach((item) => {
-        const newItem = item.cloneNode(true);
-        if (item.parentNode) {
-          item.parentNode.replaceChild(newItem, item);
-        }
-      });
-
-      const settingsInputs = document.querySelectorAll(
-        ".recently-played-settings-input"
-      );
-      settingsInputs.forEach((input) => {
-        const newInput = input.cloneNode(true);
-        if (input.parentNode) {
-          input.parentNode.replaceChild(newInput, input);
-        }
-      });
-    }
-
-    this.closeIndexedDB();
-    this.playlists = [];
-    this.songLibrary = [];
-    this.recentlyPlayedSongs = [];
-    this.recentlyPlayedPlaylists = [];
-    this.recentlyPlayedLimit = 20;
-    this.temporarilySkippedSongs.clear();
-    this.isPlaying = false;
-    this.isLooping = false;
-    this.isSidebarVisible = false;
-    this.currentPlaylist = null;
-    this.currentSongIndex = 0;
-    this.currentSpeed = 1;
-    this.listeningTime = 0;
-    this.currentDisguiseIndex = -1;
-    this.priorityModeActive = false;
-    this.handleAddSong = null;
-    this.handleFilterLibrary = null;
-    this.handleLibrarySearchKeydown = null;
-    this.handleCreatePlaylist = null;
-    this.handleClosePlaylistModal = null;
-    this.handleSearchSongsToAdd = null;
-    this.handleAddSongToPlaylist = null;
-    this.handleSeekMusic = null;
-    this.handleTogglePlayPause = null;
-    this.handlePlayPrevious = null;
-    this.handlePlayNext = null;
-    this.handleToggleLoop = null;
-    this.handlePlaylistDragStart = null;
-    this.handlePlaylistDragOver = null;
-    this.handlePlaylistDrop = null;
-    this.handleVolumeChange = null;
-    this.handleToggleSidebar = null;
-    this.handleOpenLibraryModal = null;
-    this.handleCloseLibraryModal = null;
-    this.handleToggleControlBar = null;
-    this.handleToggleTheme = null;
-    this.handleToggleSpeedOptions = null;
-    this.handleSpeedOptionClick = null;
-    this.handleImportLibrary = null;
-    this.handleExportLibrary = null;
-    this.handleTogglePlaylistLoop = null;
-    this.handleSongUrlInput = null;
-    this.handleSongUrlKeydown = null;
-    this.handleSongAuthorInput = null;
-    this.handleSongAuthorKeydown = null;
-    this.handleNewPlaylistNameKeydown = null;
-
-    console.log("Player resources cleaned up successfully");
+  } catch (error) {
+    console.warn("Error restoring page state:", error);
   }
+}
 
-  closeIndexedDB() {
-    if (this.db) {
+removeModalElements() {
+  const modalSelectors = [
+    ".recently-played-modal-bg",
+    ".lyrics-library-modal",
+    ".timer-modal",
+    ".import-modal",
+    ".export-modal",
+    ".settings-modal"
+  ];
+
+  modalSelectors.forEach(selector => {
+    try {
+      const modal = document.querySelector(selector);
+      if (modal && modal.parentNode) {
+        modal.parentNode.removeChild(modal);
+      }
+    } catch (error) {
+      console.warn(`Error removing modal ${selector}:`, error);
+    }
+  });
+}
+
+removeEventListeners() {
+  if (!this.elements) return;
+
+  const eventBindings = [
+    [this.elements.toggleControlBarBtn, "click", this.handleToggleControlBar],
+    [this.elements.modifyLibraryBtn, "click", this.handleOpenLibraryModal],
+    [this.elements.closeLibraryModalBtn, "click", this.handleCloseLibraryModal],
+    [this.elements.importLibraryBtn, "click", this.handleImportLibrary],
+    [this.elements.exportLibraryBtn, "click", this.handleExportLibrary],
+    [this.elements.loopPlaylistBtn, "click", this.handleTogglePlaylistLoop],
+    [this.elements.addSongBtn, "click", this.handleAddSong],
+    [this.elements.createPlaylistBtn, "click", this.handleCreatePlaylist],
+    [this.elements.closePlaylistModalBtn, "click", this.handleClosePlaylistModal],
+    [this.elements.addSongToPlaylistBtn, "click", this.handleAddSongToPlaylist],
+    [this.elements.playPauseBtn, "click", this.handleTogglePlayPause],
+    [this.elements.prevBtn, "click", this.handlePlayPrevious],
+    [this.elements.nextBtn, "click", this.handlePlayNext],
+    [this.elements.loopBtn, "click", this.handleToggleLoop],
+    [this.elements.showPlaylistBtn, "click", this.handleToggleSidebar],
+    [this.elements.closeSidebarBtn, "click", this.handleToggleSidebar],
+    [this.elements.themeToggle, "click", this.handleToggleTheme],
+    [this.elements.speedBtn, "click", this.handleToggleSpeedOptions],
+    [this.elements.librarySearch, "input", this.handleFilterLibrary],
+    [this.elements.librarySearch, "keydown", this.handleLibrarySearchKeydown],
+    [this.elements.searchSongsToAdd, "input", this.handleSearchSongsToAdd],
+    [this.elements.songUrlInput, "input", this.handleSongUrlInput],
+    [this.elements.songUrlInput, "keydown", this.handleSongUrlKeydown],
+    [this.elements.songUrlInput, "paste", this.handleUrlPaste],
+    [this.elements.songAuthorInput, "input", this.handleSongAuthorInput],
+    [this.elements.songAuthorInput, "keydown", this.handleSongAuthorKeydown],
+    [this.elements.newPlaylistName, "keydown", this.handleNewPlaylistNameKeydown],
+    [this.elements.volumeSlider, "input", this.handleVolumeChange],
+    [this.elements.progressBar, "click", this.handleSeekMusic],
+  ];
+
+  // Remove event listeners safely
+  eventBindings.forEach(([element, event, handler]) => {
+    if (element && handler) {
       try {
-        this.db.close();
-        console.log("IndexedDB connection closed");
-        this.db = null;
+        element.removeEventListener(event, handler);
       } catch (error) {
-        console.error("Error closing IndexedDB:", error);
+        console.warn(`Error removing event listener for ${event}:`, error);
       }
     }
+  });
+
+  // Remove speed option listeners
+  document.querySelectorAll(".speed-option").forEach((option) => {
+    try {
+      option.removeEventListener("click", this.handleSpeedOptionClick);
+    } catch (error) {
+      console.warn("Error removing speed option listener:", error);
+    }
+  });
+
+  // Remove tab listeners
+  if (this.elements.tabs) {
+    this.elements.tabs.forEach((tab) => {
+      try {
+        if (tab._boundSwitchTab) {
+          tab.removeEventListener("click", tab._boundSwitchTab);
+          delete tab._boundSwitchTab;
+        }
+        // Also remove any other potential tab listeners
+        const newTab = tab.cloneNode(true);
+        if (tab.parentNode) {
+          tab.parentNode.replaceChild(newTab, tab);
+        }
+      } catch (error) {
+        console.warn("Error removing tab listener:", error);
+      }
+    });
   }
+
+  // Remove keyboard event listeners
+  try {
+    document.removeEventListener("keydown", this.keyboardHandler);
+  } catch (error) {
+    console.warn("Error removing keyboard listener:", error);
+  }
+}
+
+cleanupDynamicElements() {
+  const dynamicSelectors = [
+    ".playlist-item",
+    ".song-item",
+    ".recently-played-item",
+    ".details-item",
+    ".section-title",
+    ".recently-played-settings-input"
+  ];
+
+  dynamicSelectors.forEach(selector => {
+    try {
+      const elements = document.querySelectorAll(selector);
+      elements.forEach((element) => {
+        // Clone and replace to remove all event listeners
+        const newElement = element.cloneNode(true);
+        if (element.parentNode) {
+          element.parentNode.replaceChild(newElement, element);
+        }
+      });
+    } catch (error) {
+      console.warn(`Error cleaning up ${selector}:`, error);
+    }
+  });
+
+  // Specific cleanup for playlist drag and drop
+  try {
+    const playlistItems = document.querySelectorAll(".playlist-item");
+    playlistItems.forEach((item) => {
+      item.removeEventListener("dragstart", this.handlePlaylistDragStart);
+      item.removeEventListener("dragover", this.handlePlaylistDragOver);
+      item.removeEventListener("drop", this.handlePlaylistDrop);
+      item.draggable = false;
+    });
+  } catch (error) {
+    console.warn("Error removing drag listeners:", error);
+  }
+}
+
+resetStateVariables() {
+  // Reset arrays and collections
+  this.playlists = [];
+  this.songLibrary = [];
+  this.recentlyPlayedSongs = [];
+  this.recentlyPlayedPlaylists = [];
+  this.temporarilySkippedSongs = new Set();
+
+  // Reset primitive values
+  this.isPlaying = false;
+  this.isLooping = false;
+  this.isPlaylistLooping = true;
+  this.isSidebarVisible = false;
+  this.currentPlaylist = null;
+  this.currentSongIndex = 0;
+  this.currentSpeed = 1;
+  this.listeningTime = 0;
+  this.currentDisguiseIndex = -1;
+  this.priorityModeActive = false;
+  this.allowDuplicates = true;
+  this.isVideoFullscreen = false;
+  this.recentlyPlayedLimit = 20;
+  this.currentTabIndex = 0;
+  this.isLongPressing = false;
+}
+
+clearReferences() {
+  // Clear all handler references
+  const handlers = [
+    'handleAddSong',
+    'handleFilterLibrary',
+    'handleLibrarySearchKeydown',
+    'handleCreatePlaylist',
+    'handleClosePlaylistModal',
+    'handleSearchSongsToAdd',
+    'handleAddSongToPlaylist',
+    'handleSeekMusic',
+    'handleTogglePlayPause',
+    'handlePlayPrevious',
+    'handlePlayNext',
+    'handleToggleLoop',
+    'handlePlaylistDragStart',
+    'handlePlaylistDragOver',
+    'handlePlaylistDrop',
+    'handleVolumeChange',
+    'handleToggleSidebar',
+    'handleOpenLibraryModal',
+    'handleCloseLibraryModal',
+    'handleToggleControlBar',
+    'handleToggleTheme',
+    'handleToggleSpeedOptions',
+    'handleSpeedOptionClick',
+    'handleImportLibrary',
+    'handleExportLibrary',
+    'handleTogglePlaylistLoop',
+    'handleSongUrlInput',
+    'handleSongUrlKeydown',
+    'handleSongAuthorInput',
+    'handleSongAuthorKeydown',
+    'handleNewPlaylistNameKeydown',
+    'handleUrlPaste'
+  ];
+
+  handlers.forEach(handler => {
+    this[handler] = null;
+  });
+
+  // Clear element references
+  this.elements = null;
+  
+  // Clear other object references
+  this.progressBar = null;
+  this.listeningTimeDisplay = null;
+}
+
+closeIndexedDB() {
+  if (this.db) {
+    try {
+      // Close any pending transactions first
+      this.db.close();
+      console.log("IndexedDB connection closed");
+    } catch (error) {
+      console.error("Error closing IndexedDB:", error);
+    } finally {
+      this.db = null;
+    }
+  }
+}
 }
 
 let musicPlayer;
