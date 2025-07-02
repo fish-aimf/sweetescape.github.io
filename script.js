@@ -26,11 +26,6 @@ class AdvancedMusicPlayer {
     this.originalTitle = document.title;
     this.allowDuplicates = true;
     this.isVideoFullscreen = false;
-    this.userSettings = {
-      playOnLoadSongId: null,
-      autoplayOnLoad: false,
-      defaultVolume: 50
-    };
     this.pageDisguises = [
       {
         favicon: "https://i.ibb.co/W4MfKV9X/image.png",
@@ -72,8 +67,8 @@ class AdvancedMusicPlayer {
     this.priorityModeActive = false;
     this.titleObserver = null;
     this.recentlyPlayedSongs = [];
+
     this.recentlyPlayedPlaylists = [];
-    
     this.initDatabase()
       .then(() => {
         return Promise.all([
@@ -81,57 +76,58 @@ class AdvancedMusicPlayer {
           this.loadPlaylists(),
           this.loadSettings(),
           this.loadRecentlyPlayed(),
-          this.loadUserSettings(),
         ]);
       })
       .then(() => {
         this.setupYouTubePlayer();
         this.initializeElements();
         this.setupEventListeners();
+
         this.initializeTheme();
         this.setupKeyboardControls();
         this.renderInitialState();
         this.renderAdditionalDetails();
         this.setupLyricsTabContextMenu();
-        this.handleAutoplayOnLoad();
       })
       .catch((error) => {
         console.error("Error initializing music player:", error);
       });
   }
-   initDatabase() {
+  initDatabase() {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open("MusicPlayerDB", 1);
+
       request.onerror = (event) => {
         console.error("IndexedDB error:", event.target.error);
         reject("Could not open IndexedDB");
       };
+
       request.onsuccess = (event) => {
         this.db = event.target.result;
         resolve();
       };
+
       request.onupgradeneeded = (event) => {
         const db = event.target.result;
-        const oldVersion = event.oldVersion;
-        
         if (!db.objectStoreNames.contains("songLibrary")) {
           db.createObjectStore("songLibrary", { keyPath: "id" });
         }
+
         if (!db.objectStoreNames.contains("playlists")) {
           db.createObjectStore("playlists", { keyPath: "id" });
         }
+
         if (!db.objectStoreNames.contains("settings")) {
           db.createObjectStore("settings", { keyPath: "name" });
         }
+
         if (!db.objectStoreNames.contains("recentlyPlayed")) {
           db.createObjectStore("recentlyPlayed", { keyPath: "type" });
-        }
-        if (oldVersion < 2 && !db.objectStoreNames.contains("userSettings")) {
-          db.createObjectStore("userSettings", { keyPath: "id" });
         }
       };
     });
   }
+
   initializeElements() {
     this.elements = {
       songNameInput: document.getElementById("songName"),
@@ -1453,7 +1449,6 @@ class AdvancedMusicPlayer {
       alert("Failed to play the video. Please try again.");
     }
   }
-
   togglePlayPause() {
     if (!this.ytPlayer) {
       console.warn("YouTube player not initialized");
@@ -1827,88 +1822,7 @@ class AdvancedMusicPlayer {
   setVolume(volume) {
     if (this.ytPlayer) {
       this.ytPlayer.setVolume(volume);
-      this.userSettings.defaultVolume = volume;
-      this.saveUserSettings();
     }
-  }
-
-  saveUserSettings() {
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject("Database not initialized");
-        return;
-      }
-      const transaction = this.db.transaction(["userSettings"], "readwrite");
-      const store = transaction.objectStore("userSettings");
-      const request = store.put({
-        id: "userSettings",
-        ...this.userSettings
-      });
-      request.onsuccess = () => resolve();
-      request.onerror = (event) => {
-        console.error("Error saving user settings:", event.target.error);
-        reject("Could not save user settings");
-      };
-    });
-  }
-
-  loadUserSettings() {
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject("Database not initialized");
-        return;
-      }
-      const transaction = this.db.transaction(["userSettings"], "readonly");
-      const store = transaction.objectStore("userSettings");
-      const request = store.get("userSettings");
-      request.onsuccess = () => {
-        if (request.result) {
-          this.userSettings = {
-            ...this.userSettings,
-            ...request.result
-          };
-        }
-        resolve();
-      };
-      request.onerror = (event) => {
-        console.error("Error loading user settings:", event.target.error);
-        reject("Could not load user settings");
-      };
-    });
-  }
-
-  handleAutoplayOnLoad() {
-    if (!this.userSettings.autoplayOnLoad) return;
-    
-    if (this.userSettings.playOnLoadSongId) {
-      const song = this.songLibrary.find(s => s.id === this.userSettings.playOnLoadSongId);
-      if (song) {
-        setTimeout(() => {
-          this.playSong(song.id);
-        }, 1000);
-      }
-    }
-  }
-
-  applyDefaultVolume() {
-    if (this.ytPlayer && this.userSettings.defaultVolume !== null) {
-      this.ytPlayer.setVolume(this.userSettings.defaultVolume);
-    }
-  }
-
-  setPlayOnLoadSong(songId) {
-    this.userSettings.playOnLoadSongId = songId;
-    this.saveUserSettings();
-  }
-
-  toggleAutoplayOnLoad() {
-    this.userSettings.autoplayOnLoad = !this.userSettings.autoplayOnLoad;
-    this.saveUserSettings();
-  }
-
-  setDefaultVolume(volume) {
-    this.userSettings.defaultVolume = Math.max(0, Math.min(100, volume));
-    this.setVolume(this.userSettings.defaultVolume);
   }
 
   initializeTheme() {
