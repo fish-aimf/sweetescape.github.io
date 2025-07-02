@@ -571,50 +571,96 @@ class AdvancedMusicPlayer {
     });
   }
   setupProgressBar() {
-    if (!this.elements.progressBar) return;
+  if (!this.elements.progressBar) return;
+  
+  // Add touch event listeners for mobile
+  this.elements.progressBar.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
+  this.elements.progressBar.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
+  this.elements.progressBar.addEventListener('touchend', this.handleTouchEnd.bind(this));
+}
+
+updateProgressBar() {
+  if (!this.ytPlayer || !this.elements.progressBar) return;
+  
+  if (this.progressInterval) {
+    clearInterval(this.progressInterval);
+    this.progressInterval = null;
   }
-  updateProgressBar() {
-    if (!this.ytPlayer || !this.elements.progressBar) return;
-    if (this.progressInterval) {
-      clearInterval(this.progressInterval);
-      this.progressInterval = null;
-    }
-    this.progressInterval = setInterval(() => {
-      try {
-        if (
-          !this.ytPlayer ||
-          this.ytPlayer.getPlayerState() !== YT.PlayerState.PLAYING
-        ) {
-          return;
-        }
-        const currentTime = this.ytPlayer.getCurrentTime() || 0;
-        const duration = this.ytPlayer.getDuration() || 0;
-        if (duration > 0) {
-          const progressPercent = (currentTime / duration) * 100;
-          this.elements.progressBar.value = progressPercent;
-          if (this.elements.timeDisplay) {
-            const formattedCurrentTime = this.formatTime(currentTime);
-            const formattedDuration = this.formatTime(duration);
-            this.elements.timeDisplay.textContent = `${formattedCurrentTime}/${formattedDuration}`;
-          }
-        }
-      } catch (error) {
-        console.error("Error updating progress bar:", error);
+  
+  // Reduced interval for smoother updates (500ms instead of 1000ms)
+  this.progressInterval = setInterval(() => {
+    try {
+      if (
+        !this.ytPlayer ||
+        this.ytPlayer.getPlayerState() !== YT.PlayerState.PLAYING
+      ) {
+        return;
       }
-    }, 1000);
-  }
-  seekMusic(e) {
-    if (!this.ytPlayer) return;
-    const duration = this.ytPlayer.getDuration();
-    const clickPosition = e.offsetX / this.elements.progressBar.offsetWidth;
-    const seekTime = duration * clickPosition;
-    this.ytPlayer.seekTo(seekTime, true);
-    if (this.elements.timeDisplay) {
-      const formattedCurrentTime = this.formatTime(seekTime);
-      const formattedDuration = this.formatTime(duration);
-      this.elements.timeDisplay.textContent = `${formattedCurrentTime}/${formattedDuration}`;
+      const currentTime = this.ytPlayer.getCurrentTime() || 0;
+      const duration = this.ytPlayer.getDuration() || 0;
+      
+      if (duration > 0) {
+        const progressPercent = (currentTime / duration) * 100;
+        this.elements.progressBar.value = progressPercent;
+        
+        if (this.elements.timeDisplay) {
+          const formattedCurrentTime = this.formatTime(currentTime);
+          const formattedDuration = this.formatTime(duration);
+          this.elements.timeDisplay.textContent = `${formattedCurrentTime}/${formattedDuration}`;
+        }
+      }
+    } catch (error) {
+      console.error("Error updating progress bar:", error);
     }
+  }, 500);
+}
+
+// Enhanced seek function that works with both mouse and touch
+seekMusic(e) {
+  if (!this.ytPlayer) return;
+  
+  const duration = this.ytPlayer.getDuration();
+  let clickPosition;
+  
+  // Handle both mouse and touch events
+  if (e.type === 'touchstart' || e.type === 'touchmove') {
+    const touch = e.touches[0] || e.changedTouches[0];
+    const rect = this.elements.progressBar.getBoundingClientRect();
+    clickPosition = (touch.clientX - rect.left) / rect.width;
+  } else {
+    clickPosition = e.offsetX / this.elements.progressBar.offsetWidth;
   }
+  
+  // Ensure clickPosition is within bounds
+  clickPosition = Math.max(0, Math.min(1, clickPosition));
+  
+  const seekTime = duration * clickPosition;
+  this.ytPlayer.seekTo(seekTime, true);
+  
+  // Update display immediately for better responsiveness
+  if (this.elements.timeDisplay) {
+    const formattedCurrentTime = this.formatTime(seekTime);
+    const formattedDuration = this.formatTime(duration);
+    this.elements.timeDisplay.textContent = `${formattedCurrentTime}/${formattedDuration}`;
+  }
+}
+
+// Touch event handlers for mobile support
+handleTouchStart(e) {
+  e.preventDefault(); // Prevent scrolling while interacting with progress bar
+  this.isDragging = true;
+  this.seekMusic(e);
+}
+
+handleTouchMove(e) {
+  if (!this.isDragging) return;
+  e.preventDefault();
+  this.seekMusic(e);
+}
+
+handleTouchEnd(e) {
+  this.isDragging = false;
+}
 
   addSongToLibrary() {
     const songName = this.elements.songNameInput.value.trim();
