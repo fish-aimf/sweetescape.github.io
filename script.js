@@ -26,6 +26,9 @@ class AdvancedMusicPlayer {
     this.originalTitle = document.title;
     this.allowDuplicates = true;
     this.isVideoFullscreen = false;
+    this.queue = [];
+    this.queueIndex = 0;
+    this.isQueueMode = false;
     this.pageDisguises = [
       {
         favicon: "https://i.ibb.co/W4MfKV9X/image.png",
@@ -70,28 +73,28 @@ class AdvancedMusicPlayer {
 
     this.recentlyPlayedPlaylists = [];
     this.initDatabase()
-      .then(() => {
-        return Promise.all([
-          this.loadSongLibrary(),
-          this.loadPlaylists(),
-          this.loadSettings(),
-          this.loadRecentlyPlayed(),
-        ]);
-      })
-      .then(() => {
-        this.setupYouTubePlayer();
-        this.initializeElements();
-        this.setupEventListeners();
-
-        this.initializeTheme();
-        this.setupKeyboardControls();
-        this.renderInitialState();
-        this.renderAdditionalDetails();
-        this.setupLyricsTabContextMenu();
-      })
-      .catch((error) => {
-        console.error("Error initializing music player:", error);
-      });
+            .then(() => {
+                return Promise.all([
+                    this.loadSongLibrary(),
+                    this.loadPlaylists(),
+                    this.loadSettings(),
+                    this.loadRecentlyPlayed()
+                ]);
+            })
+            .then(() => {
+                this.setupYouTubePlayer();
+                this.initializeElements();
+                this.setupEventListeners();
+                this.initializeTheme();
+                this.setupKeyboardControls();
+                this.renderInitialState();
+                this.renderAdditionalDetails();
+                this.setupLyricsTabContextMenu();
+                this.setupQueueEventListeners();
+            })
+            .catch((error) => {
+                console.error("Error initializing music player:", error);
+            });
   }
   initDatabase() {
     return new Promise((resolve, reject) => {
@@ -153,6 +156,10 @@ class AdvancedMusicPlayer {
       playlistSongsModal: document.getElementById("playlistSongsModal"),
       playlistSongsContent: document.getElementById("playlistSongsContent"),
       addSongToPlaylistBtn: document.getElementById("addSongToPlaylistBtn"),
+      queueIndicator: document.getElementById('queueIndicator'),
+      queueList: document.getElementById('queueList'),
+      queueCount: document.getElementById('queueCount'),
+      clearQueueBtn: document.getElementById('clearQueueBtn'),
       playlistSelectionForSong: document.getElementById(
         "playlistSelectionForSong"
       ),
@@ -782,34 +789,36 @@ handleTouchEnd(e) {
     }
   }
   createSongElement(song) {
-    const songElement = document.createElement("div");
-    songElement.classList.add("song-item");
-    songElement.innerHTML = `
-            <span class="song-name" data-song-id="${song.id}">
-                ${this.escapeHtml(song.name)}
-                ${
+      const songElement = document.createElement("div");
+      songElement.classList.add("song-item");
+      songElement.innerHTML = `
+          <span class="song-name" data-song-id="${song.id}">
+              ${this.escapeHtml(song.name)}
+              ${
                   song.author
-                    ? `<small style="color: var(--text-secondary); display: block; font-size: 0.4em;">by ${this.escapeHtml(
-                        song.author
+                      ? `<small style="color: var(--text-secondary); display: block; font-size: 0.4em;">by ${this.escapeHtml(
+                          song.author
                       )}</small>`
-                    : ""
-                }
-            </span>
-            <div class="song-actions">
-                <button class="favorite-btn" data-song-id="${song.id}">
-                    <i class="fa ${
+                      : ""
+              }
+          </span>
+          <div class="song-actions">
+              <button class="favorite-btn" data-song-id="${song.id}">
+                  <i class="fa ${
                       song.favorite ? "fa-star" : "fa-star-o"
-                    }"></i>
-                </button>
-                <button class="play-btn" data-song-id="${song.id}">Play</button>
-                <button class="remove-btn" data-song-id="${
-                  song.id
-                }">Remove</button>
-            </div>
-        `;
-
-    this.attachSongElementListeners(songElement, song);
-    return songElement;
+                  }"></i>
+              </button>
+              <button class="play-btn" data-song-id="${song.id}">Play</button>
+              <button class="queue-btn" data-song-id="${song.id}" title="Add to Queue">
+                  <i class="fa fa-plus"></i>
+              </button>
+              <button class="remove-btn" data-song-id="${song.id}">Remove</button>
+          </div>
+      `;
+  
+      this.attachSongElementListeners(songElement, song);
+      this.attachQueueContextMenu(songElement, song);
+      return songElement;
   }
 
   escapeHtml(text) {
@@ -817,29 +826,41 @@ handleTouchEnd(e) {
     div.textContent = text;
     return div.innerHTML;
   }
-  attachSongElementListeners(songElement, song) {
-    const favoriteBtn = songElement.querySelector(".favorite-btn");
-    const playBtn = songElement.querySelector(".play-btn");
-    const removeBtn = songElement.querySelector(".remove-btn");
-    const songNameSpan = songElement.querySelector(".song-name");
+    attachSongElementListeners(songElement, song) {
+        const favoriteBtn = songElement.querySelector(".favorite-btn");
+        const playBtn = songElement.querySelector(".play-btn");
+        const queueBtn = songElement.querySelector(".queue-btn");
+        const removeBtn = songElement.querySelector(".remove-btn");
+        const songNameSpan = songElement.querySelector(".song-name");
+    
+        favoriteBtn.addEventListener("click", () => this.toggleFavorite(song.id));
+        playBtn.addEventListener("click", () => this.playSong(song.id));
+        queueBtn.addEventListener("click", () => this.addSongToQueue(song.id));
+        removeBtn.addEventListener("click", () => this.removeSong(song.id));
+    
+        let clickTimeout;
+        songNameSpan.addEventListener("click", () => {
+            if (clickTimeout) {
+                clearTimeout(clickTimeout);
+                clickTimeout = null;
+                this.openSongEditModal(song.id);
+            } else {
+                clickTimeout = setTimeout(() => {
+                    clickTimeout = null;
+                }, 300);
+            }
+        });
+    }
 
-    favoriteBtn.addEventListener("click", () => this.toggleFavorite(song.id));
-    playBtn.addEventListener("click", () => this.playSong(song.id));
-    removeBtn.addEventListener("click", () => this.removeSong(song.id));
-
-    let clickTimeout;
-    songNameSpan.addEventListener("click", () => {
-      if (clickTimeout) {
-        clearTimeout(clickTimeout);
-        clickTimeout = null;
-        this.openSongEditModal(song.id);
-      } else {
-        clickTimeout = setTimeout(() => {
-          clickTimeout = null;
-        }, 300);
-      }
-    });
+  attachQueueContextMenu(songElement, song) {
+      songElement.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          this.addSongToQueue(song.id);
+          this.showQueueAddedMessage(`"${song.name}" added to queue`);
+      });
   }
+
+
   filterLibrarySongs() {
     const searchTerm = this.elements.librarySearch.value.toLowerCase();
     const songItems = this.elements.songLibrary.querySelectorAll(".song-item");
@@ -972,55 +993,63 @@ handleTouchEnd(e) {
       });
   }
   renderPlaylists() {
-    this.elements.playlistContainer.innerHTML = "";
-    const sortedPlaylists = [...this.playlists].sort((a, b) => {
-      if (a.position !== undefined && b.position !== undefined) {
-        return a.position - b.position;
-      }
-      return 0;
-    });
-
-    sortedPlaylists.forEach((playlist, index) => {
-      if (playlist.position === undefined) {
-        playlist.position = index;
-      }
-
-      const duration = this.getPlaylistDuration(playlist);
-
-      let durationText = "";
-      if (playlist.songs.length > 0) {
-        durationText = ` • ${duration}`;
-      }
-
-      const playlistElement = document.createElement("div");
-      playlistElement.classList.add("playlist-card");
-      playlistElement.dataset.playlistId = playlist.id;
-      playlistElement.dataset.position = playlist.position;
-      playlistElement.draggable = false;
-
-      playlistElement.innerHTML = `
-                <h3 class="playlist-name">${playlist.name}</h3>
-                <p>${playlist.songs.length} song${
-        playlist.songs.length !== 1 ? "s" : ""
-      }${durationText}</p>
-                <div class="playlist-actions">
-                    <button onclick="musicPlayer.openPlaylistEditModal(${
+      this.elements.playlistContainer.innerHTML = "";
+      const sortedPlaylists = [...this.playlists].sort((a, b) => {
+          if (a.position !== undefined && b.position !== undefined) {
+              return a.position - b.position;
+          }
+          return 0;
+      });
+      
+      sortedPlaylists.forEach((playlist, index) => {
+          if (playlist.position === undefined) {
+              playlist.position = index;
+          }
+          const duration = this.getPlaylistDuration(playlist);
+          let durationText = "";
+          if (playlist.songs.length > 0) {
+              durationText = ` • ${duration}`;
+          }
+          const playlistElement = document.createElement("div");
+          playlistElement.classList.add("playlist-card");
+          playlistElement.dataset.playlistId = playlist.id;
+          playlistElement.dataset.position = playlist.position;
+          playlistElement.draggable = false;
+          playlistElement.innerHTML = `
+              <h3 class="playlist-name">${playlist.name}</h3>
+              <p>${playlist.songs.length} song${
+                  playlist.songs.length !== 1 ? "s" : ""
+              }${durationText}</p>
+              <div class="playlist-actions">
+                  <button onclick="musicPlayer.openPlaylistEditModal(${
                       playlist.id
-                    })">Edit</button>
-                    <button onclick="musicPlayer.deletePlaylist(${
+                  })">Edit</button>
+                  <button onclick="musicPlayer.deletePlaylist(${
                       playlist.id
-                    })">Delete</button>
-                    <button onclick="musicPlayer.playPlaylist(${
+                  })">Delete</button>
+                  <button onclick="musicPlayer.playPlaylist(${
                       playlist.id
-                    })">Play</button>
-                </div>
-            `;
-
-      const playlistNameEl = playlistElement.querySelector(".playlist-name");
-      this.addHoldToDragHandler(playlistNameEl, playlistElement);
-
-      this.elements.playlistContainer.appendChild(playlistElement);
-    });
+                  })">Play</button>
+                  <button onclick="musicPlayer.addPlaylistToQueue(${
+                      playlist.id
+                  })" title="Add to Queue">
+                      <i class="fa fa-plus"></i> Queue
+                  </button>
+              </div>
+          `;
+          
+          const playlistNameEl = playlistElement.querySelector(".playlist-name");
+          this.addHoldToDragHandler(playlistNameEl, playlistElement);
+          
+          // Add right-click context menu for playlists
+          playlistElement.addEventListener('contextmenu', (e) => {
+              e.preventDefault();
+              this.addPlaylistToQueue(playlist.id);
+              this.showQueueAddedMessage(`Playlist "${playlist.name}" added to queue`);
+          });
+          
+          this.elements.playlistContainer.appendChild(playlistElement);
+      });
   }
   openPlaylistEditModal(playlistId) {
     const playlist = this.playlists.find((p) => p.id === playlistId);
@@ -1523,36 +1552,45 @@ handleTouchEnd(e) {
     }
   }
   playNextSong() {
-    const source = this.currentPlaylist
-      ? this.currentPlaylist.songs
-      : this.songLibrary;
-
-    if (!source.length) return;
-
-    if (this.currentPlaylist && this.temporarilySkippedSongs.size > 0) {
-      this.playNextNonSkippedSong();
-      return;
-    }
-
-    if (
-      this.currentSongIndex === source.length - 1 &&
-      !this.isPlaylistLooping
-    ) {
-      if (this.ytPlayer) {
-        this.ytPlayer.stopVideo();
-        this.isPlaying = false;
-        this.updatePlayerUI();
+      if (this.isQueueMode && this.playNextInQueue()) {
+          return;
       }
-      return;
-    } else {
-      this.currentSongIndex = (this.currentSongIndex + 1) % source.length;
-    }
-
-    if (this.currentPlaylist) {
-      this.playSongById(source[this.currentSongIndex].videoId);
-    } else {
-      this.playCurrentSong();
-    }
+      
+      const source = this.currentPlaylist
+          ? this.currentPlaylist.songs
+          : this.songLibrary;
+  
+      if (!source.length) return;
+  
+      if (this.currentPlaylist && this.temporarilySkippedSongs.size > 0) {
+          this.playNextNonSkippedSong();
+          return;
+      }
+  
+      if (
+          this.currentSongIndex === source.length - 1 &&
+          !this.isPlaylistLooping
+      ) {
+          if (this.queue.length > 0) {
+              this.playNextInQueue();
+              return;
+          }
+          
+          if (this.ytPlayer) {
+              this.ytPlayer.stopVideo();
+              this.isPlaying = false;
+              this.updatePlayerUI();
+          }
+          return;
+      } else {
+          this.currentSongIndex = (this.currentSongIndex + 1) % source.length;
+      }
+  
+      if (this.currentPlaylist) {
+          this.playSongById(source[this.currentSongIndex].videoId);
+      } else {
+          this.playCurrentSong();
+      }
   }
 
   playPreviousSong() {
@@ -5708,6 +5746,150 @@ handleTouchEnd(e) {
     }
   }
 
+
+  addSongToQueue(songId) {
+      const song = this.songLibrary.find(s => s.id === songId);
+      if (!song) return;
+      
+      this.queue.push({
+          type: 'song',
+          data: song,
+          id: song.id
+      });
+      
+      this.updateQueueDisplay();
+  }
+  
+  addPlaylistToQueue(playlistId) {
+      const playlist = this.playlists.find(p => p.id === playlistId);
+      if (!playlist) return;
+      
+      playlist.songs.forEach(song => {
+          this.queue.push({
+              type: 'song',
+              data: song,
+              id: song.videoId,
+              fromPlaylist: playlist.name
+          });
+      });
+      
+      this.updateQueueDisplay();
+  }
+  
+  removeFromQueue(index) {
+      this.queue.splice(index, 1);
+      if (this.queueIndex > index) {
+          this.queueIndex--;
+      }
+      this.updateQueueDisplay();
+  }
+  
+  clearQueue() {
+      this.queue = [];
+      this.queueIndex = 0;
+      this.isQueueMode = false;
+      this.updateQueueDisplay();
+  }
+  
+  playNextInQueue() {
+      if (this.queue.length === 0) {
+          this.isQueueMode = false;
+          return false;
+      }
+      
+      if (this.queueIndex >= this.queue.length) {
+          this.clearQueue();
+          return false;
+      }
+      
+      const queueItem = this.queue[this.queueIndex];
+      this.isQueueMode = true;
+      
+      if (queueItem.type === 'song') {
+          this.playSongById(queueItem.data.videoId);
+          this.currentSongIndex = this.songLibrary.findIndex(s => s.id === queueItem.data.id);
+      }
+      
+      this.queueIndex++;
+      this.updateQueueDisplay();
+      return true;
+  }
+  
+  updateQueueDisplay() {
+      if (!this.elements.queueIndicator) return;
+      
+      const queueCount = this.queue.length - this.queueIndex;
+      
+      if (queueCount > 0) {
+          this.elements.queueIndicator.style.display = 'block';
+          this.elements.queueCount.textContent = queueCount;
+          this.renderQueueList();
+      } else {
+          this.elements.queueIndicator.style.display = 'none';
+      }
+  }
+  
+  renderQueueList() {
+      if (!this.elements.queueList) return;
+      
+      this.elements.queueList.innerHTML = '';
+      
+      const remainingQueue = this.queue.slice(this.queueIndex);
+      
+      remainingQueue.forEach((queueItem, index) => {
+          const queueElement = document.createElement('div');
+          queueElement.classList.add('queue-item');
+          
+          const actualIndex = this.queueIndex + index;
+          const isNext = actualIndex === this.queueIndex;
+          
+          if (isNext) {
+              queueElement.classList.add('next-in-queue');
+          }
+          
+          queueElement.innerHTML = `
+              <div class="queue-item-info">
+                  <span class="queue-item-name">${queueItem.data.name}</span>
+                  ${queueItem.fromPlaylist ? `<small>from ${queueItem.fromPlaylist}</small>` : ''}
+              </div>
+              <button class="remove-queue-item" onclick="musicPlayer.removeFromQueue(${actualIndex})">
+                  <i class="fa fa-times"></i>
+              </button>
+          `;
+          
+          this.elements.queueList.appendChild(queueElement);
+      });
+  }
+  
+  showQueueAddedMessage(message) {
+      const messageEl = document.createElement('div');
+      messageEl.classList.add('queue-added-message');
+      messageEl.textContent = message;
+      messageEl.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: rgba(0, 0, 0, 0.8);
+          color: white;
+          padding: 10px 15px;
+          border-radius: 5px;
+          z-index: 10000;
+          font-size: 14px;
+          transition: opacity 0.3s ease;
+      `;
+      
+      document.body.appendChild(messageEl);
+      
+      setTimeout(() => {
+          messageEl.style.opacity = '0';
+          setTimeout(() => {
+              if (messageEl.parentNode) {
+                  messageEl.parentNode.removeChild(messageEl);
+              }
+          }, 300);
+      }, 2000);
+  }
+
   cleanup() {
   console.log("Starting cleanup process...");
 
@@ -5814,6 +5996,26 @@ removeModalElements() {
     }
   });
 }
+  setupQueueEventListeners() {
+      if (this.elements.clearQueueBtn) {
+          this.elements.clearQueueBtn.addEventListener('click', () => {
+              this.clearQueue();
+          });
+      }
+      
+      if (this.elements.queueIndicator) {
+          this.elements.queueIndicator.addEventListener('click', () => {
+              this.toggleQueueVisibility();
+          });
+      }
+  }
+  
+  toggleQueueVisibility() {
+      if (this.elements.queueList) {
+          const isVisible = this.elements.queueList.style.display === 'block';
+          this.elements.queueList.style.display = isVisible ? 'none' : 'block';
+      }
+  }
 
 removeEventListeners() {
   if (!this.elements) return;
