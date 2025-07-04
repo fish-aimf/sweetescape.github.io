@@ -788,38 +788,39 @@ handleTouchEnd(e) {
         '<div class="error-message">Failed to display song library</div>';
     }
   }
-  createSongElement(song) {
-      const songElement = document.createElement("div");
-      songElement.classList.add("song-item");
-      songElement.innerHTML = `
-          <span class="song-name" data-song-id="${song.id}">
-              ${this.escapeHtml(song.name)}
-              ${
-                  song.author
-                      ? `<small style="color: var(--text-secondary); display: block; font-size: 0.4em;">by ${this.escapeHtml(
-                          song.author
-                      )}</small>`
-                      : ""
-              }
-          </span>
-          <div class="song-actions">
-              <button class="favorite-btn" data-song-id="${song.id}">
-                  <i class="fa ${
-                      song.favorite ? "fa-star" : "fa-star-o"
-                  }"></i>
-              </button>
-              <button class="play-btn" data-song-id="${song.id}">Play</button>
-              <button class="queue-btn" data-song-id="${song.id}" title="Add to Queue">
-                  <i class="fa fa-plus"></i>
-              </button>
-              <button class="remove-btn" data-song-id="${song.id}">Remove</button>
-          </div>
-      `;
-  
-      this.attachSongElementListeners(songElement, song);
-      this.attachQueueContextMenu(songElement, song);
-      return songElement;
-  }
+    createSongElement(song) {
+        const songElement = document.createElement("div");
+        songElement.classList.add("song-item");
+        songElement.innerHTML = `
+            <span class="song-name" data-song-id="${song.id}">
+                ${this.escapeHtml(song.name)}
+                ${
+                    song.author
+                        ? `<small style="color: var(--text-secondary); display: block; font-size: 0.4em;">by ${this.escapeHtml(
+                            song.author
+                        )}</small>`
+                        : ""
+                }
+            </span>
+            <div class="song-actions">
+                <button class="favorite-btn" data-song-id="${song.id}">
+                    <i class="fa ${
+                        song.favorite ? "fa-star" : "fa-star-o"
+                    }"></i>
+                </button>
+                <button class="play-btn" data-song-id="${song.id}">Play</button>
+                <button class="queue-btn" data-song-id="${song.id}" title="Add to Queue">
+                    <i class="fa fa-plus"></i>
+                </button>
+                <button class="remove-btn" data-song-id="${song.id}">Remove</button>
+            </div>
+        `;
+    
+        this.attachSongElementListeners(songElement, song);
+        this.attachQueueContextMenu(songElement, song);
+        return songElement;
+    }
+
 
   escapeHtml(text) {
     const div = document.createElement("div");
@@ -1551,48 +1552,38 @@ handleTouchEnd(e) {
       console.error("Error toggling play/pause:", error);
     }
   }
-  playNextSong() {
-      if (this.isQueueMode && this.playNextInQueue()) {
-          return;
-      }
-      
-      const source = this.currentPlaylist
-          ? this.currentPlaylist.songs
-          : this.songLibrary;
-  
-      if (!source.length) return;
-  
-      if (this.currentPlaylist && this.temporarilySkippedSongs.size > 0) {
-          this.playNextNonSkippedSong();
-          return;
-      }
-  
-      if (
-          this.currentSongIndex === source.length - 1 &&
-          !this.isPlaylistLooping
-      ) {
-          if (this.queue.length > 0) {
-              this.playNextInQueue();
-              return;
-          }
-          
-          if (this.ytPlayer) {
-              this.ytPlayer.stopVideo();
-              this.isPlaying = false;
-              this.updatePlayerUI();
-          }
-          return;
-      } else {
-          this.currentSongIndex = (this.currentSongIndex + 1) % source.length;
-      }
-  
-      if (this.currentPlaylist) {
-          this.playSongById(source[this.currentSongIndex].videoId);
-      } else {
-          this.playCurrentSong();
-      }
-  }
+playNextSong() {
+    const source = this.currentPlaylist
+      ? this.currentPlaylist.songs
+      : this.songLibrary;
 
+    if (!source.length) return;
+
+    if (this.currentPlaylist && this.temporarilySkippedSongs.size > 0) {
+      this.playNextNonSkippedSong();
+      return;
+    }
+
+    if (
+      this.currentSongIndex === source.length - 1 &&
+      !this.isPlaylistLooping
+    ) {
+      if (this.ytPlayer) {
+        this.ytPlayer.stopVideo();
+        this.isPlaying = false;
+        this.updatePlayerUI();
+      }
+      return;
+    } else {
+      this.currentSongIndex = (this.currentSongIndex + 1) % source.length;
+    }
+
+    if (this.currentPlaylist) {
+      this.playSongById(source[this.currentSongIndex].videoId);
+    } else {
+      this.playCurrentSong();
+    }
+  }
   playPreviousSong() {
     const source = this.currentPlaylist
       ? this.currentPlaylist.songs
@@ -1893,6 +1884,12 @@ handleTouchEnd(e) {
       if (document.getElementById("lyrics").classList.contains("active")) {
         this.renderLyricsTab();
       }
+      if (event.data === YT.PlayerState.ENDED) {
+        // Check if there are items in queue first
+        if (this.queue.length > 0 && this.queueIndex < this.queue.length) {
+            this.playNextInQueue();
+            return;
+        }
     }
   }
 
