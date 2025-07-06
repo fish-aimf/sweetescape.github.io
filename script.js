@@ -262,6 +262,12 @@ class AdvancedMusicPlayer {
     this.addQueueStyles();
     this.handlePlaylistDragStart = this.handlePlaylistDragStart.bind(this);
     this.handlePlaylistDragOver = this.handlePlaylistDragOver.bind(this);
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key === 'q') {
+          e.preventDefault();
+          this.showQueueOverlay();
+        }
+      });
 
     document.addEventListener('contextmenu', (e) => {
     if (e.target.classList.contains('play-btn') || 
