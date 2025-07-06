@@ -685,13 +685,7 @@ handleTouchMove(e) {
 handleTouchEnd(e) {
   this.isDragging = false;
 }
-com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
 
-      fetch(url)
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("Failed to fetch video info");
-          }
   addSongToLibrary() {
     const songName = this.elements.songNameInput.value.trim();
     const songAuthor = this.elements.songAuthorInput.value.trim();
