@@ -27,15 +27,6 @@ class AdvancedMusicPlayer {
     this.originalTitle = document.title;
     this.allowDuplicates = true;
     this.isVideoFullscreen = false;
-    this.isPipActive = false;//delete
-    this.pipDragData = { isDragging: false, startX: 0, startY: 0, startLeft: 0, startTop: 0 };//delete
-    this.isPipActive = false;
-    this.pipVideo = null;
-    this.pipCanvas = null;
-    this.pipContext = null;
-    this.pipAnimationFrame = null;
-    this.pipAutoToggle = true;
-    
     this.pageDisguises = [
       {
         favicon: "https://i.ibb.co/W4MfKV9X/image.png",
@@ -163,11 +154,6 @@ class AdvancedMusicPlayer {
       loopPlaylistBtn: document.getElementById("loopPlaylistBtn"),
       playlistSongsModal: document.getElementById("playlistSongsModal"),
       playlistSongsContent: document.getElementById("playlistSongsContent"),
-      
-
-      pipToggle: document.getElementById("pipToggle"),
-        pipVideo: document.getElementById("pipVideo"),
-        pipCanvas: document.getElementById("pipCanvas"),
       addSongToPlaylistBtn: document.getElementById("addSongToPlaylistBtn"),
       playlistSelectionForSong: document.getElementById(
         "playlistSelectionForSong"
@@ -216,10 +202,6 @@ class AdvancedMusicPlayer {
       lyricsTab: document.querySelector('.tab[data-tab="lyrics"]'),
       lyricsPane: document.getElementById("lyrics"),
     };
-
-    this.pipVideo = this.elements.pipVideo;
-    this.pipCanvas = this.elements.pipCanvas;
-    this.pipContext = this.pipCanvas.getContext('2d');
     if (this.elements.speedBtn) {
       this.elements.speedBtn.textContent = this.currentSpeed + "x";
     }
@@ -280,36 +262,7 @@ class AdvancedMusicPlayer {
     this.addQueueStyles();
     this.handlePlaylistDragStart = this.handlePlaylistDragStart.bind(this);
     this.handlePlaylistDragOver = this.handlePlaylistDragOver.bind(this);
-    if (this.elements.pipToggle) {
-        this.elements.pipToggle.addEventListener("click", () => this.togglePiP());
-    }
     
-    // PiP video event listeners
-    if (this.pipVideo) {
-        this.pipVideo.addEventListener('enterpictureinpicture', () => {
-            this.isPipActive = true;
-            this.updatePipToggleButton();
-            this.startPipRendering();
-        });
-        
-        this.pipVideo.addEventListener('leavepictureinpicture', () => {
-            this.isPipActive = false;
-            this.updatePipToggleButton();
-            this.stopPipRendering();
-        });
-    }
-    
-    // Auto-toggle PiP when tab becomes hidden
-    document.addEventListener('visibilitychange', () => {
-        if (this.pipAutoToggle && this.isPlaying) {
-            if (document.hidden && !this.isPipActive) {
-                this.enterPiP();
-            }
-        }
-    });
-    
-    // Setup Media Session API
-    this.setupMediaSession();
 
     document.addEventListener('contextmenu', (e) => {
     if (e.target.classList.contains('play-btn') || 
@@ -464,12 +417,14 @@ setupKeyboardControls() {
       return;
     }
     
+    // Handle 'y' key for queue overlay
     if (e.key.toLowerCase() === "y") {
       e.preventDefault();
       this.showQueueOverlay();
       return;
     }
     
+    // Prevent default for specific keys
     if (
       [
         "Space",
@@ -497,6 +452,7 @@ setupKeyboardControls() {
       e.preventDefault();
     }
     
+    // Handle keyboard shortcuts
     switch (e.code) {
       case "Space":
       case "KeyK":
@@ -1813,9 +1769,6 @@ updatePlayerUI() {
         this.elements.nextSongName.textContent = nextSong.name;
       }
     }
-    if (this.isPipActive) {
-        this.syncPipControls();
-    }
   }
   
   const playPauseIcon = this.elements.playPauseBtn.querySelector("i");
@@ -1828,14 +1781,6 @@ updatePlayerUI() {
     this.renderPlaylistSidebar();
   }
   this.updatePageTitle();
-
-
-  if (this.isPipActive && this.elements.pipProgressBar) {
-        this.elements.pipProgressBar.value = this.elements.progressBar.value;
-        if (this.elements.pipTimeDisplay) {
-            this.elements.pipTimeDisplay.textContent = this.elements.timeDisplay.textContent;
-        }
-    }
 }
   escapeJsString(str) {
     if (!str) return "";
@@ -6118,301 +6063,6 @@ addQueueStyles() {
     }
   `;
   document.head.appendChild(style);
-}
-
-async togglePiP() {
-    if (!('pictureInPictureEnabled' in document)) {
-        alert('Picture-in-Picture is not supported in this browser');
-        return;
-    }
-    
-    try {
-        if (this.isPipActive) {
-            await document.exitPictureInPicture();
-        } else {
-            await this.enterPiP();
-        }
-    } catch (error) {
-        console.error('Error toggling Picture-in-Picture:', error);
-    }
-}
-
-async enterPiP() {
-    if (!('pictureInPictureEnabled' in document)) {
-        return;
-    }
-    
-    try {
-        // Create a MediaStream from the canvas
-        const stream = this.pipCanvas.captureStream(30); // 30 fps
-        this.pipVideo.srcObject = stream;
-        await this.pipVideo.play();
-        
-        // Start rendering the PiP content
-        this.renderPipContent();
-        
-        // Enter Picture-in-Picture mode
-        await this.pipVideo.requestPictureInPicture();
-        
-    } catch (error) {
-        console.error('Error entering Picture-in-Picture:', error);
-    }
-}
-
-updatePipToggleButton() {
-    const pipIcon = this.elements.pipToggle.querySelector("i");
-    if (pipIcon) {
-        pipIcon.classList.remove("fa-external-link-alt", "fa-compress");
-        pipIcon.classList.add(this.isPipActive ? "fa-compress" : "fa-external-link-alt");
-    }
-}
-
-startPipRendering() {
-    this.renderPipContent();
-}
-
-stopPipRendering() {
-    if (this.pipAnimationFrame) {
-        cancelAnimationFrame(this.pipAnimationFrame);
-        this.pipAnimationFrame = null;
-    }
-}
-
-renderPipContent() {
-    if (!this.isPipActive) return;
-    
-    const ctx = this.pipContext;
-    const canvas = this.pipCanvas;
-    
-    // Clear canvas with background
-    ctx.fillStyle = '#2c3e50';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw current song info
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 16px Arial';
-    ctx.textAlign = 'center';
-    
-    const currentSong = this.elements.currentSongName.textContent;
-    this.drawWrappedText(ctx, currentSong, canvas.width / 2, 30, canvas.width - 20, 18);
-    
-    // Draw artist/next song
-    ctx.font = '12px Arial';
-    ctx.fillStyle = '#bdc3c7';
-    const nextSong = `Next: ${this.elements.nextSongName.textContent}`;
-    this.drawWrappedText(ctx, nextSong, canvas.width / 2, 55, canvas.width - 20, 14);
-    
-    // Draw progress bar
-    this.drawProgressBar(ctx, canvas.width, canvas.height);
-    
-    // Draw time
-    ctx.font = '11px Arial';
-    ctx.fillStyle = '#ecf0f1';
-    ctx.fillText(this.elements.timeDisplay.textContent, canvas.width / 2, canvas.height - 15);
-    
-    // Draw play/pause icon
-    this.drawPlayPauseIcon(ctx, canvas.width, canvas.height);
-    
-    // Continue rendering
-    this.pipAnimationFrame = requestAnimationFrame(() => this.renderPipContent());
-}
-
-drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
-    const words = text.split(' ');
-    let line = '';
-    
-    for (let n = 0; n < words.length; n++) {
-        const testLine = line + words[n] + ' ';
-        const metrics = ctx.measureText(testLine);
-        
-        if (metrics.width > maxWidth && n > 0) {
-            ctx.fillText(line, x, y);
-            line = words[n] + ' ';
-            y += lineHeight;
-        } else {
-            line = testLine;
-        }
-    }
-    ctx.fillText(line, x, y);
-}
-
-drawProgressBar(ctx, width, height) {
-    const barY = height - 50;
-    const barWidth = width - 40;
-    const barHeight = 3;
-    const barX = 20;
-    
-    // Background
-    ctx.fillStyle = '#34495e';
-    ctx.fillRect(barX, barY, barWidth, barHeight);
-    
-    // Progress
-    const progress = this.elements.progressBar.value / 100;
-    ctx.fillStyle = '#3498db';
-    ctx.fillRect(barX, barY, barWidth * progress, barHeight);
-    
-    // Progress thumb
-    const thumbX = barX + (barWidth * progress);
-    ctx.beginPath();
-    ctx.arc(thumbX, barY + barHeight / 2, 4, 0, 2 * Math.PI);
-    ctx.fillStyle = '#ffffff';
-    ctx.fill();
-}
-
-drawPlayPauseIcon(ctx, width, height) {
-    const centerX = width / 2;
-    const centerY = height - 30;
-    
-    ctx.fillStyle = '#3498db';
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, 12, 0, 2 * Math.PI);
-    ctx.fill();
-    
-    ctx.fillStyle = '#ffffff';
-    if (this.isPlaying) {
-        // Draw pause icon
-        ctx.fillRect(centerX - 3, centerY - 5, 2, 10);
-        ctx.fillRect(centerX + 1, centerY - 5, 2, 10);
-    } else {
-        // Draw play icon
-        ctx.beginPath();
-        ctx.moveTo(centerX - 3, centerY - 5);
-        ctx.lineTo(centerX - 3, centerY + 5);
-        ctx.lineTo(centerX + 5, centerY);
-        ctx.closePath();
-        ctx.fill();
-    }
-}
-
-// Media Session API setup
-setupMediaSession() {
-    if ('mediaSession' in navigator) {
-        // Set up media session metadata
-        this.updateMediaSessionMetadata();
-        
-        // Set up media session action handlers
-        navigator.mediaSession.setActionHandler('play', () => {
-            this.togglePlayPause();
-        });
-        
-        navigator.mediaSession.setActionHandler('pause', () => {
-            this.togglePlayPause();
-        });
-        
-        navigator.mediaSession.setActionHandler('previoustrack', () => {
-            this.playPreviousSong();
-        });
-        
-        navigator.mediaSession.setActionHandler('nexttrack', () => {
-            this.playNextSong();
-        });
-        
-        navigator.mediaSession.setActionHandler('seekbackward', (details) => {
-            if (this.ytPlayer) {
-                const currentTime = this.ytPlayer.getCurrentTime();
-                this.ytPlayer.seekTo(Math.max(0, currentTime - (details.seekOffset || 10)), true);
-            }
-        });
-        
-        navigator.mediaSession.setActionHandler('seekforward', (details) => {
-            if (this.ytPlayer) {
-                const currentTime = this.ytPlayer.getCurrentTime();
-                const duration = this.ytPlayer.getDuration();
-                this.ytPlayer.seekTo(Math.min(duration, currentTime + (details.seekOffset || 10)), true);
-            }
-        });
-        
-        navigator.mediaSession.setActionHandler('seekto', (details) => {
-            if (this.ytPlayer && details.seekTime) {
-                this.ytPlayer.seekTo(details.seekTime, true);
-            }
-        });
-    }
-}
-
-updateMediaSessionMetadata() {
-    if ('mediaSession' in navigator) {
-        const currentSong = this.getCurrentSong();
-        if (currentSong) {
-            navigator.mediaSession.metadata = new MediaMetadata({
-                title: currentSong.name,
-                artist: currentSong.author || 'Unknown Artist',
-                album: this.currentPlaylist ? this.currentPlaylist.name : 'Music Player',
-                artwork: [
-                    { src: `https://img.youtube.com/vi/${currentSong.videoId}/maxresdefault.jpg`, sizes: '1280x720', type: 'image/jpeg' },
-                    { src: `https://img.youtube.com/vi/${currentSong.videoId}/hqdefault.jpg`, sizes: '480x360', type: 'image/jpeg' },
-                    { src: `https://img.youtube.com/vi/${currentSong.videoId}/mqdefault.jpg`, sizes: '320x180', type: 'image/jpeg' }
-                ]
-            });
-        }
-    }
-}
-
-updateMediaSessionPlaybackState() {
-    if ('mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = this.isPlaying ? 'playing' : 'paused';
-    }
-}
-
-updateMediaSessionPositionState() {
-    if ('mediaSession' in navigator && this.ytPlayer) {
-        try {
-            const duration = this.ytPlayer.getDuration();
-            const currentTime = this.ytPlayer.getCurrentTime();
-            
-            if (duration && currentTime !== undefined) {
-                navigator.mediaSession.setPositionState({
-                    duration: duration,
-                    playbackRate: this.currentSpeed || 1,
-                    position: currentTime
-                });
-            }
-        } catch (error) {
-            // Ignore errors in position state updates
-        }
-    }
-}
-
-getCurrentSong() {
-    if (this.currentPlaylist && this.currentPlaylist.songs[this.currentSongIndex]) {
-        return this.currentPlaylist.songs[this.currentSongIndex];
-    } else if (this.songLibrary[this.currentSongIndex]) {
-        return this.songLibrary[this.currentSongIndex];
-    }
-    return null;
-}
-
-// Update your existing methods to work with Media Session
-
-// Update your existing updatePlayerUI method
-updatePlayerUI() {
-    // ... existing updatePlayerUI code ...
-    
-    // Update media session
-    this.updateMediaSessionMetadata();
-    this.updateMediaSessionPlaybackState();
-    this.updateMediaSessionPositionState();
-}
-
-// Update your existing onPlayerStateChange method
-onPlayerStateChange(event) {
-    // ... existing onPlayerStateChange code ...
-    
-    // Update media session playback state
-    this.updateMediaSessionPlaybackState();
-    
-    if (event.data === YT.PlayerState.PLAYING) {
-        // ... existing playing code ...
-        this.updateMediaSessionPositionState();
-    }
-}
-
-// Update your existing updateProgressBar method
-updateProgressBar() {
-    // ... existing updateProgressBar code ...
-    
-    // Update media session position
-    this.updateMediaSessionPositionState();
 }
 
   
