@@ -17,7 +17,6 @@ class AdvancedMusicPlayer {
     this.listeningTimeDisplay = document.getElementById("listeningTime");
     this.currentSpeed = 1;
     this.temporarilySkippedSongs = new Set();
-    this.songQueue = [];
     this.recentlyPlayedLimit = 20;
     this.longPressTimer = null;
     this.titleScrollInterval = null;
@@ -80,9 +79,7 @@ class AdvancedMusicPlayer {
         ]);
       })
       .then(() => {
-        this.loadQueue();
         this.setupYouTubePlayer();
-        
         this.initializeElements();
         this.setupEventListeners();
 
@@ -269,28 +266,6 @@ class AdvancedMusicPlayer {
     this.handleCloseLibraryModal = this.closeLibraryModal.bind(this);
     this.handleToggleControlBar = this.toggleControlBar.bind(this);
     this.handleToggleTheme = this.toggleTheme.bind(this);
-
-    // Add right-click listeners for play buttons
-    document.addEventListener('contextmenu', (e) => {
-      if (e.target.classList.contains('play-btn') || e.target.closest('.play-btn')) {
-        e.preventDefault();
-        
-        // Get song data from the button's parent element
-        const songElement = e.target.closest('[data-song-id]') || e.target.closest('[data-playlist-id]');
-        
-        if (songElement.dataset.songId) {
-          // Individual song
-          const song = this.songLibrary.find(s => s.id == songElement.dataset.songId);
-          if (song) this.addToQueue(song);
-        } else if (songElement.dataset.playlistId) {
-          // Playlist - add all songs
-          const playlist = this.playlists.find(p => p.id == songElement.dataset.playlistId);
-          if (playlist) {
-            playlist.songs.forEach(song => this.addToQueue(song));
-          }
-        }
-      }
-    });
 
     this.handleToggleSpeedOptions = this.toggleSpeedOptions.bind(this);
     this.handleSpeedOptionClick = (e) =>
@@ -612,6 +587,7 @@ updateProgressBar() {
     this.progressInterval = null;
   }
   
+  // Reduced interval for smoother updates (500ms instead of 1000ms)
   this.progressInterval = setInterval(() => {
     try {
       if (
@@ -753,7 +729,13 @@ handleTouchEnd(e) {
 
   fetchYouTubeTitle(videoId) {
     return new Promise((resolve, reject) => {
-      const url = `https://www.youtube.
+      const url = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
+
+      fetch(url)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Failed to fetch video info");
+          }
           return response.json();
         })
         .then((data) => {
@@ -1632,21 +1614,17 @@ handleTouchEnd(e) {
     this.currentSongIndex = index;
     this.playSongById(song.videoId);
   }
-updatePlayerUI() {
-  const source = this.currentPlaylist
-    ? this.currentPlaylist.songs
-    : this.songLibrary;
-  if (!source.length) return;
-  
-  const currentSong = source[this.currentSongIndex];
-  this.elements.currentSongName.textContent = currentSong.name;
-  
-  // Show next song from queue if available
-  const nextSong = this.getNextSong();
-  if (this.songQueue.length > 0) {
-    this.elements.nextSongName.textContent = nextSong.name;
-  } else {
-    // Keep existing next song logic here
+
+  updatePlayerUI() {
+    const source = this.currentPlaylist
+      ? this.currentPlaylist.songs
+      : this.songLibrary;
+
+    if (!source.length) return;
+
+    const currentSong = source[this.currentSongIndex];
+    this.elements.currentSongName.textContent = currentSong.name;
+
     if (this.isLooping) {
       this.elements.nextSongName.textContent = currentSong.name;
     } else if (
@@ -1686,18 +1664,14 @@ updatePlayerUI() {
         this.elements.nextSongName.textContent = nextSong.name;
       }
     }
+    const playPauseIcon = this.elements.playPauseBtn.querySelector("i");
+    playPauseIcon.classList.remove("fa-play", "fa-pause");
+    playPauseIcon.classList.add(this.isPlaying ? "fa-pause" : "fa-play");
+    if (this.currentPlaylist && this.isSidebarVisible) {
+      this.renderPlaylistSidebar();
+    }
+    this.updatePageTitle();
   }
-  
-  const playPauseIcon = this.elements.playPauseBtn.querySelector("i");
-  playPauseIcon.classList.remove("fa-play", "fa-pause");
-  playPauseIcon.classList.add(this.isPlaying ? "fa-pause" : "fa-play");
-  
-  if (this.currentPlaylist && this.isSidebarVisible) {
-    this.renderPlaylistSidebar();
-  }
-  
-  this.updatePageTitle();
-}
   escapeJsString(str) {
     if (!str) return "";
     return str
@@ -1838,60 +1812,52 @@ updatePlayerUI() {
         rel: 0,
       },
       events: {
-        onPlayerStateChange: this.onPlayerStateChange.bind(this),
+        onStateChange: this.onPlayerStateChange.bind(this),
       },
     });
   }
 
-onPlayerStateChange(event) {
-  if (event.data === YT.PlayerState.ENDED) {
-    if (this.isLooping) {
-      this.playSongById(
-        this.currentPlaylist
-          ? this.currentPlaylist.songs[this.currentSongIndex].videoId
-          : this.songLibrary[this.currentSongIndex].videoId
-      );
-    } else {
-      // When song ends, play next from queue
-      if (this.songQueue.length > 0) {
-        const nextSong = this.songQueue.shift(); // Remove first song from queue
-        this.saveQueue();
-        this.playSongById(nextSong.videoId);
-        this.updateQueueVisualIndicators();
+  onPlayerStateChange(event) {
+    if (event.data === YT.PlayerState.ENDED) {
+      if (this.isLooping) {
+        this.playSongById(
+          this.currentPlaylist
+            ? this.currentPlaylist.songs[this.currentSongIndex].videoId
+            : this.songLibrary[this.currentSongIndex].videoId
+        );
       } else {
-        // Use existing next song logic
         this.playNextSong();
       }
-    }
-    if (this.elements.progressBar) {
-      this.elements.progressBar.value = 0;
-    }
-  } else if (event.data === YT.PlayerState.PAUSED) {
-    this.isPlaying = false;
-    this.updatePlayerUI();
-    if (this.titleScrollInterval) {
-      clearInterval(this.titleScrollInterval);
-      document.title = `Music - ${this.elements.currentSongName.textContent}`;
-    }
-    if (this.progressInterval) {
-      clearInterval(this.progressInterval);
-    }
-    if (this.lyricsInterval) {
-      clearInterval(this.lyricsInterval);
-    }
-  } else if (event.data === YT.PlayerState.PLAYING) {
-    this.isPlaying = true;
-    this.updatePlayerUI();
-    if (this.currentSpeed !== 1) {
-      this.ytPlayer.setPlaybackRate(this.currentSpeed);
-    }
-    this.updateProgressBar();
-    this.startListeningTimeTracking();
-    if (document.getElementById("lyrics").classList.contains("active")) {
-      this.renderLyricsTab();
+      if (this.elements.progressBar) {
+        this.elements.progressBar.value = 0;
+      }
+    } else if (event.data === YT.PlayerState.PAUSED) {
+      this.isPlaying = false;
+      this.updatePlayerUI();
+      if (this.titleScrollInterval) {
+        clearInterval(this.titleScrollInterval);
+        document.title = `Music - ${this.elements.currentSongName.textContent}`;
+      }
+      if (this.progressInterval) {
+        clearInterval(this.progressInterval);
+      }
+      if (this.lyricsInterval) {
+        clearInterval(this.lyricsInterval);
+      }
+    } else if (event.data === YT.PlayerState.PLAYING) {
+      this.isPlaying = true;
+      this.updatePlayerUI();
+      if (this.currentSpeed !== 1) {
+        this.ytPlayer.setPlaybackRate(this.currentSpeed);
+      }
+      this.updateProgressBar();
+      this.startListeningTimeTracking();
+      if (document.getElementById("lyrics").classList.contains("active")) {
+        this.renderLyricsTab();
+      }
     }
   }
-}
+
   toggleLoop() {
     this.isLooping = !this.isLooping;
     this.elements.loopBtn.classList.toggle("active", this.isLooping);
@@ -5390,7 +5356,7 @@ onPlayerStateChange(event) {
           controls: 1,
         },
         events: {
-          onPlayerStateChange: (event) => {
+          onStateChange: (event) => {
             if (event.data === YT.PlayerState.PLAYING) {
               clearInterval(state.timeUpdateInterval);
               state.timeUpdateInterval = setInterval(() => {
@@ -5741,64 +5707,6 @@ onPlayerStateChange(event) {
       hintEl.style.display = "none";
     }
   }
-
-
-  // Add song to queue
-addToQueue(song) {
-  this.songQueue.push({
-    ...song,
-    queueId: Date.now() + Math.random()
-  });
-  this.saveQueue();
-  this.updateQueueVisualIndicators();
-}
-
-// Remove song from queue
-removeFromQueue(queueId) {
-  this.songQueue = this.songQueue.filter(item => item.queueId !== queueId);
-  this.saveQueue();
-  this.updateQueueVisualIndicators();
-}
-
-// Save queue to session storage
-saveQueue() {
-  sessionStorage.setItem('musicPlayerQueue', JSON.stringify(this.songQueue));
-}
-
-// Load queue from session storage
-loadQueue() {
-  const saved = sessionStorage.getItem('musicPlayerQueue');
-  this.songQueue = saved ? JSON.parse(saved) : [];
-}
-
-// Get next song (queue takes priority)
-getNextSong() {
-  if (this.songQueue.length > 0) {
-    return this.songQueue[0];
-  }
-  // Return normal next song logic
-  const source = this.currentPlaylist ? this.currentPlaylist.songs : this.songLibrary;
-  const nextIndex = (this.currentSongIndex + 1) % source.length;
-  return source[nextIndex];
-}
-
-updateQueueVisualIndicators() {
-  // Remove existing indicators
-  document.querySelectorAll('.queue-indicator').forEach(el => el.remove());
-  
-  // Add indicators for songs in queue
-  this.songQueue.forEach((queueSong, index) => {
-    const songElements = document.querySelectorAll(`[data-video-id="${queueSong.videoId}"]`);
-    songElements.forEach(element => {
-      const indicator = document.createElement('span');
-      indicator.className = 'queue-indicator';
-      indicator.textContent = `${index + 1}`;
-      indicator.style.cssText = 'position:absolute;top:0;right:0;background:#ff6b6b;color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:12px;';
-      element.style.position = 'relative';
-      element.appendChild(indicator);
-    });
-  });
-}
 
   cleanup() {
   console.log("Starting cleanup process...");
