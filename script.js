@@ -6105,6 +6105,27 @@ addQueueStyles() {
       this.ytPlayer = null;
     }
   }
+    // Clean up YouTube player
+if (this.ytPlayer) {
+  try {
+    if (typeof this.ytPlayer.destroy === "function") {
+      this.ytPlayer.destroy();
+    } else if (typeof this.ytPlayer.stopVideo === "function") {
+      this.ytPlayer.stopVideo();
+    }
+  } catch (error) {
+    console.warn("Error destroying YouTube player:", error);
+  } finally {
+    this.ytPlayer = null;
+  }
+}
+
+// 🔥 Add this to completely remove the DOM node and break lingering references
+const ytPlayerEl = document.getElementById("ytPlayer");
+if (ytPlayerEl && ytPlayerEl.parentNode) {
+  ytPlayerEl.parentNode.removeChild(ytPlayerEl);
+}
+
 
   // Restore original page appearance
   this.restoreOriginalPageState();
