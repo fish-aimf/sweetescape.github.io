@@ -27,6 +27,8 @@ class AdvancedMusicPlayer {
     this.originalTitle = document.title;
     this.allowDuplicates = true;
     this.isVideoFullscreen = false;
+    this.isPipActive = false;
+    this.pipDragData = { isDragging: false, startX: 0, startY: 0, startLeft: 0, startTop: 0 };
     this.pageDisguises = [
       {
         favicon: "https://i.ibb.co/W4MfKV9X/image.png",
@@ -154,6 +156,19 @@ class AdvancedMusicPlayer {
       loopPlaylistBtn: document.getElementById("loopPlaylistBtn"),
       playlistSongsModal: document.getElementById("playlistSongsModal"),
       playlistSongsContent: document.getElementById("playlistSongsContent"),
+      pipToggle: document.getElementById("pipToggle"),
+      pipWindow: document.getElementById("pipWindow"),
+      pipClose: document.getElementById("pipClose"),
+      pipReturn: document.getElementById("pipReturn"),
+      pipCurrentSong: document.getElementById("pipCurrentSong"),
+      pipNextSong: document.getElementById("pipNextSong"),
+      pipPrevBtn: document.getElementById("pipPrevBtn"),
+      pipPlayPauseBtn: document.getElementById("pipPlayPauseBtn"),
+      pipNextBtn: document.getElementById("pipNextBtn"),
+      pipLoopBtn: document.getElementById("pipLoopBtn"),
+      pipProgressBar: document.getElementById("pipProgressBar"),
+      pipTimeDisplay: document.getElementById("pipTimeDisplay"),
+      pipVolumeSlider: document.getElementById("pipVolumeSlider"),
       addSongToPlaylistBtn: document.getElementById("addSongToPlaylistBtn"),
       playlistSelectionForSong: document.getElementById(
         "playlistSelectionForSong"
@@ -262,6 +277,52 @@ class AdvancedMusicPlayer {
     this.addQueueStyles();
     this.handlePlaylistDragStart = this.handlePlaylistDragStart.bind(this);
     this.handlePlaylistDragOver = this.handlePlaylistDragOver.bind(this);
+    if (this.elements.pipToggle) {
+        this.elements.pipToggle.addEventListener("click", () => this.togglePiP());
+    }
+    
+    if (this.elements.pipClose) {
+        this.elements.pipClose.addEventListener("click", () => this.closePiP());
+    }
+    
+    if (this.elements.pipReturn) {
+        this.elements.pipReturn.addEventListener("click", () => this.returnToMainWindow());
+    }
+    
+    // PiP control listeners
+    if (this.elements.pipPrevBtn) {
+        this.elements.pipPrevBtn.addEventListener("click", () => this.playPreviousSong());
+    }
+    
+    if (this.elements.pipPlayPauseBtn) {
+        this.elements.pipPlayPauseBtn.addEventListener("click", () => this.togglePlayPause());
+    }
+    
+    if (this.elements.pipNextBtn) {
+        this.elements.pipNextBtn.addEventListener("click", () => this.playNextSong());
+    }
+    
+    if (this.elements.pipLoopBtn) {
+        this.elements.pipLoopBtn.addEventListener("click", () => this.toggleLoop());
+    }
+    
+    if (this.elements.pipProgressBar) {
+        this.elements.pipProgressBar.addEventListener("input", (e) => this.seekMusicPiP(e));
+    }
+    
+    if (this.elements.pipVolumeSlider) {
+        this.elements.pipVolumeSlider.addEventListener("input", (e) => this.setVolume(e.target.value));
+    }
+    
+    // Make PiP window draggable
+    this.setupPipDragging();
+    
+    // Handle visibility change to auto-toggle PiP
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden && this.isPlaying && !this.isPipActive) {
+            this.togglePiP();
+        }
+    });
     
 
     document.addEventListener('contextmenu', (e) => {
@@ -417,14 +478,12 @@ setupKeyboardControls() {
       return;
     }
     
-    // Handle 'y' key for queue overlay
     if (e.key.toLowerCase() === "y") {
       e.preventDefault();
       this.showQueueOverlay();
       return;
     }
     
-    // Prevent default for specific keys
     if (
       [
         "Space",
@@ -452,7 +511,6 @@ setupKeyboardControls() {
       e.preventDefault();
     }
     
-    // Handle keyboard shortcuts
     switch (e.code) {
       case "Space":
       case "KeyK":
@@ -1769,6 +1827,9 @@ updatePlayerUI() {
         this.elements.nextSongName.textContent = nextSong.name;
       }
     }
+    if (this.isPipActive) {
+        this.syncPipControls();
+    }
   }
   
   const playPauseIcon = this.elements.playPauseBtn.querySelector("i");
@@ -1781,6 +1842,14 @@ updatePlayerUI() {
     this.renderPlaylistSidebar();
   }
   this.updatePageTitle();
+
+
+  if (this.isPipActive && this.elements.pipProgressBar) {
+        this.elements.pipProgressBar.value = this.elements.progressBar.value;
+        if (this.elements.pipTimeDisplay) {
+            this.elements.pipTimeDisplay.textContent = this.elements.timeDisplay.textContent;
+        }
+    }
 }
   escapeJsString(str) {
     if (!str) return "";
@@ -6064,6 +6133,138 @@ addQueueStyles() {
   `;
   document.head.appendChild(style);
 }
+
+  togglePiP() {
+    if (this.isPipActive) {
+        this.closePiP();
+    } else {
+        this.openPiP();
+    }
+}
+
+openPiP() {
+    this.isPipActive = true;
+    this.elements.pipWindow.style.display = "block";
+    document.body.classList.add("pip-active");
+    this.syncPipControls();
+    
+    // Update PiP toggle button icon
+    const pipIcon = this.elements.pipToggle.querySelector("i");
+    if (pipIcon) {
+        pipIcon.classList.remove("fa-external-link-alt");
+        pipIcon.classList.add("fa-compress");
+    }
+}
+
+closePiP() {
+    this.isPipActive = false;
+    this.elements.pipWindow.style.display = "none";
+    document.body.classList.remove("pip-active");
+    
+    // Update PiP toggle button icon
+    const pipIcon = this.elements.pipToggle.querySelector("i");
+    if (pipIcon) {
+        pipIcon.classList.remove("fa-compress");
+        pipIcon.classList.add("fa-external-link-alt");
+    }
+}
+
+returnToMainWindow() {
+    this.closePiP();
+    // Focus the main window
+    window.focus();
+}
+
+syncPipControls() {
+    if (!this.isPipActive) return;
+    
+    // Update song info
+    this.elements.pipCurrentSong.textContent = this.elements.currentSongName.textContent;
+    this.elements.pipNextSong.textContent = "Next: " + this.elements.nextSongName.textContent;
+    
+    // Update play/pause button
+    const mainPlayIcon = this.elements.playPauseBtn.querySelector("i");
+    const pipPlayIcon = this.elements.pipPlayPauseBtn.querySelector("i");
+    if (mainPlayIcon && pipPlayIcon) {
+        pipPlayIcon.className = mainPlayIcon.className;
+    }
+    
+    // Update loop button
+    const pipLoopIcon = this.elements.pipLoopBtn.querySelector("i");
+    if (pipLoopIcon) {
+        pipLoopIcon.style.color = this.isLooping ? "#3498db" : "";
+    }
+    
+    // Update progress bar
+    this.elements.pipProgressBar.value = this.elements.progressBar.value;
+    
+    // Update time display
+    this.elements.pipTimeDisplay.textContent = this.elements.timeDisplay.textContent;
+    
+    // Update volume slider
+    this.elements.pipVolumeSlider.value = this.elements.volumeSlider.value;
+}
+
+seekMusicPiP(e) {
+    if (!this.ytPlayer) return;
+    
+    const duration = this.ytPlayer.getDuration();
+    const seekTime = (duration * e.target.value) / 100;
+    this.ytPlayer.seekTo(seekTime, true);
+    
+    // Update main progress bar too
+    this.elements.progressBar.value = e.target.value;
+    
+    // Update time displays
+    if (this.elements.timeDisplay && this.elements.pipTimeDisplay) {
+        const formattedCurrentTime = this.formatTime(seekTime);
+        const formattedDuration = this.formatTime(duration);
+        const timeText = `${formattedCurrentTime}/${formattedDuration}`;
+        this.elements.timeDisplay.textContent = timeText;
+        this.elements.pipTimeDisplay.textContent = timeText;
+    }
+}
+
+setupPipDragging() {
+    const pipHeader = this.elements.pipWindow.querySelector(".pip-header");
+    
+    pipHeader.addEventListener("mousedown", (e) => {
+        this.pipDragData.isDragging = true;
+        this.pipDragData.startX = e.clientX;
+        this.pipDragData.startY = e.clientY;
+        
+        const rect = this.elements.pipWindow.getBoundingClientRect();
+        this.pipDragData.startLeft = rect.left;
+        this.pipDragData.startTop = rect.top;
+        
+        this.elements.pipWindow.classList.add("dragging");
+        e.preventDefault();
+    });
+    
+    document.addEventListener("mousemove", (e) => {
+        if (!this.pipDragData.isDragging) return;
+        
+        const deltaX = e.clientX - this.pipDragData.startX;
+        const deltaY = e.clientY - this.pipDragData.startY;
+        
+        const newLeft = this.pipDragData.startLeft + deltaX;
+        const newTop = this.pipDragData.startTop + deltaY;
+        
+        // Keep window within viewport
+        const maxLeft = window.innerWidth - this.elements.pipWindow.offsetWidth;
+        const maxTop = window.innerHeight - this.elements.pipWindow.offsetHeight;
+        
+        this.elements.pipWindow.style.left = Math.max(0, Math.min(newLeft, maxLeft)) + "px";
+        this.elements.pipWindow.style.top = Math.max(0, Math.min(newTop, maxTop)) + "px";
+        this.elements.pipWindow.style.right = "auto";
+    });
+    
+    document.addEventListener("mouseup", () => {
+        this.pipDragData.isDragging = false;
+        this.elements.pipWindow.classList.remove("dragging");
+    });
+}
+
 
   
 
