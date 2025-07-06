@@ -11,6 +11,9 @@
 
 <body>
     <div class="app-container">
+        <button id="pipToggle" title="Picture in Picture">
+            <i class="fas fa-external-link-alt"></i>
+        </button>
         <div class="theme-toggle">
             <button id="themeToggle">
                 <i class="fas fa-moon"></i>
@@ -306,6 +309,38 @@
     </div>
     
     <div id="ytPlayer"></div>
+
+
+    <div id="pipWindow" class="pip-window" style="display: none;">
+            <div class="pip-header">
+                <span class="pip-title">Music Player</span>
+                <button id="pipClose" class="pip-close">×</button>
+                <button id="pipReturn" class="pip-return" title="Return to Main Window">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+            </div>
+            <div class="pip-content">
+                <div class="pip-song-info">
+                    <div id="pipCurrentSong">No Song Playing</div>
+                    <div id="pipNextSong">Next: -</div>
+                </div>
+                <div class="pip-controls">
+                    <button id="pipPrevBtn"><i class="fas fa-step-backward"></i></button>
+                    <button id="pipPlayPauseBtn"><i class="fas fa-play"></i></button>
+                    <button id="pipNextBtn"><i class="fas fa-step-forward"></i></button>
+                    <button id="pipLoopBtn"><i class="fas fa-redo"></i></button>
+                </div>
+                <div class="pip-progress">
+                    <input type="range" id="pipProgressBar" min="0" max="100" value="0" step="0.1">
+                    <div id="pipTimeDisplay">0:00/0:00</div>
+                </div>
+                <div class="pip-volume">
+                    <i class="fas fa-volume-down"></i>
+                    <input type="range" id="pipVolumeSlider" min="0" max="100" value="50">
+                    <i class="fas fa-volume-up"></i>
+                </div>
+            </div>
+        </div>
     
     <div class="watermark">Made by fishareverysmart</div>
     <script src="https://www.youtube.com/iframe_api"></script>
