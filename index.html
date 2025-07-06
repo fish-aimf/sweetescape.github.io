@@ -341,7 +341,12 @@
                 </div>
             </div>
         </div>
+    <video id="pipVideo" style="display: none;" width="320" height="180" muted playsinline>
+    <!-- Empty video element for PiP -->
+    </video>
     
+    <!-- Add this canvas element for generating the PiP content -->
+    <canvas id="pipCanvas" style="display: none;" width="320" height="180"></canvas>
     <div class="watermark">Made by fishareverysmart</div>
     <script src="https://www.youtube.com/iframe_api"></script>
     <script src="script.js"></script>
