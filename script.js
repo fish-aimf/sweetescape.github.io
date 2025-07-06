@@ -1,501 +1,448 @@
 class AdvancedMusicPlayer {
   constructor() {
-    this.playlists = [];
-    this.songLibrary = [];
-    this.songQueue = [];
-    this.db = null;
-    this.isPlaylistLooping = true;
-    this.currentPlaylist = null;
-    this.currentSongIndex = 0;
-    this.ytPlayer = null;
-    this.isPlaying = false;
-    this.isLooping = false;
-    this.progressBar = null;
-    this.progressInterval = null;
-    this.isSidebarVisible = false;
-    this.listeningTime = 0;
-    this.listeningTimeInterval = null;
-    this.listeningTimeDisplay = document.getElementById("listeningTime");
-    this.currentSpeed = 1;
-    this.temporarilySkippedSongs = new Set();
-    this.recentlyPlayedLimit = 20;
-    this.longPressTimer = null;
-    this.titleScrollInterval = null;
-    this.isLongPressing = false;
-    this.originalFavicon =
-      document.querySelector('link[rel="icon"]')?.href || "/favicon.ico";
-    this.originalTitle = document.title;
-    this.allowDuplicates = true;
-    this.isVideoFullscreen = false;
-    this.pageDisguises = [
-      {
-        favicon: "https://i.ibb.co/W4MfKV9X/image.png",
-        title: "WhatsApp",
-        isPriority: true,
-      },
-      {
-        favicon: "https://i.ibb.co/Y77XtqRh/image.png",
-        title: "Inbox (78) - Gmail",
-        isPriority: true,
-      },
-      {
-        favicon: "https://i.ibb.co/fV4bT2Fp/image.png",
-        title: "DeepSeek - Into the Unknown",
-        isPriority: true,
-      },
-      {
-        favicon: "https://i.ibb.co/35hmFHPL/image.png",
-        title: "Home",
-        isPriority: true,
-      },
-      {
-        favicon: "https://i.ibb.co/35MNf3BZ/image.png",
-        title: "New Tab",
-        isPriority: true,
-      },
-      {
-        favicon: "https://i.ibb.co/vCKb51GK/image.png",
-        title: "ChatGPT",
-        isPriority: true,
-      },
-      {
-        favicon: "https://i.ibb.co/xtwTzMvz/image.png",
-        title: "Home | Microsoft 365 Copilot",
-        isPriority: true,
-      },
-    ];
-    this.currentDisguiseIndex = -1;
-    this.priorityModeActive = false;
-    this.titleObserver = null;
-    this.recentlyPlayedSongs = [];
-
-    this.recentlyPlayedPlaylists = [];
-    this.initDatabase()
-      .then(() => {
-        return Promise.all([
-          this.loadSongLibrary(),
-          this.loadPlaylists(),
-          this.loadSettings(),
-          this.loadRecentlyPlayed(),
-        ]);
-      })
-      .then(() => {
-        this.setupYouTubePlayer();
-        this.loadQueue();
-        this.initializeElements();
-        this.setupEventListeners();
-
-        this.initializeTheme();
-        this.setupKeyboardControls();
-        this.renderInitialState();
-        this.renderAdditionalDetails();
-        this.setupLyricsTabContextMenu();
-      })
-      .catch((error) => {
-        console.error("Error initializing music player:", error);
-      });
+    // Core player state
+    this.initializePlayerState();
+    
+    // UI state and configuration
+    this.initializeUIState();
+    
+    // Page disguise functionality
+    this.initializePageDisguises();
+    
+    // Initialize the player
+    this.initialize();
   }
+
+  initializePlayerState() {
+    Object.assign(this, {
+      playlists: [],
+      songLibrary: [],
+      songQueue: [],
+      recentlyPlayedSongs: [],
+      recentlyPlayedPlaylists: [],
+      db: null,
+      ytPlayer: null,
+      currentPlaylist: null,
+      currentSongIndex: 0,
+      currentSpeed: 1,
+      listeningTime: 0,
+      recentlyPlayedLimit: 20,
+      isPlaying: false,
+      isLooping: false,
+      isPlaylistLooping: true,
+      allowDuplicates: true,
+      isVideoFullscreen: false,
+      temporarilySkippedSongs: new Set()
+    });
+  }
+
+  initializeUIState() {
+    Object.assign(this, {
+      progressBar: null,
+      progressInterval: null,
+      listeningTimeInterval: null,
+      listeningTimeDisplay: document.getElementById("listeningTime"),
+      isSidebarVisible: false,
+      longPressTimer: null,
+      titleScrollInterval: null,
+      isLongPressing: false,
+      titleObserver: null,
+      currentTabIndex: 0,
+      originalFavicon: document.querySelector('link[rel="icon"]')?.href || "/favicon.ico",
+      originalTitle: document.title,
+      currentDisguiseIndex: -1,
+      priorityModeActive: false
+    });
+  }
+
+  initializePageDisguises() {
+    this.pageDisguises = [
+      { favicon: "https://i.ibb.co/W4MfKV9X/image.png", title: "WhatsApp", isPriority: true },
+      { favicon: "https://i.ibb.co/Y77XtqRh/image.png", title: "Inbox (78) - Gmail", isPriority: true },
+      { favicon: "https://i.ibb.co/fV4bT2Fp/image.png", title: "DeepSeek - Into the Unknown", isPriority: true },
+      { favicon: "https://i.ibb.co/35hmFHPL/image.png", title: "Home", isPriority: true },
+      { favicon: "https://i.ibb.co/35MNf3BZ/image.png", title: "New Tab", isPriority: true },
+      { favicon: "https://i.ibb.co/vCKb51GK/image.png", title: "ChatGPT", isPriority: true },
+      { favicon: "https://i.ibb.co/xtwTzMvz/image.png", title: "Home | Microsoft 365 Copilot", isPriority: true }
+    ];
+  }
+
+  async initialize() {
+    try {
+      await this.initDatabase();
+      await Promise.all([
+        this.loadSongLibrary(),
+        this.loadPlaylists(),
+        this.loadSettings(),
+        this.loadRecentlyPlayed()
+      ]);
+      
+      this.setupYouTubePlayer();
+      this.loadQueue();
+      this.initializeElements();
+      this.setupEventListeners();
+      this.initializeTheme();
+      this.setupKeyboardControls();
+      this.renderInitialState();
+      this.renderAdditionalDetails();
+      this.setupLyricsTabContextMenu();
+    } catch (error) {
+      console.error("Error initializing music player:", error);
+    }
+  }
+
   initDatabase() {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open("MusicPlayerDB", 1);
-
+      
       request.onerror = (event) => {
         console.error("IndexedDB error:", event.target.error);
         reject("Could not open IndexedDB");
       };
-
+      
       request.onsuccess = (event) => {
         this.db = event.target.result;
         resolve();
       };
-
+      
       request.onupgradeneeded = (event) => {
         const db = event.target.result;
-        if (!db.objectStoreNames.contains("songLibrary")) {
-          db.createObjectStore("songLibrary", { keyPath: "id" });
-        }
-
-        if (!db.objectStoreNames.contains("playlists")) {
-          db.createObjectStore("playlists", { keyPath: "id" });
-        }
-
-        if (!db.objectStoreNames.contains("settings")) {
-          db.createObjectStore("settings", { keyPath: "name" });
-        }
-
-        if (!db.objectStoreNames.contains("recentlyPlayed")) {
-          db.createObjectStore("recentlyPlayed", { keyPath: "type" });
-        }
+        const stores = ["songLibrary", "playlists", "settings", "recentlyPlayed"];
+        const keyPaths = { songLibrary: "id", playlists: "id", settings: "name", recentlyPlayed: "type" };
+        
+        stores.forEach(store => {
+          if (!db.objectStoreNames.contains(store)) {
+            db.createObjectStore(store, { keyPath: keyPaths[store] });
+          }
+        });
       };
     });
   }
 
   initializeElements() {
-    this.elements = {
-      songNameInput: document.getElementById("songName"),
-      songAuthorInput: document.getElementById("songAuthor"),
-      songUrlInput: document.getElementById("songUrl"),
-      addSongBtn: document.getElementById("addSongBtn"),
-      songLibrary: document.getElementById("songLibrary"),
-      librarySearch: document.getElementById("librarySearch"),
-      toggleControlBarBtn: document.getElementById("toggleControlBarBtn"),
-      additionalDetails: document.getElementById("additionalDetails"),
-      newPlaylistName: document.getElementById("newPlaylistName"),
-      createPlaylistBtn: document.getElementById("createPlaylistBtn"),
-      playlistContainer: document.getElementById("playlistContainer"),
-      timeDisplay: document.getElementById("timeDisplay"),
-      playlistEditModal: document.getElementById("playlistEditModal"),
-      closePlaylistModalBtn: document.getElementById("closePlaylistModal"),
-      currentPlaylistName: document.getElementById("currentPlaylistName"),
-      searchSongsToAdd: document.getElementById("searchSongsToAdd"),
-      librarySearchResults: document.getElementById("librarySearchResults"),
-      currentPlaylistSongs: document.getElementById("currentPlaylistSongs"),
-      playlistTotalDuration: document.getElementById("playlistTotalDuration"),
-      loopPlaylistBtn: document.getElementById("loopPlaylistBtn"),
-      playlistSongsModal: document.getElementById("playlistSongsModal"),
-      playlistSongsContent: document.getElementById("playlistSongsContent"),
-      addSongToPlaylistBtn: document.getElementById("addSongToPlaylistBtn"),
-      playlistSelectionForSong: document.getElementById(
-        "playlistSelectionForSong"
-      ),
+    // Core input elements
+    const inputElements = {
+      songNameInput: "songName",
+      songAuthorInput: "songAuthor", 
+      songUrlInput: "songUrl",
+      librarySearch: "librarySearch",
+      newPlaylistName: "newPlaylistName",
+      searchSongsToAdd: "searchSongsToAdd"
+    };
 
-      importLibraryBtn: document.getElementById("importLibraryBtn"),
-      exportLibraryBtn: document.getElementById("exportLibraryBtn"),
-      modifyLibraryBtn: document.getElementById("modifyLibraryBtn"),
-      libraryModificationModal: document.getElementById(
-        "libraryModificationModal"
-      ),
-      closeLibraryModalBtn: document.getElementById("closeLibraryModal"),
-      songNameInput: document.getElementById("songName"),
-      songUrlInput: document.getElementById("songUrl"),
-      addSongBtn: document.getElementById("addSongBtn"),
-      songLibrary: document.getElementById("songLibrary"),
-      librarySearch: document.getElementById("librarySearch"),
-      importLibraryBtn: document.getElementById("importLibraryBtn"),
-      exportLibraryBtn: document.getElementById("exportLibraryBtn"),
+    // Button elements
+    const buttonElements = {
+      addSongBtn: "addSongBtn",
+      createPlaylistBtn: "createPlaylistBtn",
+      toggleControlBarBtn: "toggleControlBarBtn",
+      closePlaylistModalBtn: "closePlaylistModal",
+      addSongToPlaylistBtn: "addSongToPlaylistBtn",
+      importLibraryBtn: "importLibraryBtn",
+      exportLibraryBtn: "exportLibraryBtn",
+      modifyLibraryBtn: "modifyLibraryBtn",
+      closeLibraryModalBtn: "closeLibraryModal",
+      playPauseBtn: "playPauseBtn",
+      prevBtn: "prevBtn",
+      nextBtn: "nextBtn",
+      loopBtn: "loopBtn",
+      showPlaylistBtn: "showPlaylistBtn",
+      closeSidebarBtn: "closeSidebarBtn",
+      loopPlaylistBtn: "loopPlaylistBtn",
+      speedBtn: "speedBtn",
+      themeToggle: "themeToggle"
+    };
 
-      progressBar: document.getElementById("musicProgressBar"),
-      currentSongName: document.getElementById("currentSongName"),
-      nextSongName: document.getElementById("nextSongName"),
-      playPauseBtn: document.getElementById("playPauseBtn"),
-      prevBtn: document.getElementById("prevBtn"),
-      nextBtn: document.getElementById("nextBtn"),
-      loopBtn: document.getElementById("loopBtn"),
-      showPlaylistBtn: document.getElementById("showPlaylistBtn"),
-      volumeSlider: document.getElementById("volumeSlider"),
-      currentPlaylistSidebar: document.getElementById("currentPlaylistSidebar"),
-      sidebarPlaylistName: document.getElementById("sidebarPlaylistName"),
-      sidebarPlaylistSongs: document.getElementById("sidebarPlaylistSongs"),
-      closeSidebarBtn: document.getElementById("closeSidebarBtn"),
-      youtubeSearchSuggestion: document.getElementById(
-        "youtubeSearchSuggestion"
-      ),
-      listeningTimeDisplay: document.getElementById("listeningTime"),
-      speedBtn: document.getElementById("speedBtn"),
-      speedOptions: document.getElementById("speedOptions"),
+    // Display elements
+    const displayElements = {
+      songLibrary: "songLibrary",
+      additionalDetails: "additionalDetails",
+      playlistContainer: "playlistContainer",
+      timeDisplay: "timeDisplay",
+      currentPlaylistName: "currentPlaylistName",
+      librarySearchResults: "librarySearchResults",
+      currentPlaylistSongs: "currentPlaylistSongs",
+      playlistTotalDuration: "playlistTotalDuration",
+      playlistSongsContent: "playlistSongsContent",
+      playlistSelectionForSong: "playlistSelectionForSong",
+      currentSongName: "currentSongName",
+      nextSongName: "nextSongName",
+      sidebarPlaylistName: "sidebarPlaylistName",
+      sidebarPlaylistSongs: "sidebarPlaylistSongs",
+      youtubeSearchSuggestion: "youtubeSearchSuggestion",
+      listeningTimeDisplay: "listeningTime",
+      speedOptions: "speedOptions"
+    };
 
-      tabs: document.querySelectorAll(".tab"),
-      tabPanes: document.querySelectorAll(".tab-pane"),
-      themeToggle: document.getElementById("themeToggle"),
+    // Modal elements
+    const modalElements = {
+      playlistEditModal: "playlistEditModal",
+      playlistSongsModal: "playlistSongsModal",
+      libraryModificationModal: "libraryModificationModal",
+      currentPlaylistSidebar: "currentPlaylistSidebar"
+    };
+
+    // Control elements
+    const controlElements = {
+      progressBar: "musicProgressBar",
+      volumeSlider: "volumeSlider",
       tabs: document.querySelectorAll(".tab"),
       tabPanes: document.querySelectorAll(".tab-pane"),
       lyricsTab: document.querySelector('.tab[data-tab="lyrics"]'),
-      lyricsPane: document.getElementById("lyrics"),
+      lyricsPane: "lyrics"
     };
+
+    // Combine all elements
+    this.elements = {};
+    [inputElements, buttonElements, displayElements, modalElements, controlElements].forEach(elementGroup => {
+      Object.entries(elementGroup).forEach(([key, value]) => {
+        this.elements[key] = typeof value === 'string' ? document.getElementById(value) : value;
+      });
+    });
+
+    // Initialize speed button display
     if (this.elements.speedBtn) {
       this.elements.speedBtn.textContent = this.currentSpeed + "x";
     }
 
+    // Handle control bar visibility
+    this.handleControlBarVisibility();
+  }
+
+  handleControlBarVisibility() {
     const controlBarVisible = localStorage.getItem("controlBarVisible");
     if (controlBarVisible === "false") {
-      const controlBarContainer = document
-        .querySelector(".player-controls")
-        .closest(".player-container");
-      const targetElement =
-        controlBarContainer ||
-        document.querySelector(".player-controls").parentElement;
+      const controlBarContainer = document.querySelector(".player-controls").closest(".player-container");
+      const targetElement = controlBarContainer || document.querySelector(".player-controls").parentElement;
       const layoutToggleBtn = document.querySelector(".layout-toggle-button");
-      targetElement.style.visibility = "hidden";
-      targetElement.style.position = "absolute";
-      targetElement.style.pointerEvents = "none";
+      
+      Object.assign(targetElement.style, {
+        visibility: "hidden",
+        position: "absolute",
+        pointerEvents: "none"
+      });
 
       if (layoutToggleBtn && !targetElement.contains(layoutToggleBtn)) {
-        layoutToggleBtn.style.visibility = "visible";
-        layoutToggleBtn.style.position = "";
-        layoutToggleBtn.style.pointerEvents = "auto";
+        Object.assign(layoutToggleBtn.style, {
+          visibility: "visible",
+          position: "",
+          pointerEvents: "auto"
+        });
       }
     }
   }
 
   setupEventListeners() {
-    this.handleAddSong = this.addSongToLibrary.bind(this);
+    // Bind handler methods
+    this.bindHandlerMethods();
+    
+    // Setup special event listeners
+    this.setupSpecialEventListeners();
+    
+    // Setup main event bindings
+    this.setupMainEventBindings();
+    
+    // Setup additional listeners
+    this.setupAdditionalListeners();
+  }
+
+  bindHandlerMethods() {
+    const handlers = [
+      'handleAddSong', 'handleFilterLibrary', 'handleCreatePlaylist', 'handleClosePlaylistModal',
+      'handleSearchSongsToAdd', 'handleAddSongToPlaylist', 'handleSeekMusic', 'handleTogglePlayPause',
+      'handlePlayPrevious', 'handlePlayNext', 'handleToggleLoop', 'handlePlaylistDragStart',
+      'handlePlaylistDragOver', 'handlePlaylistDrop', 'handleToggleSidebar', 'handleOpenLibraryModal',
+      'handleCloseLibraryModal', 'handleToggleControlBar', 'handleToggleTheme', 'handleToggleSpeedOptions',
+      'handleImportLibrary', 'handleExportLibrary', 'handleTogglePlaylistLoop', 'handleSongUrlInput'
+    ];
+
+    handlers.forEach(handler => {
+      const methodName = handler.replace('handle', '').charAt(0).toLowerCase() + handler.replace('handle', '').slice(1);
+      this[handler] = this[methodName] ? this[methodName].bind(this) : (() => {});
+    });
+
+    // Special handlers
+    this.handleLibrarySearchKeydown = (e) => {
+      if (e.key === "Enter" && this.elements.youtubeSearchSuggestion.style.display !== "none") {
+        this.searchYouTube(this.elements.librarySearch.value.trim());
+      }
+    };
+
+    this.handleVolumeChange = (e) => this.setVolume(e.target.value);
+    this.handleSpeedOptionClick = (e) => this.setPlaybackSpeed(parseFloat(e.target.dataset.speed));
+    this.handleSongUrlKeydown = (e) => e.key === "Enter" && this.addSongToLibrary();
+    this.handleNewPlaylistNameKeydown = (e) => e.key === "Enter" && this.createPlaylist();
+  }
+
+  setupSpecialEventListeners() {
+    // URL paste handler
+    if (this.elements.songUrlInput) {
+      this.elements.songUrlInput.addEventListener("paste", (e) => {
+        setTimeout(() => this.handleUrlPaste(), 10);
+      });
+    }
+
+    // Search songs to add handler
     if (this.elements.searchSongsToAdd) {
       this.elements.searchSongsToAdd.addEventListener("input", () => {
         this.searchSongsToAddToPlaylist();
       });
     }
-    this.handleFilterLibrary = this.filterLibrarySongs.bind(this);
-    this.handleLibrarySearchKeydown = (e) => {
-      if (
-        e.key === "Enter" &&
-        this.elements.youtubeSearchSuggestion.style.display !== "none"
-      ) {
-        this.searchYouTube(this.elements.librarySearch.value.trim());
-      }
-    };
-    if (this.elements.songUrlInput) {
-      this.elements.songUrlInput.addEventListener("paste", (e) => {
-        setTimeout(() => {
-          this.handleUrlPaste();
-        }, 10);
-      });
-    }
-    this.handleCreatePlaylist = this.createPlaylist.bind(this);
-    this.handleClosePlaylistModal = this.closePlaylistModal.bind(this);
-    this.handleSearchSongsToAdd = this.searchSongsToAddToPlaylist.bind(this);
-    this.handleAddSongToPlaylist = this.addSongToSelectedPlaylist.bind(this);
-    this.handleSeekMusic = this.seekMusic.bind(this);
-    this.handleTogglePlayPause = this.togglePlayPause.bind(this);
-    this.handlePlayPrevious = this.playPreviousSong.bind(this);
-    this.handlePlayNext = this.playNextSong.bind(this);
-    this.handleToggleLoop = this.toggleLoop.bind(this);
-    this.addQueueStyles();
-    this.handlePlaylistDragStart = this.handlePlaylistDragStart.bind(this);
-    this.handlePlaylistDragOver = this.handlePlaylistDragOver.bind(this);
-    document.addEventListener('keydown', (e) => {
-        if (e.ctrlKey && e.key === 'q') {
-          e.preventDefault();
-          this.showQueueOverlay();
-        }
-      });
 
-    document.addEventListener('contextmenu', (e) => {
+    // Context menu for queue functionality
+    document.addEventListener('contextmenu', (e) => this.handleContextMenu(e));
+    
+    // Queue overlay keyboard shortcut
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'n') {
+        e.preventDefault();
+        this.showQueueOverlay();
+      }
+    });
+
+    this.addQueueStyles();
+  }
+
+  handleContextMenu(e) {
     if (e.target.classList.contains('play-btn') || 
         e.target.closest('.play-btn') || 
         e.target.onclick?.toString().includes('playSong') ||
         e.target.onclick?.toString().includes('playPlaylist')) {
-      e.preventDefault();
       
-      // Get song data from the button's parent element or onclick attribute
+      e.preventDefault();
       const songElement = e.target.closest('[data-song-id]') || e.target.closest('[data-playlist-id]');
       
-      if (songElement && songElement.dataset.songId) {
-        // Individual song
+      if (songElement?.dataset.songId) {
         const song = this.songLibrary.find(s => s.id == songElement.dataset.songId);
         if (song) this.addToQueue(song);
-      } else if (songElement && songElement.dataset.playlistId) {
-        // Playlist - add all songs
+      } else if (songElement?.dataset.playlistId) {
         const playlist = this.playlists.find(p => p.id == songElement.dataset.playlistId);
-        if (playlist) {
-          playlist.songs.forEach(song => this.addToQueue(song));
-        }
+        if (playlist) playlist.songs.forEach(song => this.addToQueue(song));
       } else {
-        // Try to extract from onclick attribute
-        const onclickStr = e.target.onclick?.toString() || e.target.closest('button')?.onclick?.toString();
-        if (onclickStr) {
-          const songIdMatch = onclickStr.match(/playSong\((\d+)\)/);
-          const playlistIdMatch = onclickStr.match(/playPlaylist\((\d+)\)/);
-          
-          if (songIdMatch) {
-            const song = this.songLibrary.find(s => s.id == parseInt(songIdMatch[1]));
-            if (song) this.addToQueue(song);
-          } else if (playlistIdMatch) {
-            const playlist = this.playlists.find(p => p.id == parseInt(playlistIdMatch[1]));
-            if (playlist) {
-              playlist.songs.forEach(song => this.addToQueue(song));
-            }
-          }
-        }
+        this.handleOnclickContextMenu(e);
       }
     }
-  });
-    this.handlePlaylistDrop = this.handlePlaylistDrop.bind(this);
-    this.handleVolumeChange = (e) => this.setVolume(e.target.value);
-    this.handleToggleSidebar = this.togglePlaylistSidebar.bind(this);
-    this.handleOpenLibraryModal = this.openLibraryModal.bind(this);
-    this.handleCloseLibraryModal = this.closeLibraryModal.bind(this);
-    this.handleToggleControlBar = this.toggleControlBar.bind(this);
-    this.handleToggleTheme = this.toggleTheme.bind(this);
+  }
 
-    this.handleToggleSpeedOptions = this.toggleSpeedOptions.bind(this);
-    this.handleSpeedOptionClick = (e) =>
-      this.setPlaybackSpeed(parseFloat(e.target.dataset.speed));
-    this.handleImportLibrary = this.showImportModal.bind(this);
-    this.handleExportLibrary = this.exportLibrary.bind(this);
-    this.handleTogglePlaylistLoop = this.togglePlaylistLoop.bind(this);
-    this.handleSongUrlInput = this.validateYouTubeUrl.bind(this);
+  handleOnclickContextMenu(e) {
+    const onclickStr = e.target.onclick?.toString() || e.target.closest('button')?.onclick?.toString();
+    if (onclickStr) {
+      const songIdMatch = onclickStr.match(/playSong\((\d+)\)/);
+      const playlistIdMatch = onclickStr.match(/playPlaylist\((\d+)\)/);
+      
+      if (songIdMatch) {
+        const song = this.songLibrary.find(s => s.id == parseInt(songIdMatch[1]));
+        if (song) this.addToQueue(song);
+      } else if (playlistIdMatch) {
+        const playlist = this.playlists.find(p => p.id == parseInt(playlistIdMatch[1]));
+        if (playlist) playlist.songs.forEach(song => this.addToQueue(song));
+      }
+    }
+  }
 
-    this.setupExportButtonListeners();
-    this.handleSongUrlKeydown = (e) => {
-      if (e.key === "Enter") {
-        this.addSongToLibrary();
-      }
-    };
-    this.handleNewPlaylistNameKeydown = (e) => {
-      if (e.key === "Enter") {
-        this.createPlaylist();
-      }
-    };
+  setupMainEventBindings() {
     const eventBindings = [
-      [this.elements.toggleControlBarBtn, "click", this.handleToggleControlBar],
+      // Library and playlist management
+      [this.elements.addSongBtn, "click", this.handleAddSong],
+      [this.elements.createPlaylistBtn, "click", this.handleCreatePlaylist],
+      [this.elements.closePlaylistModalBtn, "click", this.handleClosePlaylistModal],
+      [this.elements.addSongToPlaylistBtn, "click", this.handleAddSongToPlaylist],
       [this.elements.modifyLibraryBtn, "click", this.handleOpenLibraryModal],
-      [
-        this.elements.closeLibraryModalBtn,
-        "click",
-        this.handleCloseLibraryModal,
-      ],
+      [this.elements.closeLibraryModalBtn, "click", this.handleCloseLibraryModal],
       [this.elements.importLibraryBtn, "click", this.handleImportLibrary],
       [this.elements.exportLibraryBtn, "click", this.handleExportLibrary],
       [this.elements.loopPlaylistBtn, "click", this.handleTogglePlaylistLoop],
-      [this.elements.addSongBtn, "click", this.handleAddSong],
-      [this.elements.createPlaylistBtn, "click", this.handleCreatePlaylist],
-      [
-        this.elements.closePlaylistModalBtn,
-        "click",
-        this.handleClosePlaylistModal,
-      ],
-      [
-        this.elements.addSongToPlaylistBtn,
-        "click",
-        this.handleAddSongToPlaylist,
-      ],
+      
+      // Player controls
       [this.elements.playPauseBtn, "click", this.handleTogglePlayPause],
       [this.elements.prevBtn, "click", this.handlePlayPrevious],
       [this.elements.nextBtn, "click", this.handlePlayNext],
       [this.elements.loopBtn, "click", this.handleToggleLoop],
       [this.elements.showPlaylistBtn, "click", this.handleToggleSidebar],
       [this.elements.closeSidebarBtn, "click", this.handleToggleSidebar],
-      [this.elements.themeToggle, "click", this.handleToggleTheme],
       [this.elements.speedBtn, "click", this.handleToggleSpeedOptions],
+      [this.elements.volumeSlider, "input", this.handleVolumeChange],
+      [this.elements.progressBar, "click", this.handleSeekMusic],
+      
+      // UI controls
+      [this.elements.toggleControlBarBtn, "click", this.handleToggleControlBar],
+      [this.elements.themeToggle, "click", this.handleToggleTheme],
+      
+      // Search and input
       [this.elements.librarySearch, "input", this.handleFilterLibrary],
       [this.elements.librarySearch, "keydown", this.handleLibrarySearchKeydown],
       [this.elements.searchSongsToAdd, "input", this.handleSearchSongsToAdd],
       [this.elements.songUrlInput, "input", this.handleSongUrlInput],
       [this.elements.songUrlInput, "keydown", this.handleSongUrlKeydown],
-      [
-        this.elements.newPlaylistName,
-        "keydown",
-        this.handleNewPlaylistNameKeydown,
-      ],
-      [this.elements.volumeSlider, "input", this.handleVolumeChange],
-      [this.elements.progressBar, "click", this.handleSeekMusic],
+      [this.elements.newPlaylistName, "keydown", this.handleNewPlaylistNameKeydown]
     ];
 
     eventBindings.forEach(([element, event, handler]) => {
-      if (element) {
-        element.addEventListener(event, handler);
-      }
+      if (element) element.addEventListener(event, handler);
     });
+  }
 
-    document.querySelectorAll(".speed-option").forEach((option) => {
+  setupAdditionalListeners() {
+    // Speed options
+    document.querySelectorAll(".speed-option").forEach(option => {
       option.addEventListener("click", this.handleSpeedOptionClick);
     });
 
-    this.elements.tabs.forEach((tab) => {
+    // Tab switching
+    this.elements.tabs.forEach(tab => {
       tab.addEventListener("click", () => this.switchTab(tab.dataset.tab));
     });
+
+    // Setup export button listeners
+    this.setupExportButtonListeners();
   }
 
   setupKeyboardControls() {
-    if (!this.currentTabIndex) {
-      this.currentTabIndex = 0;
-    }
+    if (!this.currentTabIndex) this.currentTabIndex = 0;
 
     document.addEventListener("keydown", (e) => {
-      if (
-        document.activeElement.tagName === "INPUT" ||
-        document.activeElement.tagName === "TEXTAREA" ||
-        document.activeElement.isContentEditable
-      ) {
-        return;
-      }
-      if (e.key.toLowerCase() === "b") {
-        this.cycleFaviconAndTitle();
-        return;
-      }
-      if (
-        [
-          "Space",
-          "ArrowLeft",
-          "ArrowRight",
-          "ArrowUp",
-          "ArrowDown",
-          "KeyK",
-          "KeyA",
-          "KeyD",
-          "KeyL",
-          "KeyR",
-          "KeyP",
-          "KeyT",
-          "Equal",
-          "Minus",
-          "KeyM",
-          "Tab",
-          "KeyQ",
-        ].includes(e.code)
-      ) {
+      if (this.isInputFocused()) return;
+      
+      const keyActions = {
+        'b': () => this.cycleFaviconAndTitle(),
+        'Space': () => this.togglePlayPause(),
+        'KeyK': () => this.togglePlayPause(),
+        'ArrowLeft': () => this.playPreviousSong(),
+        'KeyA': () => this.playPreviousSong(),
+        'ArrowRight': () => this.playNextSong(),
+        'KeyD': () => this.playNextSong(),
+        'ArrowUp': () => this.adjustVolume(0.1),
+        'ArrowDown': () => this.adjustVolume(-0.1),
+        'KeyL': () => this.toggleLoop(),
+        'KeyR': () => this.ytPlayer?.seekTo(0, true),
+        'KeyP': () => this.toggleTheme(),
+        'KeyT': () => this.openTimerModal(),
+        'Equal': () => this.adjustVolume(0.01),
+        'Minus': () => this.adjustVolume(-0.01),
+        'KeyH': () => this.toggleControlBar(),
+        'KeyM': () => this.togglePlaylistSidebar(),
+        'Tab': () => this.togglePlaylistSidebar(),
+        'KeyQ': () => this.cycleToNextTab(),
+        'KeyU': () => this.handleVideoFullscreen()
+      };
+
+      if (keyActions[e.code] || keyActions[e.key.toLowerCase()]) {
         e.preventDefault();
-      }
-      switch (e.code) {
-        case "Space":
-        case "KeyK":
-          this.togglePlayPause();
-          break;
-        case "ArrowLeft":
-        case "KeyA":
-          this.playPreviousSong();
-          break;
-        case "ArrowRight":
-        case "KeyD":
-          this.playNextSong();
-          break;
-        case "ArrowUp":
-          this.adjustVolume(0.1);
-          break;
-        case "ArrowDown":
-          this.adjustVolume(-0.1);
-          break;
-        case "KeyL":
-          this.toggleLoop();
-          break;
-        case "KeyR":
-          if (this.ytPlayer) {
-            this.ytPlayer.seekTo(0, true);
-          }
-          break;
-        case "KeyP":
-          this.toggleTheme();
-          break;
-        case "KeyT":
-          this.openTimerModal();
-          break;
-        case "Equal":
-          this.adjustVolume(0.01);
-          break;
-        case "Minus":
-          this.adjustVolume(-0.01);
-          break;
-        case "KeyH":
-          this.toggleControlBar();
-          break;
-        case "KeyM":
-        case "Tab":
-          this.togglePlaylistSidebar();
-          break;
-        case "KeyQ":
-          this.cycleToNextTab();
-          break;
-        case "KeyU":
-          if (
-            this.ytPlayer &&
-            this.elements.currentSongName.textContent !== "No Song Playing"
-          ) {
-            this.toggleVideoFullscreen();
-          }
-          break;
+        (keyActions[e.code] || keyActions[e.key.toLowerCase()])();
       }
     });
   }
+
+  isInputFocused() {
+    return ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) || 
+           document.activeElement.isContentEditable;
+  }
+
+  handleVideoFullscreen() {
+    if (this.ytPlayer && this.elements.currentSongName.textContent !== "No Song Playing") {
+      this.toggleVideoFullscreen();
+    }
+  }
+}
   loadSongLibrary() {
     return new Promise((resolve, reject) => {
       if (!this.db) {
