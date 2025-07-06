@@ -396,106 +396,126 @@ class AdvancedMusicPlayer {
     });
   }
 
-  setupKeyboardControls() {
-    if (!this.currentTabIndex) {
-      this.currentTabIndex = 0;
-    }
-
-    document.addEventListener("keydown", (e) => {
-      if (
-        document.activeElement.tagName === "INPUT" ||
-        document.activeElement.tagName === "TEXTAREA" ||
-        document.activeElement.isContentEditable
-      ) {
-        return;
-      }
-      if (e.key.toLowerCase() === "b") {
-        this.cycleFaviconAndTitle();
-        return;
-      }
-      if (
-        [
-          "Space",
-          "ArrowLeft",
-          "ArrowRight",
-          "ArrowUp",
-          "ArrowDown",
-          "KeyK",
-          "KeyA",
-          "KeyD",
-          "KeyL",
-          "KeyR",
-          "KeyP",
-          "KeyT",
-          "Equal",
-          "Minus",
-          "KeyM",
-          "Tab",
-          "KeyQ",
-        ].includes(e.code)
-      ) {
-        e.preventDefault();
-      }
-      switch (e.code) {
-        case "Space":
-        case "KeyK":
-          this.togglePlayPause();
-          break;
-        case "ArrowLeft":
-        case "KeyA":
-          this.playPreviousSong();
-          break;
-        case "ArrowRight":
-        case "KeyD":
-          this.playNextSong();
-          break;
-        case "ArrowUp":
-          this.adjustVolume(0.1);
-          break;
-        case "ArrowDown":
-          this.adjustVolume(-0.1);
-          break;
-        case "KeyL":
-          this.toggleLoop();
-          break;
-        case "KeyR":
-          if (this.ytPlayer) {
-            this.ytPlayer.seekTo(0, true);
-          }
-          break;
-        case "KeyP":
-          this.toggleTheme();
-          break;
-        case "KeyT":
-          this.openTimerModal();
-          break;
-        case "Equal":
-          this.adjustVolume(0.01);
-          break;
-        case "Minus":
-          this.adjustVolume(-0.01);
-          break;
-        case "KeyH":
-          this.toggleControlBar();
-          break;
-        case "KeyM":
-        case "Tab":
-          this.togglePlaylistSidebar();
-          break;
-        case "KeyQ":
-          this.cycleToNextTab();
-          break;
-        case "KeyU":
-          if (
-            this.ytPlayer &&
-            this.elements.currentSongName.textContent !== "No Song Playing"
-          ) {
-            this.toggleVideoFullscreen();
-          }
-          break;
-      }
-    });
+setupKeyboardControls() {
+  if (!this.currentTabIndex) {
+    this.currentTabIndex = 0;
   }
+  
+  document.addEventListener("keydown", (e) => {
+    // Skip if user is typing in input fields
+    if (
+      document.activeElement.tagName === "INPUT" ||
+      document.activeElement.tagName === "TEXTAREA" ||
+      document.activeElement.isContentEditable
+    ) {
+      return;
+    }
+    
+    // Handle 'b' key for favicon/title cycling
+    if (e.key.toLowerCase() === "b") {
+      this.cycleFaviconAndTitle();
+      return;
+    }
+    
+    // Handle 'y' key for queue overlay
+    if (e.key.toLowerCase() === "y") {
+      e.preventDefault();
+      this.showQueueOverlay();
+      return;
+    }
+    
+    // Prevent default for specific keys
+    if (
+      [
+        "Space",
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowUp",
+        "ArrowDown",
+        "KeyK",
+        "KeyA",
+        "KeyD",
+        "KeyL",
+        "KeyR",
+        "KeyP",
+        "KeyT",
+        "Equal",
+        "Minus",
+        "KeyM",
+        "Tab",
+        "KeyQ",
+        "KeyH",
+        "KeyU",
+        "KeyY"
+      ].includes(e.code)
+    ) {
+      e.preventDefault();
+    }
+    
+    // Handle keyboard shortcuts
+    switch (e.code) {
+      case "Space":
+      case "KeyK":
+        this.togglePlayPause();
+        break;
+      case "ArrowLeft":
+      case "KeyA":
+        this.playPreviousSong();
+        break;
+      case "ArrowRight":
+      case "KeyD":
+        this.playNextSong();
+        break;
+      case "ArrowUp":
+        this.adjustVolume(0.1);
+        break;
+      case "ArrowDown":
+        this.adjustVolume(-0.1);
+        break;
+      case "KeyL":
+        this.toggleLoop();
+        break;
+      case "KeyR":
+        if (this.ytPlayer) {
+          this.ytPlayer.seekTo(0, true);
+        }
+        break;
+      case "KeyP":
+        this.toggleTheme();
+        break;
+      case "KeyT":
+        this.openTimerModal();
+        break;
+      case "Equal":
+        this.adjustVolume(0.01);
+        break;
+      case "Minus":
+        this.adjustVolume(-0.01);
+        break;
+      case "KeyH":
+        this.toggleControlBar();
+        break;
+      case "KeyM":
+      case "Tab":
+        this.togglePlaylistSidebar();
+        break;
+      case "KeyQ":
+        this.cycleToNextTab();
+        break;
+      case "KeyU":
+        if (
+          this.ytPlayer &&
+          this.elements.currentSongName.textContent !== "No Song Playing"
+        ) {
+          this.toggleVideoFullscreen();
+        }
+        break;
+      case "KeyY":
+        this.showQueueOverlay();
+        break;
+    }
+  });
+}
   loadSongLibrary() {
     return new Promise((resolve, reject) => {
       if (!this.db) {
