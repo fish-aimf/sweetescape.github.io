@@ -2,6 +2,7 @@ class AdvancedMusicPlayer {
   constructor() {
     this.playlists = [];
     this.songLibrary = [];
+    this.songQueue = [];
     this.db = null;
     this.isPlaylistLooping = true;
     this.currentPlaylist = null;
@@ -80,6 +81,7 @@ class AdvancedMusicPlayer {
       })
       .then(() => {
         this.setupYouTubePlayer();
+        this.loadQueue();
         this.initializeElements();
         this.setupEventListeners();
 
@@ -259,6 +261,47 @@ class AdvancedMusicPlayer {
     this.handleToggleLoop = this.toggleLoop.bind(this);
     this.handlePlaylistDragStart = this.handlePlaylistDragStart.bind(this);
     this.handlePlaylistDragOver = this.handlePlaylistDragOver.bind(this);
+
+    document.addEventListener('contextmenu', (e) => {
+    if (e.target.classList.contains('play-btn') || 
+        e.target.closest('.play-btn') || 
+        e.target.onclick?.toString().includes('playSong') ||
+        e.target.onclick?.toString().includes('playPlaylist')) {
+      e.preventDefault();
+      
+      // Get song data from the button's parent element or onclick attribute
+      const songElement = e.target.closest('[data-song-id]') || e.target.closest('[data-playlist-id]');
+      
+      if (songElement && songElement.dataset.songId) {
+        // Individual song
+        const song = this.songLibrary.find(s => s.id == songElement.dataset.songId);
+        if (song) this.addToQueue(song);
+      } else if (songElement && songElement.dataset.playlistId) {
+        // Playlist - add all songs
+        const playlist = this.playlists.find(p => p.id == songElement.dataset.playlistId);
+        if (playlist) {
+          playlist.songs.forEach(song => this.addToQueue(song));
+        }
+      } else {
+        // Try to extract from onclick attribute
+        const onclickStr = e.target.onclick?.toString() || e.target.closest('button')?.onclick?.toString();
+        if (onclickStr) {
+          const songIdMatch = onclickStr.match(/playSong\((\d+)\)/);
+          const playlistIdMatch = onclickStr.match(/playPlaylist\((\d+)\)/);
+          
+          if (songIdMatch) {
+            const song = this.songLibrary.find(s => s.id == parseInt(songIdMatch[1]));
+            if (song) this.addToQueue(song);
+          } else if (playlistIdMatch) {
+            const playlist = this.playlists.find(p => p.id == parseInt(playlistIdMatch[1]));
+            if (playlist) {
+              playlist.songs.forEach(song => this.addToQueue(song));
+            }
+          }
+        }
+      }
+    }
+  });
     this.handlePlaylistDrop = this.handlePlaylistDrop.bind(this);
     this.handleVolumeChange = (e) => this.setVolume(e.target.value);
     this.handleToggleSidebar = this.togglePlaylistSidebar.bind(this);
@@ -1616,62 +1659,64 @@ handleTouchEnd(e) {
   }
 
   updatePlayerUI() {
-    const source = this.currentPlaylist
-      ? this.currentPlaylist.songs
-      : this.songLibrary;
-
-    if (!source.length) return;
-
-    const currentSong = source[this.currentSongIndex];
-    this.elements.currentSongName.textContent = currentSong.name;
-
-    if (this.isLooping) {
-      this.elements.nextSongName.textContent = currentSong.name;
-    } else if (
-      this.currentPlaylist &&
-      this.temporarilySkippedSongs &&
-      this.temporarilySkippedSongs.size > 0
-    ) {
-      const totalSongs = source.length;
-      let nextIndex = (this.currentSongIndex + 1) % totalSongs;
-      const startIndex = nextIndex;
-      while (this.isSongTemporarilySkipped(source[nextIndex])) {
-        nextIndex = (nextIndex + 1) % totalSongs;
-        if (nextIndex === startIndex) {
-          this.elements.nextSongName.textContent = "No next song available";
-          break;
-        }
-        if (nextIndex === 0 && !this.isPlaylistLooping) {
-          this.elements.nextSongName.textContent = "End of playlist";
-          break;
-        }
+  const source = this.currentPlaylist
+    ? this.currentPlaylist.songs
+    : this.songLibrary;
+  if (!source.length) return;
+  const currentSong = source[this.currentSongIndex];
+  this.elements.currentSongName.textContent = currentSong.name;
+  
+  if (this.isLooping) {
+    this.elements.nextSongName.textContent = currentSong.name;
+  } else if (this.songQueue.length > 0) {
+    // Show next song from queue if available
+    this.elements.nextSongName.textContent = this.songQueue[0].name;
+  } else if (
+    this.currentPlaylist &&
+    this.temporarilySkippedSongs &&
+    this.temporarilySkippedSongs.size > 0
+  ) {
+    const totalSongs = source.length;
+    let nextIndex = (this.currentSongIndex + 1) % totalSongs;
+    const startIndex = nextIndex;
+    while (this.isSongTemporarilySkipped(source[nextIndex])) {
+      nextIndex = (nextIndex + 1) % totalSongs;
+      if (nextIndex === startIndex) {
+        this.elements.nextSongName.textContent = "No next song available";
+        break;
       }
-      if (
-        this.elements.nextSongName.textContent !== "No next song available" &&
-        this.elements.nextSongName.textContent !== "End of playlist"
-      ) {
-        this.elements.nextSongName.textContent = source[nextIndex].name;
-      }
-    } else {
-      const nextSongIndex = (this.currentSongIndex + 1) % source.length;
-      const nextSong = source[nextSongIndex];
-      if (
-        this.currentSongIndex === source.length - 1 &&
-        !this.isPlaylistLooping
-      ) {
+      if (nextIndex === 0 && !this.isPlaylistLooping) {
         this.elements.nextSongName.textContent = "End of playlist";
-      } else {
-        this.elements.nextSongName.textContent = nextSong.name;
+        break;
       }
     }
-    const playPauseIcon = this.elements.playPauseBtn.querySelector("i");
-    playPauseIcon.classList.remove("fa-play", "fa-pause");
-    playPauseIcon.classList.add(this.isPlaying ? "fa-pause" : "fa-play");
-    if (this.currentPlaylist && this.isSidebarVisible) {
-      this.renderPlaylistSidebar();
+    if (
+      this.elements.nextSongName.textContent !== "No next song available" &&
+      this.elements.nextSongName.textContent !== "End of playlist"
+    ) {
+      this.elements.nextSongName.textContent = source[nextIndex].name;
     }
-    this.updatePageTitle();
+  } else {
+    const nextSongIndex = (this.currentSongIndex + 1) % source.length;
+    const nextSong = source[nextSongIndex];
+    if (
+      this.currentSongIndex === source.length - 1 &&
+      !this.isPlaylistLooping
+    ) {
+      this.elements.nextSongName.textContent = "End of playlist";
+    } else {
+      this.elements.nextSongName.textContent = nextSong.name;
+    }
   }
+  
+  const playPauseIcon = this.elements.playPauseBtn.querySelector("i");
+  playPauseIcon.classList.remove("fa-play", "fa-pause");
+  playPauseIcon.classList.add(this.isPlaying ? "fa-pause" : "fa-play");
+  if (this.currentPlaylist && this.isSidebarVisible) {
+    this.renderPlaylistSidebar();
+  }
+  this.updatePageTitle();
+}
   escapeJsString(str) {
     if (!str) return "";
     return str
@@ -1818,45 +1863,55 @@ handleTouchEnd(e) {
   }
 
   onPlayerStateChange(event) {
-    if (event.data === YT.PlayerState.ENDED) {
-      if (this.isLooping) {
-        this.playSongById(
-          this.currentPlaylist
-            ? this.currentPlaylist.songs[this.currentSongIndex].videoId
-            : this.songLibrary[this.currentSongIndex].videoId
-        );
+  if (event.data === YT.PlayerState.ENDED) {
+    if (this.isLooping) {
+      this.playSongById(
+        this.currentPlaylist
+          ? this.currentPlaylist.songs[this.currentSongIndex].videoId
+          : this.songLibrary[this.currentSongIndex].videoId
+      );
+    } else {
+      // Check if there's a queue song to play next
+      if (this.songQueue.length > 0) {
+        const nextSong = this.songQueue.shift(); // Remove first song from queue
+        this.saveQueue();
+        this.playSongById(nextSong.videoId);
+        this.updateQueueVisualIndicators();
+        this.updatePlayerUI();
       } else {
         this.playNextSong();
       }
-      if (this.elements.progressBar) {
-        this.elements.progressBar.value = 0;
-      }
-    } else if (event.data === YT.PlayerState.PAUSED) {
-      this.isPlaying = false;
-      this.updatePlayerUI();
-      if (this.titleScrollInterval) {
-        clearInterval(this.titleScrollInterval);
-        document.title = `Music - ${this.elements.currentSongName.textContent}`;
-      }
-      if (this.progressInterval) {
-        clearInterval(this.progressInterval);
-      }
-      if (this.lyricsInterval) {
-        clearInterval(this.lyricsInterval);
-      }
-    } else if (event.data === YT.PlayerState.PLAYING) {
-      this.isPlaying = true;
-      this.updatePlayerUI();
-      if (this.currentSpeed !== 1) {
-        this.ytPlayer.setPlaybackRate(this.currentSpeed);
-      }
-      this.updateProgressBar();
-      this.startListeningTimeTracking();
-      if (document.getElementById("lyrics").classList.contains("active")) {
-        this.renderLyricsTab();
-      }
+    }
+    if (this.elements.progressBar) {
+      this.elements.progressBar.value = 0;
+    }
+  } else if (event.data === YT.PlayerState.PAUSED) {
+    this.isPlaying = false;
+    this.updatePlayerUI();
+    if (this.titleScrollInterval) {
+      clearInterval(this.titleScrollInterval);
+      document.title = `Music - ${this.elements.currentSongName.textContent}`;
+    }
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+    }
+    if (this.lyricsInterval) {
+      clearInterval(this.lyricsInterval);
+    }
+  } else if (event.data === YT.PlayerState.PLAYING) {
+    this.isPlaying = true;
+    this.updatePlayerUI();
+    if (this.currentSpeed !== 1) {
+      this.ytPlayer.setPlaybackRate(this.currentSpeed);
+    }
+    this.updateProgressBar();
+    this.startListeningTimeTracking();
+    if (document.getElementById("lyrics").classList.contains("active")) {
+      this.renderLyricsTab();
     }
   }
+}
+
 
   toggleLoop() {
     this.isLooping = !this.isLooping;
@@ -5707,6 +5762,49 @@ handleTouchEnd(e) {
       hintEl.style.display = "none";
     }
   }
+
+  addToQueue(song) {
+  this.songQueue.push({
+    ...song,
+    queueId: Date.now() + Math.random()
+  });
+  this.saveQueue();
+  this.updateQueueVisualIndicators();
+}
+
+removeFromQueue(queueId) {
+  this.songQueue = this.songQueue.filter(item => item.queueId !== queueId);
+  this.saveQueue();
+  this.updateQueueVisualIndicators();
+}
+
+saveQueue() {
+  sessionStorage.setItem('musicPlayerQueue', JSON.stringify(this.songQueue));
+}
+
+loadQueue() {
+  const saved = sessionStorage.getItem('musicPlayerQueue');
+  this.songQueue = saved ? JSON.parse(saved) : [];
+}
+
+updateQueueVisualIndicators() {
+  // Remove existing indicators
+  document.querySelectorAll('.queue-indicator').forEach(el => el.remove());
+  
+  // Add indicators for songs in queue
+  this.songQueue.forEach((queueSong, index) => {
+    const songElements = document.querySelectorAll(`[data-video-id="${queueSong.videoId}"]`);
+    songElements.forEach(element => {
+      const indicator = document.createElement('span');
+      indicator.className = 'queue-indicator';
+      indicator.textContent = `${index + 1}`;
+      indicator.style.cssText = 'position:absolute;top:0;right:0;background:#ff6b6b;color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:12px;z-index:10;';
+      element.style.position = 'relative';
+      element.appendChild(indicator);
+    });
+  });
+}
+  
 
   cleanup() {
   console.log("Starting cleanup process...");
