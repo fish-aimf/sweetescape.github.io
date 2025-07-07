@@ -166,6 +166,7 @@
 - opens select playlist to export
 - improved select playlist to export style as it wasnt visible in light mode
 - works
+- lyrics all done
 - moved buttons playlist modification to bottom below the results
 - improved cleanup but cleanup is still leaking a lot
 - improved update progress bar still it wont work for mobile
@@ -174,3 +175,4 @@
 - also fixed the issue in styles.
 - need to fix leaking memory
 - fixed issue where load song library isnt working after i updated the export and import the last time
+- fixed issue where pressing n opens the queue even if text box is active
