@@ -319,12 +319,7 @@ class AdvancedMusicPlayer {
     this.handleExportLibrary = this.exportLibrary.bind(this);
     this.handleTogglePlaylistLoop = this.togglePlaylistLoop.bind(this);
     this.handleSongUrlInput = this.validateYouTubeUrl.bind(this);
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'n') {
-          e.preventDefault();
-          this.showQueueOverlay();
-        }
-      });
+    
     this.setupExportButtonListeners();
     this.handleSongUrlKeydown = (e) => {
       if (e.key === "Enter") {
