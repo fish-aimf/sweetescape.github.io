@@ -1590,7 +1590,7 @@ handleTouchEnd(e) {
   playNextSong() {
   // Check if there's a queue song to play next
   if (this.songQueue.length > 0) {
-    const nextSong = this.songQueue.shift(); // Remove first song from queue
+    const nextSong = this.songQueue.shift(); 
     this.saveQueue();
     this.updateQueueVisualIndicators();
     
@@ -5863,6 +5863,12 @@ refreshSpecificSection(sectionTitle) {
       hintEl.style.display = "none";
     }
   }
+// Add this missing method
+escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
 
 addToQueue(song) {
   this.songQueue.push({
@@ -5871,7 +5877,7 @@ addToQueue(song) {
   });
   this.saveQueue();
   this.updateQueueVisualIndicators();
-  this.updatePlayerUI(); // Immediately update UI
+  this.updatePlayerUI();
   this.showQueueNotification(`Added "${song.name}" to queue`);
 }
 
@@ -5886,23 +5892,23 @@ removeFromQueue(queueId) {
   }
 }
 
+// Replace sessionStorage with in-memory storage
 saveQueue() {
-  sessionStorage.setItem('musicPlayerQueue', JSON.stringify(this.songQueue));
+  // Store in memory instead of sessionStorage
+  window.musicPlayerQueue = JSON.stringify(this.songQueue);
 }
 
 loadQueue() {
-  const saved = sessionStorage.getItem('musicPlayerQueue');
+  // Load from memory instead of sessionStorage
+  const saved = window.musicPlayerQueue;
   this.songQueue = saved ? JSON.parse(saved) : [];
   this.updateQueueVisualIndicators();
 }
 
 updateQueueVisualIndicators() {
-  // Remove existing indicators
   document.querySelectorAll('.queue-indicator').forEach(el => el.remove());
   
-  // Add indicators for songs in queue
   this.songQueue.forEach((queueSong, index) => {
-    // Find elements by videoId or song id
     const songElements = [
       ...document.querySelectorAll(`[data-video-id="${queueSong.videoId}"]`),
       ...document.querySelectorAll(`[onclick*="playSong(${queueSong.id})"]`),
@@ -5910,7 +5916,7 @@ updateQueueVisualIndicators() {
     ];
     
     songElements.forEach(element => {
-      if (element.querySelector('.queue-indicator')) return; // Skip if already has indicator
+      if (element.querySelector('.queue-indicator')) return;
       
       const indicator = document.createElement('span');
       indicator.className = 'queue-indicator';
@@ -5938,8 +5944,8 @@ updateQueueVisualIndicators() {
     });
   });
 }
-  showQueueNotification(message) {
-  // Remove existing notification
+
+showQueueNotification(message) {
   const existing = document.querySelector('.queue-notification');
   if (existing) existing.remove();
   
@@ -5968,9 +5974,7 @@ updateQueueVisualIndicators() {
   }, 2000);
 }
 
-// Queue display overlay
 showQueueOverlay() {
-  // Remove existing overlay
   const existing = document.querySelector('.queue-overlay');
   if (existing) {
     existing.remove();
@@ -6024,7 +6028,7 @@ showQueueOverlay() {
             <div style="font-weight: bold;">${this.escapeHtml(song.name)}</div>
             ${song.author ? `<div style="font-size: 12px; color: var(--text-secondary);">${this.escapeHtml(song.author)}</div>` : ''}
           </div>
-          <button onclick="musicPlayer.removeFromQueue('${song.queueId}')" style="background: #ff6b6b; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;">Remove</button>
+          <button onclick="window.musicPlayer.removeFromQueue('${song.queueId}')" style="background: #ff6b6b; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;">Remove</button>
         </div>
       `;
     });
@@ -6032,8 +6036,8 @@ showQueueOverlay() {
     
     queueContent += `
       <div style="margin-top: 15px; display: flex; gap: 10px;">
-        <button onclick="musicPlayer.clearQueue()" style="background: #ff6b6b; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; flex: 1;">Clear Queue</button>
-        <button onclick="musicPlayer.shuffleQueue()" style="background: var(--accent-color); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; flex: 1;">Shuffle Queue</button>
+        <button onclick="window.musicPlayer.clearQueue()" style="background: #ff6b6b; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; flex: 1;">Clear Queue</button>
+        <button onclick="window.musicPlayer.shuffleQueue()" style="background: var(--accent-color); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; flex: 1;">Shuffle Queue</button>
       </div>
     `;
   }
@@ -6042,7 +6046,6 @@ showQueueOverlay() {
   overlay.appendChild(queuePanel);
   document.body.appendChild(overlay);
   
-  // Close on outside click
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) {
       overlay.remove();
@@ -6050,14 +6053,12 @@ showQueueOverlay() {
   });
 }
 
-// Additional queue methods
 clearQueue() {
   this.songQueue = [];
   this.saveQueue();
   this.updateQueueVisualIndicators();
   this.updatePlayerUI();
   this.showQueueNotification('Queue cleared');
-  // Update overlay if open
   const overlay = document.querySelector('.queue-overlay');
   if (overlay) {
     overlay.remove();
@@ -6074,7 +6075,6 @@ shuffleQueue() {
   this.updateQueueVisualIndicators();
   this.updatePlayerUI();
   this.showQueueNotification('Queue shuffled');
-  // Update overlay if open
   const overlay = document.querySelector('.queue-overlay');
   if (overlay) {
     overlay.remove();
@@ -6082,9 +6082,24 @@ shuffleQueue() {
   }
 }
 
-// Add CSS animations
+// Initialize queue and make globally accessible
+initializeQueue() {
+  this.songQueue = [];
+  this.loadQueue();
+  this.addQueueStyles();
+  
+  // Make musicPlayer globally accessible
+  window.musicPlayer = this;
+}
+
+// Add CSS animations - call this once when initializing
 addQueueStyles() {
+  // Remove existing queue styles
+  const existingStyle = document.querySelector('#queue-styles');
+  if (existingStyle) existingStyle.remove();
+  
   const style = document.createElement('style');
+  style.id = 'queue-styles';
   style.textContent = `
     @keyframes slideIn {
       from { transform: translateX(100%); opacity: 0; }
@@ -6108,7 +6123,6 @@ addQueueStyles() {
   `;
   document.head.appendChild(style);
 }
-
   
 
   cleanup() {
