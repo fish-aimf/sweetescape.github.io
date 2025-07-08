@@ -4559,148 +4559,197 @@ updatePlayerUI() {
     const formatted = this.formatDuration(totalSeconds);
     return hasAnyDuration ? formatted : `~${formatted}`;
   }
-  createDetailsSection(title, items, type) {
-    if (!this.elements.additionalDetails || items.length === 0) return;
+createDetailsSection(title, items, type) {
+  if (!this.elements.additionalDetails || items.length === 0) return;
 
-    const section = document.createElement("div");
-    section.classList.add("additional-details-section");
-    section.setAttribute("data-section-title", title);
+  const section = document.createElement("div");
+  section.classList.add("additional-details-section");
+  section.setAttribute("data-section-title", title);
 
-    const sectionTitle = document.createElement("h3");
-    sectionTitle.textContent = title;
-    sectionTitle.classList.add("section-title");
-    if (title === "Recently Listened To") {
-      sectionTitle.style.cursor = "pointer";
-      sectionTitle.addEventListener("click", () => {
-        this.showRecentlyPlayedModal();
-      });
-    } else if (title === "Suggested") {
-      sectionTitle.style.cursor = "pointer";
-      sectionTitle.addEventListener("click", () => {
-        this.refreshSpecificSection("Suggested");
-      });
-    } else if (title === "Your Picks") {
-      sectionTitle.style.cursor = "pointer";
-      sectionTitle.addEventListener("click", () => {
-        this.refreshSpecificSection("Your Picks");
-      });
-    }
-
-    section.appendChild(sectionTitle);
-    const itemsList = document.createElement("div");
-    itemsList.classList.add("details-items-list");
-
-    items.forEach((item) => {
-      const itemElement = document.createElement("div");
-      itemElement.classList.add("details-item");
-      const thumbnail = document.createElement("div");
-      thumbnail.classList.add("details-item-thumbnail");
-
-      if (type === "song") {
-        const thumbnailImg = document.createElement("img");
-        thumbnailImg.src =
-          item.thumbnailUrl ||
-          `https://img.youtube.com/vi/${item.videoId}/default.jpg`;
-        thumbnailImg.alt = item.name;
-        thumbnailImg.onerror = function () {
-          this.src = "https://placehold.it/120x90/333/fff?text=No+Image";
-        };
-        thumbnail.appendChild(thumbnailImg);
-      } else {
-        const playlistIcon = document.createElement("i");
-        playlistIcon.classList.add("fa", "fa-list");
-        thumbnail.appendChild(playlistIcon);
-      }
-      const itemInfo = document.createElement("div");
-      itemInfo.classList.add("details-item-info");
-
-      const itemName = document.createElement("div");
-      itemName.classList.add("details-item-name");
-      itemName.textContent = item.name;
-      itemInfo.appendChild(itemName);
-      itemElement.addEventListener("click", () => {
-        if (type === "song") {
-          this.playSong(item.id);
-        } else {
-          this.playPlaylist(item.id);
-        }
-      });
-      itemElement.appendChild(thumbnail);
-      itemElement.appendChild(itemInfo);
-      itemsList.appendChild(itemElement);
+  const sectionTitle = document.createElement("h3");
+  sectionTitle.textContent = title;
+  sectionTitle.classList.add("section-title");
+  if (title === "Recently Listened To") {
+    sectionTitle.style.cursor = "pointer";
+    sectionTitle.addEventListener("click", () => {
+      this.showRecentlyPlayedModal();
     });
-
-    section.appendChild(itemsList);
-    this.elements.additionalDetails.appendChild(section);
-  }
-  refreshSpecificSection(sectionTitle) {
-    if (!this.elements.additionalDetails) return;
-    const sectionToRefresh = this.elements.additionalDetails.querySelector(
-      `[data-section-title="${sectionTitle}"]`
-    );
-    if (!sectionToRefresh) return;
-
-    let newItems = [];
-    let type = "song";
-    if (sectionTitle === "Suggested") {
-      if (this.songLibrary.length > 0) {
-        newItems = this.getRandomItems(this.songLibrary, 2);
-      }
-    } else if (sectionTitle === "Your Picks") {
-      const favoriteSongs = this.songLibrary.filter((song) => song.favorite);
-      if (favoriteSongs.length > 0) {
-        newItems = this.getRandomItems(favoriteSongs, 2);
-      }
-    }
-
-    if (newItems.length === 0) return;
-
-    const itemsList = sectionToRefresh.querySelector(".details-items-list");
-    if (!itemsList) return;
-    itemsList.innerHTML = "";
-    newItems.forEach((item) => {
-      const itemElement = document.createElement("div");
-      itemElement.classList.add("details-item");
-      const thumbnail = document.createElement("div");
-      thumbnail.classList.add("details-item-thumbnail");
-
-      if (type === "song") {
-        const thumbnailImg = document.createElement("img");
-        thumbnailImg.src =
-          item.thumbnailUrl ||
-          `https://img.youtube.com/vi/${item.videoId}/default.jpg`;
-        thumbnailImg.alt = item.name;
-        thumbnailImg.onerror = function () {
-          this.src = "https://placehold.it/120x90/333/fff?text=No+Image";
-        };
-        thumbnail.appendChild(thumbnailImg);
-      } else {
-        const playlistIcon = document.createElement("i");
-        playlistIcon.classList.add("fa", "fa-list");
-        thumbnail.appendChild(playlistIcon);
-      }
-
-      const itemInfo = document.createElement("div");
-      itemInfo.classList.add("details-item-info");
-
-      const itemName = document.createElement("div");
-      itemName.classList.add("details-item-name");
-      itemName.textContent = item.name;
-      itemInfo.appendChild(itemName);
-
-      itemElement.addEventListener("click", () => {
-        if (type === "song") {
-          this.playSong(item.id);
-        } else {
-          this.playPlaylist(item.id);
-        }
-      });
-
-      itemElement.appendChild(thumbnail);
-      itemElement.appendChild(itemInfo);
-      itemsList.appendChild(itemElement);
+  } else if (title === "Suggested") {
+    sectionTitle.style.cursor = "pointer";
+    sectionTitle.addEventListener("click", () => {
+      this.refreshSpecificSection("Suggested");
+    });
+  } else if (title === "Your Picks") {
+    sectionTitle.style.cursor = "pointer";
+    sectionTitle.addEventListener("click", () => {
+      this.refreshSpecificSection("Your Picks");
     });
   }
+
+  section.appendChild(sectionTitle);
+  const itemsList = document.createElement("div");
+  itemsList.classList.add("details-items-list");
+
+  items.forEach((item) => {
+    const itemElement = document.createElement("div");
+    itemElement.classList.add("details-item");
+    
+    // Add data attributes for queue functionality
+    if (type === "song") {
+      itemElement.setAttribute("data-video-id", item.videoId);
+      itemElement.setAttribute("data-song-id", item.id);
+    }
+    
+    const thumbnail = document.createElement("div");
+    thumbnail.classList.add("details-item-thumbnail");
+
+    if (type === "song") {
+      const thumbnailImg = document.createElement("img");
+      thumbnailImg.src =
+        item.thumbnailUrl ||
+        `https://img.youtube.com/vi/${item.videoId}/default.jpg`;
+      thumbnailImg.alt = item.name;
+      thumbnailImg.onerror = function () {
+        this.src = "https://placehold.it/120x90/333/fff?text=No+Image";
+      };
+      thumbnail.appendChild(thumbnailImg);
+    } else {
+      const playlistIcon = document.createElement("i");
+      playlistIcon.classList.add("fa", "fa-list");
+      thumbnail.appendChild(playlistIcon);
+    }
+    
+    const itemInfo = document.createElement("div");
+    itemInfo.classList.add("details-item-info");
+
+    const itemName = document.createElement("div");
+    itemName.classList.add("details-item-name");
+    itemName.textContent = item.name;
+    itemInfo.appendChild(itemName);
+    
+    // Left click - play immediately
+    itemElement.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (type === "song") {
+        this.playSong(item.id);
+      } else {
+        this.playPlaylist(item.id);
+      }
+    });
+    
+    // Right click - add to queue (only for songs)
+    if (type === "song") {
+      itemElement.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        this.addToQueue(item);
+      });
+      
+      // Add visual feedback for right-click capability
+      itemElement.style.cursor = "pointer";
+      itemElement.title = "Left click to play, right click to add to queue";
+    }
+    
+    itemElement.appendChild(thumbnail);
+    itemElement.appendChild(itemInfo);
+    itemsList.appendChild(itemElement);
+  });
+
+  section.appendChild(itemsList);
+  this.elements.additionalDetails.appendChild(section);
+}
+
+refreshSpecificSection(sectionTitle) {
+  if (!this.elements.additionalDetails) return;
+  const sectionToRefresh = this.elements.additionalDetails.querySelector(
+    `[data-section-title="${sectionTitle}"]`
+  );
+  if (!sectionToRefresh) return;
+
+  let newItems = [];
+  let type = "song";
+  if (sectionTitle === "Suggested") {
+    if (this.songLibrary.length > 0) {
+      newItems = this.getRandomItems(this.songLibrary, 2);
+    }
+  } else if (sectionTitle === "Your Picks") {
+    const favoriteSongs = this.songLibrary.filter((song) => song.favorite);
+    if (favoriteSongs.length > 0) {
+      newItems = this.getRandomItems(favoriteSongs, 2);
+    }
+  }
+
+  if (newItems.length === 0) return;
+
+  const itemsList = sectionToRefresh.querySelector(".details-items-list");
+  if (!itemsList) return;
+  itemsList.innerHTML = "";
+  
+  newItems.forEach((item) => {
+    const itemElement = document.createElement("div");
+    itemElement.classList.add("details-item");
+    
+    // Add data attributes for queue functionality
+    if (type === "song") {
+      itemElement.setAttribute("data-video-id", item.videoId);
+      itemElement.setAttribute("data-song-id", item.id);
+    }
+    
+    const thumbnail = document.createElement("div");
+    thumbnail.classList.add("details-item-thumbnail");
+
+    if (type === "song") {
+      const thumbnailImg = document.createElement("img");
+      thumbnailImg.src =
+        item.thumbnailUrl ||
+        `https://img.youtube.com/vi/${item.videoId}/default.jpg`;
+      thumbnailImg.alt = item.name;
+      thumbnailImg.onerror = function () {
+        this.src = "https://placehold.it/120x90/333/fff?text=No+Image";
+      };
+      thumbnail.appendChild(thumbnailImg);
+    } else {
+      const playlistIcon = document.createElement("i");
+      playlistIcon.classList.add("fa", "fa-list");
+      thumbnail.appendChild(playlistIcon);
+    }
+
+    const itemInfo = document.createElement("div");
+    itemInfo.classList.add("details-item-info");
+
+    const itemName = document.createElement("div");
+    itemName.classList.add("details-item-name");
+    itemName.textContent = item.name;
+    itemInfo.appendChild(itemName);
+
+    // Left click - play immediately
+    itemElement.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (type === "song") {
+        this.playSong(item.id);
+      } else {
+        this.playPlaylist(item.id);
+      }
+    });
+    
+    // Right click - add to queue (only for songs)
+    if (type === "song") {
+      itemElement.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        this.addToQueue(item);
+      });
+      
+      // Add visual feedback for right-click capability
+      itemElement.style.cursor = "pointer";
+      itemElement.title = "Left click to play, right click to add to queue";
+    }
+
+    itemElement.appendChild(thumbnail);
+    itemElement.appendChild(itemInfo);
+    itemsList.appendChild(itemElement);
+  });
+}
+
+
 
   refreshSuggestedSongs() {
     if (this.songLibrary.length > 0) {
