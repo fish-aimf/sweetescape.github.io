@@ -5864,6 +5864,7 @@ refreshSpecificSection(sectionTitle) {
     }
   }
 addToQueue(song) {
+  console.log('Adding song to queue:', song);
   this.songQueue.push({
     ...song,
     queueId: Date.now() + Math.random()
@@ -5875,6 +5876,7 @@ addToQueue(song) {
 }
 
 removeFromQueue(queueId) {
+  console.log('Removing song from queue with ID:', queueId);
   const removedSong = this.songQueue.find(item => item.queueId == queueId);
   this.songQueue = this.songQueue.filter(item => item.queueId != queueId);
   this.saveQueue();
@@ -6037,6 +6039,18 @@ showQueueOverlay() {
   
   overlay.appendChild(queuePanel);
   document.body.appendChild(overlay);
+  
+  // Add event listener for remove buttons
+  queuePanel.addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove-queue-btn')) {
+      const queueId = e.target.getAttribute('data-queue-id');
+      console.log('Remove button clicked for queue ID:', queueId);
+      this.removeFromQueue(queueId);
+      // Refresh the queue overlay
+      overlay.remove();
+      this.showQueueOverlay();
+    }
+  });
   
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) {
