@@ -5875,8 +5875,8 @@ addToQueue(song) {
 }
 
 removeFromQueue(queueId) {
-  const removedSong = this.songQueue.find(item => item.queueId === queueId);
-  this.songQueue = this.songQueue.filter(item => item.queueId !== queueId);
+  const removedSong = this.songQueue.find(item => item.queueId == queueId);
+  this.songQueue = this.songQueue.filter(item => item.queueId != queueId);
   this.saveQueue();
   this.updateQueueVisualIndicators();
   this.updatePlayerUI();
