@@ -6018,7 +6018,7 @@ showQueueOverlay() {
             <div style="font-weight: bold;">${this.escapeHtml(song.name)}</div>
             ${song.author ? `<div style="font-size: 12px; color: var(--text-secondary);">${this.escapeHtml(song.author)}</div>` : ''}
           </div>
-          <button data-queue-id="${song.queueId}" class="remove-queue-btn" style="background: #ff6b6b; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;">Remove</button>
+          <button onclick="window.musicPlayer.removeFromQueue('${song.queueId}'); document.querySelector('.queue-overlay').remove(); window.musicPlayer.showQueueOverlay();" style="background: #ff6b6b; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;">Remove</button>
         </div>
       `;
     });
@@ -6034,14 +6034,6 @@ showQueueOverlay() {
   
   queuePanel.innerHTML = queueContent;
   
-  queuePanel.addEventListener('click', (e) => {
-    if (e.target.classList.contains('remove-queue-btn')) {
-      const queueId = e.target.dataset.queueId;
-      this.removeFromQueue(queueId);
-      overlay.remove();
-      this.showQueueOverlay();
-    }
-  });
   
   overlay.appendChild(queuePanel);
   document.body.appendChild(overlay);
@@ -6107,7 +6099,6 @@ addQueueStyles() {
   `;
   document.head.appendChild(style);
 }
-
   cleanup() {
   console.log("Starting cleanup process...");
 
