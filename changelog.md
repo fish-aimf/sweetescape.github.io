@@ -176,3 +176,6 @@
 - need to fix leaking memory
 - fixed issue where load song library isnt working after i updated the export and import the last time
 - fixed issue where pressing n opens the queue even if text box is active
+- made right clicking the song in the addtional details sidebar add to queue
+- added visual indication
+- fixed the button remove from queue not working
