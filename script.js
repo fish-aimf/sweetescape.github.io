@@ -5863,7 +5863,6 @@ refreshSpecificSection(sectionTitle) {
       hintEl.style.display = "none";
     }
   }
-
 addToQueue(song) {
   this.songQueue.push({
     ...song,
@@ -5871,7 +5870,7 @@ addToQueue(song) {
   });
   this.saveQueue();
   this.updateQueueVisualIndicators();
-  this.updatePlayerUI(); // Immediately update UI
+  this.updatePlayerUI();
   this.showQueueNotification(`Added "${song.name}" to queue`);
 }
 
@@ -5897,12 +5896,9 @@ loadQueue() {
 }
 
 updateQueueVisualIndicators() {
-  // Remove existing indicators
   document.querySelectorAll('.queue-indicator').forEach(el => el.remove());
   
-  // Add indicators for songs in queue
   this.songQueue.forEach((queueSong, index) => {
-    // Find elements by videoId or song id
     const songElements = [
       ...document.querySelectorAll(`[data-video-id="${queueSong.videoId}"]`),
       ...document.querySelectorAll(`[onclick*="playSong(${queueSong.id})"]`),
@@ -5910,7 +5906,7 @@ updateQueueVisualIndicators() {
     ];
     
     songElements.forEach(element => {
-      if (element.querySelector('.queue-indicator')) return; // Skip if already has indicator
+      if (element.querySelector('.queue-indicator')) return;
       
       const indicator = document.createElement('span');
       indicator.className = 'queue-indicator';
@@ -5938,8 +5934,8 @@ updateQueueVisualIndicators() {
     });
   });
 }
-  showQueueNotification(message) {
-  // Remove existing notification
+
+showQueueNotification(message) {
   const existing = document.querySelector('.queue-notification');
   if (existing) existing.remove();
   
@@ -5968,9 +5964,7 @@ updateQueueVisualIndicators() {
   }, 2000);
 }
 
-// Queue display overlay
 showQueueOverlay() {
-  // Remove existing overlay
   const existing = document.querySelector('.queue-overlay');
   if (existing) {
     existing.remove();
@@ -6024,7 +6018,7 @@ showQueueOverlay() {
             <div style="font-weight: bold;">${this.escapeHtml(song.name)}</div>
             ${song.author ? `<div style="font-size: 12px; color: var(--text-secondary);">${this.escapeHtml(song.author)}</div>` : ''}
           </div>
-            <button onclick="window.musicPlayer.removeFromQueue('${song.queueId}'); this.closest('.queue-overlay').remove(); musicPlayer.showQueueOverlay();" style="...">Remove</button>
+          <button data-queue-id="${song.queueId}" class="remove-queue-btn" style="background: #ff6b6b; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;">Remove</button>
         </div>
       `;
     });
@@ -6039,10 +6033,19 @@ showQueueOverlay() {
   }
   
   queuePanel.innerHTML = queueContent;
+  
+  queuePanel.addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove-queue-btn')) {
+      const queueId = e.target.dataset.queueId;
+      this.removeFromQueue(queueId);
+      overlay.remove();
+      this.showQueueOverlay();
+    }
+  });
+  
   overlay.appendChild(queuePanel);
   document.body.appendChild(overlay);
   
-  // Close on outside click
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) {
       overlay.remove();
@@ -6050,14 +6053,12 @@ showQueueOverlay() {
   });
 }
 
-// Additional queue methods
 clearQueue() {
   this.songQueue = [];
   this.saveQueue();
   this.updateQueueVisualIndicators();
   this.updatePlayerUI();
   this.showQueueNotification('Queue cleared');
-  // Update overlay if open
   const overlay = document.querySelector('.queue-overlay');
   if (overlay) {
     overlay.remove();
@@ -6074,7 +6075,6 @@ shuffleQueue() {
   this.updateQueueVisualIndicators();
   this.updatePlayerUI();
   this.showQueueNotification('Queue shuffled');
-  // Update overlay if open
   const overlay = document.querySelector('.queue-overlay');
   if (overlay) {
     overlay.remove();
@@ -6082,7 +6082,6 @@ shuffleQueue() {
   }
 }
 
-// Add CSS animations
 addQueueStyles() {
   const style = document.createElement('style');
   style.textContent = `
@@ -6108,8 +6107,6 @@ addQueueStyles() {
   `;
   document.head.appendChild(style);
 }
-
-  
 
   cleanup() {
   console.log("Starting cleanup process...");
