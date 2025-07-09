@@ -6018,7 +6018,7 @@ showQueueOverlay() {
             <div style="font-weight: bold;">${this.escapeHtml(song.name)}</div>
             ${song.author ? `<div style="font-size: 12px; color: var(--text-secondary);">${this.escapeHtml(song.author)}</div>` : ''}
           </div>
-          <button onclick="window.musicPlayer.removeFromQueue('${song.queueId}'); document.querySelector('.queue-overlay').remove(); window.musicPlayer.showQueueOverlay();" style="background: #ff6b6b; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;">Remove</button>
+          <button data-queue-id="${song.queueId}" class="remove-queue-btn" style="background: #ff6b6b; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;">Remove</button>
         </div>
       `;
     });
