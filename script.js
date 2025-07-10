@@ -6574,342 +6574,213 @@ setupLayoutEventListeners() {
 
   this.adjustLayoutTogglePosition();
 }
-  cleanup() {
-  console.log("Starting cleanup process...");
-  this.destroyWebEmbedOverlay();
+cleanup() {
+  console.log("Starting cleanup process");
+  
+  this.saveCurrentState();
+  this.clearTimersAndIntervals();
+  this.cleanupYouTubePlayer();
+  this.restorePageAppearance();
+  this.disconnectObservers();
+  this.removeDynamicEventListeners();
+  this.gracefulDatabaseClose();
+  
+  console.log("Cleanup process completed successfully");
+}
 
-  // Clear all intervals and timers
+saveCurrentState() {
+  try {
+    console.log("Saving current application state");
+    
+    if (this.listeningTime > 0) {
+      localStorage.setItem('musicPlayer_listeningTime', this.listeningTime.toString());
+      console.log(`Listening time persisted: ${this.listeningTime} seconds`);
+    }
+    
+    if (this.elements?.volumeSlider?.value) {
+      localStorage.setItem('musicPlayer_volume', this.elements.volumeSlider.value);
+      console.log(`Volume level persisted: ${this.elements.volumeSlider.value}`);
+    }
+    
+    if (this.currentSpeed !== 1) {
+      localStorage.setItem('musicPlayer_speed', this.currentSpeed.toString());
+      console.log(`Playback speed persisted: ${this.currentSpeed}x`);
+    }
+    
+    if (this.ytPlayer && this.isPlaying) {
+      try {
+        const currentTime = this.ytPlayer.getCurrentTime();
+        if (currentTime > 0) {
+          localStorage.setItem('musicPlayer_lastPosition', currentTime.toString());
+          console.log(`Current position persisted: ${currentTime} seconds`);
+        }
+      } catch (error) {
+        console.warn("Failed to persist current playback position:", error.message);
+      }
+    }
+    
+    console.log("Application state saved successfully");
+  } catch (error) {
+    console.error("Critical error during state persistence:", error);
+  }
+}
+
+clearTimersAndIntervals() {
+  console.log("Clearing active timers and intervals");
+  
   const timers = [
-    this.progressInterval,
-    this.listeningTimeInterval,
-    this.longPressTimer,
-    this.titleScrollInterval,
+    { ref: 'progressInterval', timer: this.progressInterval },
+    { ref: 'listeningTimeInterval', timer: this.listeningTimeInterval },
+    { ref: 'longPressTimer', timer: this.longPressTimer },
+    { ref: 'titleScrollInterval', timer: this.titleScrollInterval },
+    { ref: 'appTimer', timer: this.appTimer }
   ];
 
-  timers.forEach((timer, index) => {
+  let clearedCount = 0;
+  timers.forEach(({ ref, timer }) => {
     if (timer) {
       clearInterval(timer);
-      clearTimeout(timer); // Also clear in case it's a timeout
+      clearTimeout(timer);
+      this[ref] = null;
+      clearedCount++;
+      console.log(`Timer cleared: ${ref}`);
     }
   });
 
-  // Reset timer references
-  this.progressInterval = null;
-  this.listeningTimeInterval = null;
-  this.longPressTimer = null;
-  this.titleScrollInterval = null;
+  console.log(`Successfully cleared ${clearedCount} active timers`);
+}
 
-  // Clean up YouTube player
+cleanupYouTubePlayer() {
+  console.log("Initiating YouTube player cleanup");
+  
   if (this.ytPlayer) {
     try {
+      if (typeof this.ytPlayer.pauseVideo === "function") {
+        this.ytPlayer.pauseVideo();
+        console.log("YouTube player paused");
+      }
+      
       if (typeof this.ytPlayer.destroy === "function") {
         this.ytPlayer.destroy();
-      } else if (typeof this.ytPlayer.stopVideo === "function") {
-        this.ytPlayer.stopVideo();
+        console.log("YouTube player instance destroyed");
       }
-    } catch (error) {
-      console.warn("Error destroying YouTube player:", error);
-    } finally {
+      
       this.ytPlayer = null;
+      this.isPlaying = false;
+      console.log("YouTube player cleanup completed");
+    } catch (error) {
+      console.warn("Error during YouTube player cleanup:", error.message);
+      this.ytPlayer = null;
+      this.isPlaying = false;
     }
+  } else {
+    console.log("No YouTube player instance found for cleanup");
   }
-    // Clean up YouTube player
-if (this.ytPlayer) {
+}
+
+restorePageAppearance() {
+  console.log("Restoring original page appearance");
+  
   try {
-    if (typeof this.ytPlayer.destroy === "function") {
-      this.ytPlayer.destroy();
-    } else if (typeof this.ytPlayer.stopVideo === "function") {
-      this.ytPlayer.stopVideo();
-    }
-  } catch (error) {
-    console.warn("Error destroying YouTube player:", error);
-  } finally {
-    this.ytPlayer = null;
-  }
-}
-
-// 🔥 Add this to completely remove the DOM node and break lingering references
-const ytPlayerEl = document.getElementById("ytPlayer");
-if (ytPlayerEl && ytPlayerEl.parentNode) {
-  ytPlayerEl.parentNode.removeChild(ytPlayerEl);
-}
-
-
-  // Restore original page appearance
-  this.restoreOriginalPageState();
-
-  // Disconnect observers
-  if (this.titleObserver) {
-    this.titleObserver.disconnect();
-    this.titleObserver = null;
-  }
-
-  // Remove modal elements
-  this.removeModalElements();
-
-  // Remove all event listeners
-  this.removeEventListeners();
-
-  // Clean up DOM event listeners for dynamically created elements
-  this.cleanupDynamicElements();
-
-  // Close IndexedDB connection
-  this.closeIndexedDB();
-
-  // Reset all state variables
-  this.resetStateVariables();
-
-  // Remove any remaining references
-  this.clearReferences();
-
-  console.log("Player resources cleaned up successfully");
-}
-
-restoreOriginalPageState() {
-  try {
-    // Restore original title and favicon
-    if (this.originalTitle) {
+    if (this.originalTitle && document.title !== this.originalTitle) {
       document.title = this.originalTitle;
+      console.log(`Page title restored: ${this.originalTitle}`);
     }
     
     const faviconLink = document.querySelector('link[rel="icon"]');
-    if (faviconLink && this.originalFavicon) {
+    if (faviconLink && this.originalFavicon && faviconLink.href !== this.originalFavicon) {
       faviconLink.href = this.originalFavicon;
+      console.log(`Favicon restored: ${this.originalFavicon}`);
     }
+    
+    if (this.isWebEmbedVisible) {
+      this.destroyWebEmbedOverlay();
+      console.log("Web embed overlay destroyed");
+    }
+    
+    console.log("Page appearance restoration completed");
   } catch (error) {
-    console.warn("Error restoring page state:", error);
+    console.warn("Error during page appearance restoration:", error.message);
   }
 }
 
-removeModalElements() {
-  const modalSelectors = [
-    ".recently-played-modal-bg",
-    ".lyrics-library-modal",
-    ".timer-modal",
-    ".import-modal",
-    ".export-modal",
-    ".settings-modal"
-  ];
-
-  modalSelectors.forEach(selector => {
-    try {
-      const modal = document.querySelector(selector);
-      if (modal && modal.parentNode) {
-        modal.parentNode.removeChild(modal);
-      }
-    } catch (error) {
-      console.warn(`Error removing modal ${selector}:`, error);
-    }
-  });
-}
-
-removeEventListeners() {
-  if (!this.elements) return;
-
-  const eventBindings = [
-    [this.elements.toggleControlBarBtn, "click", this.handleToggleControlBar],
-    [this.elements.modifyLibraryBtn, "click", this.handleOpenLibraryModal],
-    [this.elements.closeLibraryModalBtn, "click", this.handleCloseLibraryModal],
-    [this.elements.importLibraryBtn, "click", this.handleImportLibrary],
-    [this.elements.exportLibraryBtn, "click", this.handleExportLibrary],
-    [this.elements.loopPlaylistBtn, "click", this.handleTogglePlaylistLoop],
-    [this.elements.addSongBtn, "click", this.handleAddSong],
-    [this.elements.createPlaylistBtn, "click", this.handleCreatePlaylist],
-    [this.elements.closePlaylistModalBtn, "click", this.handleClosePlaylistModal],
-    [this.elements.addSongToPlaylistBtn, "click", this.handleAddSongToPlaylist],
-    [this.elements.playPauseBtn, "click", this.handleTogglePlayPause],
-    [this.elements.prevBtn, "click", this.handlePlayPrevious],
-    [this.elements.nextBtn, "click", this.handlePlayNext],
-    [this.elements.loopBtn, "click", this.handleToggleLoop],
-    [this.elements.showPlaylistBtn, "click", this.handleToggleSidebar],
-    [this.elements.closeSidebarBtn, "click", this.handleToggleSidebar],
-    [this.elements.themeToggle, "click", this.handleToggleTheme],
-    [this.elements.speedBtn, "click", this.handleToggleSpeedOptions],
-    [this.elements.librarySearch, "input", this.handleFilterLibrary],
-    [this.elements.librarySearch, "keydown", this.handleLibrarySearchKeydown],
-    [this.elements.searchSongsToAdd, "input", this.handleSearchSongsToAdd],
-    [this.elements.songUrlInput, "input", this.handleSongUrlInput],
-    [this.elements.songUrlInput, "keydown", this.handleSongUrlKeydown],
-    [this.elements.songUrlInput, "paste", this.handleUrlPaste],
-    [this.elements.songAuthorInput, "input", this.handleSongAuthorInput],
-    [this.elements.songAuthorInput, "keydown", this.handleSongAuthorKeydown],
-    [this.elements.newPlaylistName, "keydown", this.handleNewPlaylistNameKeydown],
-    [this.elements.volumeSlider, "input", this.handleVolumeChange],
-    [this.elements.progressBar, "click", this.handleSeekMusic],
-  ];
-
-  // Remove event listeners safely
-  eventBindings.forEach(([element, event, handler]) => {
-    if (element && handler) {
-      try {
-        element.removeEventListener(event, handler);
-      } catch (error) {
-        console.warn(`Error removing event listener for ${event}:`, error);
-      }
-    }
-  });
-
-  // Remove speed option listeners
-  document.querySelectorAll(".speed-option").forEach((option) => {
-    try {
-      option.removeEventListener("click", this.handleSpeedOptionClick);
-    } catch (error) {
-      console.warn("Error removing speed option listener:", error);
-    }
-  });
-
-  // Remove tab listeners
-  if (this.elements.tabs) {
-    this.elements.tabs.forEach((tab) => {
-      try {
-        if (tab._boundSwitchTab) {
-          tab.removeEventListener("click", tab._boundSwitchTab);
-          delete tab._boundSwitchTab;
-        }
-        // Also remove any other potential tab listeners
-        const newTab = tab.cloneNode(true);
-        if (tab.parentNode) {
-          tab.parentNode.replaceChild(newTab, tab);
-        }
-      } catch (error) {
-        console.warn("Error removing tab listener:", error);
-      }
-    });
-  }
-
-  // Remove keyboard event listeners
-  try {
-    document.removeEventListener("keydown", this.keyboardHandler);
-  } catch (error) {
-    console.warn("Error removing keyboard listener:", error);
-  }
-}
-
-cleanupDynamicElements() {
-  const dynamicSelectors = [
-    ".playlist-item",
-    ".song-item",
-    ".recently-played-item",
-    ".details-item",
-    ".section-title",
-    ".recently-played-settings-input"
-  ];
-
-  dynamicSelectors.forEach(selector => {
-    try {
-      const elements = document.querySelectorAll(selector);
-      elements.forEach((element) => {
-        // Clone and replace to remove all event listeners
-        const newElement = element.cloneNode(true);
-        if (element.parentNode) {
-          element.parentNode.replaceChild(newElement, element);
-        }
-      });
-    } catch (error) {
-      console.warn(`Error cleaning up ${selector}:`, error);
-    }
-  });
-
-  // Specific cleanup for playlist drag and drop
-  try {
-    const playlistItems = document.querySelectorAll(".playlist-item");
-    playlistItems.forEach((item) => {
-      item.removeEventListener("dragstart", this.handlePlaylistDragStart);
-      item.removeEventListener("dragover", this.handlePlaylistDragOver);
-      item.removeEventListener("drop", this.handlePlaylistDrop);
-      item.draggable = false;
-    });
-  } catch (error) {
-    console.warn("Error removing drag listeners:", error);
-  }
-}
-
-resetStateVariables() {
-  // Reset arrays and collections
-  this.playlists = [];
-  this.songLibrary = [];
-  this.recentlyPlayedSongs = [];
-  this.recentlyPlayedPlaylists = [];
-  this.temporarilySkippedSongs = new Set();
-
-  // Reset primitive values
-  this.isPlaying = false;
-  this.isLooping = false;
-  this.isPlaylistLooping = true;
-  this.isSidebarVisible = false;
-  this.currentPlaylist = null;
-  this.currentSongIndex = 0;
-  this.currentSpeed = 1;
-  this.listeningTime = 0;
-  this.currentDisguiseIndex = -1;
-  this.priorityModeActive = false;
-  this.allowDuplicates = true;
-  this.isVideoFullscreen = false;
-  this.recentlyPlayedLimit = 20;
-  this.currentTabIndex = 0;
-  this.isLongPressing = false;
-}
-
-clearReferences() {
-  // Clear all handler references
-  const handlers = [
-    'handleAddSong',
-    'handleFilterLibrary',
-    'handleLibrarySearchKeydown',
-    'handleCreatePlaylist',
-    'handleClosePlaylistModal',
-    'handleSearchSongsToAdd',
-    'handleAddSongToPlaylist',
-    'handleSeekMusic',
-    'handleTogglePlayPause',
-    'handlePlayPrevious',
-    'handlePlayNext',
-    'handleToggleLoop',
-    'handlePlaylistDragStart',
-    'handlePlaylistDragOver',
-    'handlePlaylistDrop',
-    'handleVolumeChange',
-    'handleToggleSidebar',
-    'handleOpenLibraryModal',
-    'handleCloseLibraryModal',
-    'handleToggleControlBar',
-    'handleToggleTheme',
-    'handleToggleSpeedOptions',
-    'handleSpeedOptionClick',
-    'handleImportLibrary',
-    'handleExportLibrary',
-    'handleTogglePlaylistLoop',
-    'handleSongUrlInput',
-    'handleSongUrlKeydown',
-    'handleSongAuthorInput',
-    'handleSongAuthorKeydown',
-    'handleNewPlaylistNameKeydown',
-    'handleUrlPaste'
-  ];
-
-  handlers.forEach(handler => {
-    this[handler] = null;
-  });
-
-  // Clear element references
-  this.elements = null;
+disconnectObservers() {
+  console.log("Disconnecting mutation observers");
   
-  // Clear other object references
-  this.progressBar = null;
-  this.listeningTimeDisplay = null;
+  if (this.titleObserver) {
+    try {
+      this.titleObserver.disconnect();
+      this.titleObserver = null;
+      console.log("Title observer disconnected successfully");
+    } catch (error) {
+      console.warn("Error disconnecting title observer:", error.message);
+    }
+  } else {
+    console.log("No active observers found for disconnection");
+  }
 }
 
-closeIndexedDB() {
+removeDynamicEventListeners() {
+  console.log("Removing dynamic event listeners");
+  
+  let removedCount = 0;
+  
+  try {
+    const contextMenuHandler = this.contextMenuHandler;
+    if (contextMenuHandler) {
+      document.removeEventListener('contextmenu', contextMenuHandler);
+      removedCount++;
+      console.log("Context menu event listener removed");
+    }
+  } catch (error) {
+    console.warn("Error removing context menu listener:", error.message);
+  }
+  
+  try {
+    const keyboardHandler = this.keyboardHandler;
+    if (keyboardHandler) {
+      document.removeEventListener('keydown', keyboardHandler);
+      removedCount++;
+      console.log("Global keyboard event listener removed");
+    }
+  } catch (error) {
+    console.warn("Error removing keyboard listener:", error.message);
+  }
+  
+  try {
+    const playlistItems = document.querySelectorAll(".playlist-item[draggable='true']");
+    playlistItems.forEach((item) => {
+      item.draggable = false;
+      removedCount++;
+    });
+    if (playlistItems.length > 0) {
+      console.log(`Drag functionality removed from ${playlistItems.length} playlist items`);
+    }
+  } catch (error) {
+    console.warn("Error removing drag functionality:", error.message);
+  }
+  
+  console.log(`Dynamic event listener removal completed: ${removedCount} listeners processed`);
+}
+
+gracefulDatabaseClose() {
+  console.log("Initiating graceful database connection closure");
+  
   if (this.db) {
     try {
-      // Close any pending transactions first
-      this.db.close();
-      console.log("IndexedDB connection closed");
+      setTimeout(() => {
+        if (this.db) {
+          this.db.close();
+          this.db = null;
+          console.log("Database connection closed successfully");
+        }
+      }, 100);
     } catch (error) {
-      console.error("Error closing IndexedDB:", error);
-    } finally {
+      console.warn("Error during database closure:", error.message);
       this.db = null;
     }
+  } else {
+    console.log("No active database connection found");
   }
 }
 }
