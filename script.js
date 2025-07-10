@@ -29,6 +29,9 @@ class AdvancedMusicPlayer {
     this.isVideoFullscreen = false;
     this.webEmbedOverlay = null;
     this.isWebEmbedVisible = false;
+    this.appTimer = null;
+    this.timerEndTime = null;
+    this.currentLayout = "center";
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
       'https://www.google.com',
@@ -284,6 +287,8 @@ class AdvancedMusicPlayer {
     this.handlePlaylistDragStart = this.handlePlaylistDragStart.bind(this);
     this.handlePlaylistDragOver = this.handlePlaylistDragOver.bind(this);
      this.elements.autofillBtn = document.getElementById("autofillBtn");
+    this.setupTimerEventListeners();
+  this.setupLayoutEventListeners();
     
     this.elements.autofillBtn.addEventListener("click", this.handleAutofill.bind(this));
     
@@ -6429,6 +6434,238 @@ cycleWebEmbedSite() {
     }
   }
 }
+
+  setSpecificTimeTimer(timeString) {
+  const [hours, minutes] = timeString.split(":").map(Number);
+
+  const now = new Date();
+  const targetTime = new Date();
+
+  targetTime.setHours(hours, minutes, 0, 0);
+
+  if (targetTime < now) {
+    targetTime.setDate(targetTime.getDate() + 1);
+  }
+
+  const timeDiff = targetTime - now;
+
+  const minutesDiff = (timeDiff / 60000).toFixed(2);
+  this.setAppTimer(parseFloat(minutesDiff), targetTime);
+}
+
+setAppTimer(minutes, specificEndTime = null) {
+  this.clearAppTimer();
+
+  const milliseconds = minutes * 60000;
+  if (specificEndTime) {
+    this.timerEndTime = specificEndTime;
+  } else {
+    this.timerEndTime = new Date(Date.now() + milliseconds);
+  }
+
+  const timerStatus = document.getElementById("timerStatus");
+
+  if (specificEndTime) {
+    const formattedTime = this.timerEndTime.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    timerStatus.textContent = `App will close at ${formattedTime} (in ${minutes.toFixed(
+      2
+    )} minutes)`;
+
+    const timerDisplay = document.getElementById("timerDisplay");
+    timerDisplay.textContent = formattedTime;
+    timerDisplay.style.display = "inline";
+  } else {
+    timerStatus.textContent = `App will close in ${minutes.toFixed(2)} minutes`;
+
+    const timerDisplay = document.getElementById("timerDisplay");
+    timerDisplay.textContent = `${Math.floor(minutes)}m`;
+    timerDisplay.style.display = "inline";
+  }
+
+  document.getElementById("cancelTimer").style.display = "inline-block";
+
+  this.appTimer = setTimeout(() => {
+    try {
+      window.close();
+      window.open("", "_self").close();
+    } catch (e) {
+      console.log("Standard window close failed:", e);
+    }
+
+    try {
+      window.location.replace("about:blank");
+    } catch (e) {
+      console.log("Navigation redirect failed:", e);
+    }
+    document.body.innerHTML =
+      '<div style="text-align: center; padding: 50px; background: #1a1a1a; color: #fff; position: fixed; top: 0; left: 0; right: 0; bottom: 0;"><h1>Session Ended</h1><p>Your music session has ended. The app has been closed.</p><button onclick="window.location.reload()" style="padding: 10px 20px; margin-top: 20px; background: #3498db; border: none; color: white; border-radius: 4px; cursor: pointer;">Restart App</button></div>';
+
+    const scripts = document.getElementsByTagName("script");
+    for (let i = scripts.length - 1; i >= 0; i--) {
+      if (scripts[i].parentNode) {
+        scripts[i].parentNode.removeChild(scripts[i]);
+      }
+    }
+  }, milliseconds);
+
+  document.getElementById("timerModal").style.display = "none";
+  this.updateTimerCountdown();
+}
+
+clearAppTimer() {
+  if (this.appTimer) {
+    clearTimeout(this.appTimer);
+    this.appTimer = null;
+    this.timerEndTime = null;
+
+    const timerStatus = document.getElementById("timerStatus");
+    timerStatus.textContent = "No timer set";
+
+    document.getElementById("cancelTimer").style.display = "none";
+
+    const timerDisplay = document.getElementById("timerDisplay");
+    timerDisplay.textContent = "";
+    timerDisplay.style.display = "none";
+  }
+}
+
+updateTimerCountdown() {
+  if (this.timerEndTime) {
+    const now = new Date();
+    const timeLeft = this.timerEndTime - now;
+
+    if (timeLeft > 0) {
+      const minutes = Math.floor(timeLeft / 60000);
+      const seconds = Math.floor((timeLeft % 60000) / 1000);
+
+      const timerStatus = document.getElementById("timerStatus");
+      timerStatus.textContent = `App will close in ${minutes}m ${seconds}s`;
+
+      const timerDisplay = document.getElementById("timerDisplay");
+      if (minutes > 0) {
+        timerDisplay.textContent = `${minutes}m ${seconds}s`;
+      } else {
+        timerDisplay.textContent = `${seconds}s`;
+      }
+
+      setTimeout(() => this.updateTimerCountdown(), 1000);
+    }
+  }
+}
+
+openTimerModal() {
+  document.getElementById("timerModal").style.display = "flex";
+
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  document.getElementById("specificTimeInput").value = `${hours}:${minutes}`;
+}
+
+adjustLayoutTogglePosition() {
+  const playlistSidebar = document.getElementById("currentPlaylistSidebar");
+  if (playlistSidebar.classList.contains("open")) {
+    document.querySelector(".layout-toggle").style.left = "300px";
+  } else {
+    document.querySelector(".layout-toggle").style.left = "15px";
+  }
+}
+
+setupTimerEventListeners() {
+  document.getElementById("timerButton").addEventListener("click", () => {
+    this.openTimerModal();
+  });
+
+  document.getElementById("closeTimerModal").addEventListener("click", () => {
+    document.getElementById("timerModal").style.display = "none";
+  });
+
+  document.querySelectorAll(".timer-options button").forEach((button) => {
+    button.addEventListener("click", () => {
+      const minutes = parseFloat(button.getAttribute("data-time"));
+      this.setAppTimer(minutes);
+    });
+  });
+
+  document.getElementById("setCustomTimer").addEventListener("click", () => {
+    const customMinutes = parseFloat(
+      document.getElementById("customTimerInput").value
+    );
+    if (customMinutes > 0) {
+      this.setAppTimer(customMinutes);
+    }
+  });
+
+  document.getElementById("cancelTimer").addEventListener("click", () => {
+    this.clearAppTimer();
+  });
+
+  document.getElementById("setSpecificTime").addEventListener("click", () => {
+    const timeInput = document.getElementById("specificTimeInput").value;
+    if (timeInput) {
+      this.setSpecificTimeTimer(timeInput);
+    }
+  });
+
+  window.addEventListener("click", (event) => {
+    if (event.target === document.getElementById("timerModal")) {
+      document.getElementById("timerModal").style.display = "none";
+    }
+  });
+}
+
+setupLayoutEventListeners() {
+  const layoutToggleBtn = document.getElementById("layoutToggleBtn");
+  const nowPlayingSection = document.querySelector(".now-playing");
+  const playlistSidebar = document.getElementById("currentPlaylistSidebar");
+
+  layoutToggleBtn.addEventListener("click", () => {
+    nowPlayingSection.classList.remove(
+      "controls-left",
+      "controls-center",
+      "controls-right"
+    );
+
+    if (this.currentLayout === "center") {
+      this.currentLayout = "left";
+      nowPlayingSection.classList.add("controls-left");
+      layoutToggleBtn.title = "Controls aligned left";
+    } else if (this.currentLayout === "left") {
+      this.currentLayout = "right";
+      nowPlayingSection.classList.add("controls-right");
+      layoutToggleBtn.title = "Controls aligned right";
+    } else {
+      this.currentLayout = "center";
+      nowPlayingSection.classList.add("controls-center");
+      layoutToggleBtn.title = "Controls aligned center";
+    }
+  });
+
+  // Load saved layout
+  const savedLayout = localStorage.getItem("controlsLayout");
+  if (savedLayout) {
+    this.currentLayout = savedLayout;
+    nowPlayingSection.classList.add(`controls-${this.currentLayout}`);
+  } else {
+    nowPlayingSection.classList.add("controls-center");
+  }
+
+  const showPlaylistBtn = document.getElementById("showPlaylistBtn");
+  const closeSidebarBtn = document.getElementById("closeSidebarBtn");
+
+  showPlaylistBtn.addEventListener("click", () => {
+    setTimeout(() => this.adjustLayoutTogglePosition(), 10);
+  });
+
+  closeSidebarBtn.addEventListener("click", () => {
+    setTimeout(() => this.adjustLayoutTogglePosition(), 10);
+  });
+
+  this.adjustLayoutTogglePosition();
+}
   cleanup() {
   console.log("Starting cleanup process...");
   this.destroyWebEmbedOverlay();
@@ -6768,8 +7005,8 @@ closeIndexedDB() {
   }
 }
 }
-
 let musicPlayer;
+
 function initializeMusicPlayer() {
   musicPlayer = new AdvancedMusicPlayer();
 }
@@ -6779,239 +7016,5 @@ window.addEventListener("beforeunload", () => {
     musicPlayer.cleanup();
   }
 });
-document.addEventListener("DOMContentLoaded", function () {
-  const layoutToggleBtn = document.getElementById("layoutToggleBtn");
-  const nowPlayingSection = document.querySelector(".now-playing");
-  const playlistSidebar = document.getElementById("currentPlaylistSidebar");
 
-  let currentLayout = "center";
-
-  layoutToggleBtn.addEventListener("click", function () {
-    nowPlayingSection.classList.remove(
-      "controls-left",
-      "controls-center",
-      "controls-right"
-    );
-
-    if (currentLayout === "center") {
-      currentLayout = "left";
-      nowPlayingSection.classList.add("controls-left");
-      layoutToggleBtn.title = "Controls aligned left";
-    } else if (currentLayout === "left") {
-      currentLayout = "right";
-      nowPlayingSection.classList.add("controls-right");
-      layoutToggleBtn.title = "Controls aligned right";
-    } else {
-      currentLayout = "center";
-      nowPlayingSection.classList.add("controls-center");
-      layoutToggleBtn.title = "Controls aligned center";
-    }
-
-    localStorage.setItem("controlsLayout", currentLayout);
-  });
-
-  const savedLayout = localStorage.getItem("controlsLayout");
-  if (savedLayout) {
-    currentLayout = savedLayout;
-    nowPlayingSection.classList.add(`controls-${currentLayout}`);
-  } else {
-    nowPlayingSection.classList.add("controls-center");
-  }
-
-  const adjustLayoutTogglePosition = function () {
-    if (playlistSidebar.classList.contains("open")) {
-      document.querySelector(".layout-toggle").style.left = "300px";
-    } else {
-      document.querySelector(".layout-toggle").style.left = "15px";
-    }
-  };
-
-  const showPlaylistBtn = document.getElementById("showPlaylistBtn");
-  const closeSidebarBtn = document.getElementById("closeSidebarBtn");
-
-  showPlaylistBtn.addEventListener("click", function () {
-    setTimeout(adjustLayoutTogglePosition, 10);
-  });
-
-  closeSidebarBtn.addEventListener("click", function () {
-    setTimeout(adjustLayoutTogglePosition, 10);
-  });
-
-  adjustLayoutTogglePosition();
-});
-let appTimer = null;
-let timerEndTime = null;
-
-document.getElementById("timerButton").addEventListener("click", function () {
-  document.getElementById("timerModal").style.display = "flex";
-
-  const now = new Date();
-  const hours = String(now.getHours()).padStart(2, "0");
-  const minutes = String(now.getMinutes()).padStart(2, "0");
-  document.getElementById("specificTimeInput").value = `${hours}:${minutes}`;
-});
-
-document
-  .getElementById("closeTimerModal")
-  .addEventListener("click", function () {
-    document.getElementById("timerModal").style.display = "none";
-  });
-
-document.querySelectorAll(".timer-options button").forEach((button) => {
-  button.addEventListener("click", function () {
-    const minutes = parseFloat(this.getAttribute("data-time"));
-    setAppTimer(minutes);
-  });
-});
-
-document
-  .getElementById("setCustomTimer")
-  .addEventListener("click", function () {
-    const customMinutes = parseFloat(
-      document.getElementById("customTimerInput").value
-    );
-    if (customMinutes > 0) {
-      setAppTimer(customMinutes);
-    }
-  });
-
-document.getElementById("cancelTimer").addEventListener("click", function () {
-  clearAppTimer();
-});
-document
-  .getElementById("setSpecificTime")
-  .addEventListener("click", function () {
-    const timeInput = document.getElementById("specificTimeInput").value;
-    if (timeInput) {
-      setSpecificTimeTimer(timeInput);
-    }
-  });
-
-function setSpecificTimeTimer(timeString) {
-  const [hours, minutes] = timeString.split(":").map(Number);
-
-  const now = new Date();
-  const targetTime = new Date();
-
-  targetTime.setHours(hours, minutes, 0, 0);
-
-  if (targetTime < now) {
-    targetTime.setDate(targetTime.getDate() + 1);
-  }
-
-  const timeDiff = targetTime - now;
-
-  const minutesDiff = (timeDiff / 60000).toFixed(2);
-  setAppTimer(parseFloat(minutesDiff), targetTime);
-}
-
-function setAppTimer(minutes, specificEndTime = null) {
-  clearAppTimer();
-
-  const milliseconds = minutes * 60000;
-  if (specificEndTime) {
-    timerEndTime = specificEndTime;
-  } else {
-    timerEndTime = new Date(Date.now() + milliseconds);
-  }
-
-  const timerStatus = document.getElementById("timerStatus");
-
-  if (specificEndTime) {
-    const formattedTime = timerEndTime.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    timerStatus.textContent = `App will close at ${formattedTime} (in ${minutes.toFixed(
-      2
-    )} minutes)`;
-
-    const timerDisplay = document.getElementById("timerDisplay");
-    timerDisplay.textContent = formattedTime;
-    timerDisplay.style.display = "inline";
-  } else {
-    timerStatus.textContent = `App will close in ${minutes.toFixed(2)} minutes`;
-
-    const timerDisplay = document.getElementById("timerDisplay");
-    timerDisplay.textContent = `${Math.floor(minutes)}m`;
-    timerDisplay.style.display = "inline";
-  }
-
-  document.getElementById("cancelTimer").style.display = "inline-block";
-
-  appTimer = setTimeout(function () {
-    try {
-      window.close();
-
-      window.open("", "_self").close();
-    } catch (e) {
-      console.log("Standard window close failed:", e);
-    }
-
-    try {
-      window.location.replace("about:blank");
-    } catch (e) {
-      console.log("Navigation redirect failed:", e);
-    }
-    document.body.innerHTML =
-      '<div style="text-align: center; padding: 50px; background: #1a1a1a; color: #fff; position: fixed; top: 0; left: 0; right: 0; bottom: 0;"><h1>Session Ended</h1><p>Your music session has ended. The app has been closed.</p><button onclick="window.location.reload()" style="padding: 10px 20px; margin-top: 20px; background: #3498db; border: none; color: white; border-radius: 4px; cursor: pointer;">Restart App</button></div>';
-
-    const scripts = document.getElementsByTagName("script");
-    for (let i = scripts.length - 1; i >= 0; i--) {
-      if (scripts[i].parentNode) {
-        scripts[i].parentNode.removeChild(scripts[i]);
-      }
-    }
-  }, milliseconds);
-
-  document.getElementById("timerModal").style.display = "none";
-  updateTimerCountdown();
-}
-
-function clearAppTimer() {
-  if (appTimer) {
-    clearTimeout(appTimer);
-    appTimer = null;
-    timerEndTime = null;
-
-    const timerStatus = document.getElementById("timerStatus");
-    timerStatus.textContent = "No timer set";
-
-    document.getElementById("cancelTimer").style.display = "none";
-
-    const timerDisplay = document.getElementById("timerDisplay");
-    timerDisplay.textContent = "";
-    timerDisplay.style.display = "none";
-  }
-}
-
-function updateTimerCountdown() {
-  if (timerEndTime) {
-    const now = new Date();
-    const timeLeft = timerEndTime - now;
-
-    if (timeLeft > 0) {
-      const minutes = Math.floor(timeLeft / 60000);
-      const seconds = Math.floor((timeLeft % 60000) / 1000);
-
-      const timerStatus = document.getElementById("timerStatus");
-      timerStatus.textContent = `App will close in ${minutes}m ${seconds}s`;
-
-      const timerDisplay = document.getElementById("timerDisplay");
-      if (minutes > 0) {
-        timerDisplay.textContent = `${minutes}m ${seconds}s`;
-      } else {
-        timerDisplay.textContent = `${seconds}s`;
-      }
-
-      setTimeout(updateTimerCountdown, 1000);
-    }
-  }
-}
-
-window.addEventListener("click", function (event) {
-  if (event.target === document.getElementById("timerModal")) {
-    document.getElementById("timerModal").style.display = "none";
-  }
-});
 document.addEventListener("DOMContentLoaded", initializeMusicPlayer);
