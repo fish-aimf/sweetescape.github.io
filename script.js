@@ -6149,6 +6149,7 @@ createWebEmbedOverlay() {
   
   this.webEmbedOverlay = document.createElement('div');
   this.webEmbedOverlay.id = 'web-embed-overlay';
+  this.webEmbedOverlay.tabIndex = 0;
   this.webEmbedOverlay.style.cssText = `
     position: fixed;
     top: 0;
@@ -6158,7 +6159,28 @@ createWebEmbedOverlay() {
     background: white;
     z-index: 9999;
     display: none;
+    outline: none;
   `;
+  
+  // Create exit button
+  const exitBtn = document.createElement('button');
+  exitBtn.innerHTML = '×';
+  exitBtn.style.cssText = `
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    z-index: 10000;
+    font-weight: bold;
+  `;
+  exitBtn.onclick = () => this.toggleWebEmbedOverlay();
   
   const iframe = document.createElement('iframe');
   iframe.id = 'web-embed-iframe';
@@ -6166,13 +6188,31 @@ createWebEmbedOverlay() {
   iframe.style.cssText = 'width: 100%; height: 100%; border: none;';
   
   this.webEmbedOverlay.appendChild(iframe);
+  this.webEmbedOverlay.appendChild(exitBtn);
   document.body.appendChild(this.webEmbedOverlay);
+  
+  // Only capture ESC key for exit - let 'c' work normally in the embed
+  this.webEmbedOverlay.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      this.toggleWebEmbedOverlay();
+    }
+    // Shift+C still cycles through sites
+    if (e.key.toLowerCase() === 'c' && e.shiftKey) {
+      e.preventDefault();
+      this.cycleWebEmbedSite();
+    }
+  });
 }
 
 toggleWebEmbedOverlay() {
   this.createWebEmbedOverlay();
   this.isWebEmbedVisible = !this.isWebEmbedVisible;
   this.webEmbedOverlay.style.display = this.isWebEmbedVisible ? 'block' : 'none';
+  
+  if (this.isWebEmbedVisible) {
+    this.webEmbedOverlay.focus();
+  }
 }
 
 cycleWebEmbedSite() {
