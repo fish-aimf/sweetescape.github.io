@@ -27,6 +27,18 @@ class AdvancedMusicPlayer {
     this.originalTitle = document.title;
     this.allowDuplicates = true;
     this.isVideoFullscreen = false;
+
+    // Add these lines in constructor after existing properties
+    this.webEmbedOverlay = null;
+    this.isWebEmbedVisible = false;
+    this.webEmbedSites = [
+      'https://www.desmos.com/calculator',
+      'https://www.google.com',
+      'https://www.wikipedia.org',
+      'https://www.youtube.com',
+      'https://www.github.com'
+    ];
+    this.currentWebEmbedIndex = 0;
     this.pageDisguises = [
       {
         favicon: "https://i.ibb.co/W4MfKV9X/image.png",
@@ -395,7 +407,6 @@ class AdvancedMusicPlayer {
       tab.addEventListener("click", () => this.switchTab(tab.dataset.tab));
     });
   }
-
 setupKeyboardControls() {
   if (!this.currentTabIndex) {
     this.currentTabIndex = 0;
@@ -414,6 +425,18 @@ setupKeyboardControls() {
     // Handle 'b' key for favicon/title cycling
     if (e.key.toLowerCase() === "b") {
       this.cycleFaviconAndTitle();
+      return;
+    }
+    
+    // Handle 'c' key for web embed overlay
+    if (e.key.toLowerCase() === "c") {
+      if (e.shiftKey) {
+        // Shift+C cycles through websites
+        this.cycleWebEmbedSite();
+      } else {
+        // C toggles the overlay
+        this.toggleWebEmbedOverlay();
+      }
       return;
     }
     
@@ -446,7 +469,8 @@ setupKeyboardControls() {
         "KeyQ",
         "KeyH",
         "KeyU",
-        "KeyY"
+        "KeyY",
+        "KeyC"
       ].includes(e.code)
     ) {
       e.preventDefault();
@@ -6117,6 +6141,49 @@ addQueueStyles() {
     }
   `;
   document.head.appendChild(style);
+}
+
+  // Add these methods to your class
+createWebEmbedOverlay() {
+  if (this.webEmbedOverlay) return;
+  
+  this.webEmbedOverlay = document.createElement('div');
+  this.webEmbedOverlay.id = 'web-embed-overlay';
+  this.webEmbedOverlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: white;
+    z-index: 9999;
+    display: none;
+  `;
+  
+  const iframe = document.createElement('iframe');
+  iframe.id = 'web-embed-iframe';
+  iframe.src = this.webEmbedSites[this.currentWebEmbedIndex];
+  iframe.style.cssText = 'width: 100%; height: 100%; border: none;';
+  
+  this.webEmbedOverlay.appendChild(iframe);
+  document.body.appendChild(this.webEmbedOverlay);
+}
+
+toggleWebEmbedOverlay() {
+  this.createWebEmbedOverlay();
+  this.isWebEmbedVisible = !this.isWebEmbedVisible;
+  this.webEmbedOverlay.style.display = this.isWebEmbedVisible ? 'block' : 'none';
+}
+
+cycleWebEmbedSite() {
+  this.currentWebEmbedIndex = (this.currentWebEmbedIndex + 1) % this.webEmbedSites.length;
+  
+  if (this.webEmbedOverlay) {
+    const iframe = document.getElementById('web-embed-iframe');
+    if (iframe) {
+      iframe.src = this.webEmbedSites[this.currentWebEmbedIndex];
+    }
+  }
 }
   cleanup() {
   console.log("Starting cleanup process...");
