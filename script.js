@@ -356,7 +356,7 @@ class AdvancedMusicPlayer {
       }
     });
   }
-}
+
   loadSongLibrary() {
     return new Promise((resolve, reject) => {
       if (!this.db) {
