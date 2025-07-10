@@ -27,8 +27,6 @@ class AdvancedMusicPlayer {
     this.originalTitle = document.title;
     this.allowDuplicates = true;
     this.isVideoFullscreen = false;
-
-    // Add these lines in constructor after existing properties
     this.webEmbedOverlay = null;
     this.isWebEmbedVisible = false;
     this.webEmbedSites = [
@@ -222,6 +220,12 @@ class AdvancedMusicPlayer {
     if (this.elements.speedBtn) {
       this.elements.speedBtn.textContent = this.currentSpeed + "x";
     }
+    this.elements.songNameInput = document.getElementById("songName");
+    this.elements.songAuthorInput = document.getElementById("songAuthor");
+    this.elements.songUrlInput = document.getElementById("songUrl");
+    this.elements.addSongBtn = document.getElementById("addSongBtn");
+    this.elements.autofillBtn = document.getElementById("autofillBtn");
+    this.elements.songLibrary = document.getElementById("songLibrary");
 
     const controlBarVisible = localStorage.getItem("controlBarVisible");
     if (controlBarVisible === "false") {
@@ -279,6 +283,15 @@ class AdvancedMusicPlayer {
     this.addQueueStyles();
     this.handlePlaylistDragStart = this.handlePlaylistDragStart.bind(this);
     this.handlePlaylistDragOver = this.handlePlaylistDragOver.bind(this);
+     this.elements.autofillBtn = document.getElementById("autofillBtn");
+    
+    this.elements.autofillBtn.addEventListener("click", this.handleAutofill.bind(this));
+    
+    this.elements.autofillBtn.addEventListener("mouseenter", this.showGhostPreview.bind(this));
+    this.elements.autofillBtn.addEventListener("mouseleave", this.removeGhostPreview.bind(this));
+    
+    this.elements.songUrlInput.addEventListener("input", this.handleUrlPaste.bind(this));
+
     
 
     document.addEventListener('contextmenu', (e) => {
@@ -288,7 +301,6 @@ class AdvancedMusicPlayer {
         e.target.onclick?.toString().includes('playPlaylist')) {
       e.preventDefault();
       
-      // Get song data from the button's parent element or onclick attribute
       const songElement = e.target.closest('[data-song-id]') || e.target.closest('[data-playlist-id]');
       
       if (songElement && songElement.dataset.songId) {
@@ -800,26 +812,37 @@ handleTouchEnd(e) {
         alert("Failed to save song. Please try again.");
       });
   }
-
   handleUrlPaste() {
-    const songUrl = this.elements.songUrlInput.value.trim();
-    const songName = this.elements.songNameInput.value.trim();
-
-    if (!songName && songUrl) {
-      const videoId = this.extractYouTubeId(songUrl);
-      if (videoId) {
-        this.fetchYouTubeTitle(videoId)
-          .then((title) => {
-            if (title && !this.elements.songNameInput.value.trim()) {
-              this.elements.songNameInput.value = title;
-            }
-          })
-          .catch((error) => {
-            console.warn("Could not fetch YouTube title:", error);
-          });
+      const songUrl = this.elements.songUrlInput.value.trim();
+      const songName = this.elements.songNameInput.value.trim();
+      
+      if (songUrl) {
+          const videoId = this.extractYouTubeId(songUrl);
+          if (videoId) {
+              this.showYouTubeThumbnailPreview(videoId);
+              this.elements.autofillBtn.disabled = false;
+              
+              if (!songName) {
+                  this.fetchYouTubeTitle(videoId)
+                      .then((title) => {
+                          if (title && !this.elements.songNameInput.value.trim()) {
+                              this.elements.songNameInput.value = title;
+                          }
+                      })
+                      .catch((error) => {
+                          console.warn("Could not fetch YouTube title:", error);
+                      });
+              }
+          } else {
+              this.removeYouTubeThumbnailPreview();
+              this.elements.autofillBtn.disabled = true;
+          }
+      } else {
+          this.removeYouTubeThumbnailPreview();
+          this.elements.autofillBtn.disabled = true;
       }
-    }
   }
+
 
   fetchYouTubeTitle(videoId) {
     return new Promise((resolve, reject) => {
@@ -3435,29 +3458,50 @@ updatePlayerUI() {
       this.checkVideoRestrictions(videoId);
     }
   }
-
-  showYouTubeThumbnailPreview(videoId) {
+showYouTubeThumbnailPreview(videoId) {
+    this.removeYouTubeThumbnailPreview();
+    
     const previewContainer = document.createElement("div");
     previewContainer.id = "thumbnailPreview";
     previewContainer.classList.add("thumbnail-preview");
+    
     const thumbnail = document.createElement("img");
     thumbnail.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
     thumbnail.alt = "Video thumbnail";
+    
+    const videoTitle = document.createElement("div");
+    videoTitle.classList.add("video-title");
+    videoTitle.textContent = "Loading video title...";
+    
     const closeButton = document.createElement("button");
     closeButton.innerHTML = "&times;";
     closeButton.classList.add("thumbnail-close-btn");
     closeButton.onclick = this.removeYouTubeThumbnailPreview.bind(this);
+    
     previewContainer.appendChild(thumbnail);
+    previewContainer.appendChild(videoTitle);
     previewContainer.appendChild(closeButton);
+    
     document.querySelector(".add-song-section").appendChild(previewContainer);
-  }
+    
+    this.fetchYouTubeTitle(videoId)
+        .then((title) => {
+            if (title) {
+                videoTitle.textContent = title;
+            }
+        })
+        .catch((error) => {
+            console.warn("Could not fetch YouTube title:", error);
+            videoTitle.textContent = "Could not load video title";
+        });
+}
 
-  removeYouTubeThumbnailPreview() {
+removeYouTubeThumbnailPreview() {
     const existingPreview = document.getElementById("thumbnailPreview");
     if (existingPreview) {
-      existingPreview.remove();
+        existingPreview.remove();
     }
-  }
+}
 
   checkVideoRestrictions(videoId) {
     const tempPlayer = document.createElement("div");
@@ -3486,6 +3530,139 @@ updatePlayerUI() {
       },
     });
   }
+  
+parseVideoTitle(title) {
+    if (!title) return { author: "", songName: "" };
+    
+    let cleanTitle = title.trim();
+    
+    const removePatterns = [
+        /\(official\s+video\)/gi,
+        /\(official\s+audio\)/gi,
+        /\(official\)/gi,
+        /\(music\s+video\)/gi,
+        /\(lyric\s+video\)/gi,
+        /\(lyrics\)/gi,
+        /\[official\s+video\]/gi,
+        /\[official\s+audio\]/gi,
+        /\[official\]/gi,
+        /\[music\s+video\]/gi,
+        /\[lyric\s+video\]/gi,
+        /\[lyrics\]/gi,
+        /official\s+video/gi,
+        /official\s+audio/gi,
+        /music\s+video/gi,
+        /lyric\s+video/gi,
+        /\(hd\)/gi,
+        /\[hd\]/gi,
+        /\(4k\)/gi,
+        /\[4k\]/gi,
+        /\(remastered\)/gi,
+        /\[remastered\]/gi
+    ];
+    
+    removePatterns.forEach(pattern => {
+        cleanTitle = cleanTitle.replace(pattern, "");
+    });
+    
+    cleanTitle = cleanTitle.replace(/\s+/g, " ").trim();
+    
+    const hyphenIndex = cleanTitle.indexOf(" - ");
+    if (hyphenIndex !== -1) {
+        const author = cleanTitle.substring(0, hyphenIndex).trim();
+        const songName = cleanTitle.substring(hyphenIndex + 3).trim();
+        return { author, songName };
+    }
+    
+    const byIndex = cleanTitle.toLowerCase().indexOf(" by ");
+    if (byIndex !== -1) {
+        const songName = cleanTitle.substring(0, byIndex).trim();
+        const author = cleanTitle.substring(byIndex + 4).trim();
+        return { author, songName };
+    }
+    
+    return { author: "", songName: cleanTitle };
+}
+
+handleAutofill() {
+    const songUrl = this.elements.songUrlInput.value.trim();
+    if (!songUrl) return;
+    
+    const videoId = this.extractYouTubeId(songUrl);
+    if (!videoId) return;
+    
+    this.fetchYouTubeTitle(videoId)
+        .then((title) => {
+            if (title) {
+                const { author, songName } = this.parseVideoTitle(title);
+                this.elements.songNameInput.value = songName;
+                this.elements.songAuthorInput.value = author;
+            }
+        })
+        .catch((error) => {
+            console.error("Error fetching video title for autofill:", error);
+            alert("Could not fetch video information for autofill");
+        });
+}
+
+showGhostPreview(event) {
+    const songUrl = this.elements.songUrlInput.value.trim();
+    if (!songUrl) return;
+    
+    const videoId = this.extractYouTubeId(songUrl);
+    if (!videoId) return;
+    
+    this.fetchYouTubeTitle(videoId)
+        .then((title) => {
+            if (title) {
+                const { author, songName } = this.parseVideoTitle(title);
+                this.createGhostPreview(songName, author, event);
+            }
+        })
+        .catch((error) => {
+            console.warn("Could not fetch title for ghost preview:", error);
+        });
+}
+
+createGhostPreview(songName, author, event) {
+    this.removeGhostPreview();
+    
+    const nameInput = this.elements.songNameInput;
+    const authorInput = this.elements.songAuthorInput;
+    
+    if (songName && songName !== nameInput.value) {
+        const nameRect = nameInput.getBoundingClientRect();
+        const nameGhost = document.createElement("div");
+        nameGhost.classList.add("ghost-preview");
+        nameGhost.textContent = songName;
+        nameGhost.style.left = nameRect.left + "px";
+        nameGhost.style.top = nameRect.top + "px";
+        nameGhost.style.width = nameRect.width + "px";
+        nameGhost.style.height = nameRect.height + "px";
+        nameGhost.id = "nameGhost";
+        document.body.appendChild(nameGhost);
+    }
+    
+    if (author && author !== authorInput.value) {
+        const authorRect = authorInput.getBoundingClientRect();
+        const authorGhost = document.createElement("div");
+        authorGhost.classList.add("ghost-preview");
+        authorGhost.textContent = author;
+        authorGhost.style.left = authorRect.left + "px";
+        authorGhost.style.top = authorRect.top + "px";
+        authorGhost.style.width = authorRect.width + "px";
+        authorGhost.style.height = authorRect.height + "px";
+        authorGhost.id = "authorGhost";
+        document.body.appendChild(authorGhost);
+    }
+}
+
+removeGhostPreview() {
+    const nameGhost = document.getElementById("nameGhost");
+    const authorGhost = document.getElementById("authorGhost");
+    if (nameGhost) nameGhost.remove();
+    if (authorGhost) authorGhost.remove();
+}
   openSongEditModal(songId) {
     const song = this.songLibrary.find((s) => s.id === songId);
     if (!song) return;
