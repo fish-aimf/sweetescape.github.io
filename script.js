@@ -6180,7 +6180,21 @@ createWebEmbedOverlay() {
     z-index: 10000;
     font-weight: bold;
   `;
-  exitBtn.onclick = () => this.toggleWebEmbedOverlay();
+  
+  // Store event handler references for cleanup
+  this.webEmbedExitHandler = () => this.toggleWebEmbedOverlay();
+  this.webEmbedKeyHandler = (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      this.toggleWebEmbedOverlay();
+    }
+    if (e.key.toLowerCase() === 'c' && e.shiftKey) {
+      e.preventDefault();
+      this.cycleWebEmbedSite();
+    }
+  };
+  
+  exitBtn.addEventListener('click', this.webEmbedExitHandler);
   
   const iframe = document.createElement('iframe');
   iframe.id = 'web-embed-iframe';
@@ -6191,18 +6205,7 @@ createWebEmbedOverlay() {
   this.webEmbedOverlay.appendChild(exitBtn);
   document.body.appendChild(this.webEmbedOverlay);
   
-  // Only capture ESC key for exit - let 'c' work normally in the embed
-  this.webEmbedOverlay.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      this.toggleWebEmbedOverlay();
-    }
-    // Shift+C still cycles through sites
-    if (e.key.toLowerCase() === 'c' && e.shiftKey) {
-      e.preventDefault();
-      this.cycleWebEmbedSite();
-    }
-  });
+  this.webEmbedOverlay.addEventListener('keydown', this.webEmbedKeyHandler);
 }
 
 toggleWebEmbedOverlay() {
@@ -6212,6 +6215,30 @@ toggleWebEmbedOverlay() {
   
   if (this.isWebEmbedVisible) {
     this.webEmbedOverlay.focus();
+  }
+}
+
+// Add cleanup method
+destroyWebEmbedOverlay() {
+  if (this.webEmbedOverlay) {
+    // Remove event listeners
+    if (this.webEmbedKeyHandler) {
+      this.webEmbedOverlay.removeEventListener('keydown', this.webEmbedKeyHandler);
+    }
+    
+    const exitBtn = this.webEmbedOverlay.querySelector('button');
+    if (exitBtn && this.webEmbedExitHandler) {
+      exitBtn.removeEventListener('click', this.webEmbedExitHandler);
+    }
+    
+    // Remove from DOM
+    this.webEmbedOverlay.remove();
+    
+    // Clear references
+    this.webEmbedOverlay = null;
+    this.webEmbedKeyHandler = null;
+    this.webEmbedExitHandler = null;
+    this.isWebEmbedVisible = false;
   }
 }
 
@@ -6227,6 +6254,7 @@ cycleWebEmbedSite() {
 }
   cleanup() {
   console.log("Starting cleanup process...");
+  this.destroyWebEmbedOverlay();
 
   // Clear all intervals and timers
   const timers = [
