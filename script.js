@@ -22,8 +22,7 @@ class AdvancedMusicPlayer {
     this.longPressTimer = null;
     this.titleScrollInterval = null;
     this.isLongPressing = false;
-    this.originalFavicon =
-      document.querySelector('link[rel="icon"]')?.href || "/favicon.ico";
+    this.originalFavicon = document.querySelector('link[rel="icon"]')?.href || "/favicon.ico";
     this.originalTitle = document.title;
     this.allowDuplicates = true;
     this.isVideoFullscreen = false;
@@ -86,8 +85,9 @@ class AdvancedMusicPlayer {
     this.priorityModeActive = false;
     this.titleObserver = null;
     this.recentlyPlayedSongs = [];
-
     this.recentlyPlayedPlaylists = [];
+    this.currentTabIndex = 0;
+
     this.initDatabase()
       .then(() => {
         return Promise.all([
@@ -102,7 +102,6 @@ class AdvancedMusicPlayer {
         this.loadQueue();
         this.initializeElements();
         this.setupEventListeners();
-
         this.initializeTheme();
         this.setupKeyboardControls();
         this.renderInitialState();
@@ -113,6 +112,7 @@ class AdvancedMusicPlayer {
         console.error("Error initializing music player:", error);
       });
   }
+
   initDatabase() {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open("MusicPlayerDB", 1);
@@ -132,15 +132,12 @@ class AdvancedMusicPlayer {
         if (!db.objectStoreNames.contains("songLibrary")) {
           db.createObjectStore("songLibrary", { keyPath: "id" });
         }
-
         if (!db.objectStoreNames.contains("playlists")) {
           db.createObjectStore("playlists", { keyPath: "id" });
         }
-
         if (!db.objectStoreNames.contains("settings")) {
           db.createObjectStore("settings", { keyPath: "name" });
         }
-
         if (!db.objectStoreNames.contains("recentlyPlayed")) {
           db.createObjectStore("recentlyPlayed", { keyPath: "type" });
         }
@@ -173,25 +170,12 @@ class AdvancedMusicPlayer {
       playlistSongsModal: document.getElementById("playlistSongsModal"),
       playlistSongsContent: document.getElementById("playlistSongsContent"),
       addSongToPlaylistBtn: document.getElementById("addSongToPlaylistBtn"),
-      playlistSelectionForSong: document.getElementById(
-        "playlistSelectionForSong"
-      ),
-
+      playlistSelectionForSong: document.getElementById("playlistSelectionForSong"),
       importLibraryBtn: document.getElementById("importLibraryBtn"),
       exportLibraryBtn: document.getElementById("exportLibraryBtn"),
       modifyLibraryBtn: document.getElementById("modifyLibraryBtn"),
-      libraryModificationModal: document.getElementById(
-        "libraryModificationModal"
-      ),
+      libraryModificationModal: document.getElementById("libraryModificationModal"),
       closeLibraryModalBtn: document.getElementById("closeLibraryModal"),
-      songNameInput: document.getElementById("songName"),
-      songUrlInput: document.getElementById("songUrl"),
-      addSongBtn: document.getElementById("addSongBtn"),
-      songLibrary: document.getElementById("songLibrary"),
-      librarySearch: document.getElementById("librarySearch"),
-      importLibraryBtn: document.getElementById("importLibraryBtn"),
-      exportLibraryBtn: document.getElementById("exportLibraryBtn"),
-
       progressBar: document.getElementById("musicProgressBar"),
       currentSongName: document.getElementById("currentSongName"),
       nextSongName: document.getElementById("nextSongName"),
@@ -205,40 +189,28 @@ class AdvancedMusicPlayer {
       sidebarPlaylistName: document.getElementById("sidebarPlaylistName"),
       sidebarPlaylistSongs: document.getElementById("sidebarPlaylistSongs"),
       closeSidebarBtn: document.getElementById("closeSidebarBtn"),
-      youtubeSearchSuggestion: document.getElementById(
-        "youtubeSearchSuggestion"
-      ),
+      youtubeSearchSuggestion: document.getElementById("youtubeSearchSuggestion"),
       listeningTimeDisplay: document.getElementById("listeningTime"),
       speedBtn: document.getElementById("speedBtn"),
       speedOptions: document.getElementById("speedOptions"),
-
       tabs: document.querySelectorAll(".tab"),
       tabPanes: document.querySelectorAll(".tab-pane"),
       themeToggle: document.getElementById("themeToggle"),
-      tabs: document.querySelectorAll(".tab"),
-      tabPanes: document.querySelectorAll(".tab-pane"),
       lyricsTab: document.querySelector('.tab[data-tab="lyrics"]'),
       lyricsPane: document.getElementById("lyrics"),
+      autofillBtn: document.getElementById("autofillBtn")
     };
+
     if (this.elements.speedBtn) {
       this.elements.speedBtn.textContent = this.currentSpeed + "x";
     }
-    this.elements.songNameInput = document.getElementById("songName");
-    this.elements.songAuthorInput = document.getElementById("songAuthor");
-    this.elements.songUrlInput = document.getElementById("songUrl");
-    this.elements.addSongBtn = document.getElementById("addSongBtn");
-    this.elements.autofillBtn = document.getElementById("autofillBtn");
-    this.elements.songLibrary = document.getElementById("songLibrary");
 
     const controlBarVisible = localStorage.getItem("controlBarVisible");
     if (controlBarVisible === "false") {
-      const controlBarContainer = document
-        .querySelector(".player-controls")
-        .closest(".player-container");
-      const targetElement =
-        controlBarContainer ||
-        document.querySelector(".player-controls").parentElement;
+      const controlBarContainer = document.querySelector(".player-controls").closest(".player-container");
+      const targetElement = controlBarContainer || document.querySelector(".player-controls").parentElement;
       const layoutToggleBtn = document.querySelector(".layout-toggle-button");
+      
       targetElement.style.visibility = "hidden";
       targetElement.style.position = "absolute";
       targetElement.style.pointerEvents = "none";
@@ -253,27 +225,12 @@ class AdvancedMusicPlayer {
 
   setupEventListeners() {
     this.handleAddSong = this.addSongToLibrary.bind(this);
-    if (this.elements.searchSongsToAdd) {
-      this.elements.searchSongsToAdd.addEventListener("input", () => {
-        this.searchSongsToAddToPlaylist();
-      });
-    }
     this.handleFilterLibrary = this.filterLibrarySongs.bind(this);
     this.handleLibrarySearchKeydown = (e) => {
-      if (
-        e.key === "Enter" &&
-        this.elements.youtubeSearchSuggestion.style.display !== "none"
-      ) {
+      if (e.key === "Enter" && this.elements.youtubeSearchSuggestion.style.display !== "none") {
         this.searchYouTube(this.elements.librarySearch.value.trim());
       }
     };
-    if (this.elements.songUrlInput) {
-      this.elements.songUrlInput.addEventListener("paste", (e) => {
-        setTimeout(() => {
-          this.handleUrlPaste();
-        }, 10);
-      });
-    }
     this.handleCreatePlaylist = this.createPlaylist.bind(this);
     this.handleClosePlaylistModal = this.closePlaylistModal.bind(this);
     this.handleSearchSongsToAdd = this.searchSongsToAddToPlaylist.bind(this);
@@ -283,61 +240,8 @@ class AdvancedMusicPlayer {
     this.handlePlayPrevious = this.playPreviousSong.bind(this);
     this.handlePlayNext = this.playNextSong.bind(this);
     this.handleToggleLoop = this.toggleLoop.bind(this);
-    this.addQueueStyles();
     this.handlePlaylistDragStart = this.handlePlaylistDragStart.bind(this);
     this.handlePlaylistDragOver = this.handlePlaylistDragOver.bind(this);
-     this.elements.autofillBtn = document.getElementById("autofillBtn");
-    this.setupTimerEventListeners();
-  this.setupLayoutEventListeners();
-    
-    this.elements.autofillBtn.addEventListener("click", this.handleAutofill.bind(this));
-    
-    this.elements.autofillBtn.addEventListener("mouseenter", this.showGhostPreview.bind(this));
-    this.elements.autofillBtn.addEventListener("mouseleave", this.removeGhostPreview.bind(this));
-    
-    this.elements.songUrlInput.addEventListener("input", this.handleUrlPaste.bind(this));
-
-    
-
-    document.addEventListener('contextmenu', (e) => {
-    if (e.target.classList.contains('play-btn') || 
-        e.target.closest('.play-btn') || 
-        e.target.onclick?.toString().includes('playSong') ||
-        e.target.onclick?.toString().includes('playPlaylist')) {
-      e.preventDefault();
-      
-      const songElement = e.target.closest('[data-song-id]') || e.target.closest('[data-playlist-id]');
-      
-      if (songElement && songElement.dataset.songId) {
-        // Individual song
-        const song = this.songLibrary.find(s => s.id == songElement.dataset.songId);
-        if (song) this.addToQueue(song);
-      } else if (songElement && songElement.dataset.playlistId) {
-        // Playlist - add all songs
-        const playlist = this.playlists.find(p => p.id == songElement.dataset.playlistId);
-        if (playlist) {
-          playlist.songs.forEach(song => this.addToQueue(song));
-        }
-      } else {
-        // Try to extract from onclick attribute
-        const onclickStr = e.target.onclick?.toString() || e.target.closest('button')?.onclick?.toString();
-        if (onclickStr) {
-          const songIdMatch = onclickStr.match(/playSong\((\d+)\)/);
-          const playlistIdMatch = onclickStr.match(/playPlaylist\((\d+)\)/);
-          
-          if (songIdMatch) {
-            const song = this.songLibrary.find(s => s.id == parseInt(songIdMatch[1]));
-            if (song) this.addToQueue(song);
-          } else if (playlistIdMatch) {
-            const playlist = this.playlists.find(p => p.id == parseInt(playlistIdMatch[1]));
-            if (playlist) {
-              playlist.songs.forEach(song => this.addToQueue(song));
-            }
-          }
-        }
-      }
-    }
-  });
     this.handlePlaylistDrop = this.handlePlaylistDrop.bind(this);
     this.handleVolumeChange = (e) => this.setVolume(e.target.value);
     this.handleToggleSidebar = this.togglePlaylistSidebar.bind(this);
@@ -345,16 +249,12 @@ class AdvancedMusicPlayer {
     this.handleCloseLibraryModal = this.closeLibraryModal.bind(this);
     this.handleToggleControlBar = this.toggleControlBar.bind(this);
     this.handleToggleTheme = this.toggleTheme.bind(this);
-
     this.handleToggleSpeedOptions = this.toggleSpeedOptions.bind(this);
-    this.handleSpeedOptionClick = (e) =>
-      this.setPlaybackSpeed(parseFloat(e.target.dataset.speed));
+    this.handleSpeedOptionClick = (e) => this.setPlaybackSpeed(parseFloat(e.target.dataset.speed));
     this.handleImportLibrary = this.showImportModal.bind(this);
     this.handleExportLibrary = this.exportLibrary.bind(this);
     this.handleTogglePlaylistLoop = this.togglePlaylistLoop.bind(this);
     this.handleSongUrlInput = this.validateYouTubeUrl.bind(this);
-    
-    this.setupExportButtonListeners();
     this.handleSongUrlKeydown = (e) => {
       if (e.key === "Enter") {
         this.addSongToLibrary();
@@ -365,29 +265,79 @@ class AdvancedMusicPlayer {
         this.createPlaylist();
       }
     };
+
+    if (this.elements.searchSongsToAdd) {
+      this.elements.searchSongsToAdd.addEventListener("input", this.handleSearchSongsToAdd);
+    }
+
+    if (this.elements.songUrlInput) {
+      this.elements.songUrlInput.addEventListener("paste", (e) => {
+        setTimeout(() => {
+          this.handleUrlPaste();
+        }, 10);
+      });
+      this.elements.songUrlInput.addEventListener("input", this.handleUrlPaste.bind(this));
+    }
+
+    if (this.elements.autofillBtn) {
+      this.elements.autofillBtn.addEventListener("click", this.handleAutofill.bind(this));
+      this.elements.autofillBtn.addEventListener("mouseenter", this.showGhostPreview.bind(this));
+      this.elements.autofillBtn.addEventListener("mouseleave", this.removeGhostPreview.bind(this));
+    }
+
+    this.addQueueStyles();
+    this.setupTimerEventListeners();
+    this.setupLayoutEventListeners();
+    this.setupExportButtonListeners();
+
+    document.addEventListener('contextmenu', (e) => {
+      if (e.target.classList.contains('play-btn') || 
+          e.target.closest('.play-btn') || 
+          e.target.onclick?.toString().includes('playSong') ||
+          e.target.onclick?.toString().includes('playPlaylist')) {
+        e.preventDefault();
+        
+        const songElement = e.target.closest('[data-song-id]') || e.target.closest('[data-playlist-id]');
+        
+        if (songElement && songElement.dataset.songId) {
+          const song = this.songLibrary.find(s => s.id == songElement.dataset.songId);
+          if (song) this.addToQueue(song);
+        } else if (songElement && songElement.dataset.playlistId) {
+          const playlist = this.playlists.find(p => p.id == songElement.dataset.playlistId);
+          if (playlist) {
+            playlist.songs.forEach(song => this.addToQueue(song));
+          }
+        } else {
+          const onclickStr = e.target.onclick?.toString() || e.target.closest('button')?.onclick?.toString();
+          if (onclickStr) {
+            const songIdMatch = onclickStr.match(/playSong\((\d+)\)/);
+            const playlistIdMatch = onclickStr.match(/playPlaylist\((\d+)\)/);
+            
+            if (songIdMatch) {
+              const song = this.songLibrary.find(s => s.id == parseInt(songIdMatch[1]));
+              if (song) this.addToQueue(song);
+            } else if (playlistIdMatch) {
+              const playlist = this.playlists.find(p => p.id == parseInt(playlistIdMatch[1]));
+              if (playlist) {
+                playlist.songs.forEach(song => this.addToQueue(song));
+              }
+            }
+          }
+        }
+      }
+    });
+
     const eventBindings = [
       [this.elements.toggleControlBarBtn, "click", this.handleToggleControlBar],
       [this.elements.modifyLibraryBtn, "click", this.handleOpenLibraryModal],
-      [
-        this.elements.closeLibraryModalBtn,
-        "click",
-        this.handleCloseLibraryModal,
-      ],
+      [this.elements.closeLibraryModalBtn, "click", this.handleCloseLibraryModal],
       [this.elements.importLibraryBtn, "click", this.handleImportLibrary],
       [this.elements.exportLibraryBtn, "click", this.handleExportLibrary],
       [this.elements.loopPlaylistBtn, "click", this.handleTogglePlaylistLoop],
       [this.elements.addSongBtn, "click", this.handleAddSong],
       [this.elements.createPlaylistBtn, "click", this.handleCreatePlaylist],
-      [
-        this.elements.closePlaylistModalBtn,
-        "click",
-        this.handleClosePlaylistModal,
-      ],
-      [
-        this.elements.addSongToPlaylistBtn,
-        "click",
-        this.handleAddSongToPlaylist,
-      ],
+      [this.elements.closePlaylistModalBtn, "click", this.handleClosePlaylistModal],
+      [this.elements.addSongToPlaylistBtn, "click", this.handleAddSongToPlaylist],
       [this.elements.playPauseBtn, "click", this.handleTogglePlayPause],
       [this.elements.prevBtn, "click", this.handlePlayPrevious],
       [this.elements.nextBtn, "click", this.handlePlayNext],
@@ -398,16 +348,11 @@ class AdvancedMusicPlayer {
       [this.elements.speedBtn, "click", this.handleToggleSpeedOptions],
       [this.elements.librarySearch, "input", this.handleFilterLibrary],
       [this.elements.librarySearch, "keydown", this.handleLibrarySearchKeydown],
-      [this.elements.searchSongsToAdd, "input", this.handleSearchSongsToAdd],
       [this.elements.songUrlInput, "input", this.handleSongUrlInput],
       [this.elements.songUrlInput, "keydown", this.handleSongUrlKeydown],
-      [
-        this.elements.newPlaylistName,
-        "keydown",
-        this.handleNewPlaylistNameKeydown,
-      ],
+      [this.elements.newPlaylistName, "keydown", this.handleNewPlaylistNameKeydown],
       [this.elements.volumeSlider, "input", this.handleVolumeChange],
-      [this.elements.progressBar, "click", this.handleSeekMusic],
+      [this.elements.progressBar, "click", this.handleSeekMusic]
     ];
 
     eventBindings.forEach(([element, event, handler]) => {
@@ -424,139 +369,102 @@ class AdvancedMusicPlayer {
       tab.addEventListener("click", () => this.switchTab(tab.dataset.tab));
     });
   }
-setupKeyboardControls() {
-  if (!this.currentTabIndex) {
-    this.currentTabIndex = 0;
-  }
-  
-  document.addEventListener("keydown", (e) => {
-    // Skip if user is typing in input fields
-    if (
-      document.activeElement.tagName === "INPUT" ||
-      document.activeElement.tagName === "TEXTAREA" ||
-      document.activeElement.isContentEditable
-    ) {
-      return;
-    }
-    
-    // Handle 'b' key for favicon/title cycling
-    if (e.key.toLowerCase() === "b") {
-      this.cycleFaviconAndTitle();
-      return;
-    }
-    
-    // Handle 'c' key for web embed overlay
-    if (e.key.toLowerCase() === "c") {
-      if (e.shiftKey) {
-        // Shift+C cycles through websites
-        this.cycleWebEmbedSite();
-      } else {
-        // C toggles the overlay
-        this.toggleWebEmbedOverlay();
+
+  setupKeyboardControls() {
+    document.addEventListener("keydown", (e) => {
+      if (document.activeElement.tagName === "INPUT" ||
+          document.activeElement.tagName === "TEXTAREA" ||
+          document.activeElement.isContentEditable) {
+        return;
       }
-      return;
-    }
-    
-    // Handle 'y' key for queue overlay
-    if (e.key.toLowerCase() === "y") {
-      e.preventDefault();
-      this.showQueueOverlay();
-      return;
-    }
-    
-    // Prevent default for specific keys
-    if (
-      [
-        "Space",
-        "ArrowLeft",
-        "ArrowRight",
-        "ArrowUp",
-        "ArrowDown",
-        "KeyK",
-        "KeyA",
-        "KeyD",
-        "KeyL",
-        "KeyR",
-        "KeyP",
-        "KeyT",
-        "Equal",
-        "Minus",
-        "KeyM",
-        "Tab",
-        "KeyQ",
-        "KeyH",
-        "KeyU",
-        "KeyY",
-        "KeyC"
-      ].includes(e.code)
-    ) {
-      e.preventDefault();
-    }
-    
-    // Handle keyboard shortcuts
-    switch (e.code) {
-      case "Space":
-      case "KeyK":
-        this.togglePlayPause();
-        break;
-      case "ArrowLeft":
-      case "KeyA":
-        this.playPreviousSong();
-        break;
-      case "ArrowRight":
-      case "KeyD":
-        this.playNextSong();
-        break;
-      case "ArrowUp":
-        this.adjustVolume(0.1);
-        break;
-      case "ArrowDown":
-        this.adjustVolume(-0.1);
-        break;
-      case "KeyL":
-        this.toggleLoop();
-        break;
-      case "KeyR":
-        if (this.ytPlayer) {
-          this.ytPlayer.seekTo(0, true);
+      
+      if (e.key.toLowerCase() === "b") {
+        this.cycleFaviconAndTitle();
+        return;
+      }
+      
+      if (e.key.toLowerCase() === "c") {
+        if (e.shiftKey) {
+          this.cycleWebEmbedSite();
+        } else {
+          this.toggleWebEmbedOverlay();
         }
-        break;
-      case "KeyP":
-        this.toggleTheme();
-        break;
-      case "KeyT":
-        this.openTimerModal();
-        break;
-      case "Equal":
-        this.adjustVolume(0.01);
-        break;
-      case "Minus":
-        this.adjustVolume(-0.01);
-        break;
-      case "KeyH":
-        this.toggleControlBar();
-        break;
-      case "KeyM":
-      case "Tab":
-        this.togglePlaylistSidebar();
-        break;
-      case "KeyQ":
-        this.cycleToNextTab();
-        break;
-      case "KeyU":
-        if (
-          this.ytPlayer &&
-          this.elements.currentSongName.textContent !== "No Song Playing"
-        ) {
-          this.toggleVideoFullscreen();
-        }
-        break;
-      case "KeyY":
+        return;
+      }
+      
+      if (e.key.toLowerCase() === "y") {
+        e.preventDefault();
         this.showQueueOverlay();
-        break;
-    }
-  });
-}
+        return;
+      }
+      
+      if ([
+        "Space", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "KeyK", "KeyA", "KeyD", "KeyL", "KeyR", "KeyP", "KeyT", "Equal", "Minus", "KeyM", "Tab", "KeyQ", "KeyH", "KeyU", "KeyY", "KeyC"
+      ].includes(e.code)) {
+        e.preventDefault();
+      }
+      
+      switch (e.code) {
+        case "Space":
+        case "KeyK":
+          this.togglePlayPause();
+          break;
+        case "ArrowLeft":
+        case "KeyA":
+          this.playPreviousSong();
+          break;
+        case "ArrowRight":
+        case "KeyD":
+          this.playNextSong();
+          break;
+        case "ArrowUp":
+          this.adjustVolume(0.1);
+          break;
+        case "ArrowDown":
+          this.adjustVolume(-0.1);
+          break;
+        case "KeyL":
+          this.toggleLoop();
+          break;
+        case "KeyR":
+          if (this.ytPlayer) {
+            this.ytPlayer.seekTo(0, true);
+          }
+          break;
+        case "KeyP":
+          this.toggleTheme();
+          break;
+        case "KeyT":
+          this.openTimerModal();
+          break;
+        case "Equal":
+          this.adjustVolume(0.01);
+          break;
+        case "Minus":
+          this.adjustVolume(-0.01);
+          break;
+        case "KeyH":
+          this.toggleControlBar();
+          break;
+        case "KeyM":
+        case "Tab":
+          this.togglePlaylistSidebar();
+          break;
+        case "KeyQ":
+          this.cycleToNextTab();
+          break;
+        case "KeyU":
+          if (this.ytPlayer && this.elements.currentSongName.textContent !== "No Song Playing") {
+            this.toggleVideoFullscreen();
+          }
+          break;
+        case "KeyY":
+          this.showQueueOverlay();
+          break;
+      }
+    });
+  }
+
   loadSongLibrary() {
     return new Promise((resolve, reject) => {
       if (!this.db) {
