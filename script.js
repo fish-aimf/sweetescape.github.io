@@ -49,6 +49,11 @@ class AdvancedMusicPlayer {
         isPriority: true,
       },
       {
+        favicon: "https://ibb.co/JFKpsWK3/image.png",
+        title: "Desmos | Graphing Calculator",
+        isPriority: true,
+      },
+      {
         favicon: "https://i.ibb.co/35MNf3BZ/image.png",
         title: "New Tab",
         isPriority: true,
