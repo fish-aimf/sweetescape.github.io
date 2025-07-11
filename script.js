@@ -26,6 +26,7 @@ class AdvancedMusicPlayer {
     this.originalTitle = document.title;
     this.allowDuplicates = true;
     this.isVideoFullscreen = false;
+    this.isAutoplayEnabled = true;
     this.webEmbedOverlay = null;
     this.isWebEmbedVisible = false;
     this.appTimer = null;
@@ -103,10 +104,12 @@ class AdvancedMusicPlayer {
         this.initializeElements();
         this.setupEventListeners();
         this.initializeTheme();
+        this.initializeAutoplay();
         this.setupKeyboardControls();
         this.renderInitialState();
         this.renderAdditionalDetails();
         this.setupLyricsTabContextMenu();
+        
       })
       .catch((error) => {
         console.error("Error initializing music player:", error);
@@ -167,6 +170,7 @@ class AdvancedMusicPlayer {
       currentPlaylistSongs: document.getElementById("currentPlaylistSongs"),
       playlistTotalDuration: document.getElementById("playlistTotalDuration"),
       loopPlaylistBtn: document.getElementById("loopPlaylistBtn"),
+      autoplayBtn: document.getElementById("autoplayBtn"),
       playlistSongsModal: document.getElementById("playlistSongsModal"),
       playlistSongsContent: document.getElementById("playlistSongsContent"),
       addSongToPlaylistBtn: document.getElementById("addSongToPlaylistBtn"),
@@ -245,6 +249,7 @@ class AdvancedMusicPlayer {
     this.handlePlaylistDrop = this.handlePlaylistDrop.bind(this);
     this.handleVolumeChange = (e) => this.setVolume(e.target.value);
     this.handleToggleSidebar = this.togglePlaylistSidebar.bind(this);
+    this.handleToggleAutoplay = this.toggleAutoplay.bind(this);
     this.handleOpenLibraryModal = this.openLibraryModal.bind(this);
     this.handleCloseLibraryModal = this.closeLibraryModal.bind(this);
     this.handleToggleControlBar = this.toggleControlBar.bind(this);
@@ -345,6 +350,7 @@ class AdvancedMusicPlayer {
       [this.elements.showPlaylistBtn, "click", this.handleToggleSidebar],
       [this.elements.closeSidebarBtn, "click", this.handleToggleSidebar],
       [this.elements.themeToggle, "click", this.handleToggleTheme],
+      [this.elements.autoplayBtn, "click", this.handleToggleAutoplay],
       [this.elements.speedBtn, "click", this.handleToggleSpeedOptions],
       [this.elements.librarySearch, "input", this.handleFilterLibrary],
       [this.elements.librarySearch, "keydown", this.handleLibrarySearchKeydown],
@@ -1886,49 +1892,65 @@ updatePlayerUI() {
       },
     });
   }
-
-  onPlayerStateChange(event) {
-  if (event.data === YT.PlayerState.ENDED) {
-    if (this.isLooping) {
-      this.playSongById(
-        this.currentPlaylist
-          ? this.currentPlaylist.songs[this.currentSongIndex].videoId
-          : this.songLibrary[this.currentSongIndex].videoId
-      );
-    } else {
-      this.playNextSong(); // This now handles queue automatically
+onPlayerStateChange(event) {
+    if (event.data === YT.PlayerState.ENDED) {
+        if (this.isLooping) {
+            // Loop takes precedence - replay current song
+            this.playSongById(
+                this.currentPlaylist
+                    ? this.currentPlaylist.songs[this.currentSongIndex].videoId
+                    : this.songLibrary[this.currentSongIndex].videoId
+            );
+        } else if (this.isAutoplayEnabled) {
+            // Autoplay is enabled - continue to next song
+            this.playNextSong(); // This now handles queue automatically
+        }
+        // If autoplay is disabled and not looping, song just stops here
+        
+        // Reset progress bar regardless of what happens
+        if (this.elements.progressBar) {
+            this.elements.progressBar.value = 0;
+        }
+    } else if (event.data === YT.PlayerState.PAUSED) {
+        this.isPlaying = false;
+        this.updatePlayerUI();
+        
+        // Stop title scrolling
+        if (this.titleScrollInterval) {
+            clearInterval(this.titleScrollInterval);
+            document.title = `Music - ${this.elements.currentSongName.textContent}`;
+        }
+        
+        // Stop progress tracking
+        if (this.progressInterval) {
+            clearInterval(this.progressInterval);
+        }
+        
+        // Stop lyrics tracking
+        if (this.lyricsInterval) {
+            clearInterval(this.lyricsInterval);
+        }
+    } else if (event.data === YT.PlayerState.PLAYING) {
+        this.isPlaying = true;
+        this.updatePlayerUI();
+        
+        // Apply playback speed if not default
+        if (this.currentSpeed !== 1) {
+            this.ytPlayer.setPlaybackRate(this.currentSpeed);
+        }
+        
+        // Start progress tracking
+        this.updateProgressBar();
+        
+        // Start listening time tracking
+        this.startListeningTimeTracking();
+        
+        // Start lyrics if lyrics tab is active
+        if (document.getElementById("lyrics") && document.getElementById("lyrics").classList.contains("active")) {
+            this.renderLyricsTab();
+        }
     }
-    if (this.elements.progressBar) {
-      this.elements.progressBar.value = 0;
-    }
-  } else if (event.data === YT.PlayerState.PAUSED) {
-    this.isPlaying = false;
-    this.updatePlayerUI();
-    if (this.titleScrollInterval) {
-      clearInterval(this.titleScrollInterval);
-      document.title = `Music - ${this.elements.currentSongName.textContent}`;
-    }
-    if (this.progressInterval) {
-      clearInterval(this.progressInterval);
-    }
-    if (this.lyricsInterval) {
-      clearInterval(this.lyricsInterval);
-    }
-  } else if (event.data === YT.PlayerState.PLAYING) {
-    this.isPlaying = true;
-    this.updatePlayerUI();
-    if (this.currentSpeed !== 1) {
-      this.ytPlayer.setPlaybackRate(this.currentSpeed);
-    }
-    this.updateProgressBar();
-    this.startListeningTimeTracking();
-    if (document.getElementById("lyrics") && document.getElementById("lyrics").classList.contains("active")) {
-      this.renderLyricsTab();
-    }
-  }
 }
-
-
 
   toggleLoop() {
     this.isLooping = !this.isLooping;
@@ -1942,6 +1964,42 @@ updatePlayerUI() {
       this.ytPlayer.setVolume(volume);
     }
   }
+    toggleAutoplay() {
+    this.isAutoplayEnabled = !this.isAutoplayEnabled;
+    this.elements.autoplayBtn.classList.toggle("active", this.isAutoplayEnabled);
+    this.updatePlayerUI();
+    
+    // Save setting if you have settings persistence
+    if (this.db) {
+        this.saveSetting("autoplay", this.isAutoplayEnabled).catch((error) => {
+            console.error("Error saving autoplay setting:", error);
+        });
+    }
+}
+
+initializeAutoplay() {
+    if (!this.db) {
+        this.isAutoplayEnabled = true;
+        this.elements.autoplayBtn.classList.toggle("active", this.isAutoplayEnabled);
+        return;
+    }
+    
+    const transaction = this.db.transaction(["settings"], "readonly");
+    const store = transaction.objectStore("settings");
+    const request = store.get("autoplay");
+    
+    request.onsuccess = () => {
+        const savedAutoplay = request.result ? request.result.value : true;
+        this.isAutoplayEnabled = savedAutoplay;
+        this.elements.autoplayBtn.classList.toggle("active", this.isAutoplayEnabled);
+    };
+    
+    request.onerror = (event) => {
+        console.error("Error loading autoplay setting:", event.target.error);
+        this.isAutoplayEnabled = true;
+        this.elements.autoplayBtn.classList.toggle("active", this.isAutoplayEnabled);
+    };
+}
 
   initializeTheme() {
     if (!this.db) {
