@@ -2348,10 +2348,12 @@ body:has(#ytPlayer.fullscreen-video) {
 }
 
 #autoplayBtn.active {
-    background-color: var(--accent-color);
-    color: white;
+    color: var(--accent-color); 
+    background-color: transparent; 
+
 }
 
 #autoplayBtn {
     transition: all 0.3s ease;
 }
+
