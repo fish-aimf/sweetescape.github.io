@@ -5059,7 +5059,6 @@ refreshSpecificSection(sectionTitle) {
       this.elements.lyricsPane.appendChild(emptyMessage);
       return;
     }
-    
     const currentSong = this.currentPlaylist
       ? this.currentPlaylist.songs[this.currentSongIndex]
       : this.songLibrary[this.currentSongIndex];
@@ -5071,7 +5070,6 @@ refreshSpecificSection(sectionTitle) {
       this.elements.lyricsPane.appendChild(errorMessage);
       return;
     }
-    
     let songWithLyrics = currentSong;
     if (this.currentPlaylist) {
       const libraryMatch = this.songLibrary.find(
@@ -5093,14 +5091,6 @@ refreshSpecificSection(sectionTitle) {
               <p>You can add lyrics by double-clicking on this song in the library tab.</p>
           `;
 
-      // Container for buttons
-      const buttonContainer = document.createElement("div");
-      buttonContainer.style.display = "flex";
-      buttonContainer.style.gap = "10px";
-      buttonContainer.style.marginTop = "10px";
-      buttonContainer.style.flexWrap = "wrap";
-
-      // Transcribe lyrics button
       const addLyricsBtn = document.createElement("button");
       addLyricsBtn.textContent = "Transcribe lyrics";
       addLyricsBtn.classList.add("add-lyrics-btn");
@@ -5109,18 +5099,8 @@ refreshSpecificSection(sectionTitle) {
       addLyricsBtn.style.border = "none";
       addLyricsBtn.style.borderRadius = "4px";
       addLyricsBtn.style.padding = "8px 16px";
+      addLyricsBtn.style.marginTop = "10px";
       addLyricsBtn.style.cursor = "pointer";
-
-      // YouTube subtitles button
-      const ytSubtitlesBtn = document.createElement("button");
-      ytSubtitlesBtn.textContent = "Get YouTube Subtitles";
-      ytSubtitlesBtn.classList.add("yt-subtitles-btn");
-      ytSubtitlesBtn.style.backgroundColor = "#FF0000"; // YouTube red
-      ytSubtitlesBtn.style.color = "white";
-      ytSubtitlesBtn.style.border = "none";
-      ytSubtitlesBtn.style.borderRadius = "4px";
-      ytSubtitlesBtn.style.padding = "8px 16px";
-      ytSubtitlesBtn.style.cursor = "pointer";
 
       const librarySong = this.currentPlaylist
         ? this.songLibrary.find((s) => s.videoId === currentSong.videoId)
@@ -5130,21 +5110,13 @@ refreshSpecificSection(sectionTitle) {
         addLyricsBtn.addEventListener("click", () => {
           this.openLyricsMakerModal(librarySong.id);
         });
-
-        ytSubtitlesBtn.addEventListener("click", () => {
-          this.fetchYouTubeSubtitles(librarySong);
-        });
-
-        buttonContainer.appendChild(addLyricsBtn);
-        buttonContainer.appendChild(ytSubtitlesBtn);
+        noLyricsMessage.appendChild(addLyricsBtn);
       }
 
-      noLyricsMessage.appendChild(buttonContainer);
       this.elements.lyricsPane.appendChild(noLyricsMessage);
       return;
     }
 
-    // Rest of the existing lyrics display code remains the same
     const lyricsPlayer = document.createElement("div");
     lyricsPlayer.classList.add("lyrics-player");
     const lyricsArray = [];
@@ -5167,7 +5139,6 @@ refreshSpecificSection(sectionTitle) {
         timingsArray.push(timeInSeconds);
       }
     }
-    
     const lyricsDisplay = document.createElement("div");
     lyricsDisplay.classList.add("lyrics-display");
     lyricsDisplay.style.margin = "20px 0";
@@ -5177,7 +5148,6 @@ refreshSpecificSection(sectionTitle) {
     lyricsDisplay.style.backgroundColor = "var(--bg-primary)";
     lyricsDisplay.style.height = "400px";
     lyricsDisplay.style.overflowY = "auto";
-    
     for (let i = 0; i < lyricsArray.length; i++) {
       const lineElement = document.createElement("div");
       lineElement.classList.add("lyric-line");
@@ -5193,11 +5163,9 @@ refreshSpecificSection(sectionTitle) {
 
     lyricsPlayer.appendChild(lyricsDisplay);
     this.elements.lyricsPane.appendChild(lyricsPlayer);
-    
     if (this.lyricsInterval) {
       clearInterval(this.lyricsInterval);
     }
-    
     if (this.ytPlayer && this.isPlaying) {
       this.lyricsInterval = setInterval(() => {
         if (this.ytPlayer && this.ytPlayer.getCurrentTime) {
@@ -5206,79 +5174,6 @@ refreshSpecificSection(sectionTitle) {
         }
       }, 100);
     }
-  }
-  async fetchYouTubeSubtitles(song) {
-    if (!song || !song.videoId) {
-      this.showNotification("No video ID found for this song", "error");
-      return;
-    }
-
-    try {
-      // Show loading state
-      this.showNotification("Fetching YouTube subtitles...", "info");
-      
-      // Using YouTube's subtitle API endpoint
-      const subtitleUrl = `https://www.youtube.com/api/timedtext?v=${song.videoId}&lang=en&fmt=json3`;
-      
-      const response = await fetch(subtitleUrl);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data && data.events && data.events.length > 0) {
-        const lyrics = this.parseYouTubeSubtitles(data.events);
-        
-        if (lyrics.trim()) {
-          // Find the song in library and update lyrics
-          const libraryIndex = this.songLibrary.findIndex(s => s.id === song.id);
-          if (libraryIndex !== -1) {
-            this.songLibrary[libraryIndex].lyrics = lyrics;
-            await this.saveSongLibrary();
-            this.renderLyricsTab(); // Refresh the lyrics display
-            this.showNotification("YouTube subtitles added successfully!", "success");
-          }
-        } else {
-          this.showNotification("No subtitles found or subtitles are empty", "warning");
-        }
-      } else {
-        this.showNotification("No subtitles available for this video", "warning");
-      }
-    } catch (error) {
-      console.error("Error fetching YouTube subtitles:", error);
-      this.showNotification("Failed to fetch subtitles. Video may not have subtitles or they may be disabled.", "error");
-    }
-  }
-
-// Helper method to parse YouTube subtitle data
-parseYouTubeSubtitles(events) {
-    let lyrics = "";
-    
-    for (const event of events) {
-      if (event.segs) {
-        const startTime = Math.floor(event.tStart || 0);
-        const minutes = Math.floor(startTime / 60);
-        const seconds = startTime % 60;
-        
-        let lineText = "";
-        for (const seg of event.segs) {
-          if (seg.utf8) {
-            lineText += seg.utf8;
-          }
-        }
-        
-        // Clean up the text
-        lineText = lineText.replace(/\n/g, " ").trim();
-        
-        if (lineText) {
-          lyrics += `${lineText} [${minutes}:${seconds.toString().padStart(2, '0')}]\n`;
-        }
-      }
-    }
-    
-    return lyrics;
   }
   updateHighlightedLyric(currentTime, lyrics, timings) {
     if (!lyrics.length || !timings.length) return;
