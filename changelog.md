@@ -179,3 +179,5 @@
 - made right clicking the song in the addtional details sidebar add to queue
 - added visual indication
 - fixed the button remove from queue not working
+- changed button name from add lyrics to transcribe lyrics
+- plan to add "use youtube transcription." button which will extract the yotuube transcription.
