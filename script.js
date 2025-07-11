@@ -6777,7 +6777,6 @@ disconnectObservers() {
     console.log("No active observers found for disconnection");
   }
 }
-
 removeDynamicEventListeners() {
   console.log("Removing dynamic event listeners");
   
@@ -6805,6 +6804,17 @@ removeDynamicEventListeners() {
     console.warn("Error removing keyboard listener:", error.message);
   }
   
+  // NEW: Remove autoplay button event listener
+  try {
+    if (this.elements?.autoplayBtn && this.handleToggleAutoplay) {
+      this.elements.autoplayBtn.removeEventListener('click', this.handleToggleAutoplay);
+      removedCount++;
+      console.log("Autoplay button event listener removed");
+    }
+  } catch (error) {
+    console.warn("Error removing autoplay button listener:", error.message);
+  }
+  
   try {
     const playlistItems = document.querySelectorAll(".playlist-item[draggable='true']");
     playlistItems.forEach((item) => {
@@ -6820,7 +6830,6 @@ removeDynamicEventListeners() {
   
   console.log(`Dynamic event listener removal completed: ${removedCount} listeners processed`);
 }
-
 gracefulDatabaseClose() {
   console.log("Initiating graceful database connection closure");
   
