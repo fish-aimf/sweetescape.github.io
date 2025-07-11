@@ -1668,85 +1668,105 @@ handleTouchEnd(e) {
     this.currentSongIndex = index;
     this.playSongById(song.videoId);
   }
-
 updatePlayerUI() {
-  // Get current song from the right source
-  let currentSong;
-  if (this.currentPlaylist && this.currentPlaylist.songs[this.currentSongIndex]) {
-    currentSong = this.currentPlaylist.songs[this.currentSongIndex];
-  } else if (this.songLibrary[this.currentSongIndex]) {
-    currentSong = this.songLibrary[this.currentSongIndex];
-  } else {
-    // Try to find current song by videoId from YouTube player
-    if (this.ytPlayer && this.ytPlayer.getVideoData) {
-      try {
-        const videoData = this.ytPlayer.getVideoData();
-        const currentVideoId = videoData.video_id;
-        currentSong = this.songLibrary.find(s => s.videoId === currentVideoId) ||
-                     (this.currentPlaylist && this.currentPlaylist.songs.find(s => s.videoId === currentVideoId));
-      } catch (e) {
-        console.warn('Could not get current video data:', e);
-      }
-    }
-  }
-  
-  if (!currentSong) return;
-  
-  this.elements.currentSongName.textContent = currentSong.name;
-  
-  if (this.isLooping) {
-    this.elements.nextSongName.textContent = currentSong.name;
-  } else if (this.songQueue.length > 0) {
-    // Show next song from queue if available
-    this.elements.nextSongName.textContent = `Queue: ${this.songQueue[0].name}`;
-  } else {
-    const source = this.currentPlaylist ? this.currentPlaylist.songs : this.songLibrary;
-    
-    if (this.currentPlaylist && this.temporarilySkippedSongs && this.temporarilySkippedSongs.size > 0) {
-      const totalSongs = source.length;
-      let nextIndex = (this.currentSongIndex + 1) % totalSongs;
-      const startIndex = nextIndex;
-      while (this.isSongTemporarilySkipped(source[nextIndex])) {
-        nextIndex = (nextIndex + 1) % totalSongs;
-        if (nextIndex === startIndex) {
-          this.elements.nextSongName.textContent = "No next song available";
-          break;
-        }
-        if (nextIndex === 0 && !this.isPlaylistLooping) {
-          this.elements.nextSongName.textContent = "End of playlist";
-          break;
-        }
-      }
-      if (
-        this.elements.nextSongName.textContent !== "No next song available" &&
-        this.elements.nextSongName.textContent !== "End of playlist"
-      ) {
-        this.elements.nextSongName.textContent = source[nextIndex].name;
-      }
+    // Get current song from the right source
+    let currentSong;
+    if (this.currentPlaylist && this.currentPlaylist.songs[this.currentSongIndex]) {
+        currentSong = this.currentPlaylist.songs[this.currentSongIndex];
+    } else if (this.songLibrary[this.currentSongIndex]) {
+        currentSong = this.songLibrary[this.currentSongIndex];
     } else {
-      const nextSongIndex = (this.currentSongIndex + 1) % source.length;
-      const nextSong = source[nextSongIndex];
-      if (
-        this.currentSongIndex === source.length - 1 &&
-        !this.isPlaylistLooping
-      ) {
-        this.elements.nextSongName.textContent = "End of playlist";
-      } else {
-        this.elements.nextSongName.textContent = nextSong.name;
-      }
+        // Try to find current song by videoId from YouTube player
+        if (this.ytPlayer && this.ytPlayer.getVideoData) {
+            try {
+                const videoData = this.ytPlayer.getVideoData();
+                const currentVideoId = videoData.video_id;
+                currentSong = this.songLibrary.find(s => s.videoId === currentVideoId) ||
+                             (this.currentPlaylist && this.currentPlaylist.songs.find(s => s.videoId === currentVideoId));
+            } catch (e) {
+                console.warn('Could not get current video data:', e);
+            }
+        }
     }
-  }
-  
-  const playPauseIcon = this.elements.playPauseBtn.querySelector("i");
-  if (playPauseIcon) {
-    playPauseIcon.classList.remove("fa-play", "fa-pause");
-    playPauseIcon.classList.add(this.isPlaying ? "fa-pause" : "fa-play");
-  }
-  
-  if (this.currentPlaylist && this.isSidebarVisible) {
-    this.renderPlaylistSidebar();
-  }
-  this.updatePageTitle();
+    
+    if (!currentSong) {
+        // Handle case where no song is available
+        this.elements.currentSongName.textContent = "No Song Playing";
+        this.elements.nextSongName.textContent = "-";
+        const playPauseIcon = this.elements.playPauseBtn.querySelector("i");
+        if (playPauseIcon) {
+            playPauseIcon.classList.remove("fa-play", "fa-pause");
+            playPauseIcon.classList.add("fa-play");
+        }
+        this.updatePageTitle(); // This will set title to "Music" since no song is playing
+        return;
+    }
+    
+    this.elements.currentSongName.textContent = currentSong.name;
+    
+    if (this.isLooping) {
+        this.elements.nextSongName.textContent = currentSong.name;
+    } else if (this.songQueue.length > 0) {
+        // Show next song from queue if available
+        this.elements.nextSongName.textContent = `Queue: ${this.songQueue[0].name}`;
+    } else if (!this.isAutoplayEnabled) {
+        // If autoplay is disabled, show that no next song will play
+        this.elements.nextSongName.textContent = "Autoplay disabled";
+    } else {
+        const source = this.currentPlaylist ? this.currentPlaylist.songs : this.songLibrary;
+        
+        if (this.currentPlaylist && this.temporarilySkippedSongs && this.temporarilySkippedSongs.size > 0) {
+            const totalSongs = source.length;
+            let nextIndex = (this.currentSongIndex + 1) % totalSongs;
+            const startIndex = nextIndex;
+            while (this.isSongTemporarilySkipped(source[nextIndex])) {
+                nextIndex = (nextIndex + 1) % totalSongs;
+                if (nextIndex === startIndex) {
+                    this.elements.nextSongName.textContent = "No next song available";
+                    break;
+                }
+                if (nextIndex === 0 && !this.isPlaylistLooping) {
+                    this.elements.nextSongName.textContent = "End of playlist";
+                    break;
+                }
+            }
+            if (
+                this.elements.nextSongName.textContent !== "No next song available" &&
+                this.elements.nextSongName.textContent !== "End of playlist"
+            ) {
+                this.elements.nextSongName.textContent = source[nextIndex].name;
+            }
+        } else {
+            const nextSongIndex = (this.currentSongIndex + 1) % source.length;
+            const nextSong = source[nextSongIndex];
+            if (
+                this.currentSongIndex === source.length - 1 &&
+                !this.isPlaylistLooping
+            ) {
+                this.elements.nextSongName.textContent = "End of playlist";
+            } else {
+                this.elements.nextSongName.textContent = nextSong.name;
+            }
+        }
+    }
+    
+    const playPauseIcon = this.elements.playPauseBtn.querySelector("i");
+    if (playPauseIcon) {
+        playPauseIcon.classList.remove("fa-play", "fa-pause");
+        playPauseIcon.classList.add(this.isPlaying ? "fa-pause" : "fa-play");
+    }
+    
+    // Update autoplay button visual state
+    if (this.elements.autoplayBtn) {
+        this.elements.autoplayBtn.classList.toggle("active", this.isAutoplayEnabled);
+    }
+    
+    if (this.currentPlaylist && this.isSidebarVisible) {
+        this.renderPlaylistSidebar();
+    }
+    
+    // Let your existing updatePageTitle method handle the title logic
+    this.updatePageTitle();
 }
   escapeJsString(str) {
     if (!str) return "";
@@ -1904,22 +1924,53 @@ onPlayerStateChange(event) {
         } else if (this.isAutoplayEnabled) {
             // Autoplay is enabled - continue to next song
             this.playNextSong(); // This now handles queue automatically
+        } else {
+            // Autoplay is disabled - stop playback and update UI
+            this.isPlaying = false;
+            
+            // Clear any active intervals
+            if (this.progressInterval) {
+                clearInterval(this.progressInterval);
+                this.progressInterval = null;
+            }
+            if (this.listeningTimeInterval) {
+                clearInterval(this.listeningTimeInterval);
+                this.listeningTimeInterval = null;
+            }
+            if (this.titleScrollInterval) {
+                clearInterval(this.titleScrollInterval);
+                this.titleScrollInterval = null;
+            }
+            if (this.lyricsInterval) {
+                clearInterval(this.lyricsInterval);
+                this.lyricsInterval = null;
+            }
+            
+            // Update UI and page title
+            this.updatePlayerUI();
+            this.updatePageTitle(); // This will set title to "Music" since isPlaying is false
         }
-        // If autoplay is disabled and not looping, song just stops here
         
         // Reset progress bar regardless of what happens
         if (this.elements.progressBar) {
             this.elements.progressBar.value = 0;
         }
+        
+        // Update time display
+        if (this.elements.timeDisplay) {
+            this.elements.timeDisplay.textContent = "0:00/0:00";
+        }
+        
     } else if (event.data === YT.PlayerState.PAUSED) {
         this.isPlaying = false;
         this.updatePlayerUI();
         
-        // Stop title scrolling
+        // Stop title scrolling - your updatePageTitle will handle setting default title
         if (this.titleScrollInterval) {
             clearInterval(this.titleScrollInterval);
-            document.title = `Music - ${this.elements.currentSongName.textContent}`;
+            this.titleScrollInterval = null;
         }
+        this.updatePageTitle();
         
         // Stop progress tracking
         if (this.progressInterval) {
@@ -1930,6 +1981,7 @@ onPlayerStateChange(event) {
         if (this.lyricsInterval) {
             clearInterval(this.lyricsInterval);
         }
+        
     } else if (event.data === YT.PlayerState.PLAYING) {
         this.isPlaying = true;
         this.updatePlayerUI();
