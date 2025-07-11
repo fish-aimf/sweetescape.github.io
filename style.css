@@ -2346,3 +2346,12 @@ body:has(#ytPlayer.fullscreen-video) {
 .input-group {
     position: relative;
 }
+
+#autoplayBtn.active {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+#autoplayBtn {
+    transition: all 0.3s ease;
+}
