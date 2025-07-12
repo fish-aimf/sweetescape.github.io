@@ -1,121 +1,123 @@
 # Changelog
+- V1.0.0
 - index.html script.js style.css 
 - added playlist
 - used tabs
 - added add song via yt link
+- V1.1.0
 - changed whole thing from local storage to indexed.db
-- made improvements to code
-- changed ui
-- added dark light mode
-- added timer function
-- added exact time to stop timer function
-- added speed
-- added volume
-- made the progress bar show numbers at side
-- moved the whole import thing into the modify library modal
-- improved and fixed the ui
-- added import export
-- made import not be hardcoded but actually can look through filelist.txt
-- fixed the import song custom bug by adding import songs 1by 1
-- added ripoff spotify logo
-- made it such that if you cannot find what you search for it will auto open for you in youtube
-- made a lot of quality improvements such that pressing enter can replace pressing buttons
-- added toggle location of the ui elements as changing volume could bring up an annoying display that blocks middle
-- added hide control bar
-- critical flaw where if you reload page with control bar not active it will crash the page for good unless browser detail cleared
-- finally made the default theme dark
-- changed logos
-- added the nice little indicator to how long you listened to
-- finally made a lot of things indexed.db instead of localstorage
-- Changed ui a bit
-- added lyric player and lyric maker html files
-- make it look a lot better in mobile
-- made a lot of changes to optimize power consumption
-- also added cleanup function to cleanup eventlisteners to prevent leaks
-- fixed random bug that will break the control bar when the toggle position is pressed when toggle visibility is off
-- moved the buttons
-- finally added hotkeys ad right left space k -= pl r
-- improved playlist modification
-- fixed bug where pressing add in a song with an "'" in its name would not work took so long to find the issue was html
-- added library is empty message to look better
-- added next song
-- and made pressing loop make next song the same to give more indication to loop
+- made improvements to code v1.1.1
+- changed ui v1.2.0
+- added dark light mode v1.3.0
+- added timer function v2.0.0
+- added exact time to stop timer function v2.1.0
+- V3.0.0
+- added speed v3.1.0
+- added volume v3.2.0
+- made the progress bar show numbers at side v3.3.0
+- moved the whole import thing into the modify library modal v4.0.0
+- improved and fixed the ui v4.1.0
+- added import export v5.0.0
+- made import not be hardcoded but actually can look through filelist.txt v6.0.0
+- fixed the import song custom bug by adding import songs 1by 1 v6.0.1
+- added ripoff spotify logo v6.1.1
+- made it such that if you cannot find what you search for it will auto open for you in youtube v7.0.0
+- made a lot of quality improvements such that pressing enter can replace pressing buttons v7.1.0
+- added toggle location of the ui elements as changing volume could bring up an annoying display that blocks middle v7.2.0
+- added hide control bar v7.3.0
+- critical flaw where if you reload page with control bar not active it will crash the page for good unless browser detail cleared v7.3.1
+- finally made the default theme dark v7.3.2
+- changed logos v7.4.0
+- added the nice little indicator to how long you listened to v7.5.0
+- finally made a lot of things indexed.db instead of localstorage v7.5.1
+- Changed ui a bit v7.5.2
+- added lyric player and lyric maker html files v7.5.2
+- make it look a lot better in mobile v7.6.0
+- made a lot of changes to optimize power consumption v7.6.1
+- also added cleanup function to cleanup eventlisteners to prevent leaks  v8.0.0
+- fixed random bug that will break the control bar when the toggle position is pressed when toggle visibility is off v8.0.1
+- moved the buttons v8.1.0
+- finally added hotkeys ad right left space k -= pl r v9.0.0
+- improved playlist modification v9.1.0
+- fixed bug where pressing add in a song with an "'" in its name would not work took so long to find the issue was html v9.2.0
+- added library is empty message to look better v9.2.1
+- added next song v9.3.0
+- and made pressing loop make next song the same to give more indication to loop v9.4.0
 
-- made importing look better also made it not take 5 seconds
-- added a lot of preset imports had to manually do them one by one and find their yt links
-- added favorites such that they are always on top in library
-- made it such that double tapping the song list will allow for editing of song details
-- also added a youtube thumbnail preview link in song modification modal
-- fixed the import again change it to using commas
+- made importing look better also made it not take 5 seconds v9.5.0
+- added a lot of preset imports had to manually do them one by one and find their yt links v10.0.0
+- added favorites such that they are always on top in library v10.1.0
+- made it such that double tapping the song list will allow for editing of song details v11.0.0
+- also added a youtube thumbnail preview link in song modification modal v11.1.0
+- fixed the import again change it to using commas v11.1.1
 - added the lyrics player and lyric maker files. that might get used in future
-- changed the ui cos search songs too fat
+- changed the ui cos search songs too fat v11.2.0
 
-- made the youtube thumbnail preview when pasted into the youtube url column
-- changed playback quality to 144p
-- made timer function code be inside advanced music player class
-- made timer function show outside
+- made the youtube thumbnail preview when pasted into the youtube url column v11.3.0
+- changed playback quality to 144p v11.3.1
 
-- made the speed change ui look a lot better and transparent made highlighting less opaque
-- finally decided to play alert message before deleting playlists
-- made playlists show how many songs they have
-- added playlist loop
-- and end of playlist message
-- made css have animations
-- added title change so the name of the song will be after the title of the song and if its too long it will move
-- made the timer not bug out when inputting incredibly high numbers
-- added drag and drop to change position of playlist songs instead of having to delete all of them to rearrange
-- holding down a playlist now actually changes its position by drag
-- changed the whole style.css such that it will look good in half screen full screen and mobile mobile part is a lie
-- made it such that listening time wont increase when your not playing a song
-- finally added my own watermark
-- made watermark invisible when using dark mode
-- made the x button for the playlist sidebar not collide with the timer button
-- made it such that you can repeat songs in playlist finally removed the exception also fixed the bug of repeating songs jumping back in playlist
-- redid the hotkeys such that the volume can be changed with -= by fine adjustment while the up and down arrow will change it by a lot
-- made it such that pressing the name of the playlist in the playlist modification can change it
-- optimized the code
-- timer now instead will show an about:blank page since it cant close and it will also not show in history so there will be no trace in the back arrow
-- removed like 300 lines of useless comments
-- made it easier to double click
-- added instructions
-- made css have animations
-- made it such that new people with no songs in their playlist will be shown helper which introduce them
-- timer now shows end time
-- added war thunder and a few more preset playlists
-- improved organization by putting all the event listeners etc together
-- improved the cleanup cos i forgot for the event listeners i added after
-- a lot faster loading time
+- made the speed change ui look a lot better and transparent made highlighting less opaque v11.3.2
+- finally decided to play alert message before deleting playlists v11.3.3
+- made playlists show how many songs they have v11.4.0
+- added playlist loop v12.0.0
+- and end of playlist message v12.1.0
+- made css have animations v12.2.0
+- added title change so the name of the song will be after the title of the song and if its too long it will move v12.3.0
+- made the timer not bug out when inputting incredibly high numbers v12.4.0
+- added drag and drop to change position of playlist songs instead of having to delete all of them to rearrange v12.5.0
+- holding down a playlist now actually changes its position by drag v12.6.0
+- changed the whole style.css such that it will look good in half screen full screen and mobile mobile part is a lie v13.0.0
+- made it such that listening time wont increase when your not playing a song v13.0.1
+- finally added my own watermark v13.1.0
+- made watermark invisible when using dark modev13.1.1
+- made the x button for the playlist sidebar not collide with the timer button  v13.1.2
+- made it such that you can repeat songs in playlist finally removed the exception also fixed the bug of repeating songs jumping back in playlist v13.2.0
+- redid the hotkeys such that the volume can be changed with -= by fine adjustment while the up and down arrow will change it by a lot v13.3.0
+- made it such that pressing the name of the playlist in the playlist modification can change it v13.4.0
+- optimized the code v13.4.1
+- timer now instead will show an about:blank page since it cant close and it will also not show in history so there will be no trace in the back arrow v13.5.0
+- removed like 300 lines of useless comments v13.5.1
+- made it easier to double click v13.5.2
+- added instructions v13.5.3
+- made css have animations v13.5.4
+- made it such that new people with no songs in their playlist will be shown helper which introduce them v14.0.0
+- timer now shows end time v14.1.0
+- added war thunder and a few more preset playlists v14.1.1
+- improved organization by putting all the event listeners etc together 14.2.0
+- improved the cleanup cos i forgot for the event listeners i added after v14.2.1
+- a lot faster loading time v14.2.2
 - yay 10 irl users
-- optimized code by improving the robustness of functions
-- added console logs everywhere
-- written my own changelog from console
-- Made my own favicon and title
-- Designed an even better favicon with chatgpt
-- added disguises so the website title can be changed to chatgpt deepseek office 365 whatsapp gmail newtab
-- when b is pressed it can now cycle through the disguises so others cant find the source of the music
-- improved css as the elements are still quite big and unaligneda
-- also increased element size
-- made css have animations
-- updated favicon cos it looks trash
-- Made the progress bar so much smoother
-- finally disabled chrome touch actions and hand gestures
-- improved cleanup by cleaning up a few event listeners i missed
-- the improved cleanup broke the playlist drag cos i forgot
+- optimized code by improving the robustness of functions v14.2.3
+- added console logs everywhere v14.2.4
+- written my own changelog from console v14.2.5
+- Made my own favicon and title v14.3.0
+- Designed an even better favicon with chatgpt v14.4.0
+- added disguises so the website title can be changed to chatgpt deepseek office 365 whatsapp gmail newtab v15.0.0
+- when b is pressed it can now cycle through the disguises so others cant find the source of the music v15.1.0
+- improved css as the elements are still quite big and unaligneda v15.2.0
+- also increased element size v15.3.0
+- made css have animations v15.3.1
+- updated favicon cos it looks trash v15.4.0
+- Made the progress bar so much smoother v15.4.1
+- finally disabled chrome touch actions and hand gestures v15.4.2
+- improved cleanup by cleaning up a few event listeners i missed v15.4.3
+- the improved cleanup broke the playlist drag cos i forgot v15.4.4
 - critical error cannot fix playlist drag cos i just cant cos i named the progress drag as well
-- rewinded whole thing to before change
+- rewinded whole thing to before change v15.4.1
 - new progress bar very bugged ill do someother features instead
-- added the whole new discovery system with recommendations random 3 and recent, the recent is bugged
-- renamed to your picks 3 random from your fav suggested 3 random recenly listened to recently played playlist
-- redid the whole html rearranged whole thing
-- put the discover more in the same appcontainer spent 5 hours
-- repositioned it next to the library tabs and playlist tabs
-- moved the timer into the app container
-- moved the timer next to the theme
-- adjusted the styles 
-- hardcoded distances by eye so they look good
-- added feature such that if app is half screen the discover more gets hidden
-- hardcoded even more css make discovery feature smaller and more compact
+- added the whole new discovery system with recommendations random 3 and recent, the recent is bugged v16
+- renamed to your picks 3 random from your fav suggested 3 random recenly listened to recently played playlist v16.0.1
+- redid the whole html rearranged whole thing v17
+- put the discover more in the same appcontainer spent 5 hours v17.1.0
+- repositioned it next to the library tabs and playlist tabs v17.2.0
+- moved the timer into the app container v17.3.0
+- moved the timer next to the theme v17.4.0
+- adjusted the styles  v17.5.0
+- hardcoded distances by eye so they look good v17.6.0
+- added feature such that if app is half screen the discover more gets hidden v17.7.0
+- hardcoded even more css make discovery feature smaller and more compact v18.0.0
 - fixed the bugged lyric player
+- Lyric update v19.0.0
 - apparently the issue was with lyric maker notation where the lyric was just timestamped when it finished and not when it just started
 - fixed the logic of the lyric maker
 - improved lyric player made it auto centering
@@ -125,60 +127,61 @@
 - made the lyrics to be edited in the editor settings
 - made the lyrics to be saved in indexed.db
 - implimented lyric play
-- added new cleanup
-- slight issue lyrics wont render when played from playlist
-- fixed the issue took way too long apparently i written from library only and not playlist cases When a song plays from a playlist the lyrics don't show up because the lyrics data is stored in the library version of the song, not in the playlist copy of the song
-- now changed hotkeys a bit pressing tab will also toggle playlist
-- made some lyric timings
-- make pressing q cycle through tabs added helper function as well
+- added new cleanup v19.0.1
+- slight issue lyrics wont render when played from playlist v19.1.0
+- fixed the issue took way too long apparently i written from library only and not playlist cases When a song plays from a playlist the lyrics don't show up because the lyrics data is stored in the library version of the song, not in the playlist copy of the song v19.2.0
+- now changed hotkeys a bit pressing tab will also toggle playlist v19.3.0
+- made some lyric timings v19.4.0
+- make pressing q cycle through tabs added helper function as well v19.5.0
 - so frustrating made a lot of changes but they crashed the site and idk why
-- added one useless button that says add lyrics now ill make it have use in future
-- now the buttons works but the style and the models are a bit bugged
-- fixed the way the recently played songs are stored in indexed.db
-- fixed how they load on startup
-- fixed so now they show 3 songs in the recently played
-- made the recentlyplayed open a modal 
-- made it save 20 songs in recently played
-- author added
-- fixed the whole cleanup function incase the siteis closed when the modal is still open
-- made pressing recently played and your picks refresh their individual sections hard to pull off
-- added the lyric library model when rightclicked the lyric tab
-- made Set Timer to Close App word be white instead of dark green
-- optimized performance and power
-- databases saved together
-- added debouncing and better rerendering and only resorts the list when needed
--much faster dom updates
--  reduced useless function called
--fixed bug since i forgot to contents in loadplaylists efore deleting ensure fav playlist
-- added sync favonload as replacement
-- added 3 buttons. allow duplicates delete duplicates and reverse playlist
-- added randomize playlist shuffle. very hardto get css right
-- fixed major bug where I forgot to update how savelyrics work after i added author.
-- simple change where i just allowed seraching for author in the playlist edit model will also show up the author's song
-- modified import library so it can import author as well
-- autofills empty name if link is pasted in
-- accepeted youtu.be/ link shorterners. when extracting url
-- forgot to say i added a couple of premade imports
-- added a dropdown menu so export can keep up with import that was very difficult
-- added the export library to text, export songs w playlist those are easy
-- reorganized export file structure
-- export playlist added was so hard
-- opens select playlist to export
-- improved select playlist to export style as it wasnt visible in light mode
+- added one useless button that says add lyrics now ill make it have use in future v19.6.0
+- now the buttons works but the style and the models are a bit bugged v19.7.0
+- fixed the way the recently played songs are stored in indexed.db v19.7.1
+- fixed how they load on startup v19.7.2
+- fixed so now they show 3 songs in the recently played v19.7.3
+- made the recentlyplayed open a modal v19.7.4
+- made it save 20 songs in recently played v19.7.5
+- author added v20.0.0
+- fixed the whole cleanup function incase the siteis closed when the modal is still open v20.0.1
+- made pressing recently played and your picks refresh their individual sections hard to pull off v20.1.0
+- added the lyric library model when rightclicked the lyric tab v20.2.0
+- made Set Timer to Close App word be white instead of dark green v20.2.1
+- optimized performance and power v20.3.0
+- databases saved together v20.3.1
+- added debouncing and better rerendering and only resorts the list when needed v20.3.2
+-much faster dom updates v20.3.3
+-  reduced useless function called v20.3.4
+-fixed bug since i forgot to contents in loadplaylists efore deleting ensure fav playlist v20.4.0
+- added sync favonload as replacement v20.5.0
+- added 3 buttons. allow duplicates delete duplicates and reverse playlist v20.6.0
+- added randomize playlist shuffle. very hardto get css right v20.7.0
+- fixed major bug where I forgot to update how savelyrics work after i added author. v20.8.0
+- simple change where i just allowed seraching for author in the playlist edit model will also show up the author's song v20.9.0
+- modified import library so it can import author as well v20.10.0
+- autofills empty name if link is pasted in v21.0.0
+- accepeted youtu.be/ link shorterners. when extracting url v21.1.0
+- forgot to say i added a couple of premade imports v21.2.0
+- added a dropdown menu so export can keep up with import that was very difficult v22.0.0
+- added the export library to text, export songs w playlist those are easy v22.1.0
+- reorganized export file structure v22.1.1
+- export playlist added was so hard v23.0.0
+- opens select playlist to export v23.1.0
+- improved select playlist to export style as it wasnt visible in light mode v23.2.0
 - works
-- lyrics all done
-- moved buttons playlist modification to bottom below the results
-- improved cleanup but cleanup is still leaking a lot
-- improved update progress bar still it wont work for mobile
--tried to add user setting failed
-- fixed import cos theres a few duplicate issues
-- also fixed the issue in styles.
-- need to fix leaking memory
-- fixed issue where load song library isnt working after i updated the export and import the last time
-- fixed issue where pressing n opens the queue even if text box is active
-- made right clicking the song in the addtional details sidebar add to queue
-- added visual indication
-- fixed the button remove from queue not working
-- changed button name from add lyrics to transcribe lyrics
+- lyrics all done v24.0.0
+- moved buttons playlist modification to bottom below the results v24.1.0
+- improved cleanup but cleanup is still leaking a lot v24.2.0
+- improved update progress bar still it wont work for mobile v24.3.0
+-tried to add user setting failed 
+- fixed import cos theres a few duplicate issues v24.3.1
+- also fixed the issue in styles. v24.3.2
+- added queue v25.0.0
+- need to fix leaking memory 
+- fixed issue where load song library isnt working after i updated the export and import the last time v25.1.0
+- fixed issue where pressing n opens the queue even if text box is active v25.2.0
+- made right clicking the song in the addtional details sidebar add to queue v25.3.0
+- added visual indication v25.4.0
+- fixed the button remove from queue not working v25.5.0
+- changed button name from add lyrics to transcribe lyrics v25.5.1
 - plan to add "use youtube transcription." button which will extract the yotuube transcription.
-- added autoplay html logic and css
+- added autoplay html logic and css v26.0.0
