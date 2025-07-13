@@ -31,6 +31,7 @@ class AdvancedMusicPlayer {
     this.isWebEmbedVisible = false;
     this.appTimer = null;
     this.timerEndTime = null;
+    
     this.currentLayout = "center";
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
@@ -105,6 +106,7 @@ class AdvancedMusicPlayer {
         this.setupEventListeners();
         this.initializeTheme();
         this.initializeAutoplay();
+        this.initializeLyricsExpansion();
         this.setupKeyboardControls();
         this.renderInitialState();
         this.renderAdditionalDetails();
@@ -358,7 +360,11 @@ class AdvancedMusicPlayer {
       [this.elements.songUrlInput, "keydown", this.handleSongUrlKeydown],
       [this.elements.newPlaylistName, "keydown", this.handleNewPlaylistNameKeydown],
       [this.elements.volumeSlider, "input", this.handleVolumeChange],
-      [this.elements.progressBar, "click", this.handleSeekMusic]
+      [this.elements.progressBar, "click", this.handleSeekMusic],
+      // Add these to your existing event bindings array
+      [this.elements.expandLyricsBtn, 'click', () => this.enterLyricsExpansionMode()],
+      [this.elements.exitExpansionMode, 'click', () => this.exitLyricsExpansionMode()],
+      [this.elements.expansionLayoutToggle, 'click', () => this.toggleExpansionLayout()]
     ];
 
     eventBindings.forEach(([element, event, handler]) => {
@@ -5284,6 +5290,12 @@ refreshSpecificSection(sectionTitle) {
         }
       }, 100);
     }
+    // Show expand button if lyrics are available
+    if (songWithLyrics.lyrics && songWithLyrics.lyrics.trim() !== '') {
+        this.elements.expandLyricsBtn.style.display = 'block';
+    } else {
+        this.elements.expandLyricsBtn.style.display = 'none';
+    }
   }
   updateHighlightedLyric(currentTime, lyrics, timings) {
     if (!lyrics.length || !timings.length) return;
@@ -6684,6 +6696,261 @@ setupLayoutEventListeners() {
 
   this.adjustLayoutTogglePosition();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+initializeLyricsExpansion() {
+    this.isExpansionMode = false;
+    this.expansionLayoutMode = 'split'; // 'split' or 'lyrics-only'
+    this.expansionYtPlayer = null;
+    
+    this.elements.expandLyricsBtn = document.getElementById('expandLyricsBtn');
+    this.elements.exitExpansionMode = document.getElementById('exitExpansionMode');
+    this.elements.expansionLayoutToggle = document.getElementById('expansionLayoutToggle');
+    this.elements.lyricsExpansionMode = document.getElementById('lyricsExpansionMode');
+    this.elements.expansionSongName = document.getElementById('expansionSongName');
+    this.elements.expansionSongAuthor = document.getElementById('expansionSongAuthor');
+    this.elements.expansionYouTubePlayer = document.getElementById('expansionYouTubePlayer');
+    this.elements.expansionLyricsDisplay = document.getElementById('expansionLyricsDisplay');
+    this.elements.expansionLyricsContent = document.getElementById('expansionLyricsContent');
+}
+
+enterLyricsExpansionMode() {
+    const currentSong = this.currentPlaylist 
+        ? this.currentPlaylist.songs[this.currentSongIndex]
+        : this.songLibrary[this.currentSongIndex];
+    
+    if (!currentSong) return;
+    
+    this.isExpansionMode = true;
+    
+    // Hide main app
+    document.querySelector('.app-container').style.display = 'none';
+    
+    // Show expansion mode
+    this.elements.lyricsExpansionMode.style.display = 'flex';
+    
+    // Update song info
+    this.elements.expansionSongName.textContent = currentSong.name;
+    this.elements.expansionSongAuthor.textContent = currentSong.author || 'Unknown Artist';
+    
+    // Setup expansion YouTube player
+    this.setupExpansionYouTubePlayer();
+    
+    // Render lyrics in expansion mode
+    this.renderExpansionLyrics();
+    
+    // Set initial layout
+    this.setExpansionLayout('split');
+}
+
+exitLyricsExpansionMode() {
+    this.isExpansionMode = false;
+    
+    // Show main app
+    document.querySelector('.app-container').style.display = 'block';
+    
+    // Hide expansion mode
+    this.elements.lyricsExpansionMode.style.display = 'none';
+    
+    // Destroy expansion YouTube player
+    if (this.expansionYtPlayer) {
+        this.expansionYtPlayer.destroy();
+        this.expansionYtPlayer = null;
+    }
+    
+    // Resume main player
+    if (this.ytPlayer && this.isPlaying) {
+        this.ytPlayer.playVideo();
+    }
+}
+
+setupExpansionYouTubePlayer() {
+    const currentSong = this.currentPlaylist 
+        ? this.currentPlaylist.songs[this.currentSongIndex]
+        : this.songLibrary[this.currentSongIndex];
+    
+    if (!currentSong) return;
+    
+    // Pause main player
+    if (this.ytPlayer) {
+        this.ytPlayer.pauseVideo();
+    }
+    
+    // Create expansion player
+    this.expansionYtPlayer = new YT.Player('expansionYtPlayer', {
+        height: '100%',
+        width: '100%',
+        videoId: currentSong.videoId,
+        playerVars: {
+            autoplay: 1,
+            controls: 1,
+            playsinline: 1
+        },
+        events: {
+            onStateChange: this.onExpansionPlayerStateChange.bind(this)
+        }
+    });
+}
+
+onExpansionPlayerStateChange(event) {
+    if (event.data === YT.PlayerState.PLAYING) {
+        this.isPlaying = true;
+        this.startExpansionLyricsTracking();
+    } else if (event.data === YT.PlayerState.PAUSED) {
+        this.isPlaying = false;
+        this.stopExpansionLyricsTracking();
+    }
+}
+
+startExpansionLyricsTracking() {
+    if (this.expansionLyricsInterval) {
+        clearInterval(this.expansionLyricsInterval);
+    }
+    
+    this.expansionLyricsInterval = setInterval(() => {
+        if (this.expansionYtPlayer && this.expansionYtPlayer.getCurrentTime) {
+            const currentTime = this.expansionYtPlayer.getCurrentTime();
+            this.updateExpansionLyrics(currentTime);
+        }
+    }, 100);
+}
+
+stopExpansionLyricsTracking() {
+    if (this.expansionLyricsInterval) {
+        clearInterval(this.expansionLyricsInterval);
+        this.expansionLyricsInterval = null;
+    }
+}
+
+renderExpansionLyrics() {
+    const currentSong = this.currentPlaylist 
+        ? this.currentPlaylist.songs[this.currentSongIndex]
+        : this.songLibrary[this.currentSongIndex];
+    
+    if (!currentSong) return;
+    
+    let songWithLyrics = currentSong;
+    if (this.currentPlaylist) {
+        const libraryMatch = this.songLibrary.find(s => s.videoId === currentSong.videoId);
+        if (libraryMatch && libraryMatch.lyrics) {
+            songWithLyrics = libraryMatch;
+        }
+    }
+    
+    this.elements.expansionLyricsContent.innerHTML = '';
+    
+    if (!songWithLyrics.lyrics || songWithLyrics.lyrics.trim() === '') {
+        this.elements.expansionLyricsContent.innerHTML = '<p class="no-lyrics-message">No lyrics available</p>';
+        return;
+    }
+    
+    const lines = songWithLyrics.lyrics.split('\n').filter(line => line.trim() !== '');
+    this.expansionLyricsArray = [];
+    this.expansionTimingsArray = [];
+    
+    for (const line of lines) {
+        const match = line.match(/(.*)\s*\[(\d+):(\d+)\]/);
+        if (match) {
+            const lyric = match[1].trim();
+            const minutes = parseInt(match[2]);
+            const seconds = parseInt(match[3]);
+            const timeInSeconds = minutes * 60 + seconds;
+            
+            this.expansionLyricsArray.push(lyric);
+            this.expansionTimingsArray.push(timeInSeconds);
+        }
+    }
+    
+    for (let i = 0; i < this.expansionLyricsArray.length; i++) {
+        const lineElement = document.createElement('div');
+        lineElement.classList.add('lyric-line');
+        lineElement.textContent = this.expansionLyricsArray[i];
+        lineElement.id = `expansion-lyric-${i}`;
+        this.elements.expansionLyricsContent.appendChild(lineElement);
+    }
+}
+
+updateExpansionLyrics(currentTime) {
+    if (!this.expansionLyricsArray || !this.expansionTimingsArray) return;
+    
+    let highlightIndex = -1;
+    
+    for (let i = 0; i < this.expansionTimingsArray.length; i++) {
+        if (currentTime >= this.expansionTimingsArray[i]) {
+            if (i === this.expansionTimingsArray.length - 1 || currentTime < this.expansionTimingsArray[i + 1]) {
+                highlightIndex = i;
+            }
+        }
+    }
+    
+    if (highlightIndex !== this.currentExpansionHighlightIndex) {
+        const allLines = this.elements.expansionLyricsContent.querySelectorAll('.lyric-line');
+        allLines.forEach(line => {
+            line.classList.remove('active');
+        });
+        
+        if (highlightIndex !== -1) {
+            const currentElement = document.getElementById(`expansion-lyric-${highlightIndex}`);
+            if (currentElement) {
+                currentElement.classList.add('active');
+                currentElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+        }
+        
+        this.currentExpansionHighlightIndex = highlightIndex;
+    }
+}
+
+setExpansionLayout(mode) {
+    this.expansionLayoutMode = mode;
+    
+    if (mode === 'split') {
+        this.elements.expansionYouTubePlayer.style.display = 'block';
+        this.elements.expansionLyricsDisplay.classList.remove('full-width');
+        this.elements.expansionLayoutToggle.innerHTML = '<i class="fas fa-expand"></i>';
+    } else {
+        this.elements.expansionYouTubePlayer.style.display = 'none';
+        this.elements.expansionLyricsDisplay.classList.add('full-width');
+        this.elements.expansionLayoutToggle.innerHTML = '<i class="fas fa-columns"></i>';
+    }
+}
+
+toggleExpansionLayout() {
+    const newMode = this.expansionLayoutMode === 'split' ? 'lyrics-only' : 'split';
+    this.setExpansionLayout(newMode);
+}
+
+
+
+
+
+
+
+
+
+
+  
 cleanup() {
   console.log("Starting cleanup process");
   
