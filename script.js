@@ -5164,7 +5164,8 @@ refreshSpecificSection(sectionTitle) {
   renderLyricsTab() {
     if (!this.elements.lyricsPane) return;
 
-    this.elements.lyricsPane.innerHTML = "";
+    const lyricsContent = document.getElementById('lyricsContent');
+    lyricsContent.innerHTML = "";
     if (
       this.currentSongIndex === undefined ||
       (!this.songLibrary.length && !this.currentPlaylist)
@@ -5172,7 +5173,7 @@ refreshSpecificSection(sectionTitle) {
       const emptyMessage = document.createElement("div");
       emptyMessage.classList.add("empty-lyrics-message");
       emptyMessage.textContent = "No song is currently playing.";
-      this.elements.lyricsPane.appendChild(emptyMessage);
+      lyricsContent.appendChild(emptyMessage);
       return;
     }
     const currentSong = this.currentPlaylist
@@ -5183,7 +5184,7 @@ refreshSpecificSection(sectionTitle) {
       const errorMessage = document.createElement("div");
       errorMessage.classList.add("error-message");
       errorMessage.textContent = "Current song information could not be found.";
-      this.elements.lyricsPane.appendChild(errorMessage);
+      lyricsContent.appendChild(errorMessage);
       return;
     }
     let songWithLyrics = currentSong;
@@ -5229,7 +5230,7 @@ refreshSpecificSection(sectionTitle) {
         noLyricsMessage.appendChild(addLyricsBtn);
       }
 
-      this.elements.lyricsPane.appendChild(noLyricsMessage);
+      lyricsContent.appendChild(noLyricsMessage);
       return;
     }
 
@@ -5278,7 +5279,7 @@ refreshSpecificSection(sectionTitle) {
     }
 
     lyricsPlayer.appendChild(lyricsDisplay);
-    this.elements.lyricsPane.appendChild(lyricsPlayer);
+    lyricsContent.appendChild(lyricsPlayer);
     if (this.lyricsInterval) {
       clearInterval(this.lyricsInterval);
     }
@@ -5293,10 +5294,8 @@ refreshSpecificSection(sectionTitle) {
     // Show expand button if lyrics are available
     if (songWithLyrics.lyrics && songWithLyrics.lyrics.trim() !== '') {
         this.elements.expandLyricsBtn.style.display = 'block';
-      console.log('Expand button element:', this.elements.expandLyricsBtn);
     } else {
         this.elements.expandLyricsBtn.style.display = 'none';
-      console.log('Expand button element:', this.elements.expandLyricsBtn);
     }
   }
   updateHighlightedLyric(currentTime, lyrics, timings) {
