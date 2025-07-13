@@ -5293,8 +5293,10 @@ refreshSpecificSection(sectionTitle) {
     // Show expand button if lyrics are available
     if (songWithLyrics.lyrics && songWithLyrics.lyrics.trim() !== '') {
         this.elements.expandLyricsBtn.style.display = 'block';
+      console.log('Expand button element:', this.elements.expandLyricsBtn);
     } else {
         this.elements.expandLyricsBtn.style.display = 'none';
+      console.log('Expand button element:', this.elements.expandLyricsBtn);
     }
   }
   updateHighlightedLyric(currentTime, lyrics, timings) {
