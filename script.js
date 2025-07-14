@@ -6854,16 +6854,27 @@ showFullscreenVideo() {
     const isCurrentlyPlaying = this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
     const currentTime = this.ytPlayer.getCurrentTime();
     
-    // Get the ytPlayer element and add positioning class
+    // Get the ytPlayer element and position it over the video container
     const ytPlayerEl = document.getElementById("ytPlayer");
-    ytPlayerEl.classList.add("lyrics-fullscreen-video");
+    const videoContainer = this.elements.fullscreenVideoContainer;
     
-    // Show video container (for positioning reference)
-    this.elements.fullscreenVideoContainer.style.display = 'flex';
+    // Show video container first
+    videoContainer.style.display = 'flex';
     this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.remove('video-hidden');
     
-    // Resize player for fullscreen lyrics view
-    this.ytPlayer.setSize(400, 225);
+    // Get the position of the video container
+    const containerRect = videoContainer.getBoundingClientRect();
+    
+    // Position the player over the container
+    ytPlayerEl.style.position = 'fixed';
+    ytPlayerEl.style.top = containerRect.top + 'px';
+    ytPlayerEl.style.left = containerRect.left + 'px';
+    ytPlayerEl.style.zIndex = '10001';
+    ytPlayerEl.style.width = containerRect.width + 'px';
+    ytPlayerEl.style.height = containerRect.height + 'px';
+    
+    // Resize player to match container
+    this.ytPlayer.setSize(containerRect.width, containerRect.height);
     
     // Restore playback state
     if (isCurrentlyPlaying) {
@@ -6882,9 +6893,14 @@ hideFullscreenVideo() {
     const isCurrentlyPlaying = this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
     const currentTime = this.ytPlayer.getCurrentTime();
     
-    // Remove positioning class from ytPlayer
+    // Reset positioning styles on ytPlayer
     const ytPlayerEl = document.getElementById("ytPlayer");
-    ytPlayerEl.classList.remove("lyrics-fullscreen-video");
+    ytPlayerEl.style.position = '';
+    ytPlayerEl.style.top = '';
+    ytPlayerEl.style.left = '';
+    ytPlayerEl.style.zIndex = '';
+    ytPlayerEl.style.width = '';
+    ytPlayerEl.style.height = '';
     
     // Hide video container
     this.elements.fullscreenVideoContainer.style.display = 'none';
