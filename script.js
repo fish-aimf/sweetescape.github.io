@@ -1933,7 +1933,7 @@ onPlayerStateChange(event) {
             // Autoplay is disabled - stop playback and update UI
             this.isPlaying = false;
             
-            // Clear any active intervals
+            // Clear any active intervals including fullscreen lyrics
             if (this.progressInterval) {
                 clearInterval(this.progressInterval);
                 this.progressInterval = null;
@@ -1949,6 +1949,10 @@ onPlayerStateChange(event) {
             if (this.lyricsInterval) {
                 clearInterval(this.lyricsInterval);
                 this.lyricsInterval = null;
+            }
+            if (this.fullscreenLyricsInterval) {
+                clearInterval(this.fullscreenLyricsInterval);
+                this.fullscreenLyricsInterval = null;
             }
             
             // Update UI and page title
@@ -1982,9 +1986,12 @@ onPlayerStateChange(event) {
             clearInterval(this.progressInterval);
         }
         
-        // Stop lyrics tracking
+        // Stop lyrics tracking including fullscreen lyrics
         if (this.lyricsInterval) {
             clearInterval(this.lyricsInterval);
+        }
+        if (this.fullscreenLyricsInterval) {
+            clearInterval(this.fullscreenLyricsInterval);
         }
         
     } else if (event.data === YT.PlayerState.PLAYING) {
@@ -2005,6 +2012,11 @@ onPlayerStateChange(event) {
         // Start lyrics if lyrics tab is active
         if (document.getElementById("lyrics") && document.getElementById("lyrics").classList.contains("active")) {
             this.renderLyricsTab();
+        }
+        
+        // Restart fullscreen lyrics if in fullscreen mode
+        if (this.isLyricsFullscreen) {
+            this.renderFullscreenLyrics();
         }
     }
 }
