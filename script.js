@@ -6774,7 +6774,6 @@ initializeFullscreenLyrics() {
         }
     });
 }
-
 enterLyricsFullscreen() {
     if (!this.elements.lyricsFullscreenModal) {
         this.initializeFullscreenLyrics();
@@ -6796,8 +6795,8 @@ enterLyricsFullscreen() {
     // Render fullscreen lyrics
     this.renderFullscreenLyrics();
     
-    // Initialize fullscreen YouTube player
-    this.initializeFullscreenYouTubePlayer();
+    // Hide main UI similar to video fullscreen
+    this.hideMainUIForLyrics();
 }
 
 // Exit fullscreen lyrics mode
@@ -6811,10 +6810,12 @@ exitLyricsFullscreen() {
         this.fullscreenLyricsInterval = null;
     }
     
-    // Destroy fullscreen YouTube player
-    if (this.fullscreenYtPlayer) {
-        this.fullscreenYtPlayer.destroy();
-        this.fullscreenYtPlayer = null;
+    // Show main UI again
+    this.showMainUIFromLyrics();
+    
+    // If video was visible, hide it
+    if (this.isFullscreenVideoVisible) {
+        this.hideFullscreenVideo();
     }
 }
 
@@ -6823,51 +6824,91 @@ toggleFullscreenVideo() {
     this.isFullscreenVideoVisible = !this.isFullscreenVideoVisible;
     
     if (this.isFullscreenVideoVisible) {
-        this.elements.fullscreenVideoContainer.style.display = 'flex';
-        this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.remove('video-hidden');
+        this.showFullscreenVideo();
         this.elements.toggleVideoBtn.innerHTML = '<i class="fas fa-video-slash"></i>';
+        this.elements.toggleVideoBtn.title = 'Hide Video';
     } else {
-        this.elements.fullscreenVideoContainer.style.display = 'none';
-        this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.add('video-hidden');
+        this.hideFullscreenVideo();
         this.elements.toggleVideoBtn.innerHTML = '<i class="fas fa-video"></i>';
+        this.elements.toggleVideoBtn.title = 'Show Video';
     }
 }
 
-// Initialize fullscreen YouTube player
-initializeFullscreenYouTubePlayer() {
+// Show video in fullscreen lyrics mode - move existing player
+showFullscreenVideo() {
     if (!this.ytPlayer) return;
     
-    try {
-        const videoData = this.ytPlayer.getVideoData();
-        const currentVideoId = videoData.video_id;
-        
-        if (currentVideoId) {
-            this.fullscreenYtPlayer = new YT.Player('fullscreenYtPlayer', {
-                height: '100%',
-                width: '100%',
-                videoId: currentVideoId,
-                playerVars: {
-                    playsinline: 1,
-                    controls: 1,
-                    disablekb: 0,
-                    fs: 1,
-                    modestbranding: 1,
-                    rel: 0,
-                    autoplay: this.isPlaying ? 1 : 0
-                }
-            });
-            
-            // Sync with main player
-            if (this.isPlaying) {
-                setTimeout(() => {
-                    const currentTime = this.ytPlayer.getCurrentTime();
-                    this.fullscreenYtPlayer.seekTo(currentTime);
-                }, 1000);
-            }
-        }
-    } catch (error) {
-        console.error('Error initializing fullscreen YouTube player:', error);
+    // Store current state
+    const isCurrentlyPlaying = this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
+    const currentTime = this.ytPlayer.getCurrentTime();
+    
+    // Move the existing ytPlayer to fullscreen container
+    const ytPlayerEl = document.getElementById("ytPlayer");
+    this.elements.fullscreenVideoContainer.appendChild(ytPlayerEl);
+    
+    // Show video container
+    this.elements.fullscreenVideoContainer.style.display = 'flex';
+    this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.remove('video-hidden');
+    
+    // Resize player for fullscreen lyrics view
+    this.ytPlayer.setSize(400, 225); // Smaller size for lyrics view
+    
+    // Restore playback state
+    if (isCurrentlyPlaying) {
+        setTimeout(() => {
+            this.ytPlayer.seekTo(currentTime, true);
+            this.ytPlayer.playVideo();
+        }, 100);
     }
+}
+
+// Hide video in fullscreen lyrics mode - move player back
+hideFullscreenVideo() {
+    if (!this.ytPlayer) return;
+    
+    // Store current state
+    const isCurrentlyPlaying = this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
+    const currentTime = this.ytPlayer.getCurrentTime();
+    
+    // Move ytPlayer back to original container
+    const ytPlayerEl = document.getElementById("ytPlayer");
+    const originalContainer = document.querySelector('.player-container') || document.body;
+    originalContainer.appendChild(ytPlayerEl);
+    
+    // Hide video container
+    this.elements.fullscreenVideoContainer.style.display = 'none';
+    this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.add('video-hidden');
+    
+    // Reset player size
+    this.ytPlayer.setSize(1, 1);
+    
+    // Restore playback state
+    if (isCurrentlyPlaying) {
+        setTimeout(() => {
+            this.ytPlayer.seekTo(currentTime, true);
+            this.ytPlayer.playVideo();
+        }, 100);
+    }
+}
+
+// Hide main UI for lyrics fullscreen
+hideMainUIForLyrics() {
+    document.querySelector(".main-container").style.display = "none";
+    document.querySelector(".theme-toggle").style.display = "none";
+    document.querySelector(".listening-stats").style.display = "none";
+    document.querySelector(".control-bar-toggle").style.display = "none";
+    document.querySelector(".layout-toggle").style.display = "none";
+    document.querySelector(".watermark").style.display = "none";
+}
+
+// Show main UI when exiting lyrics fullscreen
+showMainUIFromLyrics() {
+    document.querySelector(".main-container").style.display = "flex";
+    document.querySelector(".theme-toggle").style.display = "flex";
+    document.querySelector(".listening-stats").style.display = "flex";
+    document.querySelector(".control-bar-toggle").style.display = "block";
+    document.querySelector(".layout-toggle").style.display = "block";
+    document.querySelector(".watermark").style.display = "block";
 }
 
 // Render fullscreen lyrics
@@ -6939,8 +6980,7 @@ renderFullscreenLyrics() {
     }
 }
 
-
-
+// Update highlighted lyric in fullscreen mode
 updateFullscreenHighlightedLyric(currentTime, lyrics, timings) {
     if (!lyrics.length || !timings.length) return;
     
@@ -6974,6 +7014,7 @@ updateFullscreenHighlightedLyric(currentTime, lyrics, timings) {
         this.currentFullscreenHighlightedLyricIndex = highlightIndex;
     }
 }
+
 
 
 
