@@ -2572,4 +2572,12 @@ body:has(#ytPlayer.fullscreen-video) {
     }
 }
 
+#ytPlayer.lyrics-fullscreen-video {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10001; /* Higher than lyrics modal */
+}
+
 
