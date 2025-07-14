@@ -308,6 +308,38 @@
     <div id="ytPlayer"></div>
     
     <div class="watermark">Made by fishareverysmart</div>
+
+
+    <!-- Add this modal right before the closing </body> tag in your HTML -->
+
+<!-- Fullscreen Lyrics Modal -->
+<div id="lyricsFullscreenModal" class="lyrics-fullscreen-modal">
+    <div class="lyrics-fullscreen-container">
+        <div class="lyrics-fullscreen-header">
+            <div class="song-info">
+                <h2 id="fullscreenSongName">Song Name</h2>
+                <p id="fullscreenSongAuthor">Artist</p>
+            </div>
+            <div class="fullscreen-controls">
+                <button id="toggleVideoBtn" class="fullscreen-btn">
+                    <i class="fas fa-video"></i>
+                </button>
+                <button id="exitFullscreenBtn" class="fullscreen-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="lyrics-fullscreen-content">
+            <div id="fullscreenVideoContainer" class="fullscreen-video-container" style="display: none;">
+                <div id="fullscreenYtPlayer"></div>
+            </div>
+            <div id="fullscreenLyricsDisplay" class="fullscreen-lyrics-display">
+                <!-- Lyrics will be populated here -->
+            </div>
+        </div>
+    </div>
+</div>
     <script src="https://www.youtube.com/iframe_api"></script>
     <script src="script.js"></script>
   
