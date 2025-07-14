@@ -6765,7 +6765,6 @@ setupLayoutEventListeners() {
 
 
 
-
 initializeFullscreenLyrics() {
     this.elements.lyricsFullscreenModal = document.getElementById('lyricsFullscreenModal');
     this.elements.fullscreenSongName = document.getElementById('fullscreenSongName');
@@ -6786,6 +6785,7 @@ initializeFullscreenLyrics() {
         }
     });
 }
+
 enterLyricsFullscreen() {
     if (!this.elements.lyricsFullscreenModal) {
         this.initializeFullscreenLyrics();
@@ -6846,7 +6846,7 @@ toggleFullscreenVideo() {
     }
 }
 
-// Show video in fullscreen lyrics mode - move existing player
+// Show video in fullscreen lyrics mode - resize and reposition without moving DOM element
 showFullscreenVideo() {
     if (!this.ytPlayer) return;
     
@@ -6854,16 +6854,16 @@ showFullscreenVideo() {
     const isCurrentlyPlaying = this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
     const currentTime = this.ytPlayer.getCurrentTime();
     
-    // Move the existing ytPlayer to fullscreen container
+    // Get the ytPlayer element and add positioning class
     const ytPlayerEl = document.getElementById("ytPlayer");
-    this.elements.fullscreenVideoContainer.appendChild(ytPlayerEl);
+    ytPlayerEl.classList.add("lyrics-fullscreen-video");
     
-    // Show video container
+    // Show video container (for positioning reference)
     this.elements.fullscreenVideoContainer.style.display = 'flex';
     this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.remove('video-hidden');
     
     // Resize player for fullscreen lyrics view
-    this.ytPlayer.setSize(400, 225); // Smaller size for lyrics view
+    this.ytPlayer.setSize(400, 225);
     
     // Restore playback state
     if (isCurrentlyPlaying) {
@@ -6874,7 +6874,7 @@ showFullscreenVideo() {
     }
 }
 
-// Hide video in fullscreen lyrics mode - move player back
+// Hide video in fullscreen lyrics mode - reset positioning without moving DOM element
 hideFullscreenVideo() {
     if (!this.ytPlayer) return;
     
@@ -6882,16 +6882,15 @@ hideFullscreenVideo() {
     const isCurrentlyPlaying = this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
     const currentTime = this.ytPlayer.getCurrentTime();
     
-    // Move ytPlayer back to original container
+    // Remove positioning class from ytPlayer
     const ytPlayerEl = document.getElementById("ytPlayer");
-    const originalContainer = document.querySelector('.player-container') || document.body;
-    originalContainer.appendChild(ytPlayerEl);
+    ytPlayerEl.classList.remove("lyrics-fullscreen-video");
     
     // Hide video container
     this.elements.fullscreenVideoContainer.style.display = 'none';
     this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.add('video-hidden');
     
-    // Reset player size
+    // Reset player size to hidden
     this.ytPlayer.setSize(1, 1);
     
     // Restore playback state
@@ -7030,6 +7029,13 @@ updateFullscreenHighlightedLyric(currentTime, lyrics, timings) {
 
 
 
+
+
+
+
+
+
+  
 
 
 
