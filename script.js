@@ -6810,17 +6810,18 @@ enterLyricsFullscreen() {
     // Hide main UI similar to video fullscreen
     this.hideMainUIForLyrics();
 }
-
-// Exit fullscreen lyrics mode
 exitLyricsFullscreen() {
     this.isLyricsFullscreen = false;
     this.elements.lyricsFullscreenModal.classList.remove('active');
     
-    // Clear fullscreen lyrics interval
+    // Clear fullscreen lyrics interval with proper cleanup
     if (this.fullscreenLyricsInterval) {
         clearInterval(this.fullscreenLyricsInterval);
         this.fullscreenLyricsInterval = null;
     }
+    
+    // Reset highlighted lyric index
+    this.currentFullscreenHighlightedLyricIndex = -1;
     
     // Show main UI again
     this.showMainUIFromLyrics();
@@ -6829,9 +6830,12 @@ exitLyricsFullscreen() {
     if (this.isFullscreenVideoVisible) {
         this.hideFullscreenVideo();
     }
+    
+    // Restart regular lyrics if lyrics tab is active and playing
+    if (this.isPlaying && document.getElementById("lyrics") && document.getElementById("lyrics").classList.contains("active")) {
+        this.renderLyricsTab();
+    }
 }
-
-// Toggle video visibility in fullscreen mode
 toggleFullscreenVideo() {
     this.isFullscreenVideoVisible = !this.isFullscreenVideoVisible;
     
@@ -6938,7 +6942,6 @@ showMainUIFromLyrics() {
     document.querySelector(".watermark").style.display = "block";
 }
 
-// Render fullscreen lyrics
 renderFullscreenLyrics() {
     if (!this.elements.fullscreenLyricsDisplay) return;
     
@@ -6984,30 +6987,47 @@ renderFullscreenLyrics() {
         }
     }
     
+    // Create lyric elements with proper styling like the regular lyrics tab
     for (let i = 0; i < lyricsArray.length; i++) {
         const lineElement = document.createElement("div");
         lineElement.classList.add("lyric-line");
         lineElement.textContent = lyricsArray[i];
         lineElement.id = `fullscreen-lyric-${i}`;
+        
+        // Apply consistent styling like regular lyrics tab
+        lineElement.style.padding = "8px 10px";
+        lineElement.style.margin = "5px 0";
+        lineElement.style.borderRadius = "3px";
+        lineElement.style.transition = "all 0.3s ease";
+        lineElement.style.color = "var(--text-secondary)";
+        
         this.elements.fullscreenLyricsDisplay.appendChild(lineElement);
     }
     
-    // Start fullscreen lyrics highlighting
+    // Clear any existing interval before starting new one
     if (this.fullscreenLyricsInterval) {
         clearInterval(this.fullscreenLyricsInterval);
+        this.fullscreenLyricsInterval = null;
     }
     
-    if (this.ytPlayer && this.isPlaying) {
+    // Reset highlighted lyric index
+    this.currentFullscreenHighlightedLyricIndex = -1;
+    
+    // Start fullscreen lyrics highlighting only if player is ready and playing
+    if (this.ytPlayer && this.isPlaying && this.ytPlayer.getCurrentTime) {
         this.fullscreenLyricsInterval = setInterval(() => {
-            if (this.ytPlayer && this.ytPlayer.getCurrentTime) {
-                const currentTime = this.ytPlayer.getCurrentTime();
-                this.updateFullscreenHighlightedLyric(currentTime, lyricsArray, timingsArray);
+            // Add safety checks like regular lyrics tab
+            if (this.ytPlayer && this.ytPlayer.getCurrentTime && this.isPlaying && this.isLyricsFullscreen) {
+                try {
+                    const currentTime = this.ytPlayer.getCurrentTime();
+                    this.updateFullscreenHighlightedLyric(currentTime, lyricsArray, timingsArray);
+                } catch (error) {
+                    console.warn("Error updating fullscreen lyrics:", error);
+                }
             }
         }, 100);
     }
 }
-
-// Update highlighted lyric in fullscreen mode
 updateFullscreenHighlightedLyric(currentTime, lyrics, timings) {
     if (!lyrics.length || !timings.length) return;
     
@@ -7022,15 +7042,28 @@ updateFullscreenHighlightedLyric(currentTime, lyrics, timings) {
     }
     
     if (highlightIndex !== this.currentFullscreenHighlightedLyricIndex) {
+        // Reset all lines with proper styling like regular lyrics tab
         const allLines = this.elements.fullscreenLyricsDisplay.querySelectorAll(".lyric-line");
         allLines.forEach((line) => {
             line.classList.remove("active");
+            line.style.backgroundColor = "";
+            line.style.color = "var(--text-secondary)";
+            line.style.fontWeight = "normal";
+            line.style.fontSize = "";
+            line.style.transform = "";
         });
         
         if (highlightIndex !== -1) {
             const currentElement = document.getElementById(`fullscreen-lyric-${highlightIndex}`);
             if (currentElement) {
                 currentElement.classList.add("active");
+                // Apply same styling as regular lyrics tab
+                currentElement.style.backgroundColor = "var(--accent-color)";
+                currentElement.style.color = "var(--text-primary)";
+                currentElement.style.fontWeight = "bold";
+                currentElement.style.fontSize = "1.1em";
+                currentElement.style.transform = "scale(1.02)";
+                
                 currentElement.scrollIntoView({
                     behavior: "smooth",
                     block: "center",
@@ -7041,6 +7074,7 @@ updateFullscreenHighlightedLyric(currentTime, lyrics, timings) {
         this.currentFullscreenHighlightedLyricIndex = highlightIndex;
     }
 }
+
 
 
 
