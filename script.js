@@ -6878,20 +6878,23 @@ showFullscreenVideo() {
     ytPlayerEl.style.width = containerRect.width + 'px';
     ytPlayerEl.style.height = containerRect.height + 'px';
     
-    // Force the iframe to update its size attributes
-    ytPlayerEl.width = containerRect.width;
-    ytPlayerEl.height = containerRect.height;
+    // Update iframe attributes (this is the key part that was missing)
+    ytPlayerEl.setAttribute('width', containerRect.width);
+    ytPlayerEl.setAttribute('height', containerRect.height);
     
-    // Resize player to match container - use a small delay to ensure DOM updates
-    setTimeout(() => {
-        this.ytPlayer.setSize(containerRect.width, containerRect.height);
-        
-        // Restore playback state
-        if (isCurrentlyPlaying) {
+    // Add class like the working fullscreen video mode
+    ytPlayerEl.classList.add('fullscreen-video');
+    
+    // Resize player to match container
+    this.ytPlayer.setSize(containerRect.width, containerRect.height);
+    
+    // Restore playback state
+    if (isCurrentlyPlaying) {
+        setTimeout(() => {
             this.ytPlayer.seekTo(currentTime, true);
             this.ytPlayer.playVideo();
-        }
-    }, 100);
+        }, 100);
+    }
 }
 
 // Hide video in fullscreen lyrics mode - reset positioning without moving DOM element
@@ -6910,6 +6913,13 @@ hideFullscreenVideo() {
     ytPlayerEl.style.zIndex = '';
     ytPlayerEl.style.width = '';
     ytPlayerEl.style.height = '';
+    
+    // Reset iframe attributes back to 1x1 (this was missing)
+    ytPlayerEl.setAttribute('width', '1');
+    ytPlayerEl.setAttribute('height', '1');
+    
+    // Remove the fullscreen video class
+    ytPlayerEl.classList.remove('fullscreen-video');
     
     // Hide video container
     this.elements.fullscreenVideoContainer.style.display = 'none';
