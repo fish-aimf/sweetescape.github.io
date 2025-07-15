@@ -2581,3 +2581,72 @@ body:has(#ytPlayer.fullscreen-video) {
 }
 
 
+
+/* Fullscreen Video Container Styling */
+.fullscreen-video-container {
+    position: relative;
+    width: 100%;
+    height: 300px; /* Adjust this height as needed */
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.fullscreen-video-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, 
+        rgba(255, 255, 255, 0.1) 0%, 
+        rgba(255, 255, 255, 0.05) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* When video is hidden, show a placeholder */
+.fullscreen-video-container:empty::after {
+    content: 'Video will appear here';
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+    text-align: center;
+    z-index: 2;
+    position: relative;
+}
+
+/* Ensure the iframe fills the container completely */
+.fullscreen-video-container iframe {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: none !important;
+    border-radius: inherit !important;
+    z-index: 10001 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .fullscreen-video-container {
+        height: 200px;
+        margin: 10px 0;
+    }
+}
+
+/* Ensure proper stacking context */
+.lyrics-fullscreen-modal {
+    z-index: 10000;
+}
+
+.lyrics-fullscreen-content {
+    position: relative;
+    z-index: 10000;
+}
