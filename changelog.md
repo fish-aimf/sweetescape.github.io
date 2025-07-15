@@ -187,3 +187,5 @@
 - added autoplay html logic and css v26.0.0
 - fixed the issue where the autoplay button will disappear slower than the rest just removed the animation. v26.0.1
 - a lot of bugs but added kareoke full screen lyrics mode. with youtube video on side or full screen lyrics v27.0.0
+- made the lyric fullscreen render better v27.0.1
+- spent 5 hours trying to fix issue of ytplayer not rendering nothign worked just renamed a bunch of functions due to confusion
