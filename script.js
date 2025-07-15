@@ -6763,19 +6763,17 @@ setupLayoutEventListeners() {
 
 
 
-
-
 initializeFullscreenLyrics() {
     this.elements.lyricsFullscreenModal = document.getElementById('lyricsFullscreenModal');
     this.elements.fullscreenSongName = document.getElementById('fullscreenSongName');
     this.elements.fullscreenSongAuthor = document.getElementById('fullscreenSongAuthor');
     this.elements.fullscreenLyricsDisplay = document.getElementById('fullscreenLyricsDisplay');
-    this.elements.fullscreenVideoContainer = document.getElementById('fullscreenVideoContainer');
-    this.elements.toggleVideoBtn = document.getElementById('toggleVideoBtn');
+    this.elements.lyricsVideoContainer = document.getElementById('lyricsVideoContainer');
+    this.elements.toggleLyricsVideoBtn = document.getElementById('toggleLyricsVideoBtn');
     this.elements.exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
     
     // Event listeners
-    this.elements.toggleVideoBtn.addEventListener('click', () => this.toggleFullscreenVideo());
+    this.elements.toggleLyricsVideoBtn.addEventListener('click', () => this.toggleLyricsVideo());
     this.elements.exitFullscreenBtn.addEventListener('click', () => this.exitLyricsFullscreen());
     
     // ESC key to exit fullscreen
@@ -6810,6 +6808,7 @@ enterLyricsFullscreen() {
     // Hide main UI similar to video fullscreen
     this.hideMainUIForLyrics();
 }
+
 exitLyricsFullscreen() {
     this.isLyricsFullscreen = false;
     this.elements.lyricsFullscreenModal.classList.remove('active');
@@ -6827,8 +6826,8 @@ exitLyricsFullscreen() {
     this.showMainUIFromLyrics();
     
     // If video was visible, hide it
-    if (this.isFullscreenVideoVisible) {
-        this.hideFullscreenVideo();
+    if (this.isLyricsVideoVisible) {
+        this.hideLyricsVideo();
     }
     
     // Restart regular lyrics if lyrics tab is active and playing
@@ -6836,245 +6835,37 @@ exitLyricsFullscreen() {
         this.renderLyricsTab();
     }
 }
-toggleFullscreenVideo() {
-    this.isFullscreenVideoVisible = !this.isFullscreenVideoVisible;
+
+toggleLyricsVideo() {
+    this.isLyricsVideoVisible = !this.isLyricsVideoVisible;
     
-    if (this.isFullscreenVideoVisible) {
-        this.showFullscreenVideo();
-        this.elements.toggleVideoBtn.innerHTML = '<i class="fas fa-video-slash"></i>';
-        this.elements.toggleVideoBtn.title = 'Hide Video';
+    if (this.isLyricsVideoVisible) {
+        this.showLyricsVideo();
+        this.elements.toggleLyricsVideoBtn.innerHTML = '<i class="fas fa-video-slash"></i>';
+        this.elements.toggleLyricsVideoBtn.title = 'Hide Video';
     } else {
-        this.hideFullscreenVideo();
-        this.elements.toggleVideoBtn.innerHTML = '<i class="fas fa-video"></i>';
-        this.elements.toggleVideoBtn.title = 'Show Video';
+        this.hideLyricsVideo();
+        this.elements.toggleLyricsVideoBtn.innerHTML = '<i class="fas fa-video"></i>';
+        this.elements.toggleLyricsVideoBtn.title = 'Show Video';
     }
 }
-// Enhanced showFullscreenVideo function with proper sizing and positioning
-// FORCE YouTube player size - call this if video is still too small
-forceYouTubePlayerSize() {
-    if (!this.ytPlayer || !this.isFullscreenVideoVisible) return;
-    
-    const videoContainer = this.elements.fullscreenVideoContainer;
-    const ytPlayerEl = document.getElementById("ytPlayer");
-    
-    if (!videoContainer || !ytPlayerEl) return;
-    
-    const containerRect = videoContainer.getBoundingClientRect();
-    const targetWidth = Math.max(containerRect.width, 500); // Minimum 500px width
-    const targetHeight = Math.max(containerRect.height, 300); // Minimum 300px height
-    
-    console.log(`Forcing YouTube player size to: ${targetWidth}x${targetHeight}`);
-    
-    // Multiple aggressive attempts
-    this.ytPlayer.setSize(targetWidth, targetHeight);
-    ytPlayerEl.setAttribute('width', targetWidth);
-    ytPlayerEl.setAttribute('height', targetHeight);
-    ytPlayerEl.style.width = targetWidth + 'px';
-    ytPlayerEl.style.height = targetHeight + 'px';
-    
-    // Wait and try again
-    setTimeout(() => {
-        this.ytPlayer.setSize(targetWidth, targetHeight);
-    }, 100);
-    
-    setTimeout(() => {
-        this.ytPlayer.setSize(targetWidth, targetHeight);
-    }, 300);
-    
-    setTimeout(() => {
-        this.ytPlayer.setSize(targetWidth, targetHeight);
-    }, 500);
-}
 
-// Enhanced showFullscreenVideo function with proper sizing and positioning
-showFullscreenVideo() {
-    if (!this.ytPlayer) return;
+showLyricsVideo() {
+    if (!this.elements.lyricsVideoContainer) return;
     
-    // Store current state
-    const isCurrentlyPlaying = this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
-    const currentTime = this.ytPlayer.getCurrentTime();
-    
-    // Get the ytPlayer element and position it over the video container
-    const ytPlayerEl = document.getElementById("ytPlayer");
-    const videoContainer = this.elements.fullscreenVideoContainer;
-    
-    // Show video container first
-    videoContainer.style.display = 'flex';
+    // Simply show the video container - don't manipulate the YouTube player
+    this.elements.lyricsVideoContainer.style.display = 'flex';
     this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.remove('video-hidden');
-    
-    // Get the position and size of the video container
-    const containerRect = videoContainer.getBoundingClientRect();
-    
-    // Position the player over the container with proper sizing
-    ytPlayerEl.style.position = 'fixed';
-    ytPlayerEl.style.top = containerRect.top + 'px';
-    ytPlayerEl.style.left = containerRect.left + 'px';
-    ytPlayerEl.style.zIndex = '10001';
-    ytPlayerEl.style.width = containerRect.width + 'px';
-    ytPlayerEl.style.height = containerRect.height + 'px';
-    
-    // Ensure the iframe fills the container completely
-    ytPlayerEl.style.border = 'none';
-    ytPlayerEl.style.borderRadius = '0';
-    ytPlayerEl.style.objectFit = 'cover';
-    
-    // FORCE YouTube player to resize - multiple attempts to ensure it works
-    const targetWidth = Math.max(containerRect.width, 300);
-    const targetHeight = Math.max(containerRect.height, 200);
-    
-    // Method 1: Direct API call
-    this.ytPlayer.setSize(targetWidth, targetHeight);
-    
-    // Method 2: Force iframe attributes (backup)
-    ytPlayerEl.setAttribute('width', targetWidth);
-    ytPlayerEl.setAttribute('height', targetHeight);
-    
-    // Method 3: Force with timeout to ensure it takes effect
-    setTimeout(() => {
-        this.ytPlayer.setSize(targetWidth, targetHeight);
-        console.log(`Forced YouTube player size to: ${targetWidth}x${targetHeight}`);
-    }, 50);
-    
-    // Method 4: Additional timeout for stubborn cases
-    setTimeout(() => {
-        this.ytPlayer.setSize(targetWidth, targetHeight);
-    }, 200);
-    
-    // Add window resize listener to maintain proper positioning
-    this.resizeHandler = () => {
-        if (this.isFullscreenVideoVisible && this.isLyricsFullscreen) {
-            const newRect = videoContainer.getBoundingClientRect();
-            const newWidth = Math.max(newRect.width, 300);
-            const newHeight = Math.max(newRect.height, 200);
-            
-            ytPlayerEl.style.top = newRect.top + 'px';
-            ytPlayerEl.style.left = newRect.left + 'px';
-            ytPlayerEl.style.width = newWidth + 'px';
-            ytPlayerEl.style.height = newHeight + 'px';
-            
-            // FORCE resize again
-            this.ytPlayer.setSize(newWidth, newHeight);
-            ytPlayerEl.setAttribute('width', newWidth);
-            ytPlayerEl.setAttribute('height', newHeight);
-        }
-    };
-    
-    window.addEventListener('resize', this.resizeHandler);
-    
-    // Restore playback state with additional size forcing
-    if (isCurrentlyPlaying) {
-        setTimeout(() => {
-            // FORCE size again before restoring playback
-            this.ytPlayer.setSize(targetWidth, targetHeight);
-            this.ytPlayer.seekTo(currentTime, true);
-            this.ytPlayer.playVideo();
-        }, 100);
-    }
-    
-    // EMERGENCY: Additional size forcing after everything else
-    setTimeout(() => {
-        this.ytPlayer.setSize(targetWidth, targetHeight);
-        console.log(`Emergency size force: ${targetWidth}x${targetHeight}`);
-    }, 500);
 }
 
-// Enhanced hideFullscreenVideo function with proper cleanup
-hideFullscreenVideo() {
-    if (!this.ytPlayer) return;
+hideLyricsVideo() {
+    if (!this.elements.lyricsVideoContainer) return;
     
-    // Store current state
-    const isCurrentlyPlaying = this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
-    const currentTime = this.ytPlayer.getCurrentTime();
-    
-    // Remove resize listener if it exists
-    if (this.resizeHandler) {
-        window.removeEventListener('resize', this.resizeHandler);
-        this.resizeHandler = null;
-    }
-    
-    // Reset positioning styles on ytPlayer
-    const ytPlayerEl = document.getElementById("ytPlayer");
-    ytPlayerEl.style.position = '';
-    ytPlayerEl.style.top = '';
-    ytPlayerEl.style.left = '';
-    ytPlayerEl.style.zIndex = '';
-    ytPlayerEl.style.width = '';
-    ytPlayerEl.style.height = '';
-    ytPlayerEl.style.border = '';
-    ytPlayerEl.style.borderRadius = '';
-    ytPlayerEl.style.objectFit = '';
-    
-    // Hide video container
-    this.elements.fullscreenVideoContainer.style.display = 'none';
+    // Simply hide the video container - don't manipulate the YouTube player
+    this.elements.lyricsVideoContainer.style.display = 'none';
     this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.add('video-hidden');
-    
-    // Reset player size to hidden (but make it slightly bigger than 1x1 to avoid issues)
-    this.ytPlayer.setSize(10, 10);
-    
-    // Restore playback state
-    if (isCurrentlyPlaying) {
-        setTimeout(() => {
-            this.ytPlayer.seekTo(currentTime, true);
-            this.ytPlayer.playVideo();
-        }, 100);
-    }
 }
 
-// Enhanced exitLyricsFullscreen function with proper cleanup
-exitLyricsFullscreen() {
-    this.isLyricsFullscreen = false;
-    this.elements.lyricsFullscreenModal.classList.remove('active');
-    
-    // Clear fullscreen lyrics interval with proper cleanup
-    if (this.fullscreenLyricsInterval) {
-        clearInterval(this.fullscreenLyricsInterval);
-        this.fullscreenLyricsInterval = null;
-    }
-    
-    // Reset highlighted lyric index
-    this.currentFullscreenHighlightedLyricIndex = -1;
-    
-    // Show main UI again
-    this.showMainUIFromLyrics();
-    
-    // If video was visible, hide it (this will also clean up resize listeners)
-    if (this.isFullscreenVideoVisible) {
-        this.hideFullscreenVideo();
-    }
-    
-    // Restart regular lyrics if lyrics tab is active and playing
-    if (this.isPlaying && document.getElementById("lyrics") && document.getElementById("lyrics").classList.contains("active")) {
-        this.renderLyricsTab();
-    }
-}
-
-// Enhanced exitLyricsFullscreen function with proper cleanup
-exitLyricsFullscreen() {
-    this.isLyricsFullscreen = false;
-    this.elements.lyricsFullscreenModal.classList.remove('active');
-    
-    // Clear fullscreen lyrics interval with proper cleanup
-    if (this.fullscreenLyricsInterval) {
-        clearInterval(this.fullscreenLyricsInterval);
-        this.fullscreenLyricsInterval = null;
-    }
-    
-    // Reset highlighted lyric index
-    this.currentFullscreenHighlightedLyricIndex = -1;
-    
-    // Show main UI again
-    this.showMainUIFromLyrics();
-    
-    // If video was visible, hide it (this will also clean up resize listeners)
-    if (this.isFullscreenVideoVisible) {
-        this.hideFullscreenVideo();
-    }
-    
-    // Restart regular lyrics if lyrics tab is active and playing
-    if (this.isPlaying && document.getElementById("lyrics") && document.getElementById("lyrics").classList.contains("active")) {
-        this.renderLyricsTab();
-    }
-}
 // Hide main UI for lyrics fullscreen
 hideMainUIForLyrics() {
     document.querySelector(".main-container").style.display = "none";
@@ -7181,6 +6972,7 @@ renderFullscreenLyrics() {
         }, 100);
     }
 }
+
 updateFullscreenHighlightedLyric(currentTime, lyrics, timings) {
     if (!lyrics.length || !timings.length) return;
     
@@ -7227,7 +7019,6 @@ updateFullscreenHighlightedLyric(currentTime, lyrics, timings) {
         this.currentFullscreenHighlightedLyricIndex = highlightIndex;
     }
 }
-
 
 
 
