@@ -6851,6 +6851,7 @@ toggleFullscreenVideo() {
 }
 
 // Show video in fullscreen lyrics mode - resize and reposition without moving DOM element
+// Show video in fullscreen lyrics mode - resize and reposition without moving DOM element
 showFullscreenVideo() {
     if (!this.ytPlayer) return;
     
@@ -6877,16 +6878,20 @@ showFullscreenVideo() {
     ytPlayerEl.style.width = containerRect.width + 'px';
     ytPlayerEl.style.height = containerRect.height + 'px';
     
-    // Resize player to match container
-    this.ytPlayer.setSize(containerRect.width, containerRect.height);
+    // Force the iframe to update its size attributes
+    ytPlayerEl.width = containerRect.width;
+    ytPlayerEl.height = containerRect.height;
     
-    // Restore playback state
-    if (isCurrentlyPlaying) {
-        setTimeout(() => {
+    // Resize player to match container - use a small delay to ensure DOM updates
+    setTimeout(() => {
+        this.ytPlayer.setSize(containerRect.width, containerRect.height);
+        
+        // Restore playback state
+        if (isCurrentlyPlaying) {
             this.ytPlayer.seekTo(currentTime, true);
             this.ytPlayer.playVideo();
-        }, 100);
-    }
+        }
+    }, 100);
 }
 
 // Hide video in fullscreen lyrics mode - reset positioning without moving DOM element
