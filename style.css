@@ -2650,3 +2650,21 @@ body:has(#ytPlayer.fullscreen-video) {
     position: relative;
     z-index: 10000;
 }
+
+/* Add this CSS for lyrics video positioning */
+#ytPlayer.lyrics-video {
+    position: fixed !important;
+    z-index: 10001 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Position it over the lyrics video container */
+.lyrics-fullscreen-modal .fullscreen-video-container {
+    position: relative;
+}
+
+/* When lyrics video is active, position the player over the container */
+.lyrics-fullscreen-modal.active #ytPlayer.lyrics-video {
+    /* This will be calculated dynamically by JavaScript */
+}
