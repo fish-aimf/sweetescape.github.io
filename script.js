@@ -6032,61 +6032,107 @@ refreshSpecificSection(sectionTitle) {
       this.hideVideoFullscreen();
     }
   }
-
-  showVideoFullscreen() {
-    const isCurrentlyPlaying =
-      this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
+// Show video in fullscreen lyrics mode - move player into fullscreen container
+showFullscreenVideo() {
+    if (!this.ytPlayer) return;
+    
+    // Store current state
+    const isCurrentlyPlaying = this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
     const currentTime = this.ytPlayer.getCurrentTime();
-
-    document.querySelector(".main-container").style.display = "none";
-    document.querySelector(".theme-toggle").style.display = "none";
-    document.querySelector(".listening-stats").style.display = "none";
-    document.querySelector(".control-bar-toggle").style.display = "none";
-    document.querySelector(".layout-toggle").style.display = "none";
-    document.querySelector(".watermark").style.display = "none";
-
+    
+    // Get the ytPlayer element and the fullscreen container
     const ytPlayerEl = document.getElementById("ytPlayer");
-    ytPlayerEl.classList.add("fullscreen-video");
-    this.ytPlayer.setSize(window.innerWidth, window.innerHeight - 120);
-
-    if (this.isMobileConnection()) {
-      this.ytPlayer.setPlaybackQuality("small");
+    const fullscreenYtPlayerContainer = document.getElementById("fullscreenYtPlayer");
+    const videoContainer = this.elements.fullscreenVideoContainer;
+    
+    // Show video container first
+    videoContainer.style.display = 'flex';
+    this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.remove('video-hidden');
+    
+    // Store the original parent so we can restore it later
+    if (!this.originalYtPlayerParent) {
+        this.originalYtPlayerParent = ytPlayerEl.parentElement;
     }
-
+    
+    // Move the ytPlayer into the fullscreen container
+    fullscreenYtPlayerContainer.appendChild(ytPlayerEl);
+    
+    // Reset any fixed positioning styles
+    ytPlayerEl.style.position = '';
+    ytPlayerEl.style.top = '';
+    ytPlayerEl.style.left = '';
+    ytPlayerEl.style.zIndex = '';
+    
+    // Get the container dimensions for sizing
+    const containerRect = fullscreenYtPlayerContainer.getBoundingClientRect();
+    
+    // Update iframe attributes and styles to fill the container
+    ytPlayerEl.setAttribute('width', containerRect.width);
+    ytPlayerEl.setAttribute('height', containerRect.height);
+    ytPlayerEl.style.width = '100%';
+    ytPlayerEl.style.height = '100%';
+    
+    // Add class for styling
+    ytPlayerEl.classList.add('fullscreen-video');
+    
+    // Resize player to match container
+    this.ytPlayer.setSize(containerRect.width, containerRect.height);
+    
+    // Restore playback state
     if (isCurrentlyPlaying) {
-      setTimeout(() => {
-        this.ytPlayer.seekTo(currentTime, true);
-        this.ytPlayer.playVideo();
-      }, 100);
+        setTimeout(() => {
+            this.ytPlayer.seekTo(currentTime, true);
+            this.ytPlayer.playVideo();
+        }, 100);
     }
+}
 
-    this.showVideoHint();
-  }
-
-  hideVideoFullscreen() {
-    const isCurrentlyPlaying =
-      this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
+// Hide video in fullscreen lyrics mode - move player back to original position
+hideFullscreenVideo() {
+    if (!this.ytPlayer) return;
+    
+    // Store current state
+    const isCurrentlyPlaying = this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
     const currentTime = this.ytPlayer.getCurrentTime();
-    document.querySelector(".main-container").style.display = "flex";
-    document.querySelector(".theme-toggle").style.display = "flex";
-    document.querySelector(".listening-stats").style.display = "flex";
-    document.querySelector(".control-bar-toggle").style.display = "block";
-    document.querySelector(".layout-toggle").style.display = "block";
-    document.querySelector(".watermark").style.display = "block";
+    
     const ytPlayerEl = document.getElementById("ytPlayer");
-    ytPlayerEl.classList.remove("fullscreen-video");
+    
+    // Move the ytPlayer back to its original parent
+    if (this.originalYtPlayerParent) {
+        this.originalYtPlayerParent.appendChild(ytPlayerEl);
+    }
+    
+    // Reset all styles and attributes
+    ytPlayerEl.style.position = '';
+    ytPlayerEl.style.top = '';
+    ytPlayerEl.style.left = '';
+    ytPlayerEl.style.zIndex = '';
+    ytPlayerEl.style.width = '';
+    ytPlayerEl.style.height = '';
+    
+    // Reset iframe attributes back to 1x1
+    ytPlayerEl.setAttribute('width', '1');
+    ytPlayerEl.setAttribute('height', '1');
+    
+    // Remove the fullscreen video class
+    ytPlayerEl.classList.remove('fullscreen-video');
+    
+    // Hide video container
+    this.elements.fullscreenVideoContainer.style.display = 'none';
+    this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.add('video-hidden');
+    
+    // Reset player size to hidden
     this.ytPlayer.setSize(1, 1);
-    if (this.isMobileConnection()) {
-      this.ytPlayer.setPlaybackQuality("small");
-    }
+    
+    // Restore playback state
     if (isCurrentlyPlaying) {
-      setTimeout(() => {
-        this.ytPlayer.seekTo(currentTime, true);
-        this.ytPlayer.playVideo();
-      }, 100);
+        setTimeout(() => {
+            this.ytPlayer.seekTo(currentTime, true);
+            this.ytPlayer.playVideo();
+        }, 100);
     }
-    this.hideVideoHint();
-  }
+}
+  
 
   showVideoHint() {
     let hintEl = document.getElementById("videoHint");
