@@ -312,7 +312,7 @@
 
     <!-- Add this modal right before the closing </body> tag in your HTML -->
 
-<!-- Fullscreen Lyrics Modal -->
+x<!-- Fullscreen Lyrics Modal -->
 <div id="lyricsFullscreenModal" class="lyrics-fullscreen-modal">
     <div class="lyrics-fullscreen-container">
         <div class="lyrics-fullscreen-header">
@@ -321,7 +321,7 @@
                 <p id="fullscreenSongAuthor">Artist</p>
             </div>
             <div class="fullscreen-controls">
-                <button id="toggleLyricsVideoBtn" class="toggleLyricsVideoBtn">
+                <button id="toggleLyricsVideoBtn" class="fullscreen-btn">
                     <i class="fas fa-video"></i>
                 </button>
                 <button id="exitFullscreenBtn" class="fullscreen-btn">
@@ -331,8 +331,8 @@
         </div>
         
         <div class="lyrics-fullscreen-content">
-            <div id="lyricsVideoContainer" class="lyricsVideoContainer" style="display: none;">
-                <div id="fullscreenYtPlayer"></div>
+            <div id="lyricsVideoContainer" class="fullscreen-video-container" style="display: none;">
+                <!-- Video will be positioned here when visible -->
             </div>
             <div id="fullscreenLyricsDisplay" class="fullscreen-lyrics-display">
                 <!-- Lyrics will be populated here -->
