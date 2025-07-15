@@ -6853,17 +6853,65 @@ toggleLyricsVideo() {
 showLyricsVideo() {
     if (!this.elements.lyricsVideoContainer) return;
     
-    // Simply show the video container - don't manipulate the YouTube player
+    // Show the video container in the lyrics modal
     this.elements.lyricsVideoContainer.style.display = 'flex';
     this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.remove('video-hidden');
+    
+    // Position the existing YouTube player inside the lyrics video container
+    const ytPlayerEl = document.getElementById("ytPlayer");
+    if (ytPlayerEl && this.ytPlayer) {
+        // Store current state
+        const isCurrentlyPlaying = this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
+        const currentTime = this.ytPlayer.getCurrentTime();
+        
+        // Move the player into the lyrics video container
+        this.elements.lyricsVideoContainer.appendChild(ytPlayerEl);
+        
+        // Resize player to fit the container
+        const containerRect = this.elements.lyricsVideoContainer.getBoundingClientRect();
+        const targetWidth = Math.max(containerRect.width - 20, 400); // Leave some padding
+        const targetHeight = Math.max(containerRect.height - 20, 250);
+        
+        this.ytPlayer.setSize(targetWidth, targetHeight);
+        
+        // Restore playback state
+        if (isCurrentlyPlaying) {
+            setTimeout(() => {
+                this.ytPlayer.seekTo(currentTime, true);
+                this.ytPlayer.playVideo();
+            }, 100);
+        }
+    }
 }
 
 hideLyricsVideo() {
     if (!this.elements.lyricsVideoContainer) return;
     
-    // Simply hide the video container - don't manipulate the YouTube player
+    // Hide the video container
     this.elements.lyricsVideoContainer.style.display = 'none';
     this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.add('video-hidden');
+    
+    // Move the YouTube player back to its original hidden location
+    const ytPlayerEl = document.getElementById("ytPlayer");
+    if (ytPlayerEl && this.ytPlayer) {
+        // Store current state
+        const isCurrentlyPlaying = this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
+        const currentTime = this.ytPlayer.getCurrentTime();
+        
+        // Move player back to original container (usually document.body or a hidden container)
+        document.body.appendChild(ytPlayerEl);
+        
+        // Reset to small hidden size
+        this.ytPlayer.setSize(10, 10);
+        
+        // Restore playback state
+        if (isCurrentlyPlaying) {
+            setTimeout(() => {
+                this.ytPlayer.seekTo(currentTime, true);
+                this.ytPlayer.playVideo();
+            }, 100);
+        }
+    }
 }
 
 // Hide main UI for lyrics fullscreen
