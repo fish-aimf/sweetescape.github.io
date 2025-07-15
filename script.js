@@ -6761,8 +6761,6 @@ setupLayoutEventListeners() {
 
 
 
-
-
 initializeFullscreenLyrics() {
     this.elements.lyricsFullscreenModal = document.getElementById('lyricsFullscreenModal');
     this.elements.fullscreenSongName = document.getElementById('fullscreenSongName');
@@ -6853,64 +6851,94 @@ toggleLyricsVideo() {
 showLyricsVideo() {
     if (!this.elements.lyricsVideoContainer) return;
     
+    // Store current state like your fullscreen video code
+    const isCurrentlyPlaying = this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
+    const currentTime = this.ytPlayer.getCurrentTime();
+    
     // Show the video container in the lyrics modal
     this.elements.lyricsVideoContainer.style.display = 'flex';
     this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.remove('video-hidden');
     
-    // Position the existing YouTube player inside the lyrics video container
+    // Position the YouTube player using CSS class and positioning
     const ytPlayerEl = document.getElementById("ytPlayer");
-    if (ytPlayerEl && this.ytPlayer) {
-        // Store current state
-        const isCurrentlyPlaying = this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
-        const currentTime = this.ytPlayer.getCurrentTime();
-        
-        // Move the player into the lyrics video container
-        this.elements.lyricsVideoContainer.appendChild(ytPlayerEl);
-        
-        // Resize player to fit the container
-        const containerRect = this.elements.lyricsVideoContainer.getBoundingClientRect();
-        const targetWidth = Math.max(containerRect.width - 20, 400); // Leave some padding
-        const targetHeight = Math.max(containerRect.height - 20, 250);
-        
-        this.ytPlayer.setSize(targetWidth, targetHeight);
-        
-        // Restore playback state
-        if (isCurrentlyPlaying) {
-            setTimeout(() => {
-                this.ytPlayer.seekTo(currentTime, true);
-                this.ytPlayer.playVideo();
-            }, 100);
+    ytPlayerEl.classList.add("lyrics-video");
+    
+    // Get the container position and size
+    const containerRect = this.elements.lyricsVideoContainer.getBoundingClientRect();
+    const targetWidth = Math.max(containerRect.width - 20, 400);
+    const targetHeight = Math.max(containerRect.height - 20, 250);
+    
+    // Position the player over the container
+    ytPlayerEl.style.position = 'fixed';
+    ytPlayerEl.style.top = (containerRect.top + 10) + 'px';
+    ytPlayerEl.style.left = (containerRect.left + 10) + 'px';
+    ytPlayerEl.style.zIndex = '10001';
+    ytPlayerEl.style.borderRadius = '8px';
+    ytPlayerEl.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
+    
+    // Resize the player
+    this.ytPlayer.setSize(targetWidth, targetHeight);
+    
+    // Add resize listener to maintain position
+    this.lyricsVideoResizeHandler = () => {
+        if (this.isLyricsVideoVisible && this.isLyricsFullscreen) {
+            const newRect = this.elements.lyricsVideoContainer.getBoundingClientRect();
+            const newWidth = Math.max(newRect.width - 20, 400);
+            const newHeight = Math.max(newRect.height - 20, 250);
+            
+            ytPlayerEl.style.top = (newRect.top + 10) + 'px';
+            ytPlayerEl.style.left = (newRect.left + 10) + 'px';
+            this.ytPlayer.setSize(newWidth, newHeight);
         }
+    };
+    
+    window.addEventListener('resize', this.lyricsVideoResizeHandler);
+    
+    // Restore playback state like your fullscreen video code
+    if (isCurrentlyPlaying) {
+        setTimeout(() => {
+            this.ytPlayer.seekTo(currentTime, true);
+            this.ytPlayer.playVideo();
+        }, 100);
     }
 }
 
 hideLyricsVideo() {
     if (!this.elements.lyricsVideoContainer) return;
     
+    // Store current state like your fullscreen video code
+    const isCurrentlyPlaying = this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
+    const currentTime = this.ytPlayer.getCurrentTime();
+    
+    // Remove resize listener
+    if (this.lyricsVideoResizeHandler) {
+        window.removeEventListener('resize', this.lyricsVideoResizeHandler);
+        this.lyricsVideoResizeHandler = null;
+    }
+    
     // Hide the video container
     this.elements.lyricsVideoContainer.style.display = 'none';
     this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.add('video-hidden');
     
-    // Move the YouTube player back to its original hidden location
+    // Reset the positioning styles
     const ytPlayerEl = document.getElementById("ytPlayer");
-    if (ytPlayerEl && this.ytPlayer) {
-        // Store current state
-        const isCurrentlyPlaying = this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
-        const currentTime = this.ytPlayer.getCurrentTime();
-        
-        // Move player back to original container (usually document.body or a hidden container)
-        document.body.appendChild(ytPlayerEl);
-        
-        // Reset to small hidden size
-        this.ytPlayer.setSize(10, 10);
-        
-        // Restore playback state
-        if (isCurrentlyPlaying) {
-            setTimeout(() => {
-                this.ytPlayer.seekTo(currentTime, true);
-                this.ytPlayer.playVideo();
-            }, 100);
-        }
+    ytPlayerEl.classList.remove("lyrics-video");
+    ytPlayerEl.style.position = '';
+    ytPlayerEl.style.top = '';
+    ytPlayerEl.style.left = '';
+    ytPlayerEl.style.zIndex = '';
+    ytPlayerEl.style.borderRadius = '';
+    ytPlayerEl.style.boxShadow = '';
+    
+    // Reset to small hidden size like your fullscreen video code
+    this.ytPlayer.setSize(1, 1);
+    
+    // Restore playback state like your fullscreen video code
+    if (isCurrentlyPlaying) {
+        setTimeout(() => {
+            this.ytPlayer.seekTo(currentTime, true);
+            this.ytPlayer.playVideo();
+        }, 100);
     }
 }
 
@@ -7067,8 +7095,6 @@ updateFullscreenHighlightedLyric(currentTime, lyrics, timings) {
         this.currentFullscreenHighlightedLyricIndex = highlightIndex;
     }
 }
-
-
 
 
 
