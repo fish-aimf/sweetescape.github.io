@@ -35,7 +35,7 @@ class AdvancedMusicPlayer {
     this.isLyricsFullscreen = false;
     this.fullscreenYtPlayer = null;
     this.fullscreenLyricsInterval = null;
-    this.isFullscreenVideoVisible = false;
+    this.isFullscreenVideoVisible = true;
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
       'https://www.google.com',
