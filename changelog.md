@@ -189,3 +189,4 @@
 - a lot of bugs but added kareoke full screen lyrics mode. with youtube video on side or full screen lyrics v27.0.0
 - made the lyric fullscreen render better v27.0.1
 - spent 5 hours trying to fix issue of ytplayer not rendering nothign worked just renamed a bunch of functions due to confusion
+- added crystal castles playlists v27.1.0
