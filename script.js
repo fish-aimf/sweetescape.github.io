@@ -6794,12 +6794,8 @@ initializeFullscreenLyrics() {
     this.elements.fullscreenSongName = document.getElementById('fullscreenSongName');
     this.elements.fullscreenSongAuthor = document.getElementById('fullscreenSongAuthor');
     this.elements.fullscreenLyricsDisplay = document.getElementById('fullscreenLyricsDisplay');
-    this.elements.lyricsVideoContainer = document.getElementById('lyricsVideoContainer');
-    this.elements.toggleLyricsVideoBtn = document.getElementById('toggleLyricsVideoBtn');
     this.elements.exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
-    
-    // Event listeners
-    this.elements.toggleLyricsVideoBtn.addEventListener('click', () => this.toggleLyricsVideo());
+
     this.elements.exitFullscreenBtn.addEventListener('click', () => this.exitLyricsFullscreen());
     
     // ESC key to exit fullscreen
@@ -6851,119 +6847,14 @@ exitLyricsFullscreen() {
     // Show main UI again
     this.showMainUIFromLyrics();
     
-    // If video was visible, hide it
-    if (this.isLyricsVideoVisible) {
-        this.hideLyricsVideo();
-    }
+    
     
     // Restart regular lyrics if lyrics tab is active and playing
     if (this.isPlaying && document.getElementById("lyrics") && document.getElementById("lyrics").classList.contains("active")) {
         this.renderLyricsTab();
     }
 }
-toggleLyricsVideo() {
-    this.isLyricsVideoVisible = !this.isLyricsVideoVisible;
-    
-    if (this.isLyricsVideoVisible) {
-        this.showLyricsVideo();
-        this.elements.toggleLyricsVideoBtn.innerHTML = '<i class="fas fa-video-slash"></i>';
-        this.elements.toggleLyricsVideoBtn.title = 'Hide Video';
-    } else {
-        this.hideLyricsVideo();
-        this.elements.toggleLyricsVideoBtn.innerHTML = '<i class="fas fa-video"></i>';
-        this.elements.toggleLyricsVideoBtn.title = 'Show Video';
-    }
-}
 
-showLyricsVideo() {
-    if (!this.elements.lyricsVideoContainer) return;
-    
-    // Store current state
-    const isCurrentlyPlaying = this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
-    const currentTime = this.ytPlayer.getCurrentTime();
-    
-    // Show the video container
-    this.elements.lyricsVideoContainer.style.display = 'flex';
-    
-    // Store the original parent so we can move it back
-    const ytPlayerEl = document.getElementById("ytPlayer");
-    if (!this.originalYtPlayerParent) {
-        this.originalYtPlayerParent = ytPlayerEl.parentNode;
-    }
-    
-    // Move the YouTube player into the container
-    this.elements.lyricsVideoContainer.appendChild(ytPlayerEl);
-    
-    // Style the player for lyrics video mode
-    ytPlayerEl.style.borderRadius = '8px';
-    ytPlayerEl.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
-    
-    // Get container dimensions and resize player
-    const containerRect = this.elements.lyricsVideoContainer.getBoundingClientRect();
-    const targetWidth = Math.min(containerRect.width - 20, 800); // Max width of 800px
-    const targetHeight = Math.round(targetWidth * 0.5625); // 16:9 aspect ratio
-    
-    // Resize the player
-    this.ytPlayer.setSize(targetWidth, targetHeight);
-    
-    // Add resize listener
-    this.lyricsVideoResizeHandler = () => {
-        if (this.isLyricsVideoVisible && this.isLyricsFullscreen) {
-            const newRect = this.elements.lyricsVideoContainer.getBoundingClientRect();
-            const newWidth = Math.min(newRect.width - 20, 800);
-            const newHeight = Math.round(newWidth * 0.5625);
-            this.ytPlayer.setSize(newWidth, newHeight);
-        }
-    };
-    
-    window.addEventListener('resize', this.lyricsVideoResizeHandler);
-    
-    // Restore playback state
-    if (isCurrentlyPlaying) {
-        setTimeout(() => {
-            this.ytPlayer.seekTo(currentTime, true);
-            this.ytPlayer.playVideo();
-        }, 100);
-    }
-}
-
-hideLyricsVideo() {
-    if (!this.elements.lyricsVideoContainer) return;
-    
-    // Store current state
-    const isCurrentlyPlaying = this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
-    const currentTime = this.ytPlayer.getCurrentTime();
-    
-    // Remove resize listener
-    if (this.lyricsVideoResizeHandler) {
-        window.removeEventListener('resize', this.lyricsVideoResizeHandler);
-        this.lyricsVideoResizeHandler = null;
-    }
-    
-    // Move the YouTube player back to its original location
-    const ytPlayerEl = document.getElementById("ytPlayer");
-    if (this.originalYtPlayerParent) {
-        this.originalYtPlayerParent.appendChild(ytPlayerEl);
-    }
-    
-    // Reset player styling
-    ytPlayerEl.style.borderRadius = '';
-    ytPlayerEl.style.boxShadow = '';
-    
-    // Hide the video container
-    this.elements.lyricsVideoContainer.style.display = 'none';
-    
-    // Reset to small hidden size
-    this.ytPlayer.setSize(1, 1);
-    
-    // Restore playback state
-    if (isCurrentlyPlaying) {
-        setTimeout(() => {
-            this.ytPlayer.seekTo(currentTime, true);
-            this.ytPlayer.playVideo();
-        }, 100);
-    }
-}
 hideMainUIForLyrics() {
     document.querySelector(".main-container").style.display = "none";
     document.querySelector(".theme-toggle").style.display = "none";
