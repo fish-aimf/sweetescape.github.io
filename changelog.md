@@ -193,3 +193,5 @@
 - added right click name of song in control bar to copy to clipboard v27.2.0
 - added such that playing next song will now add it to playlist. v27.3.0
 - added version indicator. v27.4.0
+- added tooltip hover showing latest changes. v27.5.0
+- added changelog modal after clicking. all of these are connected directly to this file. v27.6.0
