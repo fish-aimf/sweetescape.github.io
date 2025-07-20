@@ -2769,3 +2769,14 @@ body:has(#ytPlayer.fullscreen-video) {
     font-weight: bold;
     color: var(--accent-color);
 }
+
+.lyrics-video {
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.fullscreen-video-container {
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+}
