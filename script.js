@@ -114,6 +114,7 @@ class AdvancedMusicPlayer {
         this.renderAdditionalDetails();
         this.setupLyricsTabContextMenu();
         this.initializeFullscreenLyrics();
+        this.loadVersion();
         
       })
       .catch((error) => {
@@ -7119,6 +7120,24 @@ updateFullscreenHighlightedLyric(currentTime, lyrics, timings) {
         }
         
         this.currentFullscreenHighlightedLyricIndex = highlightIndex;
+    }
+}
+  async loadVersion() {
+    try {
+        const response = await fetch('changelog.md');
+        const text = await response.text();
+        const lines = text.trim().split('\n');
+        const lastLine = lines[lines.length - 1];
+        const versionMatch = lastLine.match(/v\d+\.\d+\.\d+/);
+        
+        if (versionMatch) {
+            const versionDisplay = document.getElementById('versionDisplay');
+            if (versionDisplay) {
+                versionDisplay.textContent = versionMatch[0];
+            }
+        }
+    } catch (error) {
+        console.warn('Could not load version:', error);
     }
 }
 
