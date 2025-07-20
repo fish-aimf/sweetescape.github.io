@@ -1,10 +1,10 @@
 # Changelog
-- V1.0.0
+- v1.0.0
 - index.html script.js style.css 
 - added playlist
 - used tabs
 - added add song via yt link
-- V1.1.0
+- v1.1.0
 - changed whole thing from local storage to indexed.db
 - made improvements to code v1.1.1
 - changed ui v1.2.0
@@ -192,3 +192,4 @@
 - added crystal castles playlists v27.1.0
 - added right click name of song in control bar to copy to clipboard v27.2.0
 - added such that playing next song will now add it to playlist. v27.3.0
+- added version indicator. v27.4.0
