@@ -265,6 +265,7 @@ class AdvancedMusicPlayer {
     this.handleExportLibrary = this.exportLibrary.bind(this);
     this.handleTogglePlaylistLoop = this.togglePlaylistLoop.bind(this);
     this.handleSongUrlInput = this.validateYouTubeUrl.bind(this);
+    this.handleSongNameRightClick = this.handleSongNameRightClick.bind(this);
     this.handleSongUrlKeydown = (e) => {
       if (e.key === "Enter") {
         this.addSongToLibrary();
@@ -363,7 +364,8 @@ class AdvancedMusicPlayer {
       [this.elements.songUrlInput, "keydown", this.handleSongUrlKeydown],
       [this.elements.newPlaylistName, "keydown", this.handleNewPlaylistNameKeydown],
       [this.elements.volumeSlider, "input", this.handleVolumeChange],
-      [this.elements.progressBar, "click", this.handleSeekMusic]
+      [this.elements.progressBar, "click", this.handleSeekMusic],
+      [this.elements.currentSongName, "contextmenu", this.handleSongNameRightClick]
     ];
 
     eventBindings.forEach(([element, event, handler]) => {
@@ -1492,6 +1494,21 @@ handleTouchEnd(e) {
       this.renderLyricsTab();
     }
   }
+  handleSongNameRightClick(event) {
+  event.preventDefault();
+  const songName = this.elements.currentSongName.textContent;
+  if (songName && songName !== "No Song Playing") {
+    navigator.clipboard.writeText(songName).then(() => {
+      const originalText = this.elements.currentSongName.textContent;
+      this.elements.currentSongName.textContent = "Copied!";
+      setTimeout(() => {
+        this.elements.currentSongName.textContent = originalText;
+      }, 1000);
+    }).catch(() => {
+      console.warn('Failed to copy to clipboard');
+    });
+  }
+}
 
   playSongById(videoId) {
     if (!this.ytPlayer) {
@@ -1574,9 +1591,10 @@ handleTouchEnd(e) {
     const songInLibrary = this.songLibrary.find(s => s.videoId === nextSong.videoId);
     if (songInLibrary) {
       this.currentSongIndex = this.songLibrary.findIndex(s => s.id === songInLibrary.id);
-      this.currentPlaylist = null; // Clear playlist when playing from queue
+      this.currentPlaylist = null;
     }
     
+    this.saveRecentlyPlayedSong(nextSong); // Add this line
     this.playSongById(nextSong.videoId);
     this.updatePlayerUI();
     return;
@@ -1606,6 +1624,9 @@ handleTouchEnd(e) {
     this.currentSongIndex = (this.currentSongIndex + 1) % source.length;
   }
   
+  const currentSong = source[this.currentSongIndex]; // Add this line
+  this.saveRecentlyPlayedSong(currentSong); // Add this line
+  
   if (this.currentPlaylist) {
     this.playSongById(source[this.currentSongIndex].videoId);
   } else {
@@ -1615,37 +1636,41 @@ handleTouchEnd(e) {
 
 
   playPreviousSong() {
-    const source = this.currentPlaylist
-      ? this.currentPlaylist.songs
-      : this.songLibrary;
+  const source = this.currentPlaylist
+    ? this.currentPlaylist.songs
+    : this.songLibrary;
 
-    if (!source.length) return;
+  if (!source.length) return;
 
-    if (this.currentPlaylist && this.temporarilySkippedSongs.size > 0) {
-      const totalSongs = source.length;
-      let prevIndex = (this.currentSongIndex - 1 + totalSongs) % totalSongs;
-      const startIndex = prevIndex;
-      while (this.isSongTemporarilySkipped(source[prevIndex])) {
-        prevIndex = (prevIndex - 1 + totalSongs) % totalSongs;
-        if (prevIndex === startIndex) {
-          return;
-        }
+  if (this.currentPlaylist && this.temporarilySkippedSongs.size > 0) {
+    const totalSongs = source.length;
+    let prevIndex = (this.currentSongIndex - 1 + totalSongs) % totalSongs;
+    const startIndex = prevIndex;
+    while (this.isSongTemporarilySkipped(source[prevIndex])) {
+      prevIndex = (prevIndex - 1 + totalSongs) % totalSongs;
+      if (prevIndex === startIndex) {
+        return;
       }
-
-      this.currentSongIndex = prevIndex;
-      this.playSongById(source[this.currentSongIndex].videoId);
-      return;
     }
 
-    this.currentSongIndex =
-      (this.currentSongIndex - 1 + source.length) % source.length;
-
-    if (this.currentPlaylist) {
-      this.playSongById(source[this.currentSongIndex].videoId);
-    } else {
-      this.playCurrentSong();
-    }
+    this.currentSongIndex = prevIndex;
+    this.saveRecentlyPlayedSong(source[this.currentSongIndex]); // Add this line
+    this.playSongById(source[this.currentSongIndex].videoId);
+    return;
   }
+
+  this.currentSongIndex =
+    (this.currentSongIndex - 1 + source.length) % source.length;
+
+  const currentSong = source[this.currentSongIndex]; // Add this line
+  this.saveRecentlyPlayedSong(currentSong); // Add this line
+
+  if (this.currentPlaylist) {
+    this.playSongById(source[this.currentSongIndex].videoId);
+  } else {
+    this.playCurrentSong();
+  }
+}
 
   playCurrentSong() {
     if (!this.songLibrary.length) return;
@@ -1660,19 +1685,20 @@ handleTouchEnd(e) {
     }
   }
 
-  playSongFromPlaylist(index) {
-    if (!this.currentPlaylist || index >= this.currentPlaylist.songs.length)
-      return;
+playSongFromPlaylist(index) {
+  if (!this.currentPlaylist || index >= this.currentPlaylist.songs.length)
+    return;
 
-    const song = this.currentPlaylist.songs[index];
-    const entryId = song.entryId || "id_" + song.videoId;
-    if (this.temporarilySkippedSongs.has(entryId)) {
-      return;
-    }
-
-    this.currentSongIndex = index;
-    this.playSongById(song.videoId);
+  const song = this.currentPlaylist.songs[index];
+  const entryId = song.entryId || "id_" + song.videoId;
+  if (this.temporarilySkippedSongs.has(entryId)) {
+    return;
   }
+
+  this.currentSongIndex = index;
+  this.saveRecentlyPlayedSong(song); // Add this line
+  this.playSongById(song.videoId);
+}
 updatePlayerUI() {
     // Get current song from the right source
     let currentSong;
