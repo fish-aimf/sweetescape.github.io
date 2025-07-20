@@ -6884,27 +6884,34 @@ showLyricsVideo() {
     
     // Show the video container
     this.elements.lyricsVideoContainer.style.display = 'flex';
-    this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.remove('video-hidden');
     
-    // Get the YouTube player element and add CSS class for lyrics video styling
+    // Store the original parent so we can move it back
     const ytPlayerEl = document.getElementById("ytPlayer");
-    ytPlayerEl.classList.add("lyrics-video");
+    if (!this.originalYtPlayerParent) {
+        this.originalYtPlayerParent = ytPlayerEl.parentNode;
+    }
     
-    // Get the container dimensions
+    // Move the YouTube player into the container
+    this.elements.lyricsVideoContainer.appendChild(ytPlayerEl);
+    
+    // Style the player for lyrics video mode
+    ytPlayerEl.style.borderRadius = '8px';
+    ytPlayerEl.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
+    
+    // Get container dimensions and resize player
     const containerRect = this.elements.lyricsVideoContainer.getBoundingClientRect();
-    const targetWidth = Math.max(containerRect.width - 20, 400);
-    const targetHeight = Math.max(containerRect.height - 20, 250);
+    const targetWidth = Math.min(containerRect.width - 20, 800); // Max width of 800px
+    const targetHeight = Math.round(targetWidth * 0.5625); // 16:9 aspect ratio
     
-    // Resize the player to fit the container
+    // Resize the player
     this.ytPlayer.setSize(targetWidth, targetHeight);
     
-    // Add resize listener to maintain proper sizing
+    // Add resize listener
     this.lyricsVideoResizeHandler = () => {
         if (this.isLyricsVideoVisible && this.isLyricsFullscreen) {
             const newRect = this.elements.lyricsVideoContainer.getBoundingClientRect();
-            const newWidth = Math.max(newRect.width - 20, 400);
-            const newHeight = Math.max(newRect.height - 20, 250);
-            
+            const newWidth = Math.min(newRect.width - 20, 800);
+            const newHeight = Math.round(newWidth * 0.5625);
             this.ytPlayer.setSize(newWidth, newHeight);
         }
     };
@@ -6933,15 +6940,20 @@ hideLyricsVideo() {
         this.lyricsVideoResizeHandler = null;
     }
     
+    // Move the YouTube player back to its original location
+    const ytPlayerEl = document.getElementById("ytPlayer");
+    if (this.originalYtPlayerParent) {
+        this.originalYtPlayerParent.appendChild(ytPlayerEl);
+    }
+    
+    // Reset player styling
+    ytPlayerEl.style.borderRadius = '';
+    ytPlayerEl.style.boxShadow = '';
+    
     // Hide the video container
     this.elements.lyricsVideoContainer.style.display = 'none';
-    this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.add('video-hidden');
     
-    // Get the YouTube player element and remove CSS class
-    const ytPlayerEl = document.getElementById("ytPlayer");
-    ytPlayerEl.classList.remove("lyrics-video");
-    
-    // Reset to small hidden size (like your fullscreen video code)
+    // Reset to small hidden size
     this.ytPlayer.setSize(1, 1);
     
     // Restore playback state
@@ -6952,7 +6964,6 @@ hideLyricsVideo() {
         }, 100);
     }
 }
-// Hide main UI for lyrics fullscreen
 hideMainUIForLyrics() {
     document.querySelector(".main-container").style.display = "none";
     document.querySelector(".theme-toggle").style.display = "none";
