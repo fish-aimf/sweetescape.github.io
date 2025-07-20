@@ -2668,3 +2668,23 @@ body:has(#ytPlayer.fullscreen-video) {
 .lyrics-fullscreen-modal.active #ytPlayer.lyrics-video {
     /* This will be calculated dynamically by JavaScript */
 }
+
+.version-display {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: monospace;
+    opacity: 0.7;
+    border: 1px solid var(--border-color);
+    z-index: 1000;
+    transition: opacity 0.3s ease;
+}
+
+.version-display:hover {
+    opacity: 1;
+}
