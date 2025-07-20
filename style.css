@@ -2786,3 +2786,13 @@ body:has(#ytPlayer.fullscreen-video) {
     align-items: center;
     padding: 10px;
 }
+
+.fullscreen-video-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
