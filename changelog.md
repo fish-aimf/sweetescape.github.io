@@ -190,3 +190,6 @@
 - made the lyric fullscreen render better v27.0.1
 - spent 5 hours trying to fix issue of ytplayer not rendering nothign worked just renamed a bunch of functions due to confusion
 - added crystal castles playlists v27.1.0
+- added right click name of song in control bar to copy to clipboard v27.2.0
+- added such that playing next song will now add it to playlist. v27.3.0
+- 
