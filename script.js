@@ -6886,13 +6886,8 @@ showLyricsVideo() {
     this.elements.lyricsVideoContainer.style.display = 'flex';
     this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.remove('video-hidden');
     
-    // Get the YouTube player element
+    // Get the YouTube player element and add CSS class for lyrics video styling
     const ytPlayerEl = document.getElementById("ytPlayer");
-    
-    // Move the player into the container
-    this.elements.lyricsVideoContainer.appendChild(ytPlayerEl);
-    
-    // Add CSS class for styling
     ytPlayerEl.classList.add("lyrics-video");
     
     // Get the container dimensions
@@ -6938,22 +6933,15 @@ hideLyricsVideo() {
         this.lyricsVideoResizeHandler = null;
     }
     
-    // Get the YouTube player element
-    const ytPlayerEl = document.getElementById("ytPlayer");
-    
-    // Remove CSS class
-    ytPlayerEl.classList.remove("lyrics-video");
-    
-    // Move the player back to its original location (assuming it has a parent container)
-    // You might need to adjust this depending on where the player originally lives
-    const originalContainer = document.querySelector('.video-container') || document.body;
-    originalContainer.appendChild(ytPlayerEl);
-    
     // Hide the video container
     this.elements.lyricsVideoContainer.style.display = 'none';
     this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.add('video-hidden');
     
-    // Reset to small hidden size
+    // Get the YouTube player element and remove CSS class
+    const ytPlayerEl = document.getElementById("ytPlayer");
+    ytPlayerEl.classList.remove("lyrics-video");
+    
+    // Reset to small hidden size (like your fullscreen video code)
     this.ytPlayer.setSize(1, 1);
     
     // Restore playback state
@@ -6964,7 +6952,6 @@ hideLyricsVideo() {
         }, 100);
     }
 }
-
 // Hide main UI for lyrics fullscreen
 hideMainUIForLyrics() {
     document.querySelector(".main-container").style.display = "none";
