@@ -192,4 +192,3 @@
 - added crystal castles playlists v27.1.0
 - added right click name of song in control bar to copy to clipboard v27.2.0
 - added such that playing next song will now add it to playlist. v27.3.0
-- 
