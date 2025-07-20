@@ -92,6 +92,9 @@ class AdvancedMusicPlayer {
     this.recentlyPlayedSongs = [];
     this.recentlyPlayedPlaylists = [];
     this.currentTabIndex = 0;
+    this.setupChangelogModal();
+    
+    this.loadVersion();
 
     this.initDatabase()
       .then(() => {
@@ -114,7 +117,6 @@ class AdvancedMusicPlayer {
         this.renderAdditionalDetails();
         this.setupLyricsTabContextMenu();
         this.initializeFullscreenLyrics();
-        this.loadVersion();
         
       })
       .catch((error) => {
@@ -7126,18 +7128,75 @@ updateFullscreenHighlightedLyric(currentTime, lyrics, timings) {
     try {
         const response = await fetch('changelog.md');
         const text = await response.text();
-        const lines = text.trim().split('\n');
-        const lastLine = lines[lines.length - 1];
-        const versionMatch = lastLine.match(/v\d+\.\d+\.\d+/);
+        const lines = text.trim().split('\n').filter(line => line.trim());
         
-        if (versionMatch) {
-            const versionDisplay = document.getElementById('versionDisplay');
-            if (versionDisplay) {
-                versionDisplay.textContent = versionMatch[0];
+        if (lines.length > 0) {
+            const lastLine = lines[lines.length - 1];
+            const versionMatch = lastLine.match(/v\d+\.\d+\.\d+/);
+            
+            if (versionMatch) {
+                const versionDisplay = document.getElementById('versionDisplay');
+                const versionText = document.getElementById('versionText');
+                
+                if (versionDisplay && versionText) {
+                    versionText.textContent = versionMatch[0];
+                    
+                    // Set tooltip with latest change
+                    const changeText = lastLine.replace(/v\d+\.\d+\.\d+/, '').replace(/^\*\s*/, '').trim();
+                    versionDisplay.title = `Latest: ${changeText}`;
+                    
+                    // Store full changelog for modal
+                    this.fullChangelog = text;
+                    
+                    // Add click event
+                    versionDisplay.addEventListener('click', () => {
+                        this.showChangelogModal();
+                    });
+                }
             }
         }
     } catch (error) {
         console.warn('Could not load version:', error);
+    }
+}
+showChangelogModal() {
+    const modal = document.getElementById('changelogModal');
+    const content = document.getElementById('changelogContent');
+    
+    if (modal && content && this.fullChangelog) {
+        // Convert changelog to HTML
+        const lines = this.fullChangelog.trim().split('\n').filter(line => line.trim());
+        const htmlContent = lines.map(line => {
+            const versionMatch = line.match(/(v\d+\.\d+\.\d+)/);
+            if (versionMatch) {
+                const version = versionMatch[1];
+                const change = line.replace(/^\*\s*/, '').replace(version, '').trim();
+                return `<li><span class="changelog-version">${version}</span> - ${change}</li>`;
+            }
+            return `<li>${line.replace(/^\*\s*/, '')}</li>`;
+        }).join('');
+        
+        content.innerHTML = `<ul>${htmlContent}</ul>`;
+        modal.style.display = 'block';
+    }
+}
+
+setupChangelogModal() {
+    const modal = document.getElementById('changelogModal');
+    const closeBtn = document.querySelector('.changelog-close');
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+    }
+    
+    if (modal) {
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
     }
 }
 
