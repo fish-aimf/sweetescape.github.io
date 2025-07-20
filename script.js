@@ -6798,12 +6798,7 @@ initializeFullscreenLyrics() {
 
     this.elements.exitFullscreenBtn.addEventListener('click', () => this.exitLyricsFullscreen());
     
-    // ESC key to exit fullscreen
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && this.isLyricsFullscreen) {
-            this.exitLyricsFullscreen();
-        }
-    });
+    
 }
 
 enterLyricsFullscreen() {
@@ -6814,7 +6809,6 @@ enterLyricsFullscreen() {
     this.isLyricsFullscreen = true;
     this.elements.lyricsFullscreenModal.classList.add('active');
     
-    // Update song info
     const currentSong = this.currentPlaylist
         ? this.currentPlaylist.songs[this.currentSongIndex]
         : this.songLibrary[this.currentSongIndex];
