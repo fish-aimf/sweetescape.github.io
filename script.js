@@ -35,7 +35,6 @@ class AdvancedMusicPlayer {
     this.isLyricsFullscreen = false;
     this.fullscreenYtPlayer = null;
     this.fullscreenLyricsInterval = null;
-    this.isFullscreenVideoVisible = true;
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
       'https://www.google.com',
@@ -6862,7 +6861,6 @@ exitLyricsFullscreen() {
         this.renderLyricsTab();
     }
 }
-
 toggleLyricsVideo() {
     this.isLyricsVideoVisible = !this.isLyricsVideoVisible;
     
@@ -6880,50 +6878,45 @@ toggleLyricsVideo() {
 showLyricsVideo() {
     if (!this.elements.lyricsVideoContainer) return;
     
-    // Store current state like your fullscreen video code
+    // Store current state
     const isCurrentlyPlaying = this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
     const currentTime = this.ytPlayer.getCurrentTime();
     
-    // Show the video container in the lyrics modal
+    // Show the video container
     this.elements.lyricsVideoContainer.style.display = 'flex';
     this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.remove('video-hidden');
     
-    // Position the YouTube player using CSS class and positioning
+    // Get the YouTube player element
     const ytPlayerEl = document.getElementById("ytPlayer");
+    
+    // Move the player into the container
+    this.elements.lyricsVideoContainer.appendChild(ytPlayerEl);
+    
+    // Add CSS class for styling
     ytPlayerEl.classList.add("lyrics-video");
     
-    // Get the container position and size
+    // Get the container dimensions
     const containerRect = this.elements.lyricsVideoContainer.getBoundingClientRect();
     const targetWidth = Math.max(containerRect.width - 20, 400);
     const targetHeight = Math.max(containerRect.height - 20, 250);
     
-    // Position the player over the container
-    ytPlayerEl.style.position = 'fixed';
-    ytPlayerEl.style.top = (containerRect.top + 10) + 'px';
-    ytPlayerEl.style.left = (containerRect.left + 10) + 'px';
-    ytPlayerEl.style.zIndex = '10001';
-    ytPlayerEl.style.borderRadius = '8px';
-    ytPlayerEl.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
-    
-    // Resize the player
+    // Resize the player to fit the container
     this.ytPlayer.setSize(targetWidth, targetHeight);
     
-    // Add resize listener to maintain position
+    // Add resize listener to maintain proper sizing
     this.lyricsVideoResizeHandler = () => {
         if (this.isLyricsVideoVisible && this.isLyricsFullscreen) {
             const newRect = this.elements.lyricsVideoContainer.getBoundingClientRect();
             const newWidth = Math.max(newRect.width - 20, 400);
             const newHeight = Math.max(newRect.height - 20, 250);
             
-            ytPlayerEl.style.top = (newRect.top + 10) + 'px';
-            ytPlayerEl.style.left = (newRect.left + 10) + 'px';
             this.ytPlayer.setSize(newWidth, newHeight);
         }
     };
     
     window.addEventListener('resize', this.lyricsVideoResizeHandler);
     
-    // Restore playback state like your fullscreen video code
+    // Restore playback state
     if (isCurrentlyPlaying) {
         setTimeout(() => {
             this.ytPlayer.seekTo(currentTime, true);
@@ -6935,7 +6928,7 @@ showLyricsVideo() {
 hideLyricsVideo() {
     if (!this.elements.lyricsVideoContainer) return;
     
-    // Store current state like your fullscreen video code
+    // Store current state
     const isCurrentlyPlaying = this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
     const currentTime = this.ytPlayer.getCurrentTime();
     
@@ -6945,24 +6938,25 @@ hideLyricsVideo() {
         this.lyricsVideoResizeHandler = null;
     }
     
+    // Get the YouTube player element
+    const ytPlayerEl = document.getElementById("ytPlayer");
+    
+    // Remove CSS class
+    ytPlayerEl.classList.remove("lyrics-video");
+    
+    // Move the player back to its original location (assuming it has a parent container)
+    // You might need to adjust this depending on where the player originally lives
+    const originalContainer = document.querySelector('.video-container') || document.body;
+    originalContainer.appendChild(ytPlayerEl);
+    
     // Hide the video container
     this.elements.lyricsVideoContainer.style.display = 'none';
     this.elements.lyricsFullscreenModal.querySelector('.lyrics-fullscreen-content').classList.add('video-hidden');
     
-    // Reset the positioning styles
-    const ytPlayerEl = document.getElementById("ytPlayer");
-    ytPlayerEl.classList.remove("lyrics-video");
-    ytPlayerEl.style.position = '';
-    ytPlayerEl.style.top = '';
-    ytPlayerEl.style.left = '';
-    ytPlayerEl.style.zIndex = '';
-    ytPlayerEl.style.borderRadius = '';
-    ytPlayerEl.style.boxShadow = '';
-    
-    // Reset to small hidden size like your fullscreen video code
+    // Reset to small hidden size
     this.ytPlayer.setSize(1, 1);
     
-    // Restore playback state like your fullscreen video code
+    // Restore playback state
     if (isCurrentlyPlaying) {
         setTimeout(() => {
             this.ytPlayer.seekTo(currentTime, true);
