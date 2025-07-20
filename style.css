@@ -2770,12 +2770,18 @@ body:has(#ytPlayer.fullscreen-video) {
     color: var(--accent-color);
 }
 
-.lyrics-video {
+#ytPlayer.lyrics-video {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
     border-radius: 8px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    z-index: 10001;
 }
 
 .fullscreen-video-container {
+    position: relative;
     justify-content: center;
     align-items: center;
     padding: 10px;
