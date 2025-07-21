@@ -2801,16 +2801,13 @@ body:has(#ytPlayer.fullscreen-video) {
     font-weight: bold;
 }
 
-.counter-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 20px; /* Adjust spacing as needed */
-}
-
 .counter-container {
     display: inline-block;
+    vertical-align: top; /* Aligns to top */
+    margin-right: 20px; /* Add spacing */
 }
 
 iframe {
-    flex-shrink: 0; /* Prevents iframe from shrinking */
+    display: inline-block;
+    vertical-align: top;
 }
