@@ -2797,18 +2797,3 @@ body:has(#ytPlayer.fullscreen-video) {
     margin-bottom: 20px;
 }
 
-/* Target the counter link directly */
-a[href*="free-counters.org"] {
-    pointer-events: none !important;
-    display: none !important;
-}
-
-/* Target any counter iframes that get created */
-iframe[src*="freevisitorcounters.com"] {
-    pointer-events: none !important;
-    opacity: 0.5;
-    position: fixed !important;
-    bottom: 10px !important;
-    left: 10px !important;
-    z-index: 1000 !important;
-}
