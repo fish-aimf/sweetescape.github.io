@@ -2796,21 +2796,6 @@ body:has(#ytPlayer.fullscreen-video) {
     border-radius: 12px;
     margin-bottom: 20px;
 }
-.counter-container::before {
-    content: "Total visits: ";
-    font-weight: bold;
-}
 
-.counter-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 20px; /* Adjust spacing as needed */
-}
 
-.counter-container {
-    display: inline-block;
-}
 
-iframe {
-    flex-shrink: 0; /* Prevents iframe from shrinking */
-}
