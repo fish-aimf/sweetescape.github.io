@@ -2796,3 +2796,22 @@ body:has(#ytPlayer.fullscreen-video) {
     border-radius: 12px;
     margin-bottom: 20px;
 }
+
+
+.counter-container {
+    pointer-events: none !important;
+    user-select: none;
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    opacity: 0.5;
+    z-index: 1000;
+}
+
+.counter-container * {
+    pointer-events: none !important;
+}
+
+.counter-container a {
+    display: none !important;
+}
