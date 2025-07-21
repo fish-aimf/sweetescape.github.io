@@ -2769,54 +2769,52 @@ body:has(#ytPlayer.fullscreen-video) {
     border-radius: 12px;
     margin-bottom: 20px;
 }
-.top-bar-stats {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    padding: 8px 12px;
-    font-size: 16px;
-    background: var(--top-bar-bg, #f0f0f0);
-    border-bottom: 1px solid #ccc;
-}
-
+/* Keep your theme-toggle styles */
 .theme-toggle {
+    text-align: right;
+    margin-bottom: 0px;
     display: flex;
-    gap: 6px;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 20px;
 }
 
 .theme-toggle button {
     background: none;
     border: none;
+    color: var(--text-primary);
+    font-size: 20px;
     cursor: pointer;
-    font-size: 18px;
 }
 
-.top-bar-meta {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-
+/* Ensure listening-stats and counter-container are inline */
 .listening-stats {
-    display: flex;
-    align-items: center;
+    display: inline-flex;
+    align-items: flex-start; 
     gap: 5px;
+    margin-left: 2px;
+    font-size: 16px; 
+    margin-top: -20px; 
+    margin-bottom: 10px;
 }
 
 .counter-container {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
+    font-size: 16px;
+    margin-left: 10px; /* space between stats */
+    visibility: visible; /* ensure iframe is visible */
 }
 
-.counter-label {
+/* Hide the free counter link */
+.counter-container a {
+    display: none;
+}
+
+/* Add label before the iframe */
+.counter-container::before {
+    content: "Total visits: ";
     font-weight: bold;
-}
-
-.counter-iframe {
-    display: inline-block;
+    margin-right: 4px;
 }
 
