@@ -2797,21 +2797,18 @@ body:has(#ytPlayer.fullscreen-video) {
     margin-bottom: 20px;
 }
 
-
-.counter-container {
+/* Target the counter link directly */
+a[href*="free-counters.org"] {
     pointer-events: none !important;
-    user-select: none;
-    position: fixed;
-    bottom: 10px;
-    left: 10px;
-    opacity: 0.5;
-    z-index: 1000;
-}
-
-.counter-container * {
-    pointer-events: none !important;
-}
-
-.counter-container a {
     display: none !important;
+}
+
+/* Target any counter iframes that get created */
+iframe[src*="freevisitorcounters.com"] {
+    pointer-events: none !important;
+    opacity: 0.5;
+    position: fixed !important;
+    bottom: 10px !important;
+    left: 10px !important;
+    z-index: 1000 !important;
 }
