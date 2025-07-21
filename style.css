@@ -2797,3 +2797,11 @@ body:has(#ytPlayer.fullscreen-video) {
     margin-bottom: 20px;
 }
 
+.counter-container::before {
+    content: "Total visits: ";
+    font-weight: bold;
+}
+
+.counter-container {
+    display: inline-block;
+}
