@@ -195,3 +195,4 @@
 - added version indicator. v27.4.0
 - added tooltip hover showing latest changes. v27.5.0
 - added changelog modal after clicking. all of these are connected directly to this file. v27.6.0
+- added visitor counter class and uses iframe. developmental v27.7.0
