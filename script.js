@@ -37,10 +37,10 @@ class AdvancedMusicPlayer {
     this.fullscreenLyricsInterval = null;
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
-      'https://www.google.com',
+      'https://duckduckgo.com',
       'https://www.wikipedia.org',
-      'https://www.youtube.com',
-      'https://www.github.com'
+      'https://www.desmos.com/scientific',
+      'https://www.desmos.com/3d'
     ];
     this.currentWebEmbedIndex = 0;
     this.pageDisguises = [
