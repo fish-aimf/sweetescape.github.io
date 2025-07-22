@@ -2803,15 +2803,10 @@ body:has(#ytPlayer.fullscreen-video) {
     display: inline;
 }
 
-.visitor-counter::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 0;
-    cursor: default;
+/* Block clicks on the actual counter elements */
+.visitor-counter a,
+.visitor-counter img {
+    pointer-events: none;
 }
 
 /* Tooltip */
