@@ -2797,33 +2797,3 @@ body:has(#ytPlayer.fullscreen-video) {
     margin-bottom: 20px;
 }
 
-
-.statistics {
-  display: flex;
-  align-items: center;
-  gap: 10px; 
-  margin-top: -20px;
-  margin-bottom: 10px;
-  margin-left: 2px;
-}
-
-.listening-stats {
-  display: flex;
-  align-items: center;
-  font-size: 16px;
-}
-
-.visits-counter {
-  display: flex;
-  align-items: center;
-}
-.listening-stats {
-    display: flex;
-    align-items: flex-start; 
-    gap: 5px;
-    margin-left: 2px;
-    font-size: 16px; 
-    margin-top: -20px; 
-    margin-bottom: 10px;
-
-}
