@@ -197,4 +197,5 @@
 - added changelog modal after clicking. all of these are connected directly to this file. v27.6.0
 - added visitor counter class and uses iframe. developmental v27.7.0
 - added visitor counter class and its description. production v27.8.0
-- spent 2 hours trying to make the css look good and the counter in place. v27.9.0
+- spent 2 hours trying to make the css look good and the counter in place. made the counter unclickable v27.9.0
+- fixed embed cycling website choice. added desmos and timeanddate. since ctl+c is used i moved hotkey c to hotkey n. v27.10.0
