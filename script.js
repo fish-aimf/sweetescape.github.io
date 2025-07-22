@@ -37,7 +37,7 @@ class AdvancedMusicPlayer {
     this.fullscreenLyricsInterval = null;
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
-      'https://duckduckgo.com',
+      'https://www.timeanddate.com/worldclock/',
       'https://www.wikipedia.org',
       'https://www.desmos.com/scientific',
       'https://www.desmos.com/3d'
