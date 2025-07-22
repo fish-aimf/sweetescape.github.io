@@ -37,7 +37,7 @@ class AdvancedMusicPlayer {
     this.fullscreenLyricsInterval = null;
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
-      'https://www.timeanddate.com/worldclock/',
+      'https://www.interpol.int/en/How-we-work/Notices/Red-Notices/View-Red-Notices
       'https://www.wikipedia.org',
       'https://www.desmos.com/scientific',
       'https://www.desmos.com/3d'
