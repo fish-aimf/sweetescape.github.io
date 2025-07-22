@@ -37,7 +37,7 @@ class AdvancedMusicPlayer {
     this.fullscreenLyricsInterval = null;
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
-      'https://www.interpol.int/en/How-we-work/Notices/Red-Notices/View-Red-Notices' ,
+      'https://i2.res.24o.it/pdf2010/Editrice/ILSOLE24ORE/ILSOLE24ORE/Online/_Oggetti_Embedded/Documenti/2025/07/12/Preliminary%20Report%20VT.pdf?utm_source=chatgpt.com' ,
       'https://www.wikipedia.org',
       'https://www.desmos.com/scientific',
       'https://www.desmos.com/3d'
