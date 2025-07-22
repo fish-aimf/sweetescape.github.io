@@ -2797,4 +2797,8 @@ body:has(#ytPlayer.fullscreen-video) {
     margin-bottom: 20px;
 }
 
+.visitor-counter {
+    position: relative;
+    top: -18px;
+}
 
