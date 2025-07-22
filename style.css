@@ -2800,4 +2800,5 @@ body:has(#ytPlayer.fullscreen-video) {
 .visitor-counter {
     position: absolute;
     top: -18px;
+    right: 20px;
 }
