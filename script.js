@@ -398,7 +398,7 @@ class AdvancedMusicPlayer {
         return;
       }
       
-      if (e.key.toLowerCase() === "c") {
+      if (e.key.toLowerCase() === "n") {
         if (e.shiftKey) {
           this.cycleWebEmbedSite();
         } else {
@@ -414,7 +414,7 @@ class AdvancedMusicPlayer {
       }
       
       if ([
-        "Space", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "KeyK", "KeyA", "KeyD", "KeyL", "KeyR", "KeyP", "KeyT", "Equal", "Minus", "KeyM", "Tab", "KeyQ", "KeyH", "KeyU", "KeyY", "KeyC"
+        "Space", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "KeyK", "KeyA", "KeyD", "KeyL", "KeyR", "KeyP", "KeyT", "Equal", "Minus", "KeyM", "Tab", "KeyQ", "KeyH", "KeyU", "KeyY", "KeyN"
       ].includes(e.code)) {
         e.preventDefault();
       }
