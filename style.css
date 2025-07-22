@@ -2800,6 +2800,7 @@ body:has(#ytPlayer.fullscreen-video) {
 .visitor-counter {
     position: absolute;
     transform: translate(120px, -20px);
+    display: inline;
 }
 
 .visitor-counter::before {
