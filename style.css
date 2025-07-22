@@ -2798,7 +2798,6 @@ body:has(#ytPlayer.fullscreen-video) {
 }
 
 .visitor-counter {
-    position: relative;
-    top: -10px;
-    left: 30px;
+    position: absolute;
+    transform: translate(30px, -10px);
 }
