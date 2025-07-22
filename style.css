@@ -2799,5 +2799,5 @@ body:has(#ytPlayer.fullscreen-video) {
 
 .visitor-counter {
     position: absolute;
-    transform: translate(30px, -10px);
+    transform: translate(60px, -20px);
 }
