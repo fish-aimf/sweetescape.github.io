@@ -2817,3 +2817,13 @@ body:has(#ytPlayer.fullscreen-video) {
   display: flex;
   align-items: center;
 }
+.listening-stats {
+    display: flex;
+    align-items: flex-start; 
+    gap: 5px;
+    margin-left: 2px;
+    font-size: 16px; 
+    margin-top: -20px; 
+    margin-bottom: 10px;
+
+}
