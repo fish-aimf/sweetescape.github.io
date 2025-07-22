@@ -2798,4 +2798,13 @@ body:has(#ytPlayer.fullscreen-video) {
 }
 
 
+.visits-counter {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+    margin-left: 2px;
+    font-size: 16px;
+    margin-top: -10px; /* Adjust this value as needed */
+    margin-bottom: 10px;
+}
 
