@@ -2801,7 +2801,9 @@ body:has(#ytPlayer.fullscreen-video) {
     position: absolute;
     transform: translate(120px, -23px);
     display: inline;
+    position: relative;
 }
+
 .visitor-counter::after {
     content: "";
     position: absolute;
@@ -2811,4 +2813,32 @@ body:has(#ytPlayer.fullscreen-video) {
     bottom: 0;
     z-index: 1;
     cursor: default;
+}
+
+/* Tooltip */
+.visitor-counter::before {
+    content: "Total website visits";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+    z-index: 2;
+    pointer-events: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Show tooltip on hover after 0.2s delay */
+.visitor-counter:hover::before {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0.2s;
 }
