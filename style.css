@@ -3081,7 +3081,7 @@ body:has(#ytPlayer.fullscreen-video) {
     top: 0;
     left: 0;
     width: calc((100vw - 1040px) / 2);
-    height: 100vh;
+    height: 70vh;
     z-index: 1;
 }
 
@@ -3091,7 +3091,7 @@ body:has(#ytPlayer.fullscreen-video) {
     top: 0;
     right: 0;
     width: calc((100vw - 1040px) / 2);
-    height: 100vh;
+    height: 70vh;
     z-index: 1;
 }
 
