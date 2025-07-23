@@ -71,7 +71,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 200px;
+    gap: 1px;
 }
 
 .theme-toggle button {
