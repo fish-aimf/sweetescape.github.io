@@ -7121,27 +7121,7 @@ initializeSettingsContent() {
     console.log("Settings modal opened - ready for content population");
 }
 
-// Add to setupKeyboardControls method (existing method)
-setupKeyboardControls() {
-    // ... existing keyboard controls ...
     
-    // Add settings keyboard shortcut
-    document.addEventListener("keydown", (event) => {
-        // ... existing keyboard shortcuts ...
-        
-        // Settings shortcut (Ctrl/Cmd + ,)
-        if ((event.ctrlKey || event.metaKey) && event.key === ",") {
-            event.preventDefault();
-            this.handleOpenSettings();
-        }
-        
-        // Close settings with Escape
-        if (event.key === "Escape" && this.elements.settingsModal.style.display === "block") {
-            event.preventDefault();
-            this.handleCloseSettings();
-        }
-    });
-}
 
 
 
