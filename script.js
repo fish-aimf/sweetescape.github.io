@@ -2314,7 +2314,7 @@ initializeAutoplay() {
       if (this.listeningTime % 60 === 0) {
         this.saveListeningTime();
       }
-    }, 1000);
+    }, 20000);
   }
   saveListeningTime() {
     this.saveSetting("listeningTime", this.listeningTime).catch((error) =>
