@@ -55,7 +55,7 @@ body {
     color: var(--text-primary);
     transition: background-color 0.3s, color 0.3s;
 }
-
+/* Updated app container */
 .app-container {
     max-width: 1000px;
     margin: 0 auto;
@@ -63,6 +63,35 @@ body {
     background-color: var(--bg-secondary);
     min-height: 100vh;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    position: relative; /* Added for absolute positioning context */
+}
+
+/* Left sidebar ad */
+.adsonleftside {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: calc((100vw - 1040px) / 2); /* Half of remaining screen width */
+    height: 100vh;
+    z-index: 10;
+}
+
+/* Right sidebar ad */
+.adsonrightside {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: calc((100vw - 1040px) / 2); /* Half of remaining screen width */
+    height: 100vh;
+    z-index: 10;
+}
+
+/* Hide ads on smaller screens to prevent overlap */
+@media (max-width: 1200px) {
+    .adsonleftside,
+    .adsonrightside {
+        display: none;
+    }
 }
 
 .theme-toggle {
