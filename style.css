@@ -66,6 +66,35 @@ body {
     position: relative; /* Added for absolute positioning context */
     z-index: 20; /* Ensure app content appears above ads */
 }
+.adsonleftside {
+    position: fixed;
+    top: 0;
+    right: 50vw;
+    right: calc(50vw + 520px); /* 50vw + half of app container width (1000px/2 + 20px padding) */
+    left: 0;
+    height: 100vh;
+    z-index: 1;
+}
+
+/* Right sidebar ad - from right edge of app container to right edge of screen */
+.adsonrightside {
+    position: fixed;
+    top: 0;
+    left: 50vw;
+    left: calc(50vw + 520px); /* 50vw + half of app container width (1000px/2 + 20px padding) */
+    right: 0;
+    height: 100vh;
+    z-index: 1;
+}
+
+/* Hide ads on smaller screens to prevent overlap */
+@media (max-width: 1200px) {
+    .adsonleftside,
+    .adsonrightside {
+        display: none;
+    }
+}
+
 
 
 .theme-toggle {
