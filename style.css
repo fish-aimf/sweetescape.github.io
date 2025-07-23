@@ -1344,26 +1344,6 @@ body.dark-mode .thumbnail-preview {
 }
 
 
-.watermark {
-    position: fixed;
-    bottom: 50%;
-    right: 0;
-    font-size: 12px;
-    color: rgba(0, 0, 0, 0.4);
-    transform: rotate(90deg) translateY(100%);
-    transform-origin: bottom right;
-    white-space: nowrap;
-    padding: 5px 10px;
-    letter-spacing: 1px;
-    z-index: 999;
-    pointer-events: none;
-    font-family: Arial, sans-serif;
-}
-
-body.dark-mode .watermark {
-    color: rgba(255, 255, 255, 0.4);
-}
-
 .top-right-clock .fas {
     font-size: 18px; 
 }
