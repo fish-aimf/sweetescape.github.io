@@ -55,7 +55,7 @@ body {
     color: var(--text-primary);
     transition: background-color 0.3s, color 0.3s;
 }
-
+/* Keep app container completely unchanged */
 .app-container {
     max-width: 1000px;
     margin: 0 auto;
@@ -63,38 +63,42 @@ body {
     background-color: var(--bg-secondary);
     min-height: 100vh;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    position: relative; /* Added for absolute positioning context */
-    z-index: 20; /* Ensure app content appears above ads */
 }
+
+/* Left sidebar ad - positioned absolutely to avoid any interference */
 .adsonleftside {
-    position: fixed;
+    position: absolute;
     top: 0;
-    right: 50vw;
-    right: calc(50vw + 520px); /* 50vw + half of app container width (1000px/2 + 20px padding) */
     left: 0;
-    height: 100vh;
-    z-index: 1;
+    right: calc(50% + 520px); /* Stop at left edge of app container */
+    height: 100%;
+    min-height: 100vh;
+    pointer-events: auto; /* Ensure ads can be clicked */
 }
 
-/* Right sidebar ad - from right edge of app container to right edge of screen */
+/* Right sidebar ad - positioned absolutely to avoid any interference */
 .adsonrightside {
-    position: fixed;
+    position: absolute;
     top: 0;
-    left: 50vw;
-    left: calc(50vw + 520px); /* 50vw + half of app container width (1000px/2 + 20px padding) */
     right: 0;
-    height: 100vh;
-    z-index: 1;
+    left: calc(50% + 520px); /* Start at right edge of app container */
+    height: 100%;
+    min-height: 100vh;
+    pointer-events: auto; /* Ensure ads can be clicked */
 }
 
-/* Hide ads on smaller screens to prevent overlap */
+/* Ensure body can contain absolute positioned elements */
+body {
+    position: relative;
+}
+
+/* Hide ads on smaller screens */
 @media (max-width: 1200px) {
     .adsonleftside,
     .adsonrightside {
         display: none;
     }
 }
-
 
 
 .theme-toggle {
