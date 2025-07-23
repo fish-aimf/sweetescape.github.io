@@ -55,8 +55,7 @@ body {
     color: var(--text-primary);
     transition: background-color 0.3s, color 0.3s;
 }
-/* Keep app container completely unchanged */
-/* Keep app container completely unchanged */
+
 .app-container {
     max-width: 1000px;
     margin: 0 auto;
@@ -66,33 +65,6 @@ body {
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-/* Left sidebar ad - uses fixed positioning that doesn't affect layout */
-.adsonleftside {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: calc((100vw - 1040px) / 2); /* Space from screen edge to app container edge */
-    height: 100vh;
-    z-index: -1; /* Behind everything so it can't interfere */
-}
-
-/* Right sidebar ad - uses fixed positioning that doesn't affect layout */
-.adsonrightside {
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: calc((100vw - 1040px) / 2); /* Space from app container edge to screen edge */
-    height: 100vh;
-    z-index: -1; /* Behind everything so it can't interfere */
-}
-
-/* Only show ads when there's enough space */
-@media (max-width: 1040px) {
-    .adsonleftside,
-    .adsonrightside {
-        display: none;
-    }
-}
 
 .theme-toggle {
     text-align: right;
