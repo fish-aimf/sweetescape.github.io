@@ -247,7 +247,6 @@ body {
     max-height: 300px;
     overflow-y: auto;
 }
-
 .now-playing {
     position: fixed;
     bottom: 0;
@@ -257,6 +256,7 @@ body {
     padding: 10px;
     box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
     border-top: 1px solid var(--border-color);
+    z-index: 10; /* Higher than banners (z-index: 1) */
 }
 
 .now-playing-info {
