@@ -2128,31 +2128,99 @@ initializeAutoplay() {
     };
 }
 
-  initializeTheme() {
-    if (!this.db) {
-      document.documentElement.setAttribute("data-theme", "dark");
-      this.updateThemeIcon("dark");
-      return;
-    }
-
-    const transaction = this.db.transaction(["settings"], "readonly");
-    const store = transaction.objectStore("settings");
-    const request = store.get("theme");
-
-    request.onsuccess = () => {
-      const savedTheme = request.result ? request.result.value : "dark";
+  // Update initializeTheme() to handle custom theme
+initializeTheme() {
+  if (!this.db) {
+    document.documentElement.setAttribute("data-theme", "dark");
+    this.updateThemeIcon("dark");
+    return;
+  }
+  
+  const transaction = this.db.transaction(["settings"], "readonly");
+  const store = transaction.objectStore("settings");
+  const request = store.get("themeMode"); // Changed from "theme" to "themeMode"
+  
+  request.onsuccess = () => {
+    const savedTheme = request.result ? request.result.value : "dark";
+    
+    if (savedTheme === "custom") {
+      this.loadCustomTheme();
+    } else {
       document.documentElement.setAttribute("data-theme", savedTheme);
       this.updateThemeIcon(savedTheme);
-    };
+    }
+  };
+  
+  request.onerror = (event) => {
+    console.error("Error loading theme setting:", event.target.error);
+    document.documentElement.setAttribute("data-theme", "dark");
+    this.updateThemeIcon("dark");
+  };
+}
 
-    request.onerror = (event) => {
-      console.error("Error loading theme setting:", event.target.error);
+// Fix the handleSaveCustomTheme method
+handleSaveCustomTheme() {
+  const primaryColor = this.elements.primaryColorPicker.value;
+  const backgroundColor = this.elements.backgroundColorPicker.value;
+  
+  // Apply custom colors to CSS variables
+  document.documentElement.style.setProperty('--custom-primary', primaryColor);
+  document.documentElement.style.setProperty('--custom-background', backgroundColor);
+  document.documentElement.setAttribute("data-theme", "custom");
+  
+  // Save to database with consistent naming
+  Promise.all([
+    this.saveSetting("customPrimary", primaryColor),
+    this.saveSetting("customBackground", backgroundColor),
+    this.saveSetting("themeMode", "custom") // Use themeMode instead of theme
+  ]).then(() => {
+    console.log("Custom theme saved successfully");
+  }).catch((error) => {
+    console.error("Error saving custom theme:", error);
+  });
+}
 
-      document.documentElement.setAttribute("data-theme", "light");
-      this.updateThemeIcon("light");
-    };
+// Add method to load custom theme
+loadCustomTheme() {
+  const transaction = this.db.transaction(["settings"], "readonly");
+  const store = transaction.objectStore("settings");
+  
+  const primaryRequest = store.get("customPrimary");
+  const backgroundRequest = store.get("customBackground");
+  
+  Promise.all([
+    new Promise(resolve => {
+      primaryRequest.onsuccess = () => resolve(primaryRequest.result?.value);
+    }),
+    new Promise(resolve => {
+      backgroundRequest.onsuccess = () => resolve(backgroundRequest.result?.value);
+    })
+  ]).then(([primaryColor, backgroundColor]) => {
+    if (primaryColor) {
+      document.documentElement.style.setProperty('--custom-primary', primaryColor);
+      this.elements.primaryColorPicker.value = primaryColor;
+    }
+    if (backgroundColor) {
+      document.documentElement.style.setProperty('--custom-background', backgroundColor);
+      this.elements.backgroundColorPicker.value = backgroundColor;
+    }
+    
+    document.documentElement.setAttribute("data-theme", "custom");
+    this.updateThemeIcon("custom");
+  });
+}
+
+// Update handleThemeModeChange to not conflict with existing toggleTheme
+handleThemeModeChange(event) {
+  const mode = event.target.value;
+  this.elements.customThemeSection.style.display = mode === "custom" ? "block" : "none";
+  
+  if (mode !== "custom") {
+    document.documentElement.setAttribute("data-theme", mode);
+    this.updateThemeIcon(mode);
+    this.saveSetting("themeMode", mode);
   }
-
+}
   toggleTheme() {
     const currentTheme = document.documentElement.getAttribute("data-theme");
     const newTheme = currentTheme === "light" ? "dark" : "light";
@@ -2165,12 +2233,7 @@ initializeAutoplay() {
     });
   }
 
-  toggleTheme(mode = null) {
-  if (mode) {
-    document.documentElement.setAttribute("data-theme", mode);
-    this.updateThemeIcon(mode);
-    return;
-  }
+  
   
   const currentTheme = document.documentElement.getAttribute("data-theme");
   const newTheme = currentTheme === "light" ? "dark" : "light";
