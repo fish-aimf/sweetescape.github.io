@@ -7211,12 +7211,7 @@ handleThemeModeChange(event) {
 
   
   
-  const currentTheme = document.documentElement.getAttribute("data-theme");
-  const newTheme = currentTheme === "light" ? "dark" : "light";
-  document.documentElement.setAttribute("data-theme", newTheme);
-  this.updateThemeIcon(newTheme);
-  this.saveSetting("themeMode", newTheme);
-}
+
   updateThemeIcon(theme) {
     const icon = this.elements.themeToggle.querySelector("i");
     icon.classList.remove("fa-moon", "fa-sun");
