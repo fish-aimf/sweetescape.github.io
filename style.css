@@ -3064,3 +3064,41 @@ body:has(#ytPlayer.fullscreen-video) {
   border: 1px solid #ccc;
   border-radius: 4px;
 }
+
+/* Keep app container completely unchanged */
+.app-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: var(--bg-secondary);
+    min-height: 100vh;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Left sidebar banner */
+.left-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: calc((100vw - 1040px) / 2);
+    height: 100vh;
+    z-index: 1;
+}
+
+/* Right sidebar banner */
+.right-banner {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: calc((100vw - 1040px) / 2);
+    height: 100vh;
+    z-index: 1;
+}
+
+/* Hide banners on smaller screens */
+@media (max-width: 1080px) {
+    .left-banner,
+    .right-banner {
+        display: none;
+    }
+}
