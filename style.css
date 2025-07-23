@@ -767,7 +767,7 @@ body {
     transition: opacity 0.3s;
     position: absolute;
     top: 0px;
-    right: 5px;
+    right: 100px;
 }
 
 .timer-button:hover {
