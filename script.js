@@ -7084,8 +7084,11 @@ handleSettingsModalClick(event) {
 }
 
 // Add these new methods:
+// Enhanced theme management with full color customization
+
 initializeSettingsContent() {
   this.loadThemeMode();
+  this.loadCustomThemeColors(); // Load all custom colors when settings modal opens
   console.log("Settings modal opened - theme customization ready");
 }
 
@@ -7103,8 +7106,7 @@ loadThemeMode() {
   };
 }
 
-
- // Update initializeTheme() to handle custom theme
+// Update initializeTheme() to handle custom theme
 initializeTheme() {
   if (!this.db) {
     document.documentElement.setAttribute("data-theme", "dark");
@@ -7114,7 +7116,7 @@ initializeTheme() {
   
   const transaction = this.db.transaction(["settings"], "readonly");
   const store = transaction.objectStore("settings");
-  const request = store.get("themeMode"); // Changed from "theme" to "themeMode"
+  const request = store.get("themeMode");
   
   request.onsuccess = () => {
     const savedTheme = request.result ? request.result.value : "dark";
@@ -7134,55 +7136,218 @@ initializeTheme() {
   };
 }
 
-// Fix the handleSaveCustomTheme method
+// Enhanced method to save all custom theme colors
 handleSaveCustomTheme() {
-  const primaryColor = this.elements.primaryColorPicker.value;
-  const backgroundColor = this.elements.backgroundColorPicker.value;
+  const customColors = {
+    primary: this.elements.primaryColorPicker.value,
+    background: this.elements.backgroundColorPicker.value,
+    secondary: this.elements.secondaryColorPicker?.value || '#334155',
+    textPrimary: this.elements.textPrimaryColorPicker?.value || '#e2e8f0',
+    textSecondary: this.elements.textSecondaryColorPicker?.value || '#94a3b8',
+    hover: this.elements.hoverColorPicker?.value || '#2563eb',
+    border: this.elements.borderColorPicker?.value || '#475569',
+    accent: this.elements.accentColorPicker?.value || this.elements.primaryColorPicker.value
+  };
   
-  // Apply custom colors to CSS variables
-  document.documentElement.style.setProperty('--custom-primary', primaryColor);
-  document.documentElement.style.setProperty('--custom-background', backgroundColor);
+  // Apply all custom colors to CSS variables
+  this.applyCustomColors(customColors);
   document.documentElement.setAttribute("data-theme", "custom");
   
-  // Save to database with consistent naming
-  Promise.all([
-    this.saveSetting("customPrimary", primaryColor),
-    this.saveSetting("customBackground", backgroundColor),
-    this.saveSetting("themeMode", "custom") // Use themeMode instead of theme
-  ]).then(() => {
+  // Save all colors to database
+  const savePromises = [
+    this.saveSetting("customPrimary", customColors.primary),
+    this.saveSetting("customBackground", customColors.background),
+    this.saveSetting("customSecondary", customColors.secondary),
+    this.saveSetting("customTextPrimary", customColors.textPrimary),
+    this.saveSetting("customTextSecondary", customColors.textSecondary),
+    this.saveSetting("customHover", customColors.hover),
+    this.saveSetting("customBorder", customColors.border),
+    this.saveSetting("customAccent", customColors.accent),
+    this.saveSetting("themeMode", "custom")
+  ];
+  
+  Promise.all(savePromises).then(() => {
     console.log("Custom theme saved successfully");
+    this.showNotification("Custom theme saved!", "success");
   }).catch((error) => {
     console.error("Error saving custom theme:", error);
+    this.showNotification("Error saving theme", "error");
   });
 }
 
-// Add method to load custom theme
+// Helper method to apply custom colors
+applyCustomColors(colors) {
+  document.documentElement.style.setProperty('--custom-primary', colors.primary);
+  document.documentElement.style.setProperty('--custom-background', colors.background);
+  document.documentElement.style.setProperty('--custom-secondary', colors.secondary);
+  document.documentElement.style.setProperty('--custom-text-primary', colors.textPrimary);
+  document.documentElement.style.setProperty('--custom-text-secondary', colors.textSecondary);
+  document.documentElement.style.setProperty('--custom-hover', colors.hover);
+  document.documentElement.style.setProperty('--custom-border', colors.border);
+  document.documentElement.style.setProperty('--custom-accent', colors.accent);
+}
+
+// Enhanced method to load custom theme with all colors
 loadCustomTheme() {
   const transaction = this.db.transaction(["settings"], "readonly");
   const store = transaction.objectStore("settings");
   
-  const primaryRequest = store.get("customPrimary");
-  const backgroundRequest = store.get("customBackground");
+  const colorKeys = [
+    'customPrimary', 'customBackground', 'customSecondary',
+    'customTextPrimary', 'customTextSecondary', 'customHover',
+    'customBorder', 'customAccent'
+  ];
   
-  Promise.all([
-    new Promise(resolve => {
-      primaryRequest.onsuccess = () => resolve(primaryRequest.result?.value);
-    }),
-    new Promise(resolve => {
-      backgroundRequest.onsuccess = () => resolve(backgroundRequest.result?.value);
-    })
-  ]).then(([primaryColor, backgroundColor]) => {
-    if (primaryColor) {
-      document.documentElement.style.setProperty('--custom-primary', primaryColor);
-      this.elements.primaryColorPicker.value = primaryColor;
-    }
-    if (backgroundColor) {
-      document.documentElement.style.setProperty('--custom-background', backgroundColor);
-      this.elements.backgroundColorPicker.value = backgroundColor;
-    }
+  const requests = colorKeys.map(key => {
+    const request = store.get(key);
+    return new Promise(resolve => {
+      request.onsuccess = () => resolve({
+        key: key,
+        value: request.result?.value
+      });
+    });
+  });
+  
+  Promise.all(requests).then((results) => {
+    const colors = {};
+    const defaults = {
+      customPrimary: '#3b82f6',
+      customBackground: '#1e293b',
+      customSecondary: '#334155',
+      customTextPrimary: '#e2e8f0',
+      customTextSecondary: '#94a3b8',
+      customHover: '#2563eb',
+      customBorder: '#475569',
+      customAccent: '#3b82f6'
+    };
+    
+    results.forEach(result => {
+      colors[result.key] = result.value || defaults[result.key];
+    });
+    
+    // Apply colors to CSS variables
+    this.applyCustomColors({
+      primary: colors.customPrimary,
+      background: colors.customBackground,
+      secondary: colors.customSecondary,
+      textPrimary: colors.customTextPrimary,
+      textSecondary: colors.customTextSecondary,
+      hover: colors.customHover,
+      border: colors.customBorder,
+      accent: colors.customAccent
+    });
+    
+    // Update color picker values if elements exist
+    this.updateColorPickerValues(colors);
     
     document.documentElement.setAttribute("data-theme", "custom");
     this.updateThemeIcon("custom");
+  });
+}
+
+// Method to load custom colors into color pickers when settings modal opens
+loadCustomThemeColors() {
+  if (!this.db) return;
+  
+  const transaction = this.db.transaction(["settings"], "readonly");
+  const store = transaction.objectStore("settings");
+  
+  const colorKeys = [
+    'customPrimary', 'customBackground', 'customSecondary',
+    'customTextPrimary', 'customTextSecondary', 'customHover',
+    'customBorder', 'customAccent'
+  ];
+  
+  colorKeys.forEach(key => {
+    const request = store.get(key);
+    request.onsuccess = () => {
+      if (request.result?.value) {
+        this.updateColorPickerByKey(key, request.result.value);
+      }
+    };
+  });
+}
+
+// Helper method to update individual color picker
+updateColorPickerByKey(key, value) {
+  const pickerMap = {
+    customPrimary: 'primaryColorPicker',
+    customBackground: 'backgroundColorPicker',
+    customSecondary: 'secondaryColorPicker',
+    customTextPrimary: 'textPrimaryColorPicker',
+    customTextSecondary: 'textSecondaryColorPicker',
+    customHover: 'hoverColorPicker',
+    customBorder: 'borderColorPicker',
+    customAccent: 'accentColorPicker'
+  };
+  
+  const elementKey = pickerMap[key];
+  if (this.elements[elementKey]) {
+    this.elements[elementKey].value = value;
+  }
+}
+
+// Helper method to update all color picker values
+updateColorPickerValues(colors) {
+  const pickerMap = {
+    primaryColorPicker: colors.customPrimary,
+    backgroundColorPicker: colors.customBackground,
+    secondaryColorPicker: colors.customSecondary,
+    textPrimaryColorPicker: colors.customTextPrimary,
+    textSecondaryColorPicker: colors.customTextSecondary,
+    hoverColorPicker: colors.customHover,
+    borderColorPicker: colors.customBorder,
+    accentColorPicker: colors.customAccent
+  };
+  
+  Object.entries(pickerMap).forEach(([picker, value]) => {
+    if (this.elements[picker]) {
+      this.elements[picker].value = value;
+    }
+  });
+}
+
+// Method to handle real-time color changes (optional - for live preview)
+handleColorChange(colorType, value) {
+  const cssVarMap = {
+    primary: '--custom-primary',
+    background: '--custom-background',
+    secondary: '--custom-secondary',
+    textPrimary: '--custom-text-primary',
+    textSecondary: '--custom-text-secondary',
+    hover: '--custom-hover',
+    border: '--custom-border',
+    accent: '--custom-accent'
+  };
+  
+  if (cssVarMap[colorType]) {
+    document.documentElement.style.setProperty(cssVarMap[colorType], value);
+  }
+}
+
+// Method to reset custom theme to defaults
+resetCustomTheme() {
+  const defaultColors = {
+    primary: '#3b82f6',
+    background: '#1e293b',
+    secondary: '#334155',
+    textPrimary: '#e2e8f0',
+    textSecondary: '#94a3b8',
+    hover: '#2563eb',
+    border: '#475569',
+    accent: '#3b82f6'
+  };
+  
+  this.applyCustomColors(defaultColors);
+  this.updateColorPickerValues({
+    customPrimary: defaultColors.primary,
+    customBackground: defaultColors.background,
+    customSecondary: defaultColors.secondary,
+    customTextPrimary: defaultColors.textPrimary,
+    customTextSecondary: defaultColors.textSecondary,
+    customHover: defaultColors.hover,
+    customBorder: defaultColors.border,
+    customAccent: defaultColors.accent
   });
 }
 
@@ -7195,29 +7360,70 @@ handleThemeModeChange(event) {
     document.documentElement.setAttribute("data-theme", mode);
     this.updateThemeIcon(mode);
     this.saveSetting("themeMode", mode);
+  } else {
+    // Load existing custom theme when switching to custom mode
+    this.loadCustomTheme();
   }
 }
-  toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute("data-theme");
-    const newTheme = currentTheme === "light" ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", newTheme);
-    this.updateThemeIcon(newTheme);
-    this.saveSetting("theme", newTheme).catch((error) => {
-      console.error("Error saving theme:", error);
-      document.documentElement.setAttribute("data-theme", currentTheme);
-      this.updateThemeIcon(currentTheme);
-    });
-  }
 
-  
-  
+// Keep existing toggleTheme method for the theme toggle button
+toggleTheme() {
+  const currentTheme = document.documentElement.getAttribute("data-theme");
+  const newTheme = currentTheme === "light" ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", newTheme);
+  this.updateThemeIcon(newTheme);
+  this.saveSetting("theme", newTheme).catch((error) => {
+    console.error("Error saving theme:", error);
+    document.documentElement.setAttribute("data-theme", currentTheme);
+    this.updateThemeIcon(currentTheme);
+  });
+}
 
-  updateThemeIcon(theme) {
-    const icon = this.elements.themeToggle.querySelector("i");
-    icon.classList.remove("fa-moon", "fa-sun");
+// Enhanced updateThemeIcon to handle custom theme
+updateThemeIcon(theme) {
+  const icon = this.elements.themeToggle.querySelector("i");
+  icon.classList.remove("fa-moon", "fa-sun", "fa-palette");
+  
+  if (theme === "custom") {
+    icon.classList.add("fa-palette");
+  } else {
     icon.classList.add(theme === "light" ? "fa-moon" : "fa-sun");
   }
+}
 
+// Helper method to show notifications (you may need to implement this)
+showNotification(message, type = "info") {
+  // Implementation depends on your notification system
+  console.log(`${type.toUpperCase()}: ${message}`);
+  
+  // Example implementation:
+  const notification = document.createElement('div');
+  notification.className = `notification notification-${type}`;
+  notification.textContent = message;
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    border-radius: 4px;
+    color: white;
+    background-color: ${type === 'success' ? 'var(--accent-color)' : '#f44336'};
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s;
+  `;
+  
+  document.body.appendChild(notification);
+  
+  // Fade in
+  setTimeout(() => notification.style.opacity = '1', 10);
+  
+  // Remove after 3 seconds
+  setTimeout(() => {
+    notification.style.opacity = '0';
+    setTimeout(() => document.body.removeChild(notification), 300);
+  }, 3000);
+}
     
 
 
