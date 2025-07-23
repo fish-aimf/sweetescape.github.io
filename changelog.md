@@ -199,4 +199,5 @@
 - added visitor counter class and its description. production v27.8.0
 - spent 2 hours trying to make the css look good and the counter in place. made the counter unclickable v27.9.0
 - fixed embed cycling website choice. added desmos and timeanddate. since ctl+c is used i moved hotkey c to hotkey n. v27.10.0
-- added usersettings nothing inside yet v28.0.0
+- added usersettings nothing inside yet v27.11.0
+- Adde themes in settings that work can customize almost all colours v28.0.0
