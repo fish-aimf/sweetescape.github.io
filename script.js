@@ -217,7 +217,12 @@ class AdvancedMusicPlayer {
       settingsButton: document.getElementById("settingsButton"),
         settingsModal: document.getElementById("settingsModal"),
         settingsCloseBtn: document.getElementById("settingsCloseBtn"),
-        settingsContent: document.getElementById("settingsContent")
+        settingsContent: document.getElementById("settingsContent"),
+      themeMode: document.getElementById("themeMode"),
+    customThemeSection: document.getElementById("customThemeSection"),
+    primaryColorPicker: document.getElementById("primaryColorPicker"),
+    backgroundColorPicker: document.getElementById("backgroundColorPicker"),
+    saveCustomTheme: document.getElementById("saveCustomTheme")
     };
 
     if (this.elements.speedBtn) {
@@ -276,6 +281,7 @@ class AdvancedMusicPlayer {
     this.handleTogglePlaylistLoop = this.togglePlaylistLoop.bind(this);
     this.handleSongUrlInput = this.validateYouTubeUrl.bind(this);
     this.handleSongNameRightClick = this.handleSongNameRightClick.bind(this);
+    this.handleAddSong = this.addSongToLibrary.bind(this);
     this.handleSongUrlKeydown = (e) => {
       if (e.key === "Enter") {
         this.addSongToLibrary();
@@ -375,7 +381,8 @@ class AdvancedMusicPlayer {
       [this.elements.newPlaylistName, "keydown", this.handleNewPlaylistNameKeydown],
       [this.elements.volumeSlider, "input", this.handleVolumeChange],
       [this.elements.progressBar, "click", this.handleSeekMusic],
-      [this.elements.currentSongName, "contextmenu", this.handleSongNameRightClick]
+      [this.elements.currentSongName, "contextmenu", this.handleSongNameRightClick],
+      [this.elements.toggleControlBarBtn, "click", this.handleToggleControlBar]
     ];
 
     eventBindings.forEach(([element, event, handler]) => {
@@ -394,7 +401,9 @@ class AdvancedMusicPlayer {
     const settingsEventBindings = [
         [this.elements.settingsButton, "click", this.handleOpenSettings],
         [this.elements.settingsCloseBtn, "click", this.handleCloseSettings],
-        [this.elements.settingsModal, "click", this.handleSettingsModalClick]
+        [this.elements.settingsModal, "click", this.handleSettingsModalClick],
+        [this.elements.themeMode, "change", this.handleThemeModeChange],
+        [this.elements.saveCustomTheme, "click", this.handleSaveCustomTheme]
     ];
     
     settingsEventBindings.forEach(([element, event, handler]) => {
@@ -2156,6 +2165,19 @@ initializeAutoplay() {
     });
   }
 
+  toggleTheme(mode = null) {
+  if (mode) {
+    document.documentElement.setAttribute("data-theme", mode);
+    this.updateThemeIcon(mode);
+    return;
+  }
+  
+  const currentTheme = document.documentElement.getAttribute("data-theme");
+  const newTheme = currentTheme === "light" ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", newTheme);
+  this.updateThemeIcon(newTheme);
+  this.saveSetting("themeMode", newTheme);
+}
   updateThemeIcon(theme) {
     const icon = this.elements.themeToggle.querySelector("i");
     icon.classList.remove("fa-moon", "fa-sun");
@@ -7115,10 +7137,49 @@ handleSettingsModalClick(event) {
     }
 }
 
+// Add these new methods:
 initializeSettingsContent() {
-    // This method is ready for future AI to populate with actual settings
-    // Current placeholder content can be replaced
-    console.log("Settings modal opened - ready for content population");
+  this.loadThemeMode();
+  console.log("Settings modal opened - theme customization ready");
+}
+
+loadThemeMode() {
+  if (!this.db) return;
+  
+  const transaction = this.db.transaction(["settings"], "readonly");
+  const store = transaction.objectStore("settings");
+  const request = store.get("themeMode");
+  
+  request.onsuccess = () => {
+    const savedMode = request.result ? request.result.value : "dark";
+    this.elements.themeMode.value = savedMode;
+    this.elements.customThemeSection.style.display = savedMode === "custom" ? "block" : "none";
+  };
+}
+
+handleThemeModeChange(event) {
+  const mode = event.target.value;
+  this.elements.customThemeSection.style.display = mode === "custom" ? "block" : "none";
+  
+  if (mode !== "custom") {
+    this.toggleTheme(mode);
+    this.saveSetting("themeMode", mode);
+  }
+}
+
+handleSaveCustomTheme() {
+  const primaryColor = this.elements.primaryColorPicker.value;
+  const backgroundColor = this.elements.backgroundColorPicker.value;
+  
+  // Apply custom colors
+  document.documentElement.style.setProperty('--custom-primary', primaryColor);
+  document.documentElement.style.setProperty('--custom-background', backgroundColor);
+  document.documentElement.setAttribute("data-theme", "custom");
+  
+  // Save to database
+  this.saveSetting("customPrimary", primaryColor);
+  this.saveSetting("customBackground", backgroundColor);
+  this.saveSetting("themeMode", "custom");
 }
 
     
