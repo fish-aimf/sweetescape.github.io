@@ -2834,3 +2834,143 @@ body:has(#ytPlayer.fullscreen-video) {
     visibility: visible;
     transition-delay: 0.2s;
 }
+
+/* Settings Button */
+.settings-button {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-left: 10px;
+    font-size: 16px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.settings-button:hover {
+    background: var(--accent-color);
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Settings Modal */
+.settings-modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+}
+
+.settings-modal-content {
+    background-color: var(--bg-secondary);
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 85vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: settingsModalSlideIn 0.3s ease-out;
+}
+
+@keyframes settingsModalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.settings-modal-header {
+    background: var(--accent-color);
+    color: white;
+    padding: 20px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.settings-modal-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.settings-close-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.settings-close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.settings-modal-body {
+    padding: 30px;
+    max-height: calc(85vh - 80px);
+    overflow-y: auto;
+}
+
+.settings-content {
+    min-height: 300px;
+}
+
+.settings-placeholder {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 50px 20px;
+}
+
+.settings-placeholder i {
+    color: var(--accent-color);
+    margin-bottom: 20px;
+}
+
+.settings-placeholder p {
+    font-size: 16px;
+    margin: 0;
+}
+
+/* Settings Modal Responsive */
+@media (max-width: 768px) {
+    .settings-modal-content {
+        width: 95%;
+        margin: 10% auto;
+        max-height: 90vh;
+    }
+    
+    .settings-modal-header {
+        padding: 15px 20px;
+    }
+    
+    .settings-modal-header h2 {
+        font-size: 20px;
+    }
+    
+    .settings-modal-body {
+        padding: 20px;
+    }
+}
