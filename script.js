@@ -375,10 +375,7 @@ class AdvancedMusicPlayer {
       [this.elements.newPlaylistName, "keydown", this.handleNewPlaylistNameKeydown],
       [this.elements.volumeSlider, "input", this.handleVolumeChange],
       [this.elements.progressBar, "click", this.handleSeekMusic],
-      [this.elements.currentSongName, "contextmenu", this.handleSongNameRightClick],
-      [this.elements.settingsButton, "click", this.handleOpenSettings],
-        [this.elements.settingsCloseBtn, "click", this.handleCloseSettings],
-        [this.elements.settingsModal, "click", this.handleSettingsModalClick]
+      [this.elements.currentSongName, "contextmenu", this.handleSongNameRightClick]
     ];
 
     eventBindings.forEach(([element, event, handler]) => {
@@ -393,6 +390,19 @@ class AdvancedMusicPlayer {
 
     this.elements.tabs.forEach((tab) => {
       tab.addEventListener("click", () => this.switchTab(tab.dataset.tab));
+    });
+    const settingsEventBindings = [
+        [this.elements.settingsButton, "click", this.handleOpenSettings],
+        [this.elements.settingsCloseBtn, "click", this.handleCloseSettings],
+        [this.elements.settingsModal, "click", this.handleSettingsModalClick]
+    ];
+    
+    settingsEventBindings.forEach(([element, event, handler]) => {
+        if (element) {
+            element.addEventListener(event, handler.bind(this));
+        } else {
+            console.warn("Settings element not found for event binding");
+        }
     });
   }
 
