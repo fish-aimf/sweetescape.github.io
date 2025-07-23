@@ -2289,38 +2289,48 @@ initializeAutoplay() {
     return null;
   }
   updateListeningTimeDisplay() {
-    if (!this.elements.listeningTimeDisplay) return;
-
-    const seconds = this.listeningTime % 60;
-    const minutes = Math.floor(this.listeningTime / 60) % 60;
-    const hours = Math.floor(this.listeningTime / 3600);
-
-    if (hours > 0) {
-      this.elements.listeningTimeDisplay.textContent = `${hours}h ${minutes}m`;
-    } else {
-      this.elements.listeningTimeDisplay.textContent = `${minutes}m`;
-    }
+  if (!this.elements.listeningTimeDisplay) return;
+  
+  const seconds = this.listeningTime % 60;
+  const minutes = Math.floor(this.listeningTime / 60) % 60;
+  const hours = Math.floor(this.listeningTime / 3600);
+  
+  const newText = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+  
+  // Only update DOM if the text actually changed
+  if (this.elements.listeningTimeDisplay.textContent !== newText) {
+    this.elements.listeningTimeDisplay.textContent = newText;
   }
+}
 
-  startListeningTimeTracking() {
-    if (this.listeningTimeInterval) {
-      clearInterval(this.listeningTimeInterval);
-    }
-
-    this.listeningTimeInterval = setInterval(() => {
-      this.listeningTime++;
+startListeningTimeTracking() {
+  if (this.listeningTimeInterval) {
+    clearInterval(this.listeningTimeInterval);
+  }
+  
+  this.listeningTimeInterval = setInterval(() => {
+    this.listeningTime++;
+    
+    // Only update display when minutes change (every 60 seconds)
+    if (this.listeningTime % 60 === 0) {
       this.updateListeningTimeDisplay();
+      this.saveListeningTime();
+    }
+  }, 1000);
+}
 
-      if (this.listeningTime % 60 === 0) {
-        this.saveListeningTime();
-      }
-    }, 20000);
+saveListeningTime() {
+  // Debounce save operations to avoid excessive calls
+  if (this.saveTimeout) {
+    clearTimeout(this.saveTimeout);
   }
-  saveListeningTime() {
+  
+  this.saveTimeout = setTimeout(() => {
     this.saveSetting("listeningTime", this.listeningTime).catch((error) =>
       console.error("Error saving listening time:", error)
     );
-  }
+  }, 100);
+}
 
   toggleSpeedOptions() {
     this.elements.speedOptions.classList.toggle("show");
