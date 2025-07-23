@@ -387,11 +387,9 @@
         </div>
         <div class="settings-modal-body">
             <div id="settingsContent" class="settings-content">
-                <!-- Add to your settings modal -->
-<div class="settings-section">
+                <div class="settings-section">
   <h3>Theme Settings</h3>
   
-  <!-- Theme Selection -->
   <div class="setting-group">
     <label>Theme Mode:</label>
     <select id="themeMode">
@@ -401,58 +399,18 @@
     </select>
   </div>
 
-  <!-- Custom Theme Colors (initially hidden) -->
-  <div id="customThemeSection" class="custom-theme-section" style="display: none;">
-    <h4>Customize Colors</h4>
-    
-    <div class="color-picker-grid">
-      <div class="color-picker-item">
-        <label for="primaryColor">Primary Color:</label>
-        <input type="color" id="primaryColor" value="#3b82f6">
-      </div>
-      
-      <div class="color-picker-item">
-        <label for="secondaryColor">Secondary Color:</label>
-        <input type="color" id="secondaryColor" value="#64748b">
-      </div>
-      
-      <div class="color-picker-item">
-        <label for="accentColor">Accent Color:</label>
-        <input type="color" id="accentColor" value="#f59e0b">
-      </div>
-      
-      <div class="color-picker-item">
-        <label for="backgroundColor">Background:</label>
-        <input type="color" id="backgroundColor" value="#1e293b">
-      </div>
-      
-      <div class="color-picker-item">
-        <label for="surfaceColor">Surface Color:</label>
-        <input type="color" id="surfaceColor" value="#334155">
-      </div>
-      
-      <div class="color-picker-item">
-        <label for="textColor">Text Color:</label>
-        <input type="color" id="textColor" value="#f1f5f9">
-      </div>
+  <div id="customThemeSection" style="display: none;">
+    <div class="color-picker-item">
+      <label>Primary Color:</label>
+      <input type="color" id="primaryColorPicker">
     </div>
     
-    <div class="theme-actions">
-      <button id="previewTheme" class="btn-secondary">Preview</button>
-      <button id="resetTheme" class="btn-secondary">Reset to Default</button>
-      <button id="saveCustomTheme" class="btn-primary">Save Custom Theme</button>
+    <div class="color-picker-item">
+      <label>Background Color:</label>
+      <input type="color" id="backgroundColorPicker">
     </div>
-  </div>
-
-  <!-- Placeholder for future settings -->
-  <div class="settings-section">
-    <h3>Audio Settings</h3>
-    <p class="placeholder-text">Audio settings will be added here...</p>
-  </div>
-
-  <div class="settings-section">
-    <h3>Display Settings</h3>
-    <p class="placeholder-text">Display settings will be added here...</p>
+    
+    <button id="saveCustomTheme">Save Theme</button>
   </div>
 </div>
             </div>
