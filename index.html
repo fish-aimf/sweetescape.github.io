@@ -399,19 +399,54 @@
     </select>
   </div>
 
-  <div id="customThemeSection" style="display: none;">
-    <div class="color-picker-item">
-      <label>Primary Color:</label>
-      <input type="color" id="primaryColorPicker">
-    </div>
-    
-    <div class="color-picker-item">
-      <label>Background Color:</label>
-      <input type="color" id="backgroundColorPicker">
-    </div>
-    
-    <button id="saveCustomTheme">Save Theme</button>
+  <div class="custom-theme-section" id="customThemeSection">
+  <h3>Customize Colors</h3>
+  
+  <div class="color-picker-group">
+    <label for="primaryColorPicker">Primary Color:</label>
+    <input type="color" id="primaryColorPicker" value="#3b82f6">
   </div>
+  
+  <div class="color-picker-group">
+    <label for="backgroundColorPicker">Background Color:</label>
+    <input type="color" id="backgroundColorPicker" value="#1e293b">
+  </div>
+  
+  <div class="color-picker-group">
+    <label for="secondaryColorPicker">Secondary Background:</label>
+    <input type="color" id="secondaryColorPicker" value="#334155">
+  </div>
+  
+  <div class="color-picker-group">
+    <label for="textPrimaryColorPicker">Primary Text:</label>
+    <input type="color" id="textPrimaryColorPicker" value="#e2e8f0">
+  </div>
+  
+  <div class="color-picker-group">
+    <label for="textSecondaryColorPicker">Secondary Text:</label>
+    <input type="color" id="textSecondaryColorPicker" value="#94a3b8">
+  </div>
+  
+  <div class="color-picker-group">
+    <label for="hoverColorPicker">Hover Color:</label>
+    <input type="color" id="hoverColorPicker" value="#2563eb">
+  </div>
+  
+  <div class="color-picker-group">
+    <label for="borderColorPicker">Border Color:</label>
+    <input type="color" id="borderColorPicker" value="#475569">
+  </div>
+  
+  <div class="color-picker-group">
+    <label for="accentColorPicker">Accent Color:</label>
+    <input type="color" id="accentColorPicker" value="#3b82f6">
+  </div>
+  
+  <div class="theme-buttons">
+    <button onclick="musicPlayer.handleSaveCustomTheme()">Save Theme</button>
+    <button onclick="musicPlayer.resetCustomTheme()">Reset to Defaults</button>
+  </div>
+</div>
 </div>
             </div>
         </div>
