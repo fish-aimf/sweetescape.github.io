@@ -222,7 +222,13 @@ class AdvancedMusicPlayer {
     customThemeSection: document.getElementById("customThemeSection"),
     primaryColorPicker: document.getElementById("primaryColorPicker"),
     backgroundColorPicker: document.getElementById("backgroundColorPicker"),
-    saveCustomTheme: document.getElementById("saveCustomTheme")
+    saveCustomTheme: document.getElementById("saveCustomTheme"),
+      secondaryColorPicker: document.getElementById('secondaryColorPicker'),
+  textPrimaryColorPicker: document.getElementById('textPrimaryColorPicker'),
+  textSecondaryColorPicker: document.getElementById('textSecondaryColorPicker'),
+  hoverColorPicker: document.getElementById('hoverColorPicker'),
+  borderColorPicker: document.getElementById('borderColorPicker'),
+  accentColorPicker: document.getElementById('accentColorPicker')
     };
 
     if (this.elements.speedBtn) {
