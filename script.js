@@ -138,20 +138,24 @@ class AdvancedMusicPlayer {
       };
 
       request.onupgradeneeded = (event) => {
-        const db = event.target.result;
-        if (!db.objectStoreNames.contains("songLibrary")) {
-          db.createObjectStore("songLibrary", { keyPath: "id" });
-        }
-        if (!db.objectStoreNames.contains("playlists")) {
-          db.createObjectStore("playlists", { keyPath: "id" });
-        }
-        if (!db.objectStoreNames.contains("settings")) {
-          db.createObjectStore("settings", { keyPath: "name" });
-        }
-        if (!db.objectStoreNames.contains("recentlyPlayed")) {
-          db.createObjectStore("recentlyPlayed", { keyPath: "type" });
-        }
-      };
+    const db = event.target.result;
+    if (!db.objectStoreNames.contains("songLibrary")) {
+        db.createObjectStore("songLibrary", { keyPath: "id" });
+    }
+    if (!db.objectStoreNames.contains("playlists")) {
+        db.createObjectStore("playlists", { keyPath: "id" });
+    }
+    if (!db.objectStoreNames.contains("settings")) {
+        db.createObjectStore("settings", { keyPath: "name" });
+    }
+    if (!db.objectStoreNames.contains("recentlyPlayed")) {
+        db.createObjectStore("recentlyPlayed", { keyPath: "type" });
+    }
+    // Settings store is already created, but ensure it has proper structure
+    if (!db.objectStoreNames.contains("userSettings")) {
+        db.createObjectStore("userSettings", { keyPath: "category" });
+    }
+};
     });
   }
 
@@ -209,7 +213,11 @@ class AdvancedMusicPlayer {
       themeToggle: document.getElementById("themeToggle"),
       lyricsTab: document.querySelector('.tab[data-tab="lyrics"]'),
       lyricsPane: document.getElementById("lyrics"),
-      autofillBtn: document.getElementById("autofillBtn")
+      autofillBtn: document.getElementById("autofillBtn"),
+      settingsButton: document.getElementById("settingsButton"),
+        settingsModal: document.getElementById("settingsModal"),
+        settingsCloseBtn: document.getElementById("settingsCloseBtn"),
+        settingsContent: document.getElementById("settingsContent")
     };
 
     if (this.elements.speedBtn) {
@@ -367,7 +375,10 @@ class AdvancedMusicPlayer {
       [this.elements.newPlaylistName, "keydown", this.handleNewPlaylistNameKeydown],
       [this.elements.volumeSlider, "input", this.handleVolumeChange],
       [this.elements.progressBar, "click", this.handleSeekMusic],
-      [this.elements.currentSongName, "contextmenu", this.handleSongNameRightClick]
+      [this.elements.currentSongName, "contextmenu", this.handleSongNameRightClick],
+      [this.elements.settingsButton, "click", this.handleOpenSettings],
+        [this.elements.settingsCloseBtn, "click", this.handleCloseSettings],
+        [this.elements.settingsModal, "click", this.handleSettingsModalClick]
     ];
 
     eventBindings.forEach(([element, event, handler]) => {
@@ -7075,6 +7086,51 @@ setupChangelogModal() {
             }
         });
     }
+}
+// Settings Modal Methods
+handleOpenSettings() {
+    this.elements.settingsModal.style.display = "block";
+    document.body.style.overflow = "hidden";
+    this.initializeSettingsContent();
+}
+
+handleCloseSettings() {
+    this.elements.settingsModal.style.display = "none";
+    document.body.style.overflow = "auto";
+}
+
+handleSettingsModalClick(event) {
+    if (event.target === this.elements.settingsModal) {
+        this.handleCloseSettings();
+    }
+}
+
+initializeSettingsContent() {
+    // This method is ready for future AI to populate with actual settings
+    // Current placeholder content can be replaced
+    console.log("Settings modal opened - ready for content population");
+}
+
+// Add to setupKeyboardControls method (existing method)
+setupKeyboardControls() {
+    // ... existing keyboard controls ...
+    
+    // Add settings keyboard shortcut
+    document.addEventListener("keydown", (event) => {
+        // ... existing keyboard shortcuts ...
+        
+        // Settings shortcut (Ctrl/Cmd + ,)
+        if ((event.ctrlKey || event.metaKey) && event.key === ",") {
+            event.preventDefault();
+            this.handleOpenSettings();
+        }
+        
+        // Close settings with Escape
+        if (event.key === "Escape" && this.elements.settingsModal.style.display === "block") {
+            event.preventDefault();
+            this.handleCloseSettings();
+        }
+    });
 }
 
 
