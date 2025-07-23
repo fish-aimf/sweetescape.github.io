@@ -17,6 +17,12 @@
     --hover-color: #4D7C46; 
     --border-color: #444;
 }
+
+[data-theme="custom"] {
+  --primary-color: var(--custom-primary, #3b82f6);
+  --background-color: var(--custom-background, #1e293b);
+  /* Add more custom properties as needed for your UI elements */
+}
 * {
     margin: 0;
     padding: 0;
