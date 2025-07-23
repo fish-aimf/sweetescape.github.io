@@ -201,3 +201,4 @@
 - fixed embed cycling website choice. added desmos and timeanddate. since ctl+c is used i moved hotkey c to hotkey n. v27.10.0
 - added usersettings nothing inside yet v27.11.0
 - Adde themes in settings that work can customize almost all colours v28.0.0
+- added debounce saving and reduced dom updates and less frequent display updates to listening time display v28.0.1
