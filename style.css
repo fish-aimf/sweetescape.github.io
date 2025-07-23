@@ -19,10 +19,15 @@
 }
 
 [data-theme="custom"] {
-  --primary-color: var(--custom-primary, #3b82f6);
-  --background-color: var(--custom-background, #1e293b);
-  /* Add more custom properties as needed for your UI elements */
+    --bg-primary: var(--custom-background, #1e293b);
+    --bg-secondary: var(--custom-secondary, #334155);
+    --text-primary: var(--custom-text-primary, #e2e8f0);
+    --text-secondary: var(--custom-text-secondary, #94a3b8);
+    --accent-color: var(--custom-primary, #3b82f6);
+    --hover-color: var(--custom-hover, #2563eb);
+    --border-color: var(--custom-border, #475569);
 }
+
 * {
     margin: 0;
     padding: 0;
@@ -35,7 +40,6 @@ body {
     color: var(--text-primary);
     transition: background-color 0.3s, color 0.3s;
 }
-
 
 .app-container {
     max-width: 1000px;
@@ -83,6 +87,7 @@ body {
     background-color: var(--accent-color);
     color: white;
 }
+
 .tab-content {
     background-color: var(--bg-secondary);
 }
@@ -147,8 +152,6 @@ body {
     background-color: var(--hover-color);
 }
 
-
-
 .song-list, .playlist-container {
     max-height: 400px;
     overflow-y: auto;
@@ -174,6 +177,12 @@ body {
     border-radius: 3px;
     cursor: pointer;
 }
+
+.song-actions button:hover,
+.playlist-actions button:hover {
+    background-color: var(--hover-color);
+}
+
 .modal {
     display: none;
     position: fixed;
@@ -193,6 +202,7 @@ body {
     border-radius: 5px;
     width: 80%;
     max-width: 500px;
+    border: 1px solid var(--border-color);
 }
 
 .close-btn {
@@ -201,6 +211,10 @@ body {
     font-size: 28px;
     font-weight: bold;
     cursor: pointer;
+}
+
+.close-btn:hover {
+    color: var(--text-primary);
 }
 
 .playlist-edit-section {
@@ -225,14 +239,14 @@ body {
     background-color: var(--bg-secondary);
     padding: 10px;
     box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    border-top: 1px solid var(--border-color);
 }
 
 .now-playing-info {
     text-align: center;
     margin-bottom: 10px;
+    color: var(--text-primary);
 }
-
-
 
 .player-controls {
     display: flex;
@@ -246,6 +260,11 @@ body {
     color: var(--text-primary);
     font-size: 20px;
     cursor: pointer;
+    transition: color 0.3s;
+}
+
+.player-controls button:hover {
+    color: var(--accent-color);
 }
 
 .volume-control {
@@ -262,6 +281,30 @@ body {
 
 #volumeSlider {
     width: 200px;
+    -webkit-appearance: none;
+    height: 5px;
+    background: var(--border-color);
+    outline: none;
+    border-radius: 3px;
+}
+
+#volumeSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    background: var(--accent-color);
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+#volumeSlider::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    background: var(--accent-color);
+    cursor: pointer;
+    border-radius: 50%;
+    border: none;
 }
 
 ::-webkit-scrollbar {
@@ -277,19 +320,26 @@ body {
     border-radius: 4px;
 }
 
+::-webkit-scrollbar-thumb:hover {
+    background: var(--hover-color);
+}
+
 .music-progress {
     position: relative;
     width: 100%;
     display: flex;
     align-items: center;
 }
+
 .time-display {
     margin-left: 10px;
     font-size: 14px;
     white-space: nowrap;
     min-width: 75px;
     text-align: right;
+    color: var(--text-secondary);
 }
+
 #musicProgressBar {
     -webkit-appearance: none;
     width: 100%;
@@ -299,10 +349,13 @@ body {
     opacity: 1;
     transition: opacity 0.2s;
     cursor: pointer;
+    border-radius: 3px;
 }
+
 #musicProgressBar:hover {
     opacity: 0.8;
 }
+
 #musicProgressBar::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
@@ -312,14 +365,15 @@ body {
     cursor: pointer;
     border-radius: 50%;
 }
+
 #musicProgressBar::-moz-range-thumb {
     width: 15px;
     height: 15px;
     background: var(--accent-color); 
     cursor: pointer;
     border-radius: 50%;
+    border: none;
 }
-
 
 .search-library-section input {
     width: 100%;
@@ -373,6 +427,25 @@ body {
     transition: background-color 0.3s;
 }
 
+.search-song-item button:hover {
+    background-color: var(--hover-color);
+}
+
+/* Music player specific styles using CSS variables */
+.music-player {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.control-bar {
+    background-color: var(--accent-color);
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px 0;
+}
 .search-song-item button:hover {
     background-color: var(--hover-color);
 }
