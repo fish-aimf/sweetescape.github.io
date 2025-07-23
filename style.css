@@ -71,7 +71,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 20px;
+    gap: 200px;
 }
 
 .theme-toggle button {
@@ -80,6 +80,7 @@ body {
     color: var(--text-primary);
     font-size: 20px;
     cursor: pointer;
+    
 }
 
 .tabs {
@@ -767,7 +768,7 @@ body {
     transition: opacity 0.3s;
     position: absolute;
     top: 0px;
-    right: -10px;
+    right: -30px;
 }
 
 .timer-button:hover {
