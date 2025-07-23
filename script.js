@@ -7099,8 +7099,6 @@ handleSettingsModalClick(event) {
     }
 }
 
-// Add these new methods:
-// Enhanced theme management with full color customization
 
 initializeSettingsContent() {
   this.loadThemeMode();
@@ -7121,8 +7119,6 @@ loadThemeMode() {
     this.elements.customThemeSection.style.display = savedMode === "custom" ? "block" : "none";
   };
 }
-
-// Update initializeTheme() to handle custom theme
 initializeTheme() {
   if (!this.db) {
     document.documentElement.setAttribute("data-theme", "dark");
@@ -7132,7 +7128,7 @@ initializeTheme() {
   
   const transaction = this.db.transaction(["settings"], "readonly");
   const store = transaction.objectStore("settings");
-  const request = store.get("themeMode");
+  const request = store.get("themeMode"); // Use consistent key
   
   request.onsuccess = () => {
     const savedTheme = request.result ? request.result.value : "dark";
@@ -7202,8 +7198,6 @@ applyCustomColors(colors) {
   document.documentElement.style.setProperty('--custom-border', colors.border);
   document.documentElement.style.setProperty('--custom-accent', colors.accent);
 }
-
-// Enhanced method to load custom theme with all colors
 loadCustomTheme() {
   const transaction = this.db.transaction(["settings"], "readonly");
   const store = transaction.objectStore("settings");
@@ -7260,7 +7254,6 @@ loadCustomTheme() {
     this.updateThemeIcon("custom");
   });
 }
-
 // Method to load custom colors into color pickers when settings modal opens
 loadCustomThemeColors() {
   if (!this.db) return;
@@ -7381,18 +7374,45 @@ handleThemeModeChange(event) {
     this.loadCustomTheme();
   }
 }
-
-// Keep existing toggleTheme method for the theme toggle button
 toggleTheme() {
   const currentTheme = document.documentElement.getAttribute("data-theme");
-  const newTheme = currentTheme === "light" ? "dark" : "light";
-  document.documentElement.setAttribute("data-theme", newTheme);
-  this.updateThemeIcon(newTheme);
-  this.saveSetting("theme", newTheme).catch((error) => {
+  let newTheme;
+  
+  // Cycle through themes: light → dark → custom → light
+  switch (currentTheme) {
+    case "light":
+      newTheme = "dark";
+      break;
+    case "dark":
+      newTheme = "custom";
+      break;
+    case "custom":
+    default:
+      newTheme = "light";
+      break;
+  }
+  
+  // Apply the new theme
+  if (newTheme === "custom") {
+    this.loadCustomTheme();
+  } else {
+    document.documentElement.setAttribute("data-theme", newTheme);
+    this.updateThemeIcon(newTheme);
+  }
+  
+  // Save the theme mode (use "themeMode" to be consistent with your settings)
+  this.saveSetting("themeMode", newTheme).catch((error) => {
     console.error("Error saving theme:", error);
+    // Revert on error
     document.documentElement.setAttribute("data-theme", currentTheme);
     this.updateThemeIcon(currentTheme);
   });
+  
+  // Update the theme mode selector in settings if it exists
+  if (this.elements.themeMode) {
+    this.elements.themeMode.value = newTheme;
+    this.elements.customThemeSection.style.display = newTheme === "custom" ? "block" : "none";
+  }
 }
 
 // Enhanced updateThemeIcon to handle custom theme
