@@ -1801,10 +1801,6 @@ body {
         display: none;
     }
 }
-
-/* ADD THESE STYLES TO YOUR style.css FILE */
-
-/* Recently Played Modal Styles */
 .recently-played-modal-bg {
     position: fixed;
     top: 0;
@@ -1819,26 +1815,26 @@ body {
 }
 
 .recently-played-modal {
-    background: #1a1a1a;
+    background: var(--bg-secondary);
     border-radius: 10px;
     width: 90%;
     max-width: 500px;
     max-height: 80vh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 30px var(--shadow-color);
 }
 
 .recently-played-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px;
-    border-bottom: 1px solid #333;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .recently-played-header h2 {
-    color: #fff;
+    color: var(--text-primary);
     margin: 0;
     font-size: 20px;
 }
@@ -1846,7 +1842,7 @@ body {
 .recently-played-close {
     background: none;
     border: none;
-    color: #fff;
+    color: var(--text-secondary);
     font-size: 24px;
     cursor: pointer;
     width: 30px;
@@ -1855,11 +1851,13 @@ body {
     justify-content: center;
     align-items: center;
     border-radius: 50%;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, color 0.2s;
+    padding: 0;
 }
 
 .recently-played-close:hover {
-    background-color: #333;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .recently-played-content {
@@ -1877,7 +1875,7 @@ body {
 }
 
 .recently-played-item:hover {
-    background-color: #2a2a2a;
+    background-color: var(--bg-primary);
 }
 
 .recently-played-thumbnail {
@@ -1894,7 +1892,7 @@ body {
 }
 
 .recently-played-name {
-    color: #fff;
+    color: var(--text-primary);
     font-size: 14px;
     margin-bottom: 4px;
     overflow: hidden;
@@ -1903,33 +1901,10 @@ body {
 }
 
 .recently-played-time {
-    color: #888;
+    color: var(--text-secondary);
     font-size: 12px;
 }
 
-/* Make the section title clickable */
-.section-title:hover {
-    color: #4a9eff !important;
-}
-
-/* Scrollbar styling for the modal */
-.recently-played-content::-webkit-scrollbar {
-    width: 6px;
-}
-
-.recently-played-content::-webkit-scrollbar-track {
-    background: #2a2a2a;
-    border-radius: 3px;
-}
-
-.recently-played-content::-webkit-scrollbar-thumb {
-    background: #555;
-    border-radius: 3px;
-}
-
-.recently-played-content::-webkit-scrollbar-thumb:hover {
-    background: #777;
-}
 .recently-played-settings {
     display: flex;
     align-items: center;
@@ -1958,30 +1933,28 @@ body {
     border-color: var(--accent-color);
 }
 
-.recently-played-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
-    border-bottom: 1px solid var(--border-color);
+/* Section title hover effect */
+.section-title:hover {
+    color: var(--accent-color) !important;
 }
 
-.recently-played-close {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: var(--text-secondary);
-    padding: 0;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+/* Scrollbar styling for the modal */
+.recently-played-content::-webkit-scrollbar {
+    width: 6px;
 }
 
-.recently-played-close:hover {
-    color: var(--text-primary);
+.recently-played-content::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+    border-radius: 3px;
+}
+
+.recently-played-content::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.recently-played-content::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
 }
 
 /* Duplicate toggle container */
