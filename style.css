@@ -6,6 +6,11 @@
     --accent-color: #5D9C59; 
     --hover-color: #4A7C59; 
     --border-color: #ddd;
+    --button-text-color: #ffffff;
+    --shadow-color: rgba(0,0,0,0.1);
+    --error-color: #dc3545;
+    --error-hover: #c82333;
+    --youtube-red: #FF0000;
 }
 
 [data-theme='dark'] {
@@ -16,6 +21,11 @@
     --accent-color: #3A6B35; 
     --hover-color: #4D7C46; 
     --border-color: #444;
+    --button-text-color: #ffffff;
+    --shadow-color: rgba(0,0,0,0.1);
+    --error-color: #dc3545;
+    --error-hover: #c82333;
+    --youtube-red: #FF0000;
 }
 
 [data-theme="custom"] {
@@ -26,6 +36,11 @@
     --accent-color: var(--custom-primary, #3b82f6);
     --hover-color: var(--custom-hover, #2563eb);
     --border-color: var(--custom-border, #475569);
+    --button-text-color: var(--custom-button-text, #ffffff);
+    --shadow-color: var(--custom-shadow, rgba(0,0,0,0.1));
+    --error-color: var(--custom-error, #dc3545);
+    --error-hover: var(--custom-error-hover, #c82333);
+    --youtube-red: var(--custom-youtube-red, #FF0000);
 }
 
 * {
@@ -398,7 +413,6 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 4px;
 }
-
 .search-song-item {
     display: flex;
     justify-content: space-between;
@@ -420,7 +434,7 @@ body {
 .search-song-item button {
     padding: 5px 10px;
     background-color: var(--accent-color);
-    color: white;
+    color: var(--button-text-color);
     border: none;
     border-radius: 3px;
     cursor: pointer;
@@ -446,6 +460,7 @@ body {
     border-radius: 4px;
     margin: 10px 0;
 }
+
 .search-song-item button:hover {
     background-color: var(--hover-color);
 }
@@ -479,8 +494,8 @@ body {
 
 .playlist-song-item button {
     padding: 5px 10px;
-    background-color: #dc3545;
-    color: white;
+    background-color: var(--error-color);
+    color: var(--button-text-color);
     border: none;
     border-radius: 3px;
     cursor: pointer;
@@ -488,7 +503,7 @@ body {
 }
 
 .playlist-song-item button:hover {
-    background-color: #c82333;
+    background-color: var(--error-hover, #c82333);
 }
 
 .playlist-edit-section {
@@ -501,7 +516,6 @@ body {
 .current-playlist-songs {
     flex: 1;
 }
-
 
 #loopBtn.active {
     color: var(--accent-color) !important;
@@ -519,7 +533,7 @@ body {
     width: 300px;
     height: 100%;
     background-color: var(--bg-secondary);
-    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+    box-shadow: -2px 0 5px var(--shadow-color);
     z-index: 900;
     transition: right 0.3s ease-in-out;
     overflow-y: auto;
@@ -568,19 +582,19 @@ body {
 
 .sidebar-song-item:hover {
     background-color: var(--hover-color);
-    color: white;
+    color: var(--button-text-color);
 }
 
 .sidebar-song-item.active {
     background-color: var(--accent-color);
-    color: white;
+    color: var(--button-text-color);
 }
 
 .youtube-search-suggestion {
     cursor: pointer;
     margin-top: 10px;
     padding: 15px;
-    background-color: var(--background-color);
+    background-color: var(--bg-primary);
     border: 2px dashed var(--accent-color);
     border-radius: 8px;
     text-align: center;
@@ -589,7 +603,7 @@ body {
 
 .youtube-search-suggestion:hover {
     background-color: var(--accent-color);
-    color: white;
+    color: var(--button-text-color);
 }
 
 .search-suggestion-content {
@@ -601,7 +615,7 @@ body {
 }
 
 .search-suggestion-content i.fab.fa-youtube {
-    color: #FF0000;
+    color: var(--youtube-red, #FF0000);
     font-size: 1.5em;
 }
 
@@ -622,10 +636,10 @@ body {
     left: 50%;
     transform: translateX(-50%); 
     min-width: 80px;
-    background-color: var(--background);
+    background-color: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 8px var(--shadow-color);
     z-index: 100;
     flex-direction: column;
     margin-bottom: 5px;
@@ -642,15 +656,17 @@ body {
     cursor: pointer;
     font-size: 14px;
     width: 100%; 
+    color: var(--text-primary);
 }
 
 .speed-option:hover {
     background-color: var(--hover-color);
+    color: var(--button-text-color);
 }
 
 #speedBtn {
     background-color: transparent;
-    color: var(--text-color);
+    color: var(--text-primary);
     border: 1px solid var(--border-color);
     border-radius: 4px;
     padding: 6px 10px;
@@ -660,9 +676,9 @@ body {
     text-align: center;
 }
 
-
 #speedBtn:hover {
     background-color: var(--hover-color);
+    color: var(--button-text-color);
 }
 
 .listening-stats {
@@ -673,10 +689,7 @@ body {
     font-size: 16px; 
     margin-top: -20px; 
     margin-bottom: 10px;
-
 }
-
-
 
 .layout-toggle {
     position: fixed;
@@ -691,15 +704,14 @@ body {
     border-radius: 50%;
     border: none;
     background-color: var(--accent-color);
-    color: var(--text-color);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    color: var(--button-text-color);
+    box-shadow: 0 2px 5px var(--shadow-color);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
 }
-
 .layout-toggle button:hover {
     transform: scale(1.1);
 }
