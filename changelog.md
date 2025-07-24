@@ -203,3 +203,4 @@
 - Adde themes in settings that work can customize almost all colours v28.0.0
 - added debounce saving and reduced dom updates and less frequent display updates to listening time display v28.0.1
 - added ads will add button to disable them, will add feature such that toggling hiding will change size of ads v29.0.0
+- added theme custom import export. added new customizable things, added a new nice looking default style v29.1.0
