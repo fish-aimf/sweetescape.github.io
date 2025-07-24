@@ -103,7 +103,6 @@ class AdvancedMusicPlayer {
           this.loadPlaylists(),
           this.loadSettings(),
           this.loadRecentlyPlayed(),
-          this.loadAdvertisementSettings(),
         ]);
       })
       .then(() => {
