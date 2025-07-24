@@ -3054,37 +3054,143 @@ body:has(#ytPlayer.fullscreen-video) {
     min-height: 100vh;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
-
-.left-banner {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: calc((100vw - 1040px) / 2);
-    height: 75vh;
-    z-index: 1;
+/* Advertisement Settings Toggle Switch */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    margin-left: 10px;
 }
 
-/* Right sidebar banner */
+.toggle-input {
+    display: none;
+}
+
+.toggle-label {
+    display: block;
+    width: 50px;
+    height: 24px;
+    background-color: var(--secondary-bg-color, #475569);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    position: relative;
+}
+
+.toggle-slider {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-input:checked + .toggle-label {
+    background-color: var(--primary-color, #3b82f6);
+}
+
+.toggle-input:checked + .toggle-label .toggle-slider {
+    transform: translateX(26px);
+}
+
+.toggle-label:hover {
+    background-color: var(--hover-color, #2563eb);
+}
+
+.toggle-input:checked + .toggle-label:hover {
+    background-color: var(--primary-color, #3b82f6);
+    filter: brightness(1.1);
+}
+
+/* Settings section styling */
+.settings-section {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color, #475569);
+}
+
+.settings-section:last-child {
+    border-bottom: none;
+}
+
+.settings-section h3 {
+    color: var(--primary-text-color, #e2e8f0);
+    margin-bottom: 15px;
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+.setting-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.setting-group label {
+    color: var(--primary-text-color, #e2e8f0);
+    font-weight: 500;
+    min-width: 150px;
+}
+
+.setting-description {
+    color: var(--secondary-text-color, #94a3b8);
+    font-size: 0.9em;
+    margin: 5px 0 0 0;
+    flex-basis: 100%;
+    font-style: italic;
+}
+
+/* Coming soon placeholder styling */
+.coming-soon {
+    color: var(--secondary-text-color, #94a3b8);
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+    background-color: var(--secondary-bg-color, #334155);
+    border-radius: 8px;
+    border: 1px dashed var(--border-color, #475569);
+}
+
+/* Advertisement banners - hide by default */
+.left-banner,
 .right-banner {
     position: fixed;
     top: 0;
-    right: 0;
     width: calc((100vw - 1040px) / 2);
     height: 75vh;
     z-index: 1;
+    display: none; /* Hidden by default */
 }
 
-/* Hide banners on smaller screens */
+.left-banner {
+    left: 0;
+}
+
+.right-banner {
+    right: 0;
+}
+
+/* Show banners when ads are enabled */
+.ads-enabled .left-banner,
+.ads-enabled .right-banner {
+    display: block;
+}
+
+/* Hide banners on smaller screens regardless of setting */
 @media (max-width: 1080px) {
     .left-banner,
     .right-banner {
-        display: none;
+        display: none !important;
     }
 }
 
 /* Expanded banner state when control bar is hidden */
-.left-banner.expanded,
-.right-banner.expanded {
+.ads-enabled .left-banner.expanded,
+.ads-enabled .right-banner.expanded {
     height: 100vh;
 }
 
