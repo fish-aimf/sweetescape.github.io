@@ -228,7 +228,14 @@ class AdvancedMusicPlayer {
   textSecondaryColorPicker: document.getElementById('textSecondaryColorPicker'),
   hoverColorPicker: document.getElementById('hoverColorPicker'),
   borderColorPicker: document.getElementById('borderColorPicker'),
-  accentColorPicker: document.getElementById('accentColorPicker')
+  accentColorPicker: document.getElementById('accentColorPicker'),
+      themeImportText: document.getElementById("themeImportText"),
+        buttonTextColorPicker: document.getElementById("buttonTextColorPicker"),
+        shadowColorPicker: document.getElementById("shadowColorPicker"),
+        shadowOpacity: document.getElementById("shadowOpacity"),
+        errorColorPicker: document.getElementById("errorColorPicker"),
+        errorHoverColorPicker: document.getElementById("errorHoverColorPicker"),
+        youtubeRedColorPicker: document.getElementById("youtubeRedColorPicker")
     };
 
     if (this.elements.speedBtn) {
@@ -7148,55 +7155,71 @@ initializeTheme() {
   };
 }
 
-// Enhanced method to save all custom theme colors
 handleSaveCustomTheme() {
-  const customColors = {
-    primary: this.elements.primaryColorPicker.value,
-    background: this.elements.backgroundColorPicker.value,
-    secondary: this.elements.secondaryColorPicker?.value || '#334155',
-    textPrimary: this.elements.textPrimaryColorPicker?.value || '#e2e8f0',
-    textSecondary: this.elements.textSecondaryColorPicker?.value || '#94a3b8',
-    hover: this.elements.hoverColorPicker?.value || '#2563eb',
-    border: this.elements.borderColorPicker?.value || '#475569',
-    accent: this.elements.accentColorPicker?.value || this.elements.primaryColorPicker.value
-  };
-  
-  // Apply all custom colors to CSS variables
-  this.applyCustomColors(customColors);
-  document.documentElement.setAttribute("data-theme", "custom");
-  
-  // Save all colors to database
-  const savePromises = [
-    this.saveSetting("customPrimary", customColors.primary),
-    this.saveSetting("customBackground", customColors.background),
-    this.saveSetting("customSecondary", customColors.secondary),
-    this.saveSetting("customTextPrimary", customColors.textPrimary),
-    this.saveSetting("customTextSecondary", customColors.textSecondary),
-    this.saveSetting("customHover", customColors.hover),
-    this.saveSetting("customBorder", customColors.border),
-    this.saveSetting("customAccent", customColors.accent),
-    this.saveSetting("themeMode", "custom")
-  ];
-  
-  Promise.all(savePromises).then(() => {
-    console.log("Custom theme saved successfully");
-    this.showNotification("Custom theme saved!", "success");
-  }).catch((error) => {
-    console.error("Error saving custom theme:", error);
-    this.showNotification("Error saving theme", "error");
-  });
+    const shadowColor = this.elements.shadowColorPicker.value;
+    const shadowOpacity = this.elements.shadowOpacity.value;
+    const shadowRgba = this.hexToRgba(shadowColor, shadowOpacity);
+    
+    const customColors = {
+        primary: this.elements.primaryColorPicker.value,
+        background: this.elements.backgroundColorPicker.value,
+        secondary: this.elements.secondaryColorPicker?.value || '#334155',
+        textPrimary: this.elements.textPrimaryColorPicker?.value || '#e2e8f0',
+        textSecondary: this.elements.textSecondaryColorPicker?.value || '#94a3b8',
+        hover: this.elements.hoverColorPicker?.value || '#2563eb',
+        border: this.elements.borderColorPicker?.value || '#475569',
+        accent: this.elements.accentColorPicker?.value || this.elements.primaryColorPicker.value,
+        buttonText: this.elements.buttonTextColorPicker?.value || '#ffffff',
+        shadow: shadowRgba,
+        error: this.elements.errorColorPicker?.value || '#dc3545',
+        errorHover: this.elements.errorHoverColorPicker?.value || '#c82333',
+        youtubeRed: this.elements.youtubeRedColorPicker?.value || '#FF0000'
+    };
+    
+    // Apply all custom colors to CSS variables
+    this.applyCustomColors(customColors);
+    document.documentElement.setAttribute("data-theme", "custom");
+    
+    // Save all colors to database
+    const savePromises = [
+        this.saveSetting("customPrimary", customColors.primary),
+        this.saveSetting("customBackground", customColors.background),
+        this.saveSetting("customSecondary", customColors.secondary),
+        this.saveSetting("customTextPrimary", customColors.textPrimary),
+        this.saveSetting("customTextSecondary", customColors.textSecondary),
+        this.saveSetting("customHover", customColors.hover),
+        this.saveSetting("customBorder", customColors.border),
+        this.saveSetting("customAccent", customColors.accent),
+        this.saveSetting("customButtonText", customColors.buttonText),
+        this.saveSetting("customShadow", customColors.shadow),
+        this.saveSetting("customError", customColors.error),
+        this.saveSetting("customErrorHover", customColors.errorHover),
+        this.saveSetting("customYoutubeRed", customColors.youtubeRed),
+        this.saveSetting("themeMode", "custom")
+    ];
+    
+    Promise.all(savePromises).then(() => {
+        console.log("Custom theme saved successfully");
+        this.showNotification("Custom theme saved!", "success");
+    }).catch((error) => {
+        console.error("Error saving custom theme:", error);
+        this.showNotification("Error saving theme", "error");
+    });
 }
-
-// Helper method to apply custom colors
 applyCustomColors(colors) {
-  document.documentElement.style.setProperty('--custom-primary', colors.primary);
-  document.documentElement.style.setProperty('--custom-background', colors.background);
-  document.documentElement.style.setProperty('--custom-secondary', colors.secondary);
-  document.documentElement.style.setProperty('--custom-text-primary', colors.textPrimary);
-  document.documentElement.style.setProperty('--custom-text-secondary', colors.textSecondary);
-  document.documentElement.style.setProperty('--custom-hover', colors.hover);
-  document.documentElement.style.setProperty('--custom-border', colors.border);
-  document.documentElement.style.setProperty('--custom-accent', colors.accent);
+    document.documentElement.style.setProperty('--custom-primary', colors.primary);
+    document.documentElement.style.setProperty('--custom-background', colors.background);
+    document.documentElement.style.setProperty('--custom-secondary', colors.secondary);
+    document.documentElement.style.setProperty('--custom-text-primary', colors.textPrimary);
+    document.documentElement.style.setProperty('--custom-text-secondary', colors.textSecondary);
+    document.documentElement.style.setProperty('--custom-hover', colors.hover);
+    document.documentElement.style.setProperty('--custom-border', colors.border);
+    document.documentElement.style.setProperty('--custom-accent', colors.accent);
+    document.documentElement.style.setProperty('--custom-button-text', colors.buttonText);
+    document.documentElement.style.setProperty('--custom-shadow', colors.shadow);
+    document.documentElement.style.setProperty('--custom-error', colors.error);
+    document.documentElement.style.setProperty('--custom-error-hover', colors.errorHover);
+    document.documentElement.style.setProperty('--custom-youtube-red', colors.youtubeRed);
 }
 loadCustomTheme() {
   const transaction = this.db.transaction(["settings"], "readonly");
@@ -7205,8 +7228,9 @@ loadCustomTheme() {
   const colorKeys = [
     'customPrimary', 'customBackground', 'customSecondary',
     'customTextPrimary', 'customTextSecondary', 'customHover',
-    'customBorder', 'customAccent'
-  ];
+    'customBorder', 'customAccent', 'customButtonText',
+    'customShadow', 'customError', 'customErrorHover', 'customYoutubeRed'
+];
   
   const requests = colorKeys.map(key => {
     const request = store.get(key);
@@ -7264,8 +7288,9 @@ loadCustomThemeColors() {
   const colorKeys = [
     'customPrimary', 'customBackground', 'customSecondary',
     'customTextPrimary', 'customTextSecondary', 'customHover',
-    'customBorder', 'customAccent'
-  ];
+    'customBorder', 'customAccent', 'customButtonText',
+    'customShadow', 'customError', 'customErrorHover', 'customYoutubeRed'
+];
   
   colorKeys.forEach(key => {
     const request = store.get(key);
@@ -7459,6 +7484,89 @@ showNotification(message, type = "info") {
     notification.style.opacity = '0';
     setTimeout(() => document.body.removeChild(notification), 300);
   }, 3000);
+}
+
+  // Export theme to clipboard
+exportTheme() {
+    const themeData = {
+        primary: this.elements.primaryColorPicker.value,
+        background: this.elements.backgroundColorPicker.value,
+        secondary: this.elements.secondaryColorPicker.value,
+        textPrimary: this.elements.textPrimaryColorPicker.value,
+        textSecondary: this.elements.textSecondaryColorPicker.value,
+        hover: this.elements.hoverColorPicker.value,
+        border: this.elements.borderColorPicker.value,
+        accent: this.elements.accentColorPicker.value,
+        buttonText: this.elements.buttonTextColorPicker.value,
+        shadow: this.elements.shadowColorPicker.value,
+        shadowOpacity: this.elements.shadowOpacity.value,
+        error: this.elements.errorColorPicker.value,
+        errorHover: this.elements.errorHoverColorPicker.value,
+        youtubeRed: this.elements.youtubeRedColorPicker.value
+    };
+    
+    const themeString = JSON.stringify(themeData, null, 2);
+    
+    navigator.clipboard.writeText(themeString).then(() => {
+        this.showNotification("Theme exported to clipboard!", "success");
+    }).catch(err => {
+        console.error('Failed to copy theme: ', err);
+        this.showNotification("Failed to copy theme", "error");
+    });
+}
+
+// Import theme from textarea
+importTheme() {
+    const themeText = this.elements.themeImportText.value.trim();
+    
+    if (!themeText) {
+        this.showNotification("Please paste a theme code first", "error");
+        return;
+    }
+    
+    try {
+        const themeData = JSON.parse(themeText);
+        this.applyImportedTheme(themeData);
+        this.showNotification("Theme imported successfully!", "success");
+        this.elements.themeImportText.value = '';
+    } catch (error) {
+        console.error('Failed to parse theme:', error);
+        this.showNotification("Invalid theme format", "error");
+    }
+}
+
+// Apply imported theme data
+applyImportedTheme(themeData) {
+    // Update color pickers with imported values
+    if (themeData.primary) this.elements.primaryColorPicker.value = themeData.primary;
+    if (themeData.background) this.elements.backgroundColorPicker.value = themeData.background;
+    if (themeData.secondary) this.elements.secondaryColorPicker.value = themeData.secondary;
+    if (themeData.textPrimary) this.elements.textPrimaryColorPicker.value = themeData.textPrimary;
+    if (themeData.textSecondary) this.elements.textSecondaryColorPicker.value = themeData.textSecondary;
+    if (themeData.hover) this.elements.hoverColorPicker.value = themeData.hover;
+    if (themeData.border) this.elements.borderColorPicker.value = themeData.border;
+    if (themeData.accent) this.elements.accentColorPicker.value = themeData.accent;
+    if (themeData.buttonText) this.elements.buttonTextColorPicker.value = themeData.buttonText;
+    if (themeData.shadow) this.elements.shadowColorPicker.value = themeData.shadow;
+    if (themeData.shadowOpacity) this.elements.shadowOpacity.value = themeData.shadowOpacity;
+    if (themeData.error) this.elements.errorColorPicker.value = themeData.error;
+    if (themeData.errorHover) this.elements.errorHoverColorPicker.value = themeData.errorHover;
+    if (themeData.youtubeRed) this.elements.youtubeRedColorPicker.value = themeData.youtubeRed;
+    
+    // Apply the theme
+    this.handleSaveCustomTheme();
+}
+
+// Helper method to convert hex to rgba
+hexToRgba(hex, opacity) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (result) {
+        const r = parseInt(result[1], 16);
+        const g = parseInt(result[2], 16);
+        const b = parseInt(result[3], 16);
+        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    }
+    return `rgba(0, 0, 0, ${opacity})`;
 }
     
 
