@@ -4144,13 +4144,21 @@ removeGhostPreview() {
       document.querySelector(".player-controls").parentElement;
     const layoutToggleBtn = document.querySelector(".layout-toggle-button");
     const isVisible = targetElement.style.visibility !== "hidden";
-
+    
+    // Get banner elements
+    const leftBanner = document.querySelector('.left-banner');
+    const rightBanner = document.querySelector('.right-banner');
+    
     if (isVisible) {
       targetElement.style.visibility = "hidden";
       targetElement.style.position = "absolute";
       targetElement.style.pointerEvents = "none";
       localStorage.setItem("controlBarVisible", "false");
-
+      
+      // Expand banners to 100vh when control bar is hidden
+      if (leftBanner) leftBanner.classList.add('expanded');
+      if (rightBanner) rightBanner.classList.add('expanded');
+      
       if (layoutToggleBtn && !targetElement.contains(layoutToggleBtn)) {
         layoutToggleBtn.style.visibility = "visible";
         layoutToggleBtn.style.position = "";
@@ -4161,8 +4169,12 @@ removeGhostPreview() {
       targetElement.style.position = "";
       targetElement.style.pointerEvents = "auto";
       localStorage.setItem("controlBarVisible", "true");
+      
+      // Return banners to 75vh when control bar is visible
+      if (leftBanner) leftBanner.classList.remove('expanded');
+      if (rightBanner) rightBanner.classList.remove('expanded');
     }
-  }
+}
   togglePlaylistLoop() {
     this.isPlaylistLooping = !this.isPlaylistLooping;
     this.updatePlaylistLoopButton();
