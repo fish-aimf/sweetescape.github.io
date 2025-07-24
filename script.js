@@ -35,6 +35,7 @@ class AdvancedMusicPlayer {
     this.isLyricsFullscreen = false;
     this.fullscreenYtPlayer = null;
     this.fullscreenLyricsInterval = null;
+    this.adsEnabled = false; 
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
       'https://i2.res.24o.it/pdf2010/Editrice/ILSOLE24ORE/ILSOLE24ORE/Online/_Oggetti_Embedded/Documenti/2025/07/12/Preliminary%20Report%20VT.pdf?utm_source=chatgpt.com' ,
@@ -102,6 +103,7 @@ class AdvancedMusicPlayer {
           this.loadPlaylists(),
           this.loadSettings(),
           this.loadRecentlyPlayed(),
+          this.loadAdvertisementSettings()
         ]);
       })
       .then(() => {
@@ -235,7 +237,8 @@ class AdvancedMusicPlayer {
         shadowOpacity: document.getElementById("shadowOpacity"),
         errorColorPicker: document.getElementById("errorColorPicker"),
         errorHoverColorPicker: document.getElementById("errorHoverColorPicker"),
-        youtubeRedColorPicker: document.getElementById("youtubeRedColorPicker")
+        youtubeRedColorPicker: document.getElementById("youtubeRedColorPicker"),
+      adsToggle: document.getElementById("adsToggle")
     };
 
     if (this.elements.speedBtn) {
@@ -416,7 +419,8 @@ class AdvancedMusicPlayer {
         [this.elements.settingsCloseBtn, "click", this.handleCloseSettings],
         [this.elements.settingsModal, "click", this.handleSettingsModalClick],
         [this.elements.themeMode, "change", this.handleThemeModeChange],
-        [this.elements.saveCustomTheme, "click", this.handleSaveCustomTheme]
+        [this.elements.saveCustomTheme, "click", this.handleSaveCustomTheme],
+      [this.elements.adsToggle, "change", this.handleAdsToggle.bind(this)]
     ];
     
     settingsEventBindings.forEach(([element, event, handler]) => {
@@ -7100,7 +7104,38 @@ setupChangelogModal() {
         });
     }
 }
-// Settings Modal Methods
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //settings
 handleOpenSettings() {
     this.elements.settingsModal.style.display = "block";
     document.body.style.overflow = "hidden";
@@ -7120,9 +7155,16 @@ handleSettingsModalClick(event) {
 
 
 initializeSettingsContent() {
-  this.loadThemeMode();
-  this.loadCustomThemeColors(); // Load all custom colors when settings modal opens
-  console.log("Settings modal opened - theme customization ready");
+    this.loadThemeMode();
+    this.loadCustomThemeColors();
+    this.loadAdvertisementSettingsInModal(); // Load advertisement settings
+    console.log("Settings modal opened - all settings loaded");
+}
+
+  loadAdvertisementSettingsInModal() {
+    if (this.elements.adsToggle) {
+        this.elements.adsToggle.checked = this.adsEnabled;
+    }
 }
 
 loadThemeMode() {
@@ -7579,6 +7621,106 @@ hexToRgba(hex, opacity) {
         return `rgba(${r}, ${g}, ${b}, ${opacity})`;
     }
     return `rgba(0, 0, 0, ${opacity})`;
+}
+  async loadAdvertisementSettings() {
+    try {
+        const transaction = this.db.transaction(["userSettings"], "readonly");
+        const store = transaction.objectStore("userSettings");
+        const request = store.get("advertisement");
+        
+        return new Promise((resolve) => {
+            request.onsuccess = (event) => {
+                const result = event.target.result;
+                if (result && result.settings) {
+                    this.adsEnabled = result.settings.enabled || false;
+                } else {
+                    this.adsEnabled = false; // Default to disabled
+                }
+                this.updateAdvertisementDisplay();
+                resolve();
+            };
+            
+            request.onerror = () => {
+                this.adsEnabled = false;
+                this.updateAdvertisementDisplay();
+                resolve();
+            };
+        });
+    } catch (error) {
+        console.error("Error loading advertisement settings:", error);
+        this.adsEnabled = false;
+        this.updateAdvertisementDisplay();
+    }
+}
+
+async saveAdvertisementSettings() {
+    try {
+        const transaction = this.db.transaction(["userSettings"], "readwrite");
+        const store = transaction.objectStore("userSettings");
+        
+        const settingsData = {
+            category: "advertisement",
+            settings: {
+                enabled: this.adsEnabled,
+                lastUpdated: new Date().toISOString()
+            }
+        };
+        
+        store.put(settingsData);
+        
+        return new Promise((resolve, reject) => {
+            transaction.oncomplete = () => {
+                console.log("Advertisement settings saved successfully");
+                resolve();
+            };
+            
+            transaction.onerror = (event) => {
+                console.error("Error saving advertisement settings:", event.target.error);
+                reject(event.target.error);
+            };
+        });
+    } catch (error) {
+        console.error("Error in saveAdvertisementSettings:", error);
+    }
+}
+
+handleAdsToggle(event) {
+    this.adsEnabled = event.target.checked;
+    this.updateAdvertisementDisplay();
+    this.saveAdvertisementSettings();
+    
+    console.log(`Advertisements ${this.adsEnabled ? 'enabled' : 'disabled'}`);
+}
+
+updateAdvertisementDisplay() {
+    // Update the body class to show/hide advertisements
+    if (this.adsEnabled) {
+        document.body.classList.add('ads-enabled');
+    } else {
+        document.body.classList.remove('ads-enabled');
+    }
+    
+    // Update the toggle switch in the settings modal
+    if (this.elements.adsToggle) {
+        this.elements.adsToggle.checked = this.adsEnabled;
+    }
+    
+    // Force refresh of ad iframes if they're enabled
+    if (this.adsEnabled) {
+        this.refreshAdvertisements();
+    }
+}
+
+refreshAdvertisements() {
+    // Refresh advertisement iframes to ensure they load properly
+    const adFrames = document.querySelectorAll('.left-banner iframe, .right-banner iframe');
+    adFrames.forEach(frame => {
+        const src = frame.src;
+        frame.src = '';
+        setTimeout(() => {
+            frame.src = src;
+        }, 100);
+    });
 }
     
 
