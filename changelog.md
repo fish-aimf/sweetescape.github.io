@@ -204,3 +204,4 @@
 - added debounce saving and reduced dom updates and less frequent display updates to listening time display v28.0.1
 - added ads will add button to disable them, will add feature such that toggling hiding will change size of ads v29.0.0
 - added theme custom import export. added new customizable things, added a new nice looking default style v29.1.0
+- made it such that toggling control bar visible will change the height of the ad banner.  v29.2.0
