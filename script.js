@@ -118,6 +118,8 @@ class AdvancedMusicPlayer {
         this.setupLyricsTabContextMenu();
         this.initializeFullscreenLyrics();
         
+        this.initializeAdvertisementSettings();
+        
       })
       .catch((error) => {
         console.error("Error initializing music player:", error);
@@ -7160,7 +7162,7 @@ initializeSettingsContent() {
     console.log("Settings modal opened - all settings loaded");
 }
 
-  loadAdvertisementSettingsInModal() {
+ loadAdvertisementSettingsInModal() {
     if (this.elements.adsToggle) {
         this.elements.adsToggle.checked = this.adsEnabled;
     }
@@ -7621,8 +7623,16 @@ hexToRgba(hex, opacity) {
     }
     return `rgba(0, 0, 0, ${opacity})`;
 }
-  async loadAdvertisementSettings() {
+async loadAdvertisementSettings() {
     try {
+        // Check if database and userSettings store exist
+        if (!this.db || !this.db.objectStoreNames.contains("userSettings")) {
+            console.log("userSettings store not found, using default advertisement settings");
+            this.adsEnabled = false;
+            this.updateAdvertisementDisplay();
+            return;
+        }
+
         const transaction = this.db.transaction(["userSettings"], "readonly");
         const store = transaction.objectStore("userSettings");
         const request = store.get("advertisement");
@@ -7640,6 +7650,7 @@ hexToRgba(hex, opacity) {
             };
             
             request.onerror = () => {
+                console.log("Error reading advertisement settings, using default");
                 this.adsEnabled = false;
                 this.updateAdvertisementDisplay();
                 resolve();
@@ -7654,6 +7665,18 @@ hexToRgba(hex, opacity) {
 
 async saveAdvertisementSettings() {
     try {
+        // Check if database exists
+        if (!this.db) {
+            console.error("Database not available for saving advertisement settings");
+            return;
+        }
+
+        // Check if userSettings store exists, if not create it
+        if (!this.db.objectStoreNames.contains("userSettings")) {
+            console.log("userSettings store doesn't exist, will be created on next database upgrade");
+            return;
+        }
+
         const transaction = this.db.transaction(["userSettings"], "readwrite");
         const store = transaction.objectStore("userSettings");
         
@@ -7665,15 +7688,15 @@ async saveAdvertisementSettings() {
             }
         };
         
-        store.put(settingsData);
+        const request = store.put(settingsData);
         
         return new Promise((resolve, reject) => {
-            transaction.oncomplete = () => {
+            request.onsuccess = () => {
                 console.log("Advertisement settings saved successfully");
                 resolve();
             };
             
-            transaction.onerror = (event) => {
+            request.onerror = (event) => {
                 console.error("Error saving advertisement settings:", event.target.error);
                 reject(event.target.error);
             };
@@ -7682,6 +7705,8 @@ async saveAdvertisementSettings() {
         console.error("Error in saveAdvertisementSettings:", error);
     }
 }
+
+
 
 handleAdsToggle(event) {
     this.adsEnabled = event.target.checked;
@@ -7721,6 +7746,28 @@ refreshAdvertisements() {
         }, 100);
     });
 }
+  initializeAdvertisementSettings() {
+    // Load advertisement settings after all other initialization
+    this.loadAdvertisementSettings().catch(error => {
+        console.error("Failed to load advertisement settings:", error);
+        this.adsEnabled = false;
+        this.updateAdvertisementDisplay();
+    });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
     
 
 
