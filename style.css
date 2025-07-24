@@ -256,7 +256,7 @@ body {
     padding: 10px;
     box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
     border-top: 1px solid var(--border-color);
-    z-index: 10; /* Higher than banners (z-index: 1) */
+    z-index: 10; 
 }
 
 .now-playing-info {
@@ -3055,7 +3055,6 @@ body:has(#ytPlayer.fullscreen-video) {
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-/* Left sidebar banner */
 .left-banner {
     position: fixed;
     top: 0;
@@ -3083,6 +3082,11 @@ body:has(#ytPlayer.fullscreen-video) {
     }
 }
 
+/* Expanded banner state when control bar is hidden */
+.left-banner.expanded,
+.right-banner.expanded {
+    height: 100vh;
+}
 
 .theme-import-export {
     margin-top: 20px;
