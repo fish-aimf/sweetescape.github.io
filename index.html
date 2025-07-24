@@ -466,11 +466,49 @@
     <label for="accentColorPicker">Accent Color:</label>
     <input type="color" id="accentColorPicker" value="#3b82f6">
   </div>
-  
+<div class="color-picker-group">
+  <label for="buttonTextColorPicker">Button Text Color:</label>
+  <input type="color" id="buttonTextColorPicker" value="#ffffff">
+</div>
+
+<div class="color-picker-group">
+  <label for="shadowColorPicker">Shadow Color:</label>
+  <input type="color" id="shadowColorPicker" value="#000000">
+  <input type="range" id="shadowOpacity" min="0" max="1" step="0.1" value="0.1">
+  <span>Opacity</span>
+</div>
+
+<div class="color-picker-group">
+  <label for="errorColorPicker">Error Color:</label>
+  <input type="color" id="errorColorPicker" value="#dc3545">
+</div>
+
+<div class="color-picker-group">
+  <label for="errorHoverColorPicker">Error Hover Color:</label>
+  <input type="color" id="errorHoverColorPicker" value="#c82333">
+</div>
+
+<div class="color-picker-group">
+  <label for="youtubeRedColorPicker">YouTube Red:</label>
+  <input type="color" id="youtubeRedColorPicker" value="#FF0000">
+</div>
   <div class="theme-buttons">
     <button onclick="musicPlayer.handleSaveCustomTheme()">Save Theme</button>
     <button onclick="musicPlayer.resetCustomTheme()">Reset to Defaults</button>
   </div>
+      <div class="theme-import-export">
+  <h4>Import/Export Theme</h4>
+  
+  <div class="import-export-group">
+    <button onclick="musicPlayer.exportTheme()">Export Theme to Clipboard</button>
+    <button onclick="musicPlayer.importTheme()">Import Theme</button>
+  </div>
+  
+      <div class="theme-input-group">
+        <label for="themeImportText">Paste Theme Code:</label>
+        <textarea id="themeImportText" placeholder="Paste your theme code here..." rows="4"></textarea>
+      </div>
+    </div>
 </div>
 </div>
             </div>
