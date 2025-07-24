@@ -238,7 +238,8 @@ class AdvancedMusicPlayer {
         errorColorPicker: document.getElementById("errorColorPicker"),
         errorHoverColorPicker: document.getElementById("errorHoverColorPicker"),
         youtubeRedColorPicker: document.getElementById("youtubeRedColorPicker"),
-      adsToggle: document.getElementById("adsToggle")
+      adsToggle: document.getElementById("adsToggle"),
+      saveCustomTheme: document.getElementById("saveCustomTheme")
     };
 
     if (this.elements.speedBtn) {
@@ -298,6 +299,7 @@ class AdvancedMusicPlayer {
     this.handleSongUrlInput = this.validateYouTubeUrl.bind(this);
     this.handleSongNameRightClick = this.handleSongNameRightClick.bind(this);
     this.handleAddSong = this.addSongToLibrary.bind(this);
+    
     this.handleSongUrlKeydown = (e) => {
       if (e.key === "Enter") {
         this.addSongToLibrary();
