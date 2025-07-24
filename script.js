@@ -117,7 +117,6 @@ class AdvancedMusicPlayer {
         this.renderAdditionalDetails();
         this.setupLyricsTabContextMenu();
         this.initializeFullscreenLyrics();
-        
         this.initializeAdvertisementSettings();
         
       })
@@ -7162,11 +7161,12 @@ initializeSettingsContent() {
     console.log("Settings modal opened - all settings loaded");
 }
 
- loadAdvertisementSettingsInModal() {
+loadAdvertisementSettingsInModal() {
     if (this.elements.adsToggle) {
         this.elements.adsToggle.checked = this.adsEnabled;
     }
 }
+
 
 loadThemeMode() {
   if (!this.db) return;
@@ -7625,23 +7625,23 @@ hexToRgba(hex, opacity) {
 }
 async loadAdvertisementSettings() {
     try {
-        // Check if database and userSettings store exist
-        if (!this.db || !this.db.objectStoreNames.contains("userSettings")) {
-            console.log("userSettings store not found, using default advertisement settings");
+        // Check if database and settings store exist
+        if (!this.db || !this.db.objectStoreNames.contains("settings")) {
+            console.log("Settings store not found, using default advertisement settings");
             this.adsEnabled = false;
             this.updateAdvertisementDisplay();
             return;
         }
 
-        const transaction = this.db.transaction(["userSettings"], "readonly");
-        const store = transaction.objectStore("userSettings");
-        const request = store.get("advertisement");
+        const transaction = this.db.transaction(["settings"], "readonly");
+        const store = transaction.objectStore("settings");
+        const request = store.get("advertisementEnabled");
         
         return new Promise((resolve) => {
             request.onsuccess = (event) => {
                 const result = event.target.result;
-                if (result && result.settings) {
-                    this.adsEnabled = result.settings.enabled || false;
+                if (result && typeof result.value !== 'undefined') {
+                    this.adsEnabled = result.value;
                 } else {
                     this.adsEnabled = false; // Default to disabled
                 }
@@ -7671,28 +7671,26 @@ async saveAdvertisementSettings() {
             return;
         }
 
-        // Check if userSettings store exists, if not create it
-        if (!this.db.objectStoreNames.contains("userSettings")) {
-            console.log("userSettings store doesn't exist, will be created on next database upgrade");
+        // Check if settings store exists
+        if (!this.db.objectStoreNames.contains("settings")) {
+            console.error("Settings store doesn't exist");
             return;
         }
 
-        const transaction = this.db.transaction(["userSettings"], "readwrite");
-        const store = transaction.objectStore("userSettings");
+        const transaction = this.db.transaction(["settings"], "readwrite");
+        const store = transaction.objectStore("settings");
         
         const settingsData = {
-            category: "advertisement",
-            settings: {
-                enabled: this.adsEnabled,
-                lastUpdated: new Date().toISOString()
-            }
+            name: "advertisementEnabled",
+            value: this.adsEnabled,
+            lastUpdated: new Date().toISOString()
         };
         
         const request = store.put(settingsData);
         
         return new Promise((resolve, reject) => {
             request.onsuccess = () => {
-                console.log("Advertisement settings saved successfully");
+                console.log("Advertisement settings saved successfully:", this.adsEnabled);
                 resolve();
             };
             
@@ -7705,8 +7703,6 @@ async saveAdvertisementSettings() {
         console.error("Error in saveAdvertisementSettings:", error);
     }
 }
-
-
 
 handleAdsToggle(event) {
     this.adsEnabled = event.target.checked;
@@ -7746,7 +7742,8 @@ refreshAdvertisements() {
         }, 100);
     });
 }
-  initializeAdvertisementSettings() {
+
+initializeAdvertisementSettings() {
     // Load advertisement settings after all other initialization
     this.loadAdvertisementSettings().catch(error => {
         console.error("Failed to load advertisement settings:", error);
