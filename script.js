@@ -423,13 +423,13 @@ class AdvancedMusicPlayer {
       [this.elements.adsToggle, "change", this.handleAdsToggle.bind(this)]
     ];
     
-    settingsEventBindings.forEach(([element, event, handler]) => {
-        if (element) {
-            element.addEventListener(event, handler.bind(this));
-        } else {
-            console.warn("Settings element not found for event binding");
-        }
-    });
+settingsEventBindings.forEach(([element, event, handler], index) => {
+    if (element) {
+        element.addEventListener(event, handler.bind(this));
+    } else {
+        console.warn(`Settings element not found for event binding at index ${index}`);
+    }
+});
   }
 
   setupKeyboardControls() {
