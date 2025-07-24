@@ -3082,3 +3082,43 @@ body:has(#ytPlayer.fullscreen-video) {
         display: none;
     }
 }
+
+
+.theme-import-export {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.import-export-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.theme-input-group {
+    margin-bottom: 15px;
+}
+
+.theme-input-group textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-family: monospace;
+    font-size: 12px;
+    resize: vertical;
+}
+
+.color-picker-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.color-picker-group input[type="range"] {
+    width: 60px;
+}
