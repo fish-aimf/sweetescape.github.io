@@ -1,12 +1,12 @@
 Sweetescape, an alternative to spotify and independantly developed music player that stores your songs in your indexed.db
 
--This website requires an internet connection to function and stores songs as youtube urls in indexed.db
+- This website requires an internet connection to function and stores songs as youtube urls in indexed.db
 
 - Please don't sue me. this is just a passion project.
 
--Oops didnt make any instructions but im sure its pretty straightforward.
+- Oops didnt make any instructions but im sure its pretty straightforward.
 
--Packed full of features basically almost everything can be double clicked/ rightclicked/ longclicked
+- Packed full of features basically almost everything can be double clicked/ rightclicked/ longclicked
 
 - 8 months in the making.
 
