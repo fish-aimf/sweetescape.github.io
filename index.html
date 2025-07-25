@@ -412,130 +412,150 @@
         </div>
         <div class="settings-modal-body">
             <div id="settingsContent" class="settings-content">
-                            <!--- the form--->
-                <div class = "settings-section">
-                    <h3>Feedback<\h3>
-                    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd_TCuV0fb6j0Psu2-QowYAlK440IOd4f1XxhzswTfWOkLHyw/viewform?embedded=true" width="640" height="656" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
-                    <div>
-                <!-- Advertisement Settings Section -->
-                <div class="settings-section">
-                    <h3>Advertisement Settings</h3>
-                    
-                    <div class="setting-group">
-                        <label for="adsToggle">Enable Advertisements:</label>
-                        <div class="toggle-switch">
-                            <input type="checkbox" id="adsToggle" class="toggle-input">
-                            <label for="adsToggle" class="toggle-label">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                        <p class="setting-description">Turning on advertisements won't even give me a hundredth of a cent</p>
+                
+                <!-- Collapsible Feedback Section -->
+                <div class="settings-section collapsible-section">
+                    <div class="section-header" data-section="feedback">
+                        <h3>Feedback</h3>
+                        <i class="fas fa-chevron-down section-arrow"></i>
+                    </div>
+                    <div class="section-content" id="feedbackContent">
+                        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd_TCuV0fb6j0Psu2-QowYAlK440IOd4f1XxhzswTfWOkLHyw/viewform?embedded=true" width="640" height="656" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
                     </div>
                 </div>
 
-                <!-- Theme Settings Section -->
-                <div class="settings-section">
-                    <h3>Theme Settings</h3>
-                    
-                    <div class="setting-group">
-                        <label>Theme Mode:</label>
-                        <select id="themeMode">
-                            <option value="light">Light</option>
-                            <option value="dark">Dark</option>
-                            <option value="custom">Custom</option>
-                        </select>
+                <!-- Collapsible Advertisement Settings Section -->
+                <div class="settings-section collapsible-section">
+                    <div class="section-header" data-section="advertisement">
+                        <h3>Advertisement Settings</h3>
+                        <i class="fas fa-chevron-down section-arrow"></i>
                     </div>
-                    
-                    <div class="custom-theme-section" id="customThemeSection">
-                        <h3>Customize Colors</h3>
-                        
-                        <div class="color-picker-group">
-                            <label for="primaryColorPicker">Primary Color:</label>
-                            <input type="color" id="primaryColorPicker" value="#3b82f6">
+                    <div class="section-content" id="advertisementContent">
+                        <div class="setting-group">
+                            <label for="adsToggle">Enable Advertisements:</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="adsToggle" class="toggle-input">
+                                <label for="adsToggle" class="toggle-label">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <p class="setting-description">Turning on advertisements won't even give me a hundredth of a cent</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collapsible Theme Settings Section -->
+                <div class="settings-section collapsible-section">
+                    <div class="section-header" data-section="theme">
+                        <h3>Theme Settings</h3>
+                        <i class="fas fa-chevron-down section-arrow"></i>
+                    </div>
+                    <div class="section-content" id="themeContent">
+                        <div class="setting-group">
+                            <label>Theme Mode:</label>
+                            <select id="themeMode">
+                                <option value="light">Light</option>
+                                <option value="dark">Dark</option>
+                                <option value="custom">Custom</option>
+                            </select>
                         </div>
                         
-                        <div class="color-picker-group">
-                            <label for="backgroundColorPicker">Background Color:</label>
-                            <input type="color" id="backgroundColorPicker" value="#1e293b">
-                        </div>
-                        
-                        <div class="color-picker-group">
-                            <label for="secondaryColorPicker">Secondary Background:</label>
-                            <input type="color" id="secondaryColorPicker" value="#334155">
-                        </div>
-                        
-                        <div class="color-picker-group">
-                            <label for="textPrimaryColorPicker">Primary Text:</label>
-                            <input type="color" id="textPrimaryColorPicker" value="#e2e8f0">
-                        </div>
-                        
-                        <div class="color-picker-group">
-                            <label for="textSecondaryColorPicker">Secondary Text:</label>
-                            <input type="color" id="textSecondaryColorPicker" value="#94a3b8">
-                        </div>
-                        
-                        <div class="color-picker-group">
-                            <label for="hoverColorPicker">Hover Color:</label>
-                            <input type="color" id="hoverColorPicker" value="#2563eb">
-                        </div>
-                        
-                        <div class="color-picker-group">
-                            <label for="borderColorPicker">Border Color:</label>
-                            <input type="color" id="borderColorPicker" value="#475569">
-                        </div>
-                        
-                        <div class="color-picker-group">
-                            <label for="accentColorPicker">Accent Color:</label>
-                            <input type="color" id="accentColorPicker" value="#3b82f6">
-                        </div>
-                        
-                        <div class="color-picker-group">
-                            <label for="buttonTextColorPicker">Button Text Color:</label>
-                            <input type="color" id="buttonTextColorPicker" value="#ffffff">
-                        </div>
-                        
-                        <div class="color-picker-group">
-                            <label for="shadowColorPicker">Shadow Color:</label>
-                            <input type="color" id="shadowColorPicker" value="#000000">
-                            <input type="range" id="shadowOpacity" min="0" max="1" step="0.1" value="0.1">
-                            <span>Opacity</span>
-                        </div>
-                        
-                        <div class="color-picker-group">
-                            <label for="errorColorPicker">Error Color:</label>
-                            <input type="color" id="errorColorPicker" value="#dc3545">
-                        </div>
-                        
-                        <div class="color-picker-group">
-                            <label for="errorHoverColorPicker">Error Hover Color:</label>
-                            <input type="color" id="errorHoverColorPicker" value="#c82333">
-                        </div>
-                        
-                        <div class="color-picker-group">
-                            <label for="youtubeRedColorPicker">YouTube Red:</label>
-                            <input type="color" id="youtubeRedColorPicker" value="#FF0000">
-                        </div>
-                        
-                        <div class="theme-buttons">
-                            <button id="saveCustomTheme" onclick="musicPlayer.handleSaveCustomTheme()">Save Theme</button>
-                            <button onclick="musicPlayer.resetCustomTheme()">Reset to Defaults</button>
-                        </div>
-                        
-                        <div class="theme-import-export">
-                            <h4>Import/Export Theme</h4>
+                        <div class="custom-theme-section" id="customThemeSection">
+                            <h3>Customize Colors</h3>
                             
-                            <div class="import-export-group">
-                                <button onclick="musicPlayer.exportTheme()">Export Theme to Clipboard</button>
-                                <button onclick="musicPlayer.importTheme()">Import Theme</button>
+                            <div class="color-picker-group">
+                                <label for="primaryColorPicker">Primary Color:</label>
+                                <input type="color" id="primaryColorPicker" value="#3b82f6">
                             </div>
                             
-                            <div class="theme-input-group">
-                                <label for="themeImportText">Paste Theme Code:</label>
-                                <textarea id="themeImportText" placeholder="Paste your theme code here..." rows="4"></textarea>
+                            <div class="color-picker-group">
+                                <label for="backgroundColorPicker">Background Color:</label>
+                                <input type="color" id="backgroundColorPicker" value="#1e293b">
+                            </div>
+                            
+                            <div class="color-picker-group">
+                                <label for="secondaryColorPicker">Secondary Background:</label>
+                                <input type="color" id="secondaryColorPicker" value="#334155">
+                            </div>
+                            
+                            <div class="color-picker-group">
+                                <label for="textPrimaryColorPicker">Primary Text:</label>
+                                <input type="color" id="textPrimaryColorPicker" value="#e2e8f0">
+                            </div>
+                            
+                            <div class="color-picker-group">
+                                <label for="textSecondaryColorPicker">Secondary Text:</label>
+                                <input type="color" id="textSecondaryColorPicker" value="#94a3b8">
+                            </div>
+                            
+                            <div class="color-picker-group">
+                                <label for="hoverColorPicker">Hover Color:</label>
+                                <input type="color" id="hoverColorPicker" value="#2563eb">
+                            </div>
+                            
+                            <div class="color-picker-group">
+                                <label for="borderColorPicker">Border Color:</label>
+                                <input type="color" id="borderColorPicker" value="#475569">
+                            </div>
+                            
+                            <div class="color-picker-group">
+                                <label for="accentColorPicker">Accent Color:</label>
+                                <input type="color" id="accentColorPicker" value="#3b82f6">
+                            </div>
+                            
+                            <div class="color-picker-group">
+                                <label for="buttonTextColorPicker">Button Text Color:</label>
+                                <input type="color" id="buttonTextColorPicker" value="#ffffff">
+                            </div>
+                            
+                            <div class="color-picker-group">
+                                <label for="shadowColorPicker">Shadow Color:</label>
+                                <input type="color" id="shadowColorPicker" value="#000000">
+                                <input type="range" id="shadowOpacity" min="0" max="1" step="0.1" value="0.1">
+                                <span>Opacity</span>
+                            </div>
+                            
+                            <div class="color-picker-group">
+                                <label for="errorColorPicker">Error Color:</label>
+                                <input type="color" id="errorColorPicker" value="#dc3545">
+                            </div>
+                            
+                            <div class="color-picker-group">
+                                <label for="errorHoverColorPicker">Error Hover Color:</label>
+                                <input type="color" id="errorHoverColorPicker" value="#c82333">
+                            </div>
+                            
+                            <div class="color-picker-group">
+                                <label for="youtubeRedColorPicker">YouTube Red:</label>
+                                <input type="color" id="youtubeRedColorPicker" value="#FF0000">
+                            </div>
+                            
+                            <div class="theme-buttons">
+                                <button id="saveCustomTheme" onclick="musicPlayer.handleSaveCustomTheme()">Save Theme</button>
+                                <button onclick="musicPlayer.resetCustomTheme()">Reset to Defaults</button>
+                            </div>
+                            
+                            <div class="theme-import-export">
+                                <h4>Import/Export Theme</h4>
+                                
+                                <div class="import-export-group">
+                                    <button onclick="musicPlayer.exportTheme()">Export Theme to Clipboard</button>
+                                    <button onclick="musicPlayer.importTheme()">Import Theme</button>
+                                </div>
+                                
+                                <div class="theme-input-group">
+                                    <label for="themeImportText">Paste Theme Code:</label>
+                                    <textarea id="themeImportText" placeholder="Paste your theme code here..." rows="4"></textarea>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+            </div>
+        </div>
+    </div>
+</div>
 
 
 
