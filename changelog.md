@@ -205,3 +205,8 @@
 - added ads will add button to disable them, will add feature such that toggling hiding will change size of ads v29.0.0
 - added theme custom import export. added new customizable things, added a new nice looking default style v29.1.0
 - made it such that toggling control bar visible will change the height of the ad banner.  v29.2.0
+- seperated and formatted settings. v29.3.0
+- posted this as a project launch on product hunt.
+- added feedback form and made it connect to discord webhook using zapier so i can quickly see feedback on discord. v29.4.0
+- added discover more setting section and content. v30.0.0
+  
