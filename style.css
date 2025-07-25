@@ -3280,3 +3280,63 @@ body:has(#ytPlayer.fullscreen-video) {
   transform: translateX(24px);
   background-color: var(--button-text-color);
 }
+
+
+.collapsible-section {
+    border: 1px solid var(--border-color, #475569);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: var(--secondary-background, #334155);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    user-select: none;
+}
+
+.section-header:hover {
+    background: var(--hover-color, #2563eb);
+    cursor: pointer;
+}
+
+.section-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary, #e2e8f0);
+}
+
+.section-arrow {
+    transition: transform 0.3s ease;
+    color: var(--text-secondary, #94a3b8);
+    font-size: 14px;
+}
+
+.section-arrow.rotated {
+    transform: rotate(180deg);
+}
+
+.section-content {
+    padding: 0 20px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+}
+
+.section-content.expanded {
+    max-height: 2000px; /* Large enough to accommodate content */
+    padding: 20px;
+}
+
+/* Ensure existing styles don't conflict */
+.settings-section.collapsible-section .setting-group,
+.settings-section.collapsible-section .custom-theme-section,
+.settings-section.collapsible-section iframe {
+    margin-bottom: 16px;
+}
