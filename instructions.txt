@@ -6,7 +6,9 @@ Sweetescape, an alternative to spotify and independantly developed music player 
 
 -Oops didnt make any instructions but im sure its pretty straightforward.
 
--Packed full of functions and features basically almost everything can be double clicked/ rightclicked/ longclicked
+-Packed full of features basically almost everything can be double clicked/ rightclicked/ longclicked
+
+- 8 months in the making.
 
 
 Thank you for visiting and have fun. Consider staying. improvement updates every other day.
