@@ -6139,6 +6139,31 @@ setupChangelogModal() {
         });
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+// Update your existing handleOpenSettings method to include setupCollapsibleSections
 handleOpenSettings() {
     this.elements.settingsModal.style.display = "block";
     document.body.style.overflow = "hidden";
@@ -6157,8 +6182,10 @@ initializeSettingsContent() {
     this.loadThemeMode();
     this.loadCustomThemeColors();
     this.loadAdvertisementSettingsInModal(); 
+    this.setupCollapsibleSections(); // Add this line
     console.log("Settings modal opened - all settings loaded");
 }
+
 loadAdvertisementSettingsInModal() {
     if (this.elements.adsToggle) {
         this.elements.adsToggle.checked = this.adsEnabled;
@@ -6643,6 +6670,113 @@ initializeAdvertisementSettings() {
         this.updateAdvertisementDisplay();
     });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+setupCollapsibleSections() {
+    // Get all section headers
+    const sectionHeaders = document.querySelectorAll('.section-header');
+    
+    sectionHeaders.forEach(header => {
+        // Remove any existing event listeners to prevent duplicates
+        header.removeEventListener('click', this.handleSectionToggle);
+        
+        // Add click event listener
+        header.addEventListener('click', this.handleSectionToggle.bind(this));
+        
+        // Set initial state - all sections collapsed by default
+        const sectionType = header.dataset.section;
+        const content = document.getElementById(`${sectionType}Content`);
+        const arrow = header.querySelector('.section-arrow');
+        
+        if (content && arrow) {
+            content.classList.remove('expanded');
+            arrow.classList.remove('rotated');
+        }
+    });
+    
+    console.log("Collapsible sections initialized");
+}
+
+handleSectionToggle(event) {
+    const header = event.currentTarget;
+    const sectionType = header.dataset.section;
+    const content = document.getElementById(`${sectionType}Content`);
+    const arrow = header.querySelector('.section-arrow');
+    
+    if (!content || !arrow) {
+        console.error(`Section content or arrow not found for: ${sectionType}`);
+        return;
+    }
+    
+    // Toggle the section
+    const isExpanded = content.classList.contains('expanded');
+    
+    if (isExpanded) {
+        // Collapse the section
+        content.classList.remove('expanded');
+        arrow.classList.remove('rotated');
+    } else {
+        // Expand the section
+        content.classList.add('expanded');
+        arrow.classList.add('rotated');
+    }
+    
+    console.log(`Section ${sectionType} ${isExpanded ? 'collapsed' : 'expanded'}`);
+}
+
+// Optional: Method to expand a specific section programmatically
+expandSection(sectionType) {
+    const content = document.getElementById(`${sectionType}Content`);
+    const header = document.querySelector(`[data-section="${sectionType}"]`);
+    const arrow = header?.querySelector('.section-arrow');
+    
+    if (content && arrow) {
+        content.classList.add('expanded');
+        arrow.classList.add('rotated');
+    }
+}
+
+// Optional: Method to collapse a specific section programmatically
+collapseSection(sectionType) {
+    const content = document.getElementById(`${sectionType}Content`);
+    const header = document.querySelector(`[data-section="${sectionType}"]`);
+    const arrow = header?.querySelector('.section-arrow');
+    
+    if (content && arrow) {
+        content.classList.remove('expanded');
+        arrow.classList.remove('rotated');
+    }
+}
+
+// Optional: Method to collapse all sections
+collapseAllSections() {
+    const sectionTypes = ['feedback', 'advertisement', 'theme'];
+    sectionTypes.forEach(sectionType => {
+        this.collapseSection(sectionType);
+    });
+}
+
+
+  
 cleanup() {
   console.log("Starting cleanup process");
   this.saveCurrentState();
