@@ -36,6 +36,10 @@ class AdvancedMusicPlayer {
     this.fullscreenYtPlayer = null;
     this.fullscreenLyricsInterval = null;
     this.adsEnabled = false; 
+    this.recentlyPlayedDisplayLimit = 3;
+    this.suggestedSongsDisplayLimit = 2;
+    this.yourPicksDisplayLimit = 2;
+    this.recentlyPlayedPlaylistsDisplayLimit = 1;
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
       'https://i2.res.24o.it/pdf2010/Editrice/ILSOLE24ORE/ILSOLE24ORE/Online/_Oggetti_Embedded/Documenti/2025/07/12/Preliminary%20Report%20VT.pdf?utm_source=chatgpt.com' ,
