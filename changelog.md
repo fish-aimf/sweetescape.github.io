@@ -209,4 +209,5 @@
 - posted this as a project launch on product hunt.
 - added feedback form and made it connect to discord webhook using zapier so i can quickly see feedback on discord. v29.4.0
 - added discover more setting section and content. v30.0.0
-  
+- made welcome message appear after 1 second only v30.0.1
+- posted this on r/internet is beutiful for the first time v30.0.1
