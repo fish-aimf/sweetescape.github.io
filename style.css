@@ -3281,7 +3281,6 @@ body:has(#ytPlayer.fullscreen-video) {
   background-color: var(--button-text-color);
 }
 
-
 .collapsible-section {
     border: 1px solid var(--border-color, #475569);
     border-radius: 8px;
@@ -3330,8 +3329,57 @@ body:has(#ytPlayer.fullscreen-video) {
 }
 
 .section-content.expanded {
-    max-height: 2000px; /* Large enough to accommodate content */
+    max-height: 2000px;
     padding: 20px;
+}
+
+/* Discover More Settings Specific Styles */
+.number-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.number-input-group input[type="number"] {
+    width: 80px;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color, #475569);
+    border-radius: 4px;
+    background: var(--background-color, #1e293b);
+    color: var(--text-primary, #e2e8f0);
+    font-size: 14px;
+}
+
+.number-input-group input[type="number"]:focus {
+    outline: none;
+    border-color: var(--primary-color, #3b82f6);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.input-suffix {
+    color: var(--text-secondary, #94a3b8);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.save-settings-btn {
+    background: var(--primary-color, #3b82f6);
+    color: var(--button-text-color, #ffffff);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.save-settings-btn:hover {
+    background: var(--hover-color, #2563eb);
+}
+
+.save-settings-btn:active {
+    transform: translateY(1px);
 }
 
 /* Ensure existing styles don't conflict */
