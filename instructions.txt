@@ -1,4 +1,8 @@
 Welcome to sweetescape, an alternative to spotify and independantly developed music player that stores your songs in your browser.
+
 -This website requires an internet connection to function.
+
 -Oops didnt make any instructions but im sure its pretty straightforward.
+
 -Packed full of functions and features basically almost everything can be double clicked/ rightclicked/ longclicked
+
