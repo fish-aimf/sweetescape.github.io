@@ -230,7 +230,13 @@ class AdvancedMusicPlayer {
         errorHoverColorPicker: document.getElementById("errorHoverColorPicker"),
         youtubeRedColorPicker: document.getElementById("youtubeRedColorPicker"),
       adsToggle: document.getElementById("adsToggle"),
-      saveCustomTheme: document.getElementById("saveCustomTheme")
+      saveCustomTheme: document.getElementById("saveCustomTheme"),
+      recentlyPlayedStorageLimit: document.getElementById("recentlyPlayedStorageLimit"),
+        recentlyPlayedDisplayLimit: document.getElementById("recentlyPlayedDisplayLimit"),
+        suggestedSongsDisplayLimit: document.getElementById("suggestedSongsDisplayLimit"),
+        yourPicksDisplayLimit: document.getElementById("yourPicksDisplayLimit"),
+        recentlyPlayedPlaylistsLimit: document.getElementById("recentlyPlayedPlaylistsLimit"),
+        saveDiscoverMoreSettings: document.getElementById("saveDiscoverMoreSettings")
     };
     if (this.elements.speedBtn) {
       this.elements.speedBtn.textContent = this.currentSpeed + "x";
@@ -290,6 +296,9 @@ class AdvancedMusicPlayer {
         this.addSongToLibrary();
       }
     };
+    if (this.elements.saveDiscoverMoreSettings) {
+        this.elements.saveDiscoverMoreSettings.addEventListener("click", this.handleSaveDiscoverMoreSettings.bind(this));
+    }
     this.handleNewPlaylistNameKeydown = (e) => {
       if (e.key === "Enter") {
         this.createPlaylist();
@@ -4227,41 +4236,49 @@ removeGhostPreview() {
   }
   renderAdditionalDetails() {
     if (!this.elements.additionalDetails) return;
+    
     this.elements.additionalDetails.innerHTML = "";
+    
     const header = document.createElement("h2");
     header.textContent = "Discover More";
     header.classList.add("additional-details-header");
     this.elements.additionalDetails.appendChild(header);
+    
+    // Use the new display limits
     if (this.recentlyPlayedSongs.length > 0) {
-      this.createDetailsSection(
-        "Recently Listened To",
-        this.recentlyPlayedSongs.slice(0, 3),
-        "song"
-      );
+        this.createDetailsSection(
+            "Recently Listened To",
+            this.recentlyPlayedSongs.slice(0, this.recentlyPlayedDisplayLimit || 3),
+            "song"
+        );
     }
+    
     if (this.songLibrary.length > 0) {
-      this.createDetailsSection(
-        "Suggested",
-        this.getRandomItems(this.songLibrary, 2),
-        "song"
-      );
+        this.createDetailsSection(
+            "Suggested",
+            this.getRandomItems(this.songLibrary, this.suggestedSongsDisplayLimit || 2),
+            "song"
+        );
     }
+    
     const favoriteSongs = this.songLibrary.filter((song) => song.favorite);
     if (favoriteSongs.length > 0) {
-      this.createDetailsSection(
-        "Your Picks",
-        this.getRandomItems(favoriteSongs, 2),
-        "song"
-      );
+        this.createDetailsSection(
+            "Your Picks",
+            this.getRandomItems(favoriteSongs, this.yourPicksDisplayLimit || 2),
+            "song"
+        );
     }
+    
     if (this.recentlyPlayedPlaylists.length > 0) {
-      this.createDetailsSection(
-        "Recently Played Playlists",
-        this.recentlyPlayedPlaylists.slice(0, 1),
-        "playlist"
-      );
+        this.createDetailsSection(
+            "Recently Played Playlists",
+            this.recentlyPlayedPlaylists.slice(0, this.recentlyPlayedPlaylistsDisplayLimit || 1),
+            "playlist"
+        );
     }
-  }
+}
+
   formatDuration(seconds) {
     if (!seconds || seconds <= 0) return "0:00";
     const hours = Math.floor(seconds / 3600);
@@ -4381,77 +4398,89 @@ createDetailsSection(title, items, type) {
   this.elements.additionalDetails.appendChild(section);
 }
 refreshSpecificSection(sectionTitle) {
-  if (!this.elements.additionalDetails) return;
-  const sectionToRefresh = this.elements.additionalDetails.querySelector(
-    `[data-section-title="${sectionTitle}"]`
-  );
-  if (!sectionToRefresh) return;
-  let newItems = [];
-  let type = "song";
-  if (sectionTitle === "Suggested") {
-    if (this.songLibrary.length > 0) {
-      newItems = this.getRandomItems(this.songLibrary, 2);
+    if (!this.elements.additionalDetails) return;
+    
+    const sectionToRefresh = this.elements.additionalDetails.querySelector(
+        `[data-section-title="${sectionTitle}"]`
+    );
+    if (!sectionToRefresh) return;
+    
+    let newItems = [];
+    let type = "song";
+    
+    if (sectionTitle === "Suggested") {
+        if (this.songLibrary.length > 0) {
+            newItems = this.getRandomItems(this.songLibrary, this.suggestedSongsDisplayLimit || 2);
+        }
+    } else if (sectionTitle === "Your Picks") {
+        const favoriteSongs = this.songLibrary.filter((song) => song.favorite);
+        if (favoriteSongs.length > 0) {
+            newItems = this.getRandomItems(favoriteSongs, this.yourPicksDisplayLimit || 2);
+        }
     }
-  } else if (sectionTitle === "Your Picks") {
-    const favoriteSongs = this.songLibrary.filter((song) => song.favorite);
-    if (favoriteSongs.length > 0) {
-      newItems = this.getRandomItems(favoriteSongs, 2);
-    }
-  }
-  if (newItems.length === 0) return;
-  const itemsList = sectionToRefresh.querySelector(".details-items-list");
-  if (!itemsList) return;
-  itemsList.innerHTML = "";
-  newItems.forEach((item) => {
-    const itemElement = document.createElement("div");
-    itemElement.classList.add("details-item");
-    if (type === "song") {
-      itemElement.setAttribute("data-video-id", item.videoId);
-      itemElement.setAttribute("data-song-id", item.id);
-    }
-    const thumbnail = document.createElement("div");
-    thumbnail.classList.add("details-item-thumbnail");
-    if (type === "song") {
-      const thumbnailImg = document.createElement("img");
-      thumbnailImg.src =
-        item.thumbnailUrl ||
-        `https://img.youtube.com/vi/${item.videoId}/default.jpg`;
-      thumbnailImg.alt = item.name;
-      thumbnailImg.onerror = function () {
-        this.src = "https://placehold.it/120x90/333/fff?text=No+Image";
-      };
-      thumbnail.appendChild(thumbnailImg);
-    } else {
-      const playlistIcon = document.createElement("i");
-      playlistIcon.classList.add("fa", "fa-list");
-      thumbnail.appendChild(playlistIcon);
-    }
-    const itemInfo = document.createElement("div");
-    itemInfo.classList.add("details-item-info");
-    const itemName = document.createElement("div");
-    itemName.classList.add("details-item-name");
-    itemName.textContent = item.name;
-    itemInfo.appendChild(itemName);
-    itemElement.addEventListener("click", (e) => {
-      e.preventDefault();
-      if (type === "song") {
-        this.playSong(item.id);
-      } else {
-        this.playPlaylist(item.id);
-      }
+    
+    if (newItems.length === 0) return;
+    
+    const itemsList = sectionToRefresh.querySelector(".details-items-list");
+    if (!itemsList) return;
+    
+    itemsList.innerHTML = "";
+    
+    newItems.forEach((item) => {
+        const itemElement = document.createElement("div");
+        itemElement.classList.add("details-item");
+        if (type === "song") {
+            itemElement.setAttribute("data-video-id", item.videoId);
+            itemElement.setAttribute("data-song-id", item.id);
+        }
+        
+        const thumbnail = document.createElement("div");
+        thumbnail.classList.add("details-item-thumbnail");
+        if (type === "song") {
+            const thumbnailImg = document.createElement("img");
+            thumbnailImg.src =
+                item.thumbnailUrl ||
+                `https://img.youtube.com/vi/${item.videoId}/default.jpg`;
+            thumbnailImg.alt = item.name;
+            thumbnailImg.onerror = function () {
+                this.src = "https://placehold.it/120x90/333/fff?text=No+Image";
+            };
+            thumbnail.appendChild(thumbnailImg);
+        } else {
+            const playlistIcon = document.createElement("i");
+            playlistIcon.classList.add("fa", "fa-list");
+            thumbnail.appendChild(playlistIcon);
+        }
+        
+        const itemInfo = document.createElement("div");
+        itemInfo.classList.add("details-item-info");
+        const itemName = document.createElement("div");
+        itemName.classList.add("details-item-name");
+        itemName.textContent = item.name;
+        itemInfo.appendChild(itemName);
+        
+        itemElement.addEventListener("click", (e) => {
+            e.preventDefault();
+            if (type === "song") {
+                this.playSong(item.id);
+            } else {
+                this.playPlaylist(item.id);
+            }
+        });
+        
+        if (type === "song") {
+            itemElement.addEventListener("contextmenu", (e) => {
+                e.preventDefault();
+                this.addToQueue(item);
+            });
+            itemElement.style.cursor = "pointer";
+            itemElement.title = "Left click to play, right click to add to queue";
+        }
+        
+        itemElement.appendChild(thumbnail);
+        itemElement.appendChild(itemInfo);
+        itemsList.appendChild(itemElement);
     });
-    if (type === "song") {
-      itemElement.addEventListener("contextmenu", (e) => {
-        e.preventDefault();
-        this.addToQueue(item);
-      });
-      itemElement.style.cursor = "pointer";
-      itemElement.title = "Left click to play, right click to add to queue";
-    }
-    itemElement.appendChild(thumbnail);
-    itemElement.appendChild(itemInfo);
-    itemsList.appendChild(itemElement);
-  });
 }
   refreshSuggestedSongs() {
     if (this.songLibrary.length > 0) {
@@ -6182,7 +6211,8 @@ initializeSettingsContent() {
     this.loadThemeMode();
     this.loadCustomThemeColors();
     this.loadAdvertisementSettingsInModal(); 
-    this.setupCollapsibleSections(); // Add this line
+    this.setupCollapsibleSections(); 
+    this.loadDiscoverMoreSettings();
     console.log("Settings modal opened - all settings loaded");
 }
 
@@ -6774,6 +6804,213 @@ collapseAllSections() {
         this.collapseSection(sectionType);
     });
 }
+  async loadDiscoverMoreSettings() {
+    try {
+        if (!this.db || !this.db.objectStoreNames.contains("settings")) {
+            console.log("Settings store not found, using default discover more settings");
+            this.setDefaultDiscoverMoreValues();
+            return;
+        }
+
+        const transaction = this.db.transaction(["settings"], "readonly");
+        const store = transaction.objectStore("settings");
+        
+        const settingKeys = [
+            "recentlyPlayedLimit",
+            "recentlyPlayedDisplayLimit", 
+            "suggestedSongsDisplayLimit",
+            "yourPicksDisplayLimit",
+            "recentlyPlayedPlaylistsDisplayLimit"
+        ];
+
+        const requests = settingKeys.map(key => {
+            const request = store.get(key);
+            return new Promise(resolve => {
+                request.onsuccess = () => resolve({
+                    key: key,
+                    value: request.result?.value
+                });
+                request.onerror = () => resolve({
+                    key: key,
+                    value: null
+                });
+            });
+        });
+
+        const results = await Promise.all(requests);
+        
+        // Set values from database or defaults
+        results.forEach(result => {
+            switch(result.key) {
+                case "recentlyPlayedLimit":
+                    this.recentlyPlayedLimit = result.value || 20;
+                    if (this.elements.recentlyPlayedStorageLimit) {
+                        this.elements.recentlyPlayedStorageLimit.value = this.recentlyPlayedLimit;
+                    }
+                    break;
+                case "recentlyPlayedDisplayLimit":
+                    this.recentlyPlayedDisplayLimit = result.value || 3;
+                    if (this.elements.recentlyPlayedDisplayLimit) {
+                        this.elements.recentlyPlayedDisplayLimit.value = this.recentlyPlayedDisplayLimit;
+                    }
+                    break;
+                case "suggestedSongsDisplayLimit":
+                    this.suggestedSongsDisplayLimit = result.value || 2;
+                    if (this.elements.suggestedSongsDisplayLimit) {
+                        this.elements.suggestedSongsDisplayLimit.value = this.suggestedSongsDisplayLimit;
+                    }
+                    break;
+                case "yourPicksDisplayLimit":
+                    this.yourPicksDisplayLimit = result.value || 2;
+                    if (this.elements.yourPicksDisplayLimit) {
+                        this.elements.yourPicksDisplayLimit.value = this.yourPicksDisplayLimit;
+                    }
+                    break;
+                case "recentlyPlayedPlaylistsDisplayLimit":
+                    this.recentlyPlayedPlaylistsDisplayLimit = result.value || 1;
+                    if (this.elements.recentlyPlayedPlaylistsLimit) {
+                        this.elements.recentlyPlayedPlaylistsLimit.value = this.recentlyPlayedPlaylistsDisplayLimit;
+                    }
+                    break;
+            }
+        });
+
+        console.log("Discover More settings loaded successfully");
+        
+    } catch (error) {
+        console.error("Error loading discover more settings:", error);
+        this.setDefaultDiscoverMoreValues();
+    }
+}
+  setDefaultDiscoverMoreValues() {
+    this.recentlyPlayedLimit = this.recentlyPlayedLimit || 20;
+    this.recentlyPlayedDisplayLimit = 3;
+    this.suggestedSongsDisplayLimit = 2;
+    this.yourPicksDisplayLimit = 2;
+    this.recentlyPlayedPlaylistsDisplayLimit = 1;
+
+    if (this.elements.recentlyPlayedStorageLimit) {
+        this.elements.recentlyPlayedStorageLimit.value = this.recentlyPlayedLimit;
+    }
+    if (this.elements.recentlyPlayedDisplayLimit) {
+        this.elements.recentlyPlayedDisplayLimit.value = this.recentlyPlayedDisplayLimit;
+    }
+    if (this.elements.suggestedSongsDisplayLimit) {
+        this.elements.suggestedSongsDisplayLimit.value = this.suggestedSongsDisplayLimit;
+    }
+    if (this.elements.yourPicksDisplayLimit) {
+        this.elements.yourPicksDisplayLimit.value = this.yourPicksDisplayLimit;
+    }
+    if (this.elements.recentlyPlayedPlaylistsLimit) {
+        this.elements.recentlyPlayedPlaylistsLimit.value = this.recentlyPlayedPlaylistsDisplayLimit;
+    }
+}
+
+// Handle saving Discover More settings
+async handleSaveDiscoverMoreSettings() {
+    try {
+        // Get values from inputs
+        const recentlyPlayedStorageLimit = parseInt(this.elements.recentlyPlayedStorageLimit?.value) || 20;
+        const recentlyPlayedDisplayLimit = parseInt(this.elements.recentlyPlayedDisplayLimit?.value) || 3;
+        const suggestedSongsDisplayLimit = parseInt(this.elements.suggestedSongsDisplayLimit?.value) || 2;
+        const yourPicksDisplayLimit = parseInt(this.elements.yourPicksDisplayLimit?.value) || 2;
+        const recentlyPlayedPlaylistsDisplayLimit = parseInt(this.elements.recentlyPlayedPlaylistsLimit?.value) || 1;
+
+        // Validate values
+        if (recentlyPlayedStorageLimit < 1 || recentlyPlayedStorageLimit > 100) {
+            this.showNotification("Recently played storage limit must be between 1 and 100", "error");
+            return;
+        }
+        
+        if (recentlyPlayedDisplayLimit < 1 || recentlyPlayedDisplayLimit > 10) {
+            this.showNotification("Recently played display limit must be between 1 and 10", "error");
+            return;
+        }
+
+        if (suggestedSongsDisplayLimit < 1 || suggestedSongsDisplayLimit > 10) {
+            this.showNotification("Suggested songs display limit must be between 1 and 10", "error");
+            return;
+        }
+
+        if (yourPicksDisplayLimit < 1 || yourPicksDisplayLimit > 10) {
+            this.showNotification("Your picks display limit must be between 1 and 10", "error");
+            return;
+        }
+
+        if (recentlyPlayedPlaylistsDisplayLimit < 1 || recentlyPlayedPlaylistsDisplayLimit > 5) {
+            this.showNotification("Recently played playlists limit must be between 1 and 5", "error");
+            return;
+        }
+
+        // Update instance variables
+        const oldRecentlyPlayedLimit = this.recentlyPlayedLimit;
+        this.recentlyPlayedLimit = recentlyPlayedStorageLimit;
+        this.recentlyPlayedDisplayLimit = recentlyPlayedDisplayLimit;
+        this.suggestedSongsDisplayLimit = suggestedSongsDisplayLimit;
+        this.yourPicksDisplayLimit = yourPicksDisplayLimit;
+        this.recentlyPlayedPlaylistsDisplayLimit = recentlyPlayedPlaylistsDisplayLimit;
+
+        // Save to database
+        const savePromises = [
+            this.saveSetting("recentlyPlayedLimit", recentlyPlayedStorageLimit),
+            this.saveSetting("recentlyPlayedDisplayLimit", recentlyPlayedDisplayLimit),
+            this.saveSetting("suggestedSongsDisplayLimit", suggestedSongsDisplayLimit),
+            this.saveSetting("yourPicksDisplayLimit", yourPicksDisplayLimit),
+            this.saveSetting("recentlyPlayedPlaylistsDisplayLimit", recentlyPlayedPlaylistsDisplayLimit)
+        ];
+
+        await Promise.all(savePromises);
+
+        // If recently played storage limit changed, trim the stored songs
+        if (oldRecentlyPlayedLimit !== recentlyPlayedStorageLimit && this.recentlyPlayedSongs.length > recentlyPlayedStorageLimit) {
+            this.recentlyPlayedSongs = this.recentlyPlayedSongs.slice(0, recentlyPlayedStorageLimit);
+            
+            if (this.db) {
+                const transaction = this.db.transaction(["recentlyPlayed"], "readwrite");
+                const store = transaction.objectStore("recentlyPlayed");
+                store.put({
+                    type: "songs",
+                    items: this.recentlyPlayedSongs,
+                });
+            }
+        }
+
+        // Refresh the Discover More section to reflect new limits
+        this.renderAdditionalDetails();
+
+        this.showNotification("Discover More settings saved successfully!", "success");
+        console.log("Discover More settings saved successfully");
+
+    } catch (error) {
+        console.error("Error saving Discover More settings:", error);
+        this.showNotification("Error saving Discover More settings", "error");
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 
 
   
