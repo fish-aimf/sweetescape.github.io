@@ -2035,7 +2035,7 @@ initializeAutoplay() {
     }
     setTimeout(() => {
       this.showWelcomeModal();
-    }, 10000);
+    }, 1000);
   }
   extractYouTubeId(url) {
     if (!url) return null;
