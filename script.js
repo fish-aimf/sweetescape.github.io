@@ -105,6 +105,7 @@ class AdvancedMusicPlayer {
           this.loadPlaylists(),
           this.loadSettings(),
           this.loadRecentlyPlayed(),
+          this.loadDiscoverMoreSettingsOnStartup()
         ]);
       })
       .then(() => {
@@ -6810,80 +6811,28 @@ collapseAllSections() {
 }
   async loadDiscoverMoreSettings() {
     try {
-        if (!this.db || !this.db.objectStoreNames.contains("settings")) {
-            console.log("Settings store not found, using default discover more settings");
-            this.setDefaultDiscoverMoreValues();
-            return;
+        // The values are already loaded on startup, just sync with DOM elements
+        if (this.elements.recentlyPlayedStorageLimit) {
+            this.elements.recentlyPlayedStorageLimit.value = this.recentlyPlayedLimit || 20;
+        }
+        if (this.elements.recentlyPlayedDisplayLimit) {
+            this.elements.recentlyPlayedDisplayLimit.value = this.recentlyPlayedDisplayLimit || 3;
+        }
+        if (this.elements.suggestedSongsDisplayLimit) {
+            this.elements.suggestedSongsDisplayLimit.value = this.suggestedSongsDisplayLimit || 2;
+        }
+        if (this.elements.yourPicksDisplayLimit) {
+            this.elements.yourPicksDisplayLimit.value = this.yourPicksDisplayLimit || 2;
+        }
+        if (this.elements.recentlyPlayedPlaylistsLimit) {
+            this.elements.recentlyPlayedPlaylistsLimit.value = this.recentlyPlayedPlaylistsDisplayLimit || 1;
         }
 
-        const transaction = this.db.transaction(["settings"], "readonly");
-        const store = transaction.objectStore("settings");
-        
-        const settingKeys = [
-            "recentlyPlayedLimit",
-            "recentlyPlayedDisplayLimit", 
-            "suggestedSongsDisplayLimit",
-            "yourPicksDisplayLimit",
-            "recentlyPlayedPlaylistsDisplayLimit"
-        ];
-
-        const requests = settingKeys.map(key => {
-            const request = store.get(key);
-            return new Promise(resolve => {
-                request.onsuccess = () => resolve({
-                    key: key,
-                    value: request.result?.value
-                });
-                request.onerror = () => resolve({
-                    key: key,
-                    value: null
-                });
-            });
-        });
-
-        const results = await Promise.all(requests);
-        
-        // Set values from database or defaults
-        results.forEach(result => {
-            switch(result.key) {
-                case "recentlyPlayedLimit":
-                    this.recentlyPlayedLimit = result.value || 20;
-                    if (this.elements.recentlyPlayedStorageLimit) {
-                        this.elements.recentlyPlayedStorageLimit.value = this.recentlyPlayedLimit;
-                    }
-                    break;
-                case "recentlyPlayedDisplayLimit":
-                    this.recentlyPlayedDisplayLimit = result.value || 3;
-                    if (this.elements.recentlyPlayedDisplayLimit) {
-                        this.elements.recentlyPlayedDisplayLimit.value = this.recentlyPlayedDisplayLimit;
-                    }
-                    break;
-                case "suggestedSongsDisplayLimit":
-                    this.suggestedSongsDisplayLimit = result.value || 2;
-                    if (this.elements.suggestedSongsDisplayLimit) {
-                        this.elements.suggestedSongsDisplayLimit.value = this.suggestedSongsDisplayLimit;
-                    }
-                    break;
-                case "yourPicksDisplayLimit":
-                    this.yourPicksDisplayLimit = result.value || 2;
-                    if (this.elements.yourPicksDisplayLimit) {
-                        this.elements.yourPicksDisplayLimit.value = this.yourPicksDisplayLimit;
-                    }
-                    break;
-                case "recentlyPlayedPlaylistsDisplayLimit":
-                    this.recentlyPlayedPlaylistsDisplayLimit = result.value || 1;
-                    if (this.elements.recentlyPlayedPlaylistsLimit) {
-                        this.elements.recentlyPlayedPlaylistsLimit.value = this.recentlyPlayedPlaylistsDisplayLimit;
-                    }
-                    break;
-            }
-        });
-
-        console.log("Discover More settings loaded successfully");
+        console.log("Discover More settings synced with DOM elements");
         
     } catch (error) {
-        console.error("Error loading discover more settings:", error);
-        this.setDefaultDiscoverMoreValues();
+        console.error("Error syncing discover more settings with DOM:", error);
+        this.setDefaultDiscoverMoreValues(); // Fallback to the original method with DOM
     }
 }
   setDefaultDiscoverMoreValues() {
@@ -6909,7 +6858,13 @@ collapseAllSections() {
         this.elements.recentlyPlayedPlaylistsLimit.value = this.recentlyPlayedPlaylistsDisplayLimit;
     }
 }
-
+setDefaultDiscoverMoreValuesOnStartup() {
+    this.recentlyPlayedLimit = this.recentlyPlayedLimit || 20;
+    this.recentlyPlayedDisplayLimit = 3;
+    this.suggestedSongsDisplayLimit = 2;
+    this.yourPicksDisplayLimit = 2;
+    this.recentlyPlayedPlaylistsDisplayLimit = 1;
+}
 // Handle saving Discover More settings
 async handleSaveDiscoverMoreSettings() {
     try {
@@ -6988,6 +6943,76 @@ async handleSaveDiscoverMoreSettings() {
     } catch (error) {
         console.error("Error saving Discover More settings:", error);
         this.showNotification("Error saving Discover More settings", "error");
+    }
+}
+
+  async loadDiscoverMoreSettingsOnStartup() {
+    try {
+        if (!this.db || !this.db.objectStoreNames.contains("settings")) {
+            console.log("Settings store not found, using default discover more settings");
+            this.setDefaultDiscoverMoreValuesOnStartup();
+            return;
+        }
+
+        const transaction = this.db.transaction(["settings"], "readonly");
+        const store = transaction.objectStore("settings");
+        
+        const settingKeys = [
+            "recentlyPlayedLimit",
+            "recentlyPlayedDisplayLimit", 
+            "suggestedSongsDisplayLimit",
+            "yourPicksDisplayLimit",
+            "recentlyPlayedPlaylistsDisplayLimit"
+        ];
+
+        const requests = settingKeys.map(key => {
+            const request = store.get(key);
+            return new Promise(resolve => {
+                request.onsuccess = () => resolve({
+                    key: key,
+                    value: request.result?.value
+                });
+                request.onerror = () => resolve({
+                    key: key,
+                    value: null
+                });
+            });
+        });
+
+        const results = await Promise.all(requests);
+        
+        // Set values from database or defaults (without DOM manipulation)
+        results.forEach(result => {
+            switch(result.key) {
+                case "recentlyPlayedLimit":
+                    this.recentlyPlayedLimit = result.value || 20;
+                    break;
+                case "recentlyPlayedDisplayLimit":
+                    this.recentlyPlayedDisplayLimit = result.value || 3;
+                    break;
+                case "suggestedSongsDisplayLimit":
+                    this.suggestedSongsDisplayLimit = result.value || 2;
+                    break;
+                case "yourPicksDisplayLimit":
+                    this.yourPicksDisplayLimit = result.value || 2;
+                    break;
+                case "recentlyPlayedPlaylistsDisplayLimit":
+                    this.recentlyPlayedPlaylistsDisplayLimit = result.value || 1;
+                    break;
+            }
+        });
+
+        console.log("Discover More settings loaded on startup:", {
+            recentlyPlayedLimit: this.recentlyPlayedLimit,
+            recentlyPlayedDisplayLimit: this.recentlyPlayedDisplayLimit,
+            suggestedSongsDisplayLimit: this.suggestedSongsDisplayLimit,
+            yourPicksDisplayLimit: this.yourPicksDisplayLimit,
+            recentlyPlayedPlaylistsDisplayLimit: this.recentlyPlayedPlaylistsDisplayLimit
+        });
+        
+    } catch (error) {
+        console.error("Error loading discover more settings on startup:", error);
+        this.setDefaultDiscoverMoreValuesOnStartup();
     }
 }
 
