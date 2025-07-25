@@ -552,11 +552,76 @@
                     </div>
                 </div>
 
+                <!-- Collapsible Discover More Settings Section -->
+                <div class="settings-section collapsible-section">
+                    <div class="section-header" data-section="discoverMore">
+                        <h3>Discover More Settings</h3>
+                        <i class="fas fa-chevron-down section-arrow"></i>
+                    </div>
+                    <div class="section-content" id="discoverMoreContent">
+                        
+                        <!-- Recently Listened To Storage Setting -->
+                        <div class="setting-group">
+                            <label for="recentlyPlayedStorageLimit">Store Last Songs:</label>
+                            <div class="number-input-group">
+                                <input type="number" id="recentlyPlayedStorageLimit" min="1" max="100" value="20">
+                                <span class="input-suffix">songs</span>
+                            </div>
+                            <p class="setting-description">Maximum number of recently played songs to store</p>
+                        </div>
+
+                        <!-- Recently Listened To Display Setting -->
+                        <div class="setting-group">
+                            <label for="recentlyPlayedDisplayLimit">Recently Listened To Display:</label>
+                            <div class="number-input-group">
+                                <input type="number" id="recentlyPlayedDisplayLimit" min="1" max="10" value="3">
+                                <span class="input-suffix">songs</span>
+                            </div>
+                            <p class="setting-description">Number of songs to show in Recently Listened To section</p>
+                        </div>
+
+                        <!-- Suggested Songs Display Setting -->
+                        <div class="setting-group">
+                            <label for="suggestedSongsDisplayLimit">Suggested Songs Display:</label>
+                            <div class="number-input-group">
+                                <input type="number" id="suggestedSongsDisplayLimit" min="1" max="10" value="2">
+                                <span class="input-suffix">songs</span>
+                            </div>
+                            <p class="setting-description">Number of songs to show in Suggested section</p>
+                        </div>
+
+                        <!-- Your Picks Display Setting -->
+                        <div class="setting-group">
+                            <label for="yourPicksDisplayLimit">Your Picks Display:</label>
+                            <div class="number-input-group">
+                                <input type="number" id="yourPicksDisplayLimit" min="1" max="10" value="2">
+                                <span class="input-suffix">songs</span>
+                            </div>
+                            <p class="setting-description">Number of songs to show in Your Picks section</p>
+                        </div>
+
+                        <!-- Recently Played Playlists Display Setting -->
+                        <div class="setting-group">
+                            <label for="recentlyPlayedPlaylistsLimit">Recently Played Playlists Display:</label>
+                            <div class="number-input-group">
+                                <input type="number" id="recentlyPlayedPlaylistsLimit" min="1" max="5" value="1">
+                                <span class="input-suffix">playlists</span>
+                            </div>
+                            <p class="setting-description">Number of playlists to show in Recently Played Playlists section</p>
+                        </div>
+
+                        <!-- Save Button -->
+                        <div class="setting-group">
+                            <button id="saveDiscoverMoreSettings" class="save-settings-btn">Save Discover More Settings</button>
+                        </div>
+
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 </div>
-
 
 
 
