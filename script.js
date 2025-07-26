@@ -7029,7 +7029,8 @@ async handleSaveDiscoverMoreSettings() {
 
 
 
-  
+ // Add these three methods to your AdvancedMusicPlayer class
+
 openImportSubtitlesModal(songId) {
   const song = this.songLibrary.find((s) => s.id === songId);
   if (!song) return;
@@ -7098,20 +7099,50 @@ openImportSubtitlesModal(songId) {
   headerContainer.appendChild(header);
   headerContainer.appendChild(closeBtn);
 
-  // Instructions
+  // Instructions and YouTube link
+  const instructionsContainer = document.createElement("div");
+  instructionsContainer.style.marginBottom = "20px";
+
   const instructions = document.createElement("div");
-  instructions.style.marginBottom = "20px";
   instructions.style.padding = "15px";
   instructions.style.backgroundColor = "var(--bg-primary)";
   instructions.style.borderRadius = "5px";
   instructions.style.border = "1px solid var(--border-color)";
+  instructions.style.marginBottom = "10px";
   instructions.innerHTML = `
     <p style="margin: 0 0 10px 0; font-weight: bold; color: var(--accent-color);">Instructions:</p>
-    <p style="margin: 0 0 5px 0;">1. Go to the YouTube video: <strong>${song.name}</strong></p>
+    <p style="margin: 0 0 5px 0;">1. Click "Open YouTube Video" button below</p>
     <p style="margin: 0 0 5px 0;">2. Click the "..." menu → "Show transcript"</p>
     <p style="margin: 0 0 5px 0;">3. Copy the entire transcript and paste it below</p>
     <p style="margin: 0;">4. Click "Convert to Lyrics" to format it properly</p>
   `;
+
+  const openYouTubeBtn = document.createElement("button");
+  openYouTubeBtn.textContent = "Open YouTube Video";
+  openYouTubeBtn.style.width = "100%";
+  openYouTubeBtn.style.padding = "10px";
+  openYouTubeBtn.style.backgroundColor = "#ff0000";
+  openYouTubeBtn.style.color = "white";
+  openYouTubeBtn.style.border = "none";
+  openYouTubeBtn.style.borderRadius = "6px";
+  openYouTubeBtn.style.cursor = "pointer";
+  openYouTubeBtn.style.fontSize = "14px";
+  openYouTubeBtn.style.fontWeight = "bold";
+  openYouTubeBtn.style.transition = "all 0.3s ease";
+
+  openYouTubeBtn.addEventListener("mouseover", () => {
+    openYouTubeBtn.style.backgroundColor = "#cc0000";
+  });
+  openYouTubeBtn.addEventListener("mouseout", () => {
+    openYouTubeBtn.style.backgroundColor = "#ff0000";
+  });
+
+  openYouTubeBtn.addEventListener("click", () => {
+    window.open(`https://www.youtube.com/watch?v=${song.videoId}`, '_blank');
+  });
+
+  instructionsContainer.appendChild(instructions);
+  instructionsContainer.appendChild(openYouTubeBtn);
 
   // Input textarea
   const inputLabel = document.createElement("label");
@@ -7278,7 +7309,7 @@ openImportSubtitlesModal(songId) {
 
   // Assemble modal
   modalContent.appendChild(headerContainer);
-  modalContent.appendChild(instructions);
+  modalContent.appendChild(instructionsContainer);
   modalContent.appendChild(inputLabel);
   modalContent.appendChild(transcriptInput);
   modalContent.appendChild(convertBtn);
@@ -7306,11 +7337,11 @@ convertTranscriptToLyrics(transcript) {
       // Skip empty lines
       if (!line) continue;
       
-      // Check if line contains timestamp (e.g., **0:24**)
-      const timestampMatch = line.match(/\*\*(\d+):(\d+)\*\*/);
+      // Check if line contains timestamp (e.g., 0:24 or **0:24**)
+      const timestampMatch = line.match(/^(\*\*)?(\d+):(\d+)(\*\*)?$/) || line.match(/^(\d+):(\d+)$/);
       if (timestampMatch) {
-        const minutes = parseInt(timestampMatch[1]);
-        const seconds = parseInt(timestampMatch[2]);
+        const minutes = parseInt(timestampMatch[2] || timestampMatch[1]);
+        const seconds = parseInt(timestampMatch[3] || timestampMatch[2]);
         
         // Look for lyric content in the next line(s)
         let lyricContent = '';
@@ -7319,9 +7350,15 @@ convertTranscriptToLyrics(transcript) {
         while (j < lines.length) {
           const nextLine = lines[j].trim();
           
-          // Stop if we hit another timestamp or empty line
-          if (nextLine.match(/\*\*\d+:\d+\*\*/) || !nextLine) {
+          // Stop if we hit another timestamp
+          if (nextLine.match(/^(\*\*)?(\d+):(\d+)(\*\*)?$/) || nextLine.match(/^(\d+):(\d+)$/)) {
             break;
+          }
+          
+          // Skip empty lines
+          if (!nextLine) {
+            j++;
+            continue;
           }
           
           // Extract lyric content
@@ -7331,6 +7368,9 @@ convertTranscriptToLyrics(transcript) {
             // Skip music descriptions like "(gentle rock music)" or "**intense rock music**"
             j++;
             continue;
+          } else if (nextLine.startsWith('♪')) {
+            // Handle lines that start with ♪ but don't end with it
+            lyricContent = nextLine.slice(1).replace(/♪$/, '').trim();
           } else {
             lyricContent = nextLine;
           }
