@@ -4980,369 +4980,392 @@ refreshSpecificSection(sectionTitle) {
     lyricsTab.title = "rightclick to view lyric library";
   }
   openLyricsMakerModal(songId) {
-  const song = this.songLibrary.find((s) => s.id === songId);
-  if (!song) return;
-
-  // Pause main player
-  if (this.ytPlayer && typeof this.ytPlayer.pauseVideo === "function") {
-    this.ytPlayer.pauseVideo();
-    this.isPlaying = false;
-    this.updatePlayerUI();
-    this.clearAllIntervals();
-  }
-
-  // Show modal and set up
-  const modal = document.getElementById('lyricsModal');
-  const titleElement = document.getElementById('lyricsTitle');
-  const youtubeLink = document.getElementById('youtubeLink');
-  
-  titleElement.textContent = `Lyrics Maker for: ${song.name}`;
-  youtubeLink.value = `https://www.youtube.com/watch?v=${song.videoId}`;
-  
-  modal.classList.remove('hidden');
-  this.initLyricMaker(song);
-}
-
-  clearAllIntervals() {
-  if (this.titleScrollInterval) {
-    clearInterval(this.titleScrollInterval);
-  }
-  if (this.progressInterval) {
-    clearInterval(this.progressInterval);
-  }
-  if (this.lyricsInterval) {
-    clearInterval(this.lyricsInterval);
-  }
-}
-
-  // Show modal and set up
-  const modal = document.getElementById('lyricsModal');
-  const titleElement = document.getElementById('lyricsTitle');
-  const youtubeLink = document.getElementById('youtubeLink');
-  
-  titleElement.textContent = `Lyrics Maker for: ${song.name}`;
-  youtubeLink.value = `https://www.youtube.com/watch?v=${song.videoId}`;
-  
-  modal.classList.remove('hidden');
-  this.initLyricMaker(song);
-}
-initLyricMaker(song) {
-  const modal = document.getElementById('lyricsModal');
-  const closeBtn = document.getElementById('closeLyricsModal');
-  
-  const player = { ytPlayer: null };
-  const state = {
-    lyrics: [],
-    timings: [],
-    currentLineIndex: -1,
-    isRecording: false,
-    timeUpdateInterval: null,
-  };
-
-  // Close modal handler
-  const closeModal = () => {
-    modal.classList.add('hidden');
-    if (state.timeUpdateInterval) {
-      clearInterval(state.timeUpdateInterval);
-    }
-    if (player.ytPlayer) {
-      player.ytPlayer.destroy();
-    }
-  };
-
-  closeBtn.onclick = closeModal;
-
-  // Tab switching
-  const showTab = (tabId) => {
-    document.querySelectorAll('.lyrics-tab, .lyrics-nav-item').forEach(el => el.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active');
-    document.querySelectorAll('.lyrics-nav-item').forEach(item => {
-      if (item.dataset.tab === tabId) {
-        item.classList.add('active');
-      }
-    });
-  };
-
-  document.querySelectorAll('.lyrics-nav-item').forEach(tab => {
-    tab.addEventListener('click', () => showTab(tab.dataset.tab));
-  });
-
-  // Load video function
-  const loadVideo = () => {
-    const videoId = song.videoId;
-    if (!videoId) return;
-
-    if (player.ytPlayer) {
-      player.ytPlayer.destroy();
-    }
-
-    if (typeof YT === "undefined" || typeof YT.Player === "undefined") {
-      if (!document.getElementById("youtube-api")) {
-        const tag = document.createElement("script");
-        tag.id = "youtube-api";
-        tag.src = "https://www.youtube.com/iframe_api";
-        const firstScriptTag = document.getElementsByTagName("script")[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-        window.onYouTubeIframeAPIReady = () => {
-          createYouTubePlayer(videoId);
-        };
-      }
-    } else {
-      createYouTubePlayer(videoId);
-    }
-  };
-
-  // Create YouTube player
-  const createYouTubePlayer = (videoId) => {
-    const container = document.getElementById("videoContainer");
-    if (!container) return;
-
+    const song = this.songLibrary.find((s) => s.id === songId);
+    if (!song) return;
     if (this.ytPlayer && typeof this.ytPlayer.pauseVideo === "function") {
       this.ytPlayer.pauseVideo();
-    }
-
-    player.ytPlayer = new YT.Player(container, {
-      height: "360",
-      width: "640",
-      videoId: videoId,
-      playerVars: {
-        playsinline: 1,
-        controls: 1,
-      },
-      events: {
-        onStateChange: (event) => {
-          if (event.data === YT.PlayerState.PLAYING) {
-            clearInterval(state.timeUpdateInterval);
-            state.timeUpdateInterval = setInterval(() => {
-              if (player.ytPlayer && player.ytPlayer.getCurrentTime) {
-                document.getElementById("currentTime").textContent = formatTime(
-                  player.ytPlayer.getCurrentTime()
-                );
-              }
-            }, 100);
-          }
-        },
-      },
-    });
-  };
-
-  // Format time helper
-  const formatTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
-  };
-
-  // Prepare lyrics function
-  const prepareLyrics = () => {
-    const lyricsText = document.getElementById("lyricsInput").value.trim();
-    if (!lyricsText) {
-      alert("Please enter lyrics");
-      return;
-    }
-
-    state.lyrics = lyricsText
-      .split("\n")
-      .filter((line) => line.trim() !== "");
-
-    const progressContainer = document.getElementById("progressContainer");
-    progressContainer.innerHTML = "<h3>Progress</h3>";
-
-    state.lyrics.forEach((line, index) => {
-      const lineElement = document.createElement("div");
-      lineElement.className = "progress-item";
-      lineElement.innerHTML = `
-        <span>${index + 1}. ${line}</span>
-        <span id="time-${index}">Not timed</span>
-      `;
-      progressContainer.appendChild(lineElement);
-    });
-
-    state.timings = Array(state.lyrics.length).fill(null);
-    state.currentLineIndex = -1;
-    updateLyricsDisplay();
-    showTab("recordTab");
-  };
-
-  // Update lyrics display
-  const updateLyricsDisplay = () => {
-    const prevLineElement = document.getElementById("prevLine");
-    const currentLineElement = document.getElementById("currentLine");
-    const nextLineElement = document.getElementById("nextLine");
-
-    if (!state.isRecording) {
-      currentLineElement.textContent = 'Press "Start Recording" when ready';
-      prevLineElement.textContent = "";
-      nextLineElement.textContent = "";
-      return;
-    }
-
-    if (state.currentLineIndex === -1) {
-      currentLineElement.textContent = "[Click 'Mark Line' to start the first lyric]";
-      prevLineElement.textContent = "";
-      nextLineElement.textContent = state.lyrics[0] || "";
-    } else if (state.currentLineIndex >= state.lyrics.length) {
-      currentLineElement.textContent = "Recording complete!";
-      prevLineElement.textContent = state.lyrics[state.lyrics.length - 1] || "";
-      nextLineElement.textContent = "";
-    } else {
-      currentLineElement.textContent = state.lyrics[state.currentLineIndex];
-      
-      if (state.currentLineIndex > 0) {
-        prevLineElement.textContent = state.lyrics[state.currentLineIndex - 1];
-      } else {
-        prevLineElement.textContent = "";
+      this.isPlaying = false;
+      this.updatePlayerUI();
+      if (this.titleScrollInterval) {
+        clearInterval(this.titleScrollInterval);
       }
-      
-      if (state.currentLineIndex < state.lyrics.length - 1) {
-        nextLineElement.textContent = state.lyrics[state.currentLineIndex + 1];
-      } else {
-        nextLineElement.textContent = "";
+      if (this.progressInterval) {
+        clearInterval(this.progressInterval);
+      }
+      if (this.lyricsInterval) {
+        clearInterval(this.lyricsInterval);
       }
     }
-  };
-
-  // Start recording function
-  const startRecording = () => {
-    if (!player.ytPlayer || !state.lyrics.length) {
-      alert("Please load a video and prepare lyrics first");
-      return;
-    }
-
-    player.ytPlayer.playVideo();
-    state.timings = Array(state.lyrics.length).fill(null);
-    state.currentLineIndex = -1;
-    state.isRecording = true;
-
-    document.getElementById("startRecording").disabled = true;
-    document.getElementById("markLine").disabled = false;
-    document.getElementById("finishRecording").disabled = false;
-
-    updateLyricsDisplay();
-  };
-
-  // Mark current line function
-  const markCurrentLine = () => {
-    if (!state.isRecording) return;
-
-    const currentTime = player.ytPlayer.getCurrentTime();
-    state.currentLineIndex++;
-
-    if (state.currentLineIndex < state.lyrics.length) {
-      state.timings[state.currentLineIndex] = currentTime;
-      
-      const timeElement = document.getElementById(`time-${state.currentLineIndex}`);
-      if (timeElement) {
-        timeElement.textContent = formatTime(currentTime);
-      }
-
-      const progressItem = timeElement.parentElement;
-      if (progressItem) {
-        progressItem.classList.add('completed');
-      }
-
-      updateLyricsDisplay();
-    } else {
-      finishRecording();
-    }
-  };
-
-  // Finish recording function
-  const finishRecording = () => {
-    state.isRecording = false;
-    clearInterval(state.timeUpdateInterval);
-
-    document.getElementById("startRecording").disabled = false;
-    document.getElementById("markLine").disabled = true;
-    document.getElementById("finishRecording").disabled = true;
-
-    updateLyricsDisplay();
-    generateExport();
-    showTab("exportTab");
-  };
-
-  // Generate export function
-  const generateExport = () => {
-    if (!state.lyrics.length || !state.timings.length) {
-      alert("No lyrics or timings available");
-      return;
-    }
-
-    const previewContainer = document.getElementById("previewContainer");
-    const exportOutput = document.getElementById("exportOutput");
-
-    previewContainer.innerHTML = "";
-    let exportText = "";
-
-    for (let i = 0; i < state.lyrics.length; i++) {
-      if (state.timings[i] === null) continue;
-
-      const timeString = formatTime(state.timings[i]);
-      const formattedLine = `${state.lyrics[i]} [${timeString}]`;
-
-      const lineElement = document.createElement("div");
-      lineElement.className = "progress-item";
-      lineElement.textContent = formattedLine;
-      previewContainer.appendChild(lineElement);
-
-      exportText += formattedLine + "\n";
-    }
-
-    exportOutput.value = exportText;
-  };
-
-  // Copy to clipboard function
-  const copyToClipboard = () => {
-    const exportOutput = document.getElementById("exportOutput");
-    exportOutput.select();
-    document.execCommand("copy");
-    alert("Copied to clipboard!");
-  };
-
-  // Save lyrics function
-  const saveLyrics = () => {
-    const lyricsText = document.getElementById("exportOutput").value;
-    if (!lyricsText) {
-      alert("No lyrics to save");
-      return;
-    }
-
-    this.updateSongDetails(song.id, song.name, song.author, song.videoId, lyricsText)
-      .then(() => {
-        alert("Lyrics saved successfully!");
-        closeModal();
-        if (document.getElementById("lyrics").classList.contains("active")) {
-          this.renderLyricsTab();
+    const modal = document.createElement("div");
+    modal.classList.add("modal", "lyrics-maker-modal");
+    modal.style.display = "flex";
+    modal.style.position = "fixed";
+    modal.style.top = "0";
+    modal.style.left = "0";
+    modal.style.width = "100%";
+    modal.style.height = "100%";
+    modal.style.backgroundColor = "rgba(0,0,0,0.7)";
+    modal.style.zIndex = "1000";
+    modal.style.justifyContent = "center";
+    modal.style.alignItems = "center";
+    const modalContent = document.createElement("div");
+    modalContent.classList.add("karaoke-tool");
+    modalContent.style.backgroundColor = "var(--bg-secondary)";
+    modalContent.style.color = "var(--text-primary)";
+    modalContent.style.padding = "20px";
+    modalContent.style.borderRadius = "5px";
+    modalContent.style.width = "90%";
+    modalContent.style.maxWidth = "800px";
+    modalContent.style.maxHeight = "90vh";
+    modalContent.style.overflowY = "auto";
+    modalContent.style.boxShadow = "0 0 15px rgba(0,0,0,0.3)";
+    modalContent.style.position = "relative";
+    const headerContainer = document.createElement("div");
+    headerContainer.style.display = "flex";
+    headerContainer.style.justifyContent = "space-between";
+    headerContainer.style.alignItems = "center";
+    headerContainer.style.marginBottom = "15px";
+    const header = document.createElement("h1");
+    header.textContent = "Lyrics Maker for: " + song.name;
+    header.style.margin = "0";
+    header.style.fontSize = "1.5rem";
+    const closeBtn = document.createElement("span");
+    closeBtn.innerHTML = "&times;";
+    closeBtn.style.fontSize = "28px";
+    closeBtn.style.cursor = "pointer";
+    closeBtn.style.lineHeight = "28px";
+    closeBtn.onclick = () => modal.remove();
+    headerContainer.appendChild(header);
+    headerContainer.appendChild(closeBtn);
+    const navbar = document.createElement("div");
+    navbar.className = "navbar";
+    navbar.innerHTML = `
+            <button class="nav-item active" data-tab="setupTab">1. Setup</button>
+            <button class="nav-item" data-tab="recordTab">2. Record</button>
+            <button class="nav-item" data-tab="exportTab">3. Export</button>
+        `;
+    const setupTab = document.createElement("div");
+    setupTab.id = "setupTab";
+    setupTab.className = "tab active";
+    setupTab.innerHTML = `
+            <div class="section">
+                <h2>YouTube Video</h2>
+                <input type="text" id="youtubeLink" value="https://www.youtube.com/watch?v=${song.videoId}" readonly>
+                <button id="loadVideoBtn">Load Video</button>
+            </div>
+            <div class="section">
+                <h2>Enter Lyrics</h2>
+                <textarea id="lyricsInput" placeholder="Enter your lyrics here. Put each line on a new line."></textarea>
+                <button id="prepareLyricsBtn">Prepare Lyrics</button>
+            </div>
+            <button id="nextToRecordBtn">Next: Record Timing</button>
+        `;
+    const recordTab = document.createElement("div");
+    recordTab.id = "recordTab";
+    recordTab.className = "tab";
+    recordTab.innerHTML = `
+            <div id="videoContainer"></div>
+            <div id="prevLine" class="lyrics-box"></div>
+            <div id="currentLine" class="lyrics-box">Press "Start Recording" when ready</div>
+            <div id="nextLine" class="lyrics-box"></div>
+            <div id="currentTime">0:00</div>
+            <div class="section">
+                <button id="startRecording">Start Recording</button>
+                <button id="markLine" disabled>Mark Line</button>
+                <button id="finishRecording" disabled>Finish Recording</button>
+            </div>
+            <div id="progressContainer">
+                <h3>Progress</h3>
+            </div>
+        `;
+    const exportTab = document.createElement("div");
+    exportTab.id = "exportTab";
+    exportTab.className = "tab";
+    exportTab.innerHTML = `
+            <h2>Export Timed Lyrics</h2>
+            <div class="section">
+                <h3>Preview</h3>
+                <div id="previewContainer"></div>
+            </div>
+            <div class="section">
+                <h3>Timed Lyrics</h3>
+                <textarea id="exportOutput" readonly></textarea>
+                <button id="copyToClipboardBtn">Copy to Clipboard</button>
+                <button id="saveLyricsBtn" class="accent-btn">Save to Song</button>
+            </div>
+        `;
+    modalContent.appendChild(headerContainer);
+    modalContent.appendChild(navbar);
+    modalContent.appendChild(setupTab);
+    modalContent.appendChild(recordTab);
+    modalContent.appendChild(exportTab);
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+    this.initLyricMaker(modal, song);
+  }
+  initLyricMaker(modalElement, song) {
+    const modal = modalElement;
+    const player = { ytPlayer: null };
+    const state = {
+      lyrics: [],
+      timings: [],
+      currentLineIndex: -1,
+      isRecording: false,
+      timeUpdateInterval: null,
+    };
+    const showTab = (tabId) => {
+      modal
+        .querySelectorAll(".tab, .nav-item")
+        .forEach((el) => el.classList.remove("active"));
+      modal.querySelector(`#${tabId}`).classList.add("active");
+      modal.querySelectorAll(".nav-item").forEach((item) => {
+        if (item.dataset.tab === tabId) {
+          item.classList.add("active");
         }
-      })
-      .catch((error) => {
-        console.error("Error saving lyrics:", error);
-        alert("Failed to save lyrics. Please try again.");
       });
-  };
-
-  // Event listeners
-  document.getElementById('loadVideoBtn').addEventListener('click', loadVideo);
-  document.getElementById('prepareLyricsBtn').addEventListener('click', prepareLyrics);
-  document.getElementById('nextToRecordBtn').addEventListener('click', () => showTab('recordTab'));
-  document.getElementById('startRecording').addEventListener('click', startRecording);
-  document.getElementById('markLine').addEventListener('click', markCurrentLine);
-  document.getElementById('finishRecording').addEventListener('click', finishRecording);
-  document.getElementById('copyToClipboardBtn').addEventListener('click', copyToClipboard);
-  document.getElementById('saveLyricsBtn').addEventListener('click', saveLyrics);
-
-  // Close on escape key
-  const handleKeyDown = (e) => {
-    if (e.key === 'Escape') {
-      closeModal();
-      document.removeEventListener('keydown', handleKeyDown);
-    }
-  };
-  document.addEventListener('keydown', handleKeyDown);
-
-  // Initialize by loading the video
-  loadVideo();
-}
+    };
+    modal.querySelectorAll(".nav-item").forEach((tab) => {
+      tab.addEventListener("click", () => showTab(tab.dataset.tab));
+    });
+    const loadVideo = () => {
+      const videoId = song.videoId;
+      if (!videoId) return;
+      if (player.ytPlayer) {
+        player.ytPlayer.destroy();
+      }
+      if (typeof YT === "undefined" || typeof YT.Player === "undefined") {
+        if (!document.getElementById("youtube-api")) {
+          const tag = document.createElement("script");
+          tag.id = "youtube-api";
+          tag.src = "https://www.youtube.com/iframe_api";
+          const firstScriptTag = document.getElementsByTagName("script")[0];
+          firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+          window.onYouTubeIframeAPIReady = () => {
+            createYouTubePlayer(videoId);
+          };
+        }
+      } else {
+        createYouTubePlayer(videoId);
+      }
+    };
+    const createYouTubePlayer = (videoId) => {
+      const container = modal.querySelector("#videoContainer");
+      if (!container) return;
+      if (this.ytPlayer && typeof this.ytPlayer.pauseVideo === "function") {
+        this.ytPlayer.pauseVideo();
+      }
+      player.ytPlayer = new YT.Player(container, {
+        height: "360",
+        width: "640",
+        videoId: videoId,
+        playerVars: {
+          playsinline: 1,
+          controls: 1,
+        },
+        events: {
+          onStateChange: (event) => {
+            if (event.data === YT.PlayerState.PLAYING) {
+              clearInterval(state.timeUpdateInterval);
+              state.timeUpdateInterval = setInterval(() => {
+                if (player.ytPlayer && player.ytPlayer.getCurrentTime) {
+                  modal.querySelector("#currentTime").textContent = formatTime(
+                    player.ytPlayer.getCurrentTime()
+                  );
+                }
+              }, 100);
+            }
+          },
+        },
+      });
+    };
+    const formatTime = (seconds) => {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = Math.floor(seconds % 60);
+      return `${minutes}:${
+        remainingSeconds < 10 ? "0" : ""
+      }${remainingSeconds}`;
+    };
+    const prepareLyrics = () => {
+      const lyricsText = modal.querySelector("#lyricsInput").value.trim();
+      if (!lyricsText) {
+        alert("Please enter lyrics");
+        return;
+      }
+      state.lyrics = lyricsText
+        .split("\n")
+        .filter((line) => line.trim() !== "");
+      const progressContainer = modal.querySelector("#progressContainer");
+      progressContainer.innerHTML = "<h3>Progress</h3>";
+      state.lyrics.forEach((line, index) => {
+        const lineElement = document.createElement("div");
+        lineElement.className = "progress-item";
+        lineElement.innerHTML = `
+                    <span>${index + 1}. ${line}</span>
+                    <span id="time-${index}">Not timed</span>
+                `;
+        progressContainer.appendChild(lineElement);
+      });
+      state.timings = Array(state.lyrics.length).fill(null);
+      state.currentLineIndex = -1;
+      updateLyricsDisplay();
+      showTab("recordTab");
+    };
+    const updateLyricsDisplay = () => {
+      const prevLineElement = modal.querySelector("#prevLine");
+      const currentLineElement = modal.querySelector("#currentLine");
+      const nextLineElement = modal.querySelector("#nextLine");
+      if (!state.isRecording) {
+        currentLineElement.textContent = 'Press "Start Recording" when ready';
+        prevLineElement.textContent = "";
+        nextLineElement.textContent = "";
+        return;
+      }
+      if (state.currentLineIndex === -1) {
+        currentLineElement.textContent =
+          "[Click 'Mark Line' to start the first lyric]";
+        prevLineElement.textContent = "";
+        nextLineElement.textContent = state.lyrics[0] || "";
+      } else if (state.currentLineIndex >= state.lyrics.length) {
+        currentLineElement.textContent = "Recording complete!";
+        prevLineElement.textContent =
+          state.lyrics[state.lyrics.length - 1] || "";
+        nextLineElement.textContent = "";
+      } else {
+        currentLineElement.textContent = state.lyrics[state.currentLineIndex];
+        if (state.currentLineIndex > 0) {
+          prevLineElement.textContent =
+            state.lyrics[state.currentLineIndex - 1];
+        } else {
+          prevLineElement.textContent = "";
+        }
+        if (state.currentLineIndex < state.lyrics.length - 1) {
+          nextLineElement.textContent =
+            state.lyrics[state.currentLineIndex + 1];
+        } else {
+          nextLineElement.textContent = "";
+        }
+      }
+    };
+    const startRecording = () => {
+      if (!player.ytPlayer || !state.lyrics.length) {
+        alert("Please load a video and prepare lyrics first");
+        return;
+      }
+      player.ytPlayer.playVideo();
+      state.timings = Array(state.lyrics.length).fill(null);
+      state.currentLineIndex = -1;
+      state.isRecording = true;
+      modal.querySelector("#startRecording").disabled = true;
+      modal.querySelector("#markLine").disabled = false;
+      modal.querySelector("#finishRecording").disabled = false;
+      updateLyricsDisplay();
+    };
+    const markCurrentLine = () => {
+      if (!state.isRecording) return;
+      const currentTime = player.ytPlayer.getCurrentTime();
+      state.currentLineIndex++;
+      if (state.currentLineIndex < state.lyrics.length) {
+        state.timings[state.currentLineIndex] = currentTime;
+        const timeElement = modal.querySelector(
+          `#time-${state.currentLineIndex}`
+        );
+        if (timeElement) {
+          timeElement.textContent = formatTime(currentTime);
+        }
+        const progressItem = timeElement.parentElement;
+        if (progressItem) {
+          progressItem.style.backgroundColor = "#4a4a4a";
+        }
+        updateLyricsDisplay();
+      } else {
+        finishRecording();
+      }
+    };
+    const finishRecording = () => {
+      state.isRecording = false;
+      clearInterval(state.timeUpdateInterval);
+      modal.querySelector("#startRecording").disabled = false;
+      modal.querySelector("#markLine").disabled = true;
+      modal.querySelector("#finishRecording").disabled = true;
+      updateLyricsDisplay();
+      generateExport();
+      showTab("exportTab");
+    };
+    const generateExport = () => {
+      if (!state.lyrics.length || !state.timings.length) {
+        alert("No lyrics or timings available");
+        return;
+      }
+      const previewContainer = modal.querySelector("#previewContainer");
+      const exportOutput = modal.querySelector("#exportOutput");
+      previewContainer.innerHTML = "";
+      let exportText = "";
+      for (let i = 0; i < state.lyrics.length; i++) {
+        if (state.timings[i] === null) continue;
+        const timeString = formatTime(state.timings[i]);
+        const formattedLine = `${state.lyrics[i]} [${timeString}]`;
+        const lineElement = document.createElement("div");
+        lineElement.className = "progress-item";
+        lineElement.textContent = formattedLine;
+        previewContainer.appendChild(lineElement);
+        exportText += formattedLine + "\n";
+      }
+      exportOutput.value = exportText;
+    };
+    const copyToClipboard = () => {
+      const exportOutput = modal.querySelector("#exportOutput");
+      exportOutput.select();
+      document.execCommand("copy");
+      alert("Copied to clipboard!");
+    };
+    const saveLyrics = () => {
+      const lyricsText = modal.querySelector("#exportOutput").value;
+      if (!lyricsText) {
+        alert("No lyrics to save");
+        return;
+      }
+      this.updateSongDetails(
+        song.id,
+        song.name,
+        song.author,
+        song.videoId,
+        lyricsText
+      )
+        .then(() => {
+          alert("Lyrics saved successfully!");
+          modal.remove();
+          if (document.getElementById("lyrics").classList.contains("active")) {
+            this.renderLyricsTab();
+          }
+        })
+        .catch((error) => {
+          console.error("Error saving lyrics:", error);
+          alert("Failed to save lyrics. Please try again.");
+        });
+    };
+    modal.querySelector("#loadVideoBtn").addEventListener("click", loadVideo);
+    modal
+      .querySelector("#prepareLyricsBtn")
+      .addEventListener("click", prepareLyrics);
+    modal
+      .querySelector("#nextToRecordBtn")
+      .addEventListener("click", () => showTab("recordTab"));
+    modal
+      .querySelector("#startRecording")
+      .addEventListener("click", startRecording);
+    modal.querySelector("#markLine").addEventListener("click", markCurrentLine);
+    modal
+      .querySelector("#finishRecording")
+      .addEventListener("click", finishRecording);
+    modal
+      .querySelector("#copyToClipboardBtn")
+      .addEventListener("click", copyToClipboard);
+    modal.querySelector("#saveLyricsBtn").addEventListener("click", saveLyrics);
+    closeBtn.addEventListener("click", () => {
+      clearInterval(state.timeUpdateInterval);
+    });
+    loadVideo();
+  }
   isMobileConnection() {
     if ("connection" in navigator) {
       const connection = navigator.connection;
