@@ -668,21 +668,23 @@
       <button id="nextToRecordBtn">Next: Record Timing</button>
     </div>
 
-    <div id="recordTab" class="lyrics-tab">
-      <div id="videoContainer"></div>
-      <div id="prevLine" class="lyrics-box"></div>
-      <div id="currentLine" class="lyrics-box">Press "Start Recording" when ready</div>
-      <div id="nextLine" class="lyrics-box"></div>
-      <div id="currentTime">0:00</div>
-      <div class="lyrics-section">
-        <button id="startRecording">Start Recording</button>
-        <button id="markLine" disabled>Mark Line</button>
-        <button id="finishRecording" disabled>Finish Recording</button>
-      </div>
-      <div id="progressContainer">
-        <h3>Progress</h3>
-      </div>
-    </div>
+<div id="recordTab" class="lyrics-tab">
+  <div id="videoContainer"></div>
+  <div id="prevLine" class="lyrics-box"></div>
+  <div id="currentLine" class="lyrics-box">Press "Start Recording" when ready</div>
+  <div id="nextLine" class="lyrics-box"></div>
+  <div id="currentTime">0:00</div>
+  <div class="lyrics-section">
+    <button id="startRecording">Start Recording</button>
+    <button id="prevLineBtn" disabled>← Previous Line</button>
+    <button id="markLine" disabled>Mark Line</button>
+    <button id="nextLineBtn" disabled>Next Line →</button>
+    <button id="finishRecording" disabled>Finish Recording</button>
+  </div>
+  <div id="progressContainer">
+    <h3>Progress</h3>
+  </div>
+</div>
 
     <div id="exportTab" class="lyrics-tab">
       <h2>Export Timed Lyrics</h2>
