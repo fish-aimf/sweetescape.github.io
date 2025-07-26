@@ -5209,28 +5209,28 @@ initLyricMaker(song) {
     updateLyricsDisplay();
   };
 
-  // Mark current line function - WITH SIMPLE OVERWRITE
+  // Mark current line function - WORKS LIKE ORIGINAL WITH OVERWRITE
   const markCurrentLine = () => {
     if (!state.isRecording) return;
 
     const currentTime = player.ytPlayer.getCurrentTime();
-    
-    // If we haven't started yet, start with first line
-    if (state.currentLineIndex === -1) {
-      state.currentLineIndex = 0;
-    } else {
-      // If current line is already timed, this is an overwrite
-      // If current line is not timed, move to next line
-      if (state.timings[state.currentLineIndex] === null) {
-        state.currentLineIndex++;
-      }
-      // If it's already timed, we stay on the same line to overwrite
-    }
+    state.currentLineIndex++;
 
     if (state.currentLineIndex < state.lyrics.length) {
-      state.timings[state.currentLineIndex] = currentTime;
+      // Check if we're overwriting by looking at current video time vs existing timings
+      // If current time is before an already marked timing, find which line to overwrite
+      let lineToMark = state.currentLineIndex;
       
-      const timeElement = document.getElementById(`time-${state.currentLineIndex}`);
+      for (let i = 0; i < state.currentLineIndex; i++) {
+        if (state.timings[i] !== null && currentTime < state.timings[i]) {
+          lineToMark = i;
+          break;
+        }
+      }
+
+      state.timings[lineToMark] = currentTime;
+      
+      const timeElement = document.getElementById(`time-${lineToMark}`);
       if (timeElement) {
         timeElement.textContent = formatTime(currentTime);
       }
