@@ -315,7 +315,7 @@ class AdvancedMusicPlayer {
             this.handleCloseMusicIdentify();
         }
     });
-}
+
     this.handleSongUrlKeydown = (e) => {
       if (e.key === "Enter") {
         this.addSongToLibrary();
