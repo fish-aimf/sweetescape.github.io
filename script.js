@@ -5053,8 +5053,6 @@ initLyricMaker(song) {
 
   document.querySelectorAll('.lyrics-nav-item').forEach(tab => {
     tab.addEventListener('click', () => showTab(tab.dataset.tab));
-    document.getElementById('prevLineBtn').addEventListener('click', goToPreviousLine);
-document.getElementById('nextLineBtn').addEventListener('click', goToNextLine);
   });
 
   // Load video function
@@ -5192,26 +5190,24 @@ document.getElementById('nextLineBtn').addEventListener('click', goToNextLine);
     }
   };
 
+  // Start recording function
   const startRecording = () => {
-  if (!player.ytPlayer || !state.lyrics.length) {
-    alert("Please load a video and prepare lyrics first");
-    return;
-  }
+    if (!player.ytPlayer || !state.lyrics.length) {
+      alert("Please load a video and prepare lyrics first");
+      return;
+    }
 
-  player.ytPlayer.playVideo();
-  state.timings = Array(state.lyrics.length).fill(null);
-  state.currentLineIndex = -1;
-  state.isRecording = true;
+    player.ytPlayer.playVideo();
+    state.timings = Array(state.lyrics.length).fill(null);
+    state.currentLineIndex = -1;
+    state.isRecording = true;
 
-  document.getElementById("startRecording").disabled = true;
-  document.getElementById("markLine").disabled = false;
-  document.getElementById("finishRecording").disabled = false;
-  document.getElementById("prevLineBtn").disabled = false;
-  document.getElementById("nextLineBtn").disabled = false;
+    document.getElementById("startRecording").disabled = true;
+    document.getElementById("markLine").disabled = false;
+    document.getElementById("finishRecording").disabled = false;
 
-  updateLyricsDisplay();
-  updateNavigationButtons();
-};
+    updateLyricsDisplay();
+  };
 
  const markCurrentLine = () => {
   if (!state.isRecording) return;
