@@ -4990,6 +4990,19 @@ refreshSpecificSection(sectionTitle) {
     this.updatePlayerUI();
     this.clearAllIntervals();
   }
+
+  // Show modal and set up
+  const modal = document.getElementById('lyricsModal');
+  const titleElement = document.getElementById('lyricsTitle');
+  const youtubeLink = document.getElementById('youtubeLink');
+  
+  titleElement.textContent = `Lyrics Maker for: ${song.name}`;
+  youtubeLink.value = `https://www.youtube.com/watch?v=${song.videoId}`;
+  
+  modal.classList.remove('hidden');
+  this.initLyricMaker(song);
+}
+
   clearAllIntervals() {
   if (this.titleScrollInterval) {
     clearInterval(this.titleScrollInterval);
