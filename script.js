@@ -4675,6 +4675,11 @@ refreshSpecificSection(sectionTitle) {
             <p>No lyrics available for "${this.escapeHtml(currentSong.name)}".</p>
             <p>You can add lyrics by double-clicking on this song in the library tab.</p>
         `;
+        const buttonsContainer = document.createElement("div");
+        buttonsContainer.style.display = "flex";
+        buttonsContainer.style.gap = "10px";
+        buttonsContainer.style.marginTop = "10px";
+        
         const addLyricsBtn = document.createElement("button");
         addLyricsBtn.textContent = "Transcribe lyrics";
         addLyricsBtn.classList.add("add-lyrics-btn");
@@ -4683,8 +4688,20 @@ refreshSpecificSection(sectionTitle) {
         addLyricsBtn.style.border = "none";
         addLyricsBtn.style.borderRadius = "4px";
         addLyricsBtn.style.padding = "8px 16px";
-        addLyricsBtn.style.marginTop = "10px";
         addLyricsBtn.style.cursor = "pointer";
+        addLyricsBtn.style.flex = "1";
+        
+        const importSubtitlesBtn = document.createElement("button");
+        importSubtitlesBtn.textContent = "Import subtitles as lyrics";
+        importSubtitlesBtn.classList.add("import-subtitles-btn");
+        importSubtitlesBtn.style.backgroundColor = "#17a2b8";
+        importSubtitlesBtn.style.color = "white";
+        importSubtitlesBtn.style.border = "none";
+        importSubtitlesBtn.style.borderRadius = "4px";
+        importSubtitlesBtn.style.padding = "8px 16px";
+        importSubtitlesBtn.style.cursor = "pointer";
+        importSubtitlesBtn.style.flex = "1";
+
         const librarySong = this.currentPlaylist
             ? this.songLibrary.find((s) => s.videoId === currentSong.videoId)
             : currentSong;
@@ -4692,8 +4709,13 @@ refreshSpecificSection(sectionTitle) {
             addLyricsBtn.addEventListener("click", () => {
                 this.openLyricsMakerModal(librarySong.id);
             });
-            noLyricsMessage.appendChild(addLyricsBtn);
+            importSubtitlesBtn.addEventListener("click", () => {
+                this.openImportSubtitlesModal(librarySong.id);
+            });
+            buttonsContainer.appendChild(addLyricsBtn);
+            buttonsContainer.appendChild(importSubtitlesBtn);
         }
+        noLyricsMessage.appendChild(buttonsContainer);
         this.elements.lyricsPane.appendChild(noLyricsMessage);
         return;
     }
@@ -6991,6 +7013,370 @@ async handleSaveDiscoverMoreSettings() {
         this.setDefaultDiscoverMoreValuesOnStartup();
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+openImportSubtitlesModal(songId) {
+  const song = this.songLibrary.find((s) => s.id === songId);
+  if (!song) return;
+
+  // Create modal
+  const modal = document.createElement("div");
+  modal.classList.add("modal", "subtitles-import-modal");
+  modal.style.display = "flex";
+  modal.style.position = "fixed";
+  modal.style.top = "0";
+  modal.style.left = "0";
+  modal.style.width = "100%";
+  modal.style.height = "100%";
+  modal.style.backgroundColor = "rgba(0,0,0,0.8)";
+  modal.style.zIndex = "1000";
+  modal.style.justifyContent = "center";
+  modal.style.alignItems = "center";
+
+  // Modal content
+  const modalContent = document.createElement("div");
+  modalContent.classList.add("modal-content");
+  modalContent.style.backgroundColor = "var(--bg-secondary)";
+  modalContent.style.color = "var(--text-primary)";
+  modalContent.style.padding = "20px";
+  modalContent.style.borderRadius = "8px";
+  modalContent.style.width = "90%";
+  modalContent.style.maxWidth = "800px";
+  modalContent.style.maxHeight = "90vh";
+  modalContent.style.overflowY = "auto";
+  modalContent.style.boxShadow = "0 4px 20px rgba(0,0,0,0.3)";
+  modalContent.style.position = "relative";
+
+  // Header
+  const headerContainer = document.createElement("div");
+  headerContainer.style.position = "sticky";
+  headerContainer.style.top = "0";
+  headerContainer.style.backgroundColor = "var(--bg-secondary)";
+  headerContainer.style.paddingBottom = "15px";
+  headerContainer.style.marginBottom = "15px";
+  headerContainer.style.borderBottom = "2px solid var(--accent-color)";
+  headerContainer.style.display = "flex";
+  headerContainer.style.justifyContent = "space-between";
+  headerContainer.style.alignItems = "center";
+
+  const header = document.createElement("h2");
+  header.textContent = `Import Subtitles for: ${song.name}`;
+  header.style.margin = "0";
+  header.style.color = "var(--accent-color)";
+  header.style.fontSize = "1.4em";
+
+  const closeBtn = document.createElement("span");
+  closeBtn.innerHTML = "&times;";
+  closeBtn.style.fontSize = "28px";
+  closeBtn.style.cursor = "pointer";
+  closeBtn.style.color = "var(--text-primary)";
+  closeBtn.style.lineHeight = "28px";
+  closeBtn.style.transition = "color 0.2s";
+  closeBtn.addEventListener("mouseover", () => {
+    closeBtn.style.color = "var(--accent-color)";
+  });
+  closeBtn.addEventListener("mouseout", () => {
+    closeBtn.style.color = "var(--text-primary)";
+  });
+  closeBtn.onclick = () => modal.remove();
+
+  headerContainer.appendChild(header);
+  headerContainer.appendChild(closeBtn);
+
+  // Instructions
+  const instructions = document.createElement("div");
+  instructions.style.marginBottom = "20px";
+  instructions.style.padding = "15px";
+  instructions.style.backgroundColor = "var(--bg-primary)";
+  instructions.style.borderRadius = "5px";
+  instructions.style.border = "1px solid var(--border-color)";
+  instructions.innerHTML = `
+    <p style="margin: 0 0 10px 0; font-weight: bold; color: var(--accent-color);">Instructions:</p>
+    <p style="margin: 0 0 5px 0;">1. Go to the YouTube video: <strong>${song.name}</strong></p>
+    <p style="margin: 0 0 5px 0;">2. Click the "..." menu → "Show transcript"</p>
+    <p style="margin: 0 0 5px 0;">3. Copy the entire transcript and paste it below</p>
+    <p style="margin: 0;">4. Click "Convert to Lyrics" to format it properly</p>
+  `;
+
+  // Input textarea
+  const inputLabel = document.createElement("label");
+  inputLabel.textContent = "Paste YouTube transcript here:";
+  inputLabel.style.display = "block";
+  inputLabel.style.marginBottom = "8px";
+  inputLabel.style.fontWeight = "bold";
+  inputLabel.style.color = "var(--text-primary)";
+
+  const transcriptInput = document.createElement("textarea");
+  transcriptInput.style.width = "100%";
+  transcriptInput.style.height = "200px";
+  transcriptInput.style.padding = "12px";
+  transcriptInput.style.backgroundColor = "var(--bg-primary)";
+  transcriptInput.style.color = "var(--text-primary)";
+  transcriptInput.style.border = "2px solid var(--border-color)";
+  transcriptInput.style.borderRadius = "6px";
+  transcriptInput.style.fontSize = "14px";
+  transcriptInput.style.fontFamily = "monospace";
+  transcriptInput.style.resize = "vertical";
+  transcriptInput.style.lineHeight = "1.4";
+  transcriptInput.placeholder = "Paste the YouTube transcript here...";
+
+  // Convert button
+  const convertBtn = document.createElement("button");
+  convertBtn.textContent = "Convert to Lyrics";
+  convertBtn.style.width = "100%";
+  convertBtn.style.padding = "12px";
+  convertBtn.style.backgroundColor = "var(--accent-color)";
+  convertBtn.style.color = "white";
+  convertBtn.style.border = "none";
+  convertBtn.style.borderRadius = "6px";
+  convertBtn.style.cursor = "pointer";
+  convertBtn.style.fontSize = "16px";
+  convertBtn.style.fontWeight = "bold";
+  convertBtn.style.margin = "15px 0";
+  convertBtn.style.transition = "all 0.3s ease";
+
+  convertBtn.addEventListener("mouseover", () => {
+    convertBtn.style.backgroundColor = "var(--hover-color)";
+  });
+  convertBtn.addEventListener("mouseout", () => {
+    convertBtn.style.backgroundColor = "var(--accent-color)";
+  });
+
+  // Lyrics preview container
+  const previewContainer = document.createElement("div");
+  previewContainer.style.display = "none";
+
+  const previewLabel = document.createElement("label");
+  previewLabel.textContent = "Converted Lyrics (Edit if needed):";
+  previewLabel.style.display = "block";
+  previewLabel.style.marginBottom = "8px";
+  previewLabel.style.fontWeight = "bold";
+  previewLabel.style.color = "var(--text-primary)";
+
+  const lyricsPreview = document.createElement("textarea");
+  lyricsPreview.style.width = "100%";
+  lyricsPreview.style.height = "300px";
+  lyricsPreview.style.padding = "12px";
+  lyricsPreview.style.backgroundColor = "var(--bg-primary)";
+  lyricsPreview.style.color = "var(--text-primary)";
+  lyricsPreview.style.border = "2px solid var(--border-color)";
+  lyricsPreview.style.borderRadius = "6px";
+  lyricsPreview.style.fontSize = "14px";
+  lyricsPreview.style.fontFamily = "monospace";
+  lyricsPreview.style.resize = "vertical";
+  lyricsPreview.style.lineHeight = "1.4";
+
+  previewContainer.appendChild(previewLabel);
+  previewContainer.appendChild(lyricsPreview);
+
+  // Action buttons container
+  const buttonsContainer = document.createElement("div");
+  buttonsContainer.style.display = "none";
+  buttonsContainer.style.flexDirection = "row";
+  buttonsContainer.style.gap = "10px";
+  buttonsContainer.style.marginTop = "15px";
+
+  const saveBtn = document.createElement("button");
+  saveBtn.textContent = "Save Lyrics";
+  saveBtn.style.flex = "1";
+  saveBtn.style.padding = "12px";
+  saveBtn.style.backgroundColor = "#28a745";
+  saveBtn.style.color = "white";
+  saveBtn.style.border = "none";
+  saveBtn.style.borderRadius = "6px";
+  saveBtn.style.cursor = "pointer";
+  saveBtn.style.fontSize = "16px";
+  saveBtn.style.fontWeight = "bold";
+  saveBtn.style.transition = "all 0.3s ease";
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.textContent = "Cancel";
+  cancelBtn.style.flex = "0 0 100px";
+  cancelBtn.style.padding = "12px";
+  cancelBtn.style.backgroundColor = "#6c757d";
+  cancelBtn.style.color = "white";
+  cancelBtn.style.border = "none";
+  cancelBtn.style.borderRadius = "6px";
+  cancelBtn.style.cursor = "pointer";
+  cancelBtn.style.fontSize = "16px";
+  cancelBtn.style.transition = "all 0.3s ease";
+
+  saveBtn.addEventListener("mouseover", () => {
+    saveBtn.style.backgroundColor = "#218838";
+  });
+  saveBtn.addEventListener("mouseout", () => {
+    saveBtn.style.backgroundColor = "#28a745";
+  });
+
+  cancelBtn.addEventListener("mouseover", () => {
+    cancelBtn.style.backgroundColor = "#5a6268";
+  });
+  cancelBtn.addEventListener("mouseout", () => {
+    cancelBtn.style.backgroundColor = "#6c757d";
+  });
+
+  buttonsContainer.appendChild(saveBtn);
+  buttonsContainer.appendChild(cancelBtn);
+
+  // Event handlers
+  convertBtn.addEventListener("click", () => {
+    const transcriptText = transcriptInput.value.trim();
+    if (!transcriptText) {
+      alert("Please paste a transcript first");
+      return;
+    }
+
+    const convertedLyrics = this.convertTranscriptToLyrics(transcriptText);
+    if (convertedLyrics) {
+      lyricsPreview.value = convertedLyrics;
+      previewContainer.style.display = "block";
+      buttonsContainer.style.display = "flex";
+      lyricsPreview.scrollIntoView({ behavior: "smooth", block: "center" });
+    } else {
+      alert("Could not convert transcript. Please check the format.");
+    }
+  });
+
+  saveBtn.addEventListener("click", async () => {
+    const lyricsText = lyricsPreview.value.trim();
+    if (!lyricsText) {
+      alert("No lyrics to save");
+      return;
+    }
+
+    try {
+      await this.updateSongDetails(song.id, song.name, song.author, song.videoId, lyricsText);
+      alert("Lyrics saved successfully!");
+      modal.remove();
+      if (document.getElementById("lyrics").classList.contains("active")) {
+        this.renderLyricsTab();
+      }
+    } catch (error) {
+      console.error("Error saving lyrics:", error);
+      alert("Failed to save lyrics. Please try again.");
+    }
+  });
+
+  cancelBtn.addEventListener("click", () => {
+    modal.remove();
+  });
+
+  // Assemble modal
+  modalContent.appendChild(headerContainer);
+  modalContent.appendChild(instructions);
+  modalContent.appendChild(inputLabel);
+  modalContent.appendChild(transcriptInput);
+  modalContent.appendChild(convertBtn);
+  modalContent.appendChild(previewContainer);
+  modalContent.appendChild(buttonsContainer);
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+
+  // Close modal when clicking outside
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+}
+
+convertTranscriptToLyrics(transcript) {
+  try {
+    const lines = transcript.split('\n');
+    const lyrics = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Skip empty lines
+      if (!line) continue;
+      
+      // Check if line contains timestamp (e.g., **0:24**)
+      const timestampMatch = line.match(/\*\*(\d+):(\d+)\*\*/);
+      if (timestampMatch) {
+        const minutes = parseInt(timestampMatch[1]);
+        const seconds = parseInt(timestampMatch[2]);
+        
+        // Look for lyric content in the next line(s)
+        let lyricContent = '';
+        let j = i + 1;
+        
+        while (j < lines.length) {
+          const nextLine = lines[j].trim();
+          
+          // Stop if we hit another timestamp or empty line
+          if (nextLine.match(/\*\*\d+:\d+\*\*/) || !nextLine) {
+            break;
+          }
+          
+          // Extract lyric content
+          if (nextLine.startsWith('♪') && nextLine.endsWith('♪')) {
+            lyricContent = nextLine.slice(1, -1).trim();
+          } else if (nextLine.match(/^\([^)]+\)$/) || nextLine.match(/^\*\*[^*]+\*\*$/)) {
+            // Skip music descriptions like "(gentle rock music)" or "**intense rock music**"
+            j++;
+            continue;
+          } else {
+            lyricContent = nextLine;
+          }
+          
+          if (lyricContent) {
+            // Apply formatting
+            lyricContent = this.formatLyricText(lyricContent);
+            lyrics.push(`${lyricContent} [${minutes}:${seconds.toString().padStart(2, '0')}]`);
+          }
+          
+          j++;
+          break; // Only take the first lyric line after timestamp
+        }
+        
+        i = j - 1; // Skip processed lines
+      }
+    }
+    
+    return lyrics.join('\n');
+  } catch (error) {
+    console.error('Error converting transcript:', error);
+    return null;
+  }
+}
+
+formatLyricText(text) {
+  // Remove music symbols and extra characters
+  text = text.replace(/♪/g, '').trim();
+  
+  // Convert to lowercase first
+  text = text.toLowerCase();
+  
+  // Capitalize first letter
+  text = text.charAt(0).toUpperCase() + text.slice(1);
+  
+  // Capitalize "I" when it's a standalone word
+  text = text.replace(/\bi\b/g, 'I');
+  
+  // Capitalize after punctuation (. ! ?)
+  text = text.replace(/([.!?]\s+)([a-z])/g, (match, punctuation, letter) => {
+    return punctuation + letter.toUpperCase();
+  });
+  
+  return text;
+}
+
 
 
 
