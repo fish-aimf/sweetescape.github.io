@@ -241,7 +241,15 @@ class AdvancedMusicPlayer {
         suggestedSongsDisplayLimit: document.getElementById("suggestedSongsDisplayLimit"),
         yourPicksDisplayLimit: document.getElementById("yourPicksDisplayLimit"),
         recentlyPlayedPlaylistsLimit: document.getElementById("recentlyPlayedPlaylistsLimit"),
-        saveDiscoverMoreSettings: document.getElementById("saveDiscoverMoreSettings")
+        saveDiscoverMoreSettings: document.getElementById("saveDiscoverMoreSettings"),
+      musicIdentifyBtn: document.getElementById("musicIdentifyBtn"),
+        musicIdentifyModal: document.getElementById("musicIdentifyModal"),
+        closeMusicIdentifyBtn: document.getElementById("closeMusicIdentifyBtn"),
+        startIdentifyBtn: document.getElementById("startIdentifyBtn"),
+        stopIdentifyBtn: document.getElementById("stopIdentifyBtn"),
+        musicIdentifyResults: document.getElementById("musicIdentifyResults"),
+        listeningAnimation: document.querySelector(".listening-animation"),
+        identifyControls: document.querySelector(".identify-controls")
     };
     if (this.elements.speedBtn) {
       this.elements.speedBtn.textContent = this.currentSpeed + "x";
@@ -296,6 +304,18 @@ class AdvancedMusicPlayer {
     this.handleSongUrlInput = this.validateYouTubeUrl.bind(this);
     this.handleSongNameRightClick = this.handleSongNameRightClick.bind(this);
     this.handleAddSong = this.addSongToLibrary.bind(this);
+    this.elements.musicIdentifyBtn.addEventListener("click", this.handleOpenMusicIdentify.bind(this));
+    this.elements.closeMusicIdentifyBtn.addEventListener("click", this.handleCloseMusicIdentify.bind(this));
+    this.elements.startIdentifyBtn.addEventListener("click", this.handleStartIdentify.bind(this));
+    this.elements.stopIdentifyBtn.addEventListener("click", this.handleStopIdentify.bind(this));
+    
+    // Close modal on backdrop click
+    this.elements.musicIdentifyModal.addEventListener("click", (e) => {
+        if (e.target === this.elements.musicIdentifyModal) {
+            this.handleCloseMusicIdentify();
+        }
+    });
+}
     this.handleSongUrlKeydown = (e) => {
       if (e.key === "Enter") {
         this.addSongToLibrary();
@@ -7015,6 +7035,249 @@ async handleSaveDiscoverMoreSettings() {
         this.setDefaultDiscoverMoreValuesOnStartup();
     }
 }
+handleOpenMusicIdentify() {
+    this.elements.musicIdentifyModal.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+    this.resetIdentifyUI();
+}
+
+handleCloseMusicIdentify() {
+    this.elements.musicIdentifyModal.classList.add("hidden");
+    document.body.style.overflow = "";
+    this.stopRecording();
+    this.resetIdentifyUI();
+}
+
+resetIdentifyUI() {
+    this.elements.listeningAnimation.classList.add("hidden");
+    this.elements.startIdentifyBtn.classList.remove("hidden");
+    this.elements.stopIdentifyBtn.classList.add("hidden");
+    this.elements.musicIdentifyResults.classList.add("hidden");
+    this.elements.musicIdentifyResults.innerHTML = "";
+}
+
+async handleStartIdentify() {
+    try {
+        this.elements.startIdentifyBtn.classList.add("hidden");
+        this.elements.stopIdentifyBtn.classList.remove("hidden");
+        this.elements.listeningAnimation.classList.remove("hidden");
+        this.elements.musicIdentifyResults.classList.add("hidden");
+        
+        await this.startRecording();
+    } catch (error) {
+        console.error("Error starting identification:", error);
+        this.showIdentifyError("Failed to access microphone. Please check permissions.");
+        this.resetIdentifyUI();
+    }
+}
+
+handleStopIdentify() {
+    this.stopRecording();
+    this.resetIdentifyUI();
+}
+
+async startRecording() {
+    try {
+        this.mediaStream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+                echoCancellation: false,
+                noiseSuppression: false,
+                autoGainControl: false,
+                sampleRate: 44100
+            } 
+        });
+        
+        this.mediaRecorder = new MediaRecorder(this.mediaStream, {
+            mimeType: 'audio/webm;codecs=opus'
+        });
+        
+        this.audioChunks = [];
+        
+        this.mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                this.audioChunks.push(event.data);
+            }
+        };
+        
+        this.mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm;codecs=opus' });
+            await this.identifyMusic(audioBlob);
+        };
+        
+        this.mediaRecorder.start();
+        
+        // Stop recording after 10 seconds
+        this.recordingTimeout = setTimeout(() => {
+            if (this.mediaRecorder && this.mediaRecorder.state === "recording") {
+                this.mediaRecorder.stop();
+            }
+        }, 10000);
+        
+    } catch (error) {
+        throw error;
+    }
+}
+
+stopRecording() {
+    if (this.recordingTimeout) {
+        clearTimeout(this.recordingTimeout);
+    }
+    
+    if (this.mediaRecorder && this.mediaRecorder.state === "recording") {
+        this.mediaRecorder.stop();
+    }
+    
+    if (this.mediaStream) {
+        this.mediaStream.getTracks().forEach(track => track.stop());
+        this.mediaStream = null;
+    }
+}
+
+async identifyMusic(audioBlob) {
+    try {
+        this.elements.listeningAnimation.classList.add("hidden");
+        this.elements.identifyControls.innerHTML = '<p style="color: var(--text-secondary);">Processing audio...</p>';
+        
+        // Convert audio blob to base64
+        const audioBuffer = await audioBlob.arrayBuffer();
+        const base64Audio = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
+        
+        // ACRCloud API configuration
+        const config = {
+            host: 'identify-ap-southeast-1.acrcloud.com',
+            endpoint: '/v1/identify',
+            signature_version: '1',
+            access_key: 'ef167dddcb9df7262485a426f6aab107',
+            access_secret: 'V8CFDijuD7brF7BwKKQoYpIAs1ramzfvxrkQTBPv'
+        };
+        
+        // Create signature
+        const timestamp = Date.now();
+        const stringToSign = [
+            'POST',
+            config.endpoint,
+            config.access_key,
+            'audio',
+            config.signature_version,
+            timestamp
+        ].join('\n');
+        
+        // Create HMAC-SHA1 signature
+        const signature = await this.createSignature(stringToSign, config.access_secret);
+        
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('sample', audioBlob, 'audio.webm');
+        formData.append('sample_bytes', audioBuffer.byteLength);
+        formData.append('access_key', config.access_key);
+        formData.append('data_type', 'audio');
+        formData.append('signature_version', config.signature_version);
+        formData.append('signature', signature);
+        formData.append('timestamp', timestamp);
+        
+        // Make API request
+        const response = await fetch(`https://${config.host}${config.endpoint}`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.status.code === 0 && result.metadata && result.metadata.music && result.metadata.music.length > 0) {
+            this.displayMusicResult(result.metadata.music[0]);
+        } else {
+            this.showNoMatch();
+        }
+        
+    } catch (error) {
+        console.error("Error identifying music:", error);
+        this.showIdentifyError("Failed to identify music. Please try again.");
+    } finally {
+        this.resetIdentifyUI();
+    }
+}
+
+async createSignature(stringToSign, secret) {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+        'raw',
+        encoder.encode(secret),
+        { name: 'HMAC', hash: 'SHA-1' },
+        false,
+        ['sign']
+    );
+    
+    const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(stringToSign));
+    return btoa(String.fromCharCode(...new Uint8Array(signature)));
+}
+
+displayMusicResult(musicData) {
+    const resultContent = this.elements.musicIdentifyResults.querySelector('.result-content') || 
+                         this.elements.musicIdentifyResults;
+    
+    const albumArt = musicData.album && musicData.album.name ? 
+                    (musicData.album.artwork_url_500 || musicData.album.artwork_url_300 || '') : '';
+    
+    const artists = musicData.artists ? musicData.artists.map(artist => artist.name).join(', ') : 'Unknown Artist';
+    const album = musicData.album ? musicData.album.name : 'Unknown Album';
+    const releaseDate = musicData.release_date || 'Unknown';
+    const duration = musicData.duration_ms ? this.formatTime(Math.floor(musicData.duration_ms / 1000)) : 'Unknown';
+    
+    resultContent.innerHTML = `
+        <div class="song-result">
+            ${albumArt ? `<img src="${albumArt}" alt="Album artwork" class="song-artwork">` : 
+                        '<div class="song-artwork" style="display: flex; align-items: center; justify-content: center; background: var(--bg-primary);"><i class="fas fa-music" style="color: var(--text-secondary); font-size: 24px;"></i></div>'}
+            <div class="song-info">
+                <h3>${musicData.title || 'Unknown Title'}</h3>
+                <p><strong>Artist:</strong> ${artists}</p>
+                <p><strong>Album:</strong> ${album}</p>
+                <p><strong>Duration:</strong> ${duration}</p>
+                <p><strong>Release Date:</strong> ${releaseDate}</p>
+                ${musicData.external_metadata && musicData.external_metadata.spotify ? 
+                  `<p><a href="${musicData.external_metadata.spotify.track.external_urls.spotify}" target="_blank" style="color: var(--accent-color);">Open in Spotify</a></p>` : ''}
+            </div>
+        </div>
+    `;
+    
+    this.elements.musicIdentifyResults.classList.remove("hidden");
+}
+
+showNoMatch() {
+    const resultContent = this.elements.musicIdentifyResults.querySelector('.result-content') || 
+                         this.elements.musicIdentifyResults;
+    
+    resultContent.innerHTML = `
+        <div class="no-match-message">
+            <i class="fas fa-search" style="font-size: 48px; margin-bottom: 15px; color: var(--text-secondary);"></i>
+            <p>No music match found. Try playing the song closer to the microphone or in a quieter environment.</p>
+        </div>
+    `;
+    
+    this.elements.musicIdentifyResults.classList.remove("hidden");
+}
+
+showIdentifyError(message) {
+    const resultContent = this.elements.musicIdentifyResults.querySelector('.result-content') || 
+                         this.elements.musicIdentifyResults;
+    
+    resultContent.innerHTML = `
+        <div class="error-message">
+            <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 15px;"></i>
+            <p>${message}</p>
+        </div>
+    `;
+    
+    this.elements.musicIdentifyResults.classList.remove("hidden");
+}
+
+// Helper method for formatting time (if not already present)
+formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+
 
 
 
