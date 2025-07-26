@@ -5053,8 +5053,6 @@ initLyricMaker(song) {
 
   document.querySelectorAll('.lyrics-nav-item').forEach(tab => {
     tab.addEventListener('click', () => showTab(tab.dataset.tab));
-    document.getElementById('prevLineBtn').addEventListener('click', goToPreviousLine);
-document.getElementById('nextLineBtn').addEventListener('click', goToNextLine);
   });
 
   // Load video function
@@ -5192,87 +5190,115 @@ document.getElementById('nextLineBtn').addEventListener('click', goToNextLine);
     }
   };
 
-  const startRecording = () => {
-  if (!player.ytPlayer || !state.lyrics.length) {
-    alert("Please load a video and prepare lyrics first");
-    return;
-  }
-
-  player.ytPlayer.playVideo();
-  state.timings = Array(state.lyrics.length).fill(null);
-  state.currentLineIndex = -1;
-  state.isRecording = true;
-
-  document.getElementById("startRecording").disabled = true;
-  document.getElementById("markLine").disabled = false;
-  document.getElementById("finishRecording").disabled = false;
-  document.getElementById("prevLineBtn").disabled = false;
-  document.getElementById("nextLineBtn").disabled = false;
-
-  updateLyricsDisplay();
-  updateNavigationButtons();
-};
-
- const markCurrentLine = () => {
-  if (!state.isRecording) return;
-  const currentTime = player.ytPlayer.getCurrentTime();
-  if (state.currentLineIndex >= state.lyrics.length - 1) {
-    finishRecording();
-    return;
-  }
-  if (state.currentLineIndex === -1) {
-    state.currentLineIndex = 0;
-  } else {
-    const timeElement = document.getElementById(`time-${state.currentLineIndex}`);
-    if (state.timings[state.currentLineIndex] !== null) {
-      console.log(`Overwriting timing for line ${state.currentLineIndex + 1}`);
-    } else {
-      state.currentLineIndex++;
-    }
-  }
-  if (state.currentLineIndex < state.lyrics.length) {
-    state.timings[state.currentLineIndex] = currentTime;
-    const timeElement = document.getElementById(`time-${state.currentLineIndex}`);
-    if (timeElement) {
-      timeElement.textContent = formatTime(currentTime);
-      timeElement.style.color = "var(--accent-color)"; 
-    }
-    const progressItem = timeElement.parentElement;
-    if (progressItem) {
-      progressItem.classList.add('completed');
-    }
+  // Navigation functions
+  const goToPreviousLine = () => {
+    if (!state.isRecording || state.currentLineIndex <= 0) return;
+    
+    state.currentLineIndex--;
     updateLyricsDisplay();
     updateNavigationButtons();
-  }
-};
-  const goToPreviousLine = () => {
-  if (!state.isRecording || state.currentLineIndex <= 0) return;
-  state.currentLineIndex--;
-  updateLyricsDisplay();
-  updateNavigationButtons();
-};
-const goToNextLine = () => {
-  if (!state.isRecording || state.currentLineIndex >= state.lyrics.length - 1) return;
-  state.currentLineIndex++;
-  updateLyricsDisplay();
-  updateNavigationButtons();
-};
-const updateNavigationButtons = () => {
-  const prevBtn = document.getElementById("prevLineBtn");
-  const nextBtn = document.getElementById("nextLineBtn");
-  const markBtn = document.getElementById("markLine");
-  if (prevBtn) prevBtn.disabled = state.currentLineIndex <= 0;
-  if (nextBtn) nextBtn.disabled = state.currentLineIndex >= state.lyrics.length - 1;
-  if (markBtn && state.currentLineIndex >= 0 && state.currentLineIndex < state.lyrics.length) {
-    if (state.timings[state.currentLineIndex] !== null) {
-      markBtn.textContent = "Overwrite Time";
-      markBtn.style.backgroundColor = "#ff9800"; 
-    } else {
-      markBtn.textContent = "Mark Line";
-      markBtn.style.backgroundColor = "var(--accent-color)"; 
+  };
+
+  const goToNextLine = () => {
+    if (!state.isRecording || state.currentLineIndex >= state.lyrics.length - 1) return;
+    
+    state.currentLineIndex++;
+    updateLyricsDisplay();
+    updateNavigationButtons();
+  };
+
+  const updateNavigationButtons = () => {
+    const prevBtn = document.getElementById("prevLineBtn");
+    const nextBtn = document.getElementById("nextLineBtn");
+    const markBtn = document.getElementById("markLine");
+    
+    if (prevBtn) prevBtn.disabled = state.currentLineIndex <= 0;
+    if (nextBtn) nextBtn.disabled = state.currentLineIndex >= state.lyrics.length - 1;
+    
+    // Update mark button text based on whether line is already timed
+    if (markBtn && state.currentLineIndex >= 0 && state.currentLineIndex < state.lyrics.length) {
+      if (state.timings[state.currentLineIndex] !== null) {
+        markBtn.textContent = "Overwrite Time";
+        markBtn.style.backgroundColor = "#ff9800"; // Orange for overwrite
+      } else {
+        markBtn.textContent = "Mark Line";
+        markBtn.style.backgroundColor = "var(--accent-color)"; // Normal color
+      }
     }
-  }
-};
+  };
+
+  // Start recording function
+  const startRecording = () => {
+    if (!player.ytPlayer || !state.lyrics.length) {
+      alert("Please load a video and prepare lyrics first");
+      return;
+    }
+
+    player.ytPlayer.playVideo();
+    state.timings = Array(state.lyrics.length).fill(null);
+    state.currentLineIndex = -1;
+    state.isRecording = true;
+
+    document.getElementById("startRecording").disabled = true;
+    document.getElementById("markLine").disabled = false;
+    document.getElementById("finishRecording").disabled = false;
+    
+    const prevBtn = document.getElementById("prevLineBtn");
+    const nextBtn = document.getElementById("nextLineBtn");
+    if (prevBtn) prevBtn.disabled = false;
+    if (nextBtn) nextBtn.disabled = false;
+
+    updateLyricsDisplay();
+    updateNavigationButtons();
+  };
+
+  // Mark current line function - WITH OVERWRITE CAPABILITY
+  const markCurrentLine = () => {
+    if (!state.isRecording) return;
+
+    const currentTime = player.ytPlayer.getCurrentTime();
+    
+    // Check if we're at the end of lyrics
+    if (state.currentLineIndex >= state.lyrics.length - 1 && state.timings[state.currentLineIndex] !== null) {
+      finishRecording();
+      return;
+    }
+
+    // If this is the first click or we're moving forward
+    if (state.currentLineIndex === -1) {
+      state.currentLineIndex = 0;
+    } else {
+      // Check if user wants to overwrite current line or move to next
+      if (state.timings[state.currentLineIndex] !== null) {
+        // Line already has timing - this is an overwrite
+        console.log(`Overwriting timing for line ${state.currentLineIndex + 1}`);
+      } else {
+        // Move to next line only if current line is not timed
+        if (state.currentLineIndex < state.lyrics.length - 1) {
+          state.currentLineIndex++;
+        }
+      }
+    }
+
+    // Set the timing for current line
+    if (state.currentLineIndex < state.lyrics.length) {
+      state.timings[state.currentLineIndex] = currentTime;
+      
+      const timeElement = document.getElementById(`time-${state.currentLineIndex}`);
+      if (timeElement) {
+        timeElement.textContent = formatTime(currentTime);
+        timeElement.style.color = "var(--accent-color)"; // Highlight updated time
+      }
+
+      const progressItem = timeElement.parentElement;
+      if (progressItem) {
+        progressItem.classList.add('completed');
+      }
+
+      updateLyricsDisplay();
+      updateNavigationButtons();
+    }
+  };
 
   // Finish recording function
   const finishRecording = () => {
@@ -5282,6 +5308,11 @@ const updateNavigationButtons = () => {
     document.getElementById("startRecording").disabled = false;
     document.getElementById("markLine").disabled = true;
     document.getElementById("finishRecording").disabled = true;
+    
+    const prevBtn = document.getElementById("prevLineBtn");
+    const nextBtn = document.getElementById("nextLineBtn");
+    if (prevBtn) prevBtn.disabled = true;
+    if (nextBtn) nextBtn.disabled = true;
 
     updateLyricsDisplay();
     generateExport();
@@ -5358,11 +5389,28 @@ const updateNavigationButtons = () => {
   document.getElementById('copyToClipboardBtn').addEventListener('click', copyToClipboard);
   document.getElementById('saveLyricsBtn').addEventListener('click', saveLyrics);
 
-  // Close on escape key
+  // Navigation event listeners
+  const prevBtn = document.getElementById('prevLineBtn');
+  const nextBtn = document.getElementById('nextLineBtn');
+  if (prevBtn) prevBtn.addEventListener('click', goToPreviousLine);
+  if (nextBtn) nextBtn.addEventListener('click', goToNextLine);
+
+  // Keyboard shortcuts
   const handleKeyDown = (e) => {
     if (e.key === 'Escape') {
       closeModal();
       document.removeEventListener('keydown', handleKeyDown);
+    } else if (state.isRecording) {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goToPreviousLine();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        goToNextLine();
+      } else if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        markCurrentLine();
+      }
     }
   };
   document.addEventListener('keydown', handleKeyDown);
