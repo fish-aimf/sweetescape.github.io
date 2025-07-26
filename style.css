@@ -3620,3 +3620,18 @@ body:has(#ytPlayer.fullscreen-video) {
     font-size: 0.9rem;
   }
 }
+#prevLineBtn, #nextLineBtn {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  margin: 0 5px !important;
+}
+
+#prevLineBtn:hover:not(:disabled), #nextLineBtn:hover:not(:disabled) {
+  background: var(--bg-secondary) !important;
+}
+
+#markLine {
+  font-weight: bold;
+  min-width: 120px;
+  transition: all 0.3s;
+}
