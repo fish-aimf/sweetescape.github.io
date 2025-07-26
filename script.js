@@ -7073,7 +7073,27 @@ async handleStartIdentify() {
 
 handleStopIdentify() {
     this.stopRecording();
-    this.resetIdentifyUI();
+    
+    // Reset UI immediately when user stops
+    this.elements.listeningAnimation.classList.add("hidden");
+    this.elements.startIdentifyBtn.classList.remove("hidden");
+    this.elements.stopIdentifyBtn.classList.add("hidden");
+    
+    // Reset the controls content if it was changed
+    this.elements.identifyControls.innerHTML = `
+        <button id="startIdentifyBtn" class="identify-btn">
+            <i class="fas fa-microphone"></i>
+            Start Listening
+        </button>
+        <button id="stopIdentifyBtn" class="identify-btn stop-btn hidden">
+            <i class="fas fa-stop"></i>
+            Stop
+        </button>
+    `;
+    
+    // Re-bind event listeners for the new buttons
+    document.getElementById("startIdentifyBtn").addEventListener("click", this.handleStartIdentify.bind(this));
+    document.getElementById("stopIdentifyBtn").addEventListener("click", this.handleStopIdentify.bind(this));
 }
 
 async startRecording() {
@@ -7121,6 +7141,7 @@ async startRecording() {
 stopRecording() {
     if (this.recordingTimeout) {
         clearTimeout(this.recordingTimeout);
+        this.recordingTimeout = null;
     }
     
     if (this.mediaRecorder && this.mediaRecorder.state === "recording") {
@@ -7131,12 +7152,20 @@ stopRecording() {
         this.mediaStream.getTracks().forEach(track => track.stop());
         this.mediaStream = null;
     }
+    
+    this.mediaRecorder = null;
+    this.audioChunks = [];
 }
-
 async identifyMusic(audioBlob) {
     try {
         this.elements.listeningAnimation.classList.add("hidden");
-        this.elements.identifyControls.innerHTML = '<p style="color: var(--text-secondary);">Processing audio...</p>';
+this.elements.stopIdentifyBtn.classList.add("hidden");
+
+// Show processing message
+const processingDiv = document.createElement('div');
+processingDiv.innerHTML = '<p style="color: var(--text-secondary); text-align: center; margin: 20px 0;">Processing audio...</p>';
+processingDiv.id = 'processingMessage';
+this.elements.identifyControls.appendChild(processingDiv);
         
         // Convert audio blob to base64
         const audioBuffer = await audioBlob.arrayBuffer();
@@ -7192,8 +7221,6 @@ async identifyMusic(audioBlob) {
     } catch (error) {
         console.error("Error identifying music:", error);
         this.showIdentifyError("Failed to identify music. Please try again.");
-    } finally {
-        this.resetIdentifyUI();
     }
 }
 
@@ -7240,6 +7267,7 @@ displayMusicResult(musicData) {
     `;
     
     this.elements.musicIdentifyResults.classList.remove("hidden");
+  this.cleanupIdentifyUI();
 }
 
 showNoMatch() {
@@ -7254,6 +7282,7 @@ showNoMatch() {
     `;
     
     this.elements.musicIdentifyResults.classList.remove("hidden");
+  this.cleanupIdentifyUI();
 }
 
 showIdentifyError(message) {
@@ -7268,6 +7297,7 @@ showIdentifyError(message) {
     `;
     
     this.elements.musicIdentifyResults.classList.remove("hidden");
+  this.cleanupIdentifyUI();
 }
 
 // Helper method for formatting time (if not already present)
@@ -7275,6 +7305,18 @@ formatTime(seconds) {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+  cleanupIdentifyUI() {
+    // Remove processing message if it exists
+    const processingMsg = document.getElementById('processingMessage');
+    if (processingMsg) {
+        processingMsg.remove();
+    }
+    
+    // Reset buttons
+    this.elements.startIdentifyBtn.classList.remove("hidden");
+    this.elements.stopIdentifyBtn.classList.add("hidden");
+    this.elements.listeningAnimation.classList.add("hidden");
 }
 
 
