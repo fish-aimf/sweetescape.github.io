@@ -5190,6 +5190,43 @@ initLyricMaker(song) {
     }
   };
 
+  // Navigation functions
+  const goToPreviousLine = () => {
+    if (!state.isRecording || state.currentLineIndex <= 0) return;
+    
+    state.currentLineIndex--;
+    updateLyricsDisplay();
+    updateNavigationButtons();
+  };
+
+  const goToNextLine = () => {
+    if (!state.isRecording || state.currentLineIndex >= state.lyrics.length - 1) return;
+    
+    state.currentLineIndex++;
+    updateLyricsDisplay();
+    updateNavigationButtons();
+  };
+
+  const updateNavigationButtons = () => {
+    const prevBtn = document.getElementById("prevLineBtn");
+    const nextBtn = document.getElementById("nextLineBtn");
+    const markBtn = document.getElementById("markLine");
+    
+    if (prevBtn) prevBtn.disabled = state.currentLineIndex <= 0;
+    if (nextBtn) nextBtn.disabled = state.currentLineIndex >= state.lyrics.length - 1;
+    
+    // Update mark button text based on whether line is already timed
+    if (markBtn && state.currentLineIndex >= 0 && state.currentLineIndex < state.lyrics.length) {
+      if (state.timings[state.currentLineIndex] !== null) {
+        markBtn.textContent = "Overwrite Time";
+        markBtn.style.backgroundColor = "#ff9800"; // Orange for overwrite
+      } else {
+        markBtn.textContent = "Mark Line";
+        markBtn.style.backgroundColor = "var(--accent-color)"; // Normal color
+      }
+    }
+  };
+
   // Start recording function
   const startRecording = () => {
     if (!player.ytPlayer || !state.lyrics.length) {
@@ -5205,33 +5242,58 @@ initLyricMaker(song) {
     document.getElementById("startRecording").disabled = true;
     document.getElementById("markLine").disabled = false;
     document.getElementById("finishRecording").disabled = false;
+    
+    const prevBtn = document.getElementById("prevLineBtn");
+    const nextBtn = document.getElementById("nextLineBtn");
+    if (prevBtn) prevBtn.disabled = false;
+    if (nextBtn) nextBtn.disabled = false;
 
     updateLyricsDisplay();
+    updateNavigationButtons();
   };
 
-  // Mark current line function
+  // Mark current line function - WITH OVERWRITE CAPABILITY
   const markCurrentLine = () => {
     if (!state.isRecording) return;
 
     const currentTime = player.ytPlayer.getCurrentTime();
-    state.currentLineIndex++;
+    
+    // If this is the first click, start with line 0
+    if (state.currentLineIndex === -1) {
+      state.currentLineIndex = 0;
+    } else {
+      // If current line is not timed yet, move to next line
+      if (state.timings[state.currentLineIndex] === null && state.currentLineIndex < state.lyrics.length - 1) {
+        state.currentLineIndex++;
+      }
+      // If current line is already timed, we're overwriting (don't increment)
+    }
 
+    // Set the timing for current line
     if (state.currentLineIndex < state.lyrics.length) {
+      const wasAlreadyTimed = state.timings[state.currentLineIndex] !== null;
       state.timings[state.currentLineIndex] = currentTime;
       
       const timeElement = document.getElementById(`time-${state.currentLineIndex}`);
       if (timeElement) {
         timeElement.textContent = formatTime(currentTime);
+        timeElement.style.color = wasAlreadyTimed ? "#ff9800" : "var(--accent-color)";
       }
 
-      const progressItem = timeElement.parentElement;
+      const progressItem = timeElement?.parentElement;
       if (progressItem) {
         progressItem.classList.add('completed');
       }
 
       updateLyricsDisplay();
-    } else {
-      finishRecording();
+      updateNavigationButtons();
+
+      // Auto-finish if this was the last line
+      if (state.currentLineIndex === state.lyrics.length - 1) {
+        setTimeout(() => {
+          finishRecording();
+        }, 500);
+      }
     }
   };
 
@@ -5243,6 +5305,11 @@ initLyricMaker(song) {
     document.getElementById("startRecording").disabled = false;
     document.getElementById("markLine").disabled = true;
     document.getElementById("finishRecording").disabled = true;
+    
+    const prevBtn = document.getElementById("prevLineBtn");
+    const nextBtn = document.getElementById("nextLineBtn");
+    if (prevBtn) prevBtn.disabled = true;
+    if (nextBtn) nextBtn.disabled = true;
 
     updateLyricsDisplay();
     generateExport();
@@ -5319,11 +5386,28 @@ initLyricMaker(song) {
   document.getElementById('copyToClipboardBtn').addEventListener('click', copyToClipboard);
   document.getElementById('saveLyricsBtn').addEventListener('click', saveLyrics);
 
-  // Close on escape key
+  // Navigation event listeners
+  const prevBtn = document.getElementById('prevLineBtn');
+  const nextBtn = document.getElementById('nextLineBtn');
+  if (prevBtn) prevBtn.addEventListener('click', goToPreviousLine);
+  if (nextBtn) nextBtn.addEventListener('click', goToNextLine);
+
+  // Keyboard shortcuts
   const handleKeyDown = (e) => {
     if (e.key === 'Escape') {
       closeModal();
       document.removeEventListener('keydown', handleKeyDown);
+    } else if (state.isRecording) {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goToPreviousLine();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        goToNextLine();
+      } else if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        markCurrentLine();
+      }
     }
   };
   document.addEventListener('keydown', handleKeyDown);
