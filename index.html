@@ -338,10 +338,10 @@
             </button>
         </div>
         <div class="music-identify">
-            <button id="musicidentifyBtn" title="Opens music identify">
-                <i class="fas fa-arrows-alt-h"></i>
-            </button>
-        </div>
+    <button id="musicIdentifyBtn" title="Identify music">
+        <i class="fas fa-music"></i>
+    </button>
+</div>
         
         
     </div>
@@ -654,7 +654,49 @@
     
 
   
-  
+  <!-- Music Identify Modal -->
+<div id="musicIdentifyModal" class="music-identify-modal hidden">
+    <div class="music-identify-content">
+        <div class="music-identify-header">
+            <h2>Music Identify</h2>
+            <button id="closeMusicIdentifyBtn" class="close-btn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="music-identify-body">
+            <div id="musicIdentifyStatus" class="identify-status">
+                <div class="listening-animation hidden">
+                    <div class="sound-wave">
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                        <div class="wave"></div>
+                    </div>
+                    <p>Listening...</p>
+                </div>
+                
+                <div class="identify-controls">
+                    <button id="startIdentifyBtn" class="identify-btn">
+                        <i class="fas fa-microphone"></i>
+                        Start Listening
+                    </button>
+                    <button id="stopIdentifyBtn" class="identify-btn stop-btn hidden">
+                        <i class="fas fa-stop"></i>
+                        Stop
+                    </button>
+                </div>
+            </div>
+            
+            <div id="musicIdentifyResults" class="identify-results hidden">
+                <div class="result-content">
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
     <div id="ytPlayer"></div>
      
 </body>
