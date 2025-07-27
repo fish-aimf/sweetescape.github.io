@@ -3652,3 +3652,25 @@ body:has(#ytPlayer.fullscreen-video) {
     font-size: 0.9rem;
   }
 }
+
+.lyrics-search-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.lyrics-search-btn {
+  padding: 8px 12px;
+  background-color: #444;
+  border: 1px solid #666;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.3s;
+}
+
+.lyrics-search-btn:hover {
+  background-color: #555;
+}
