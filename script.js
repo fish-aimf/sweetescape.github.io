@@ -5143,6 +5143,35 @@ initLyricMaker(song) {
     return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
   };
 
+  // Lyrics search functions
+  const searchAZLyrics = () => {
+    const songName = song.name ? song.name.replace(/\s+/g, '+') : '';
+    const author = song.author ? '+' + song.author.replace(/\s+/g, '+') : '';
+    const url = `https://search.azlyrics.com/search.php?q=${songName}${author}&x=acc029721e541ef4da92207eb06ba181719a67575dcaefe50b401ab43356fc32`;
+    window.open(url, '_blank');
+  };
+
+  const searchLetras = () => {
+    const songName = song.name ? song.name.replace(/\s+/g, '%20') : '';
+    const author = song.author ? '%20' + song.author.replace(/\s+/g, '%20') : '';
+    const url = `https://www.letras.com/?q=${songName}${author}`;
+    window.open(url, '_blank');
+  };
+
+  const searchGenius = () => {
+    const songName = song.name ? song.name.replace(/\s+/g, '%20') : '';
+    const author = song.author ? '%20' + song.author.replace(/\s+/g, '%20') : '';
+    const url = `https://genius.com/search?q=${songName}${author}`;
+    window.open(url, '_blank');
+  };
+
+  const searchGoogle = () => {
+    const songName = song.name ? song.name.replace(/\s+/g, '%20') : '';
+    const author = song.author ? '%20' + song.author.replace(/\s+/g, '%20') : '';
+    const url = `https://www.google.com/search?q=${songName}${author}%20lyrics`;
+    window.open(url, '_blank');
+  };
+
   // Prepare lyrics function
   const prepareLyrics = () => {
     const lyricsText = document.getElementById("lyricsInput").value.trim();
@@ -5351,6 +5380,10 @@ initLyricMaker(song) {
   document.getElementById('finishRecording').addEventListener('click', finishRecording);
   document.getElementById('copyToClipboardBtn').addEventListener('click', copyToClipboard);
   document.getElementById('saveLyricsBtn').addEventListener('click', saveLyrics);
+  document.getElementById('azlyricsBtn').addEventListener('click', searchAZLyrics);
+  document.getElementById('letrasBtn').addEventListener('click', searchLetras);
+  document.getElementById('geniusBtn').addEventListener('click', searchGenius);
+  document.getElementById('googleBtn').addEventListener('click', searchGoogle);
 
   // Close on escape key
   const handleKeyDown = (e) => {
