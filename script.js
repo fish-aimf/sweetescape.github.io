@@ -5058,6 +5058,30 @@ initLyricMaker(song) {
     if (player.ytPlayer) {
       player.ytPlayer.destroy();
     }
+     // Reset all state
+  state.lyrics = [];
+  state.timings = [];
+  state.currentLineIndex = -1;
+  state.isRecording = false;
+  
+  // Reset UI elements
+  document.getElementById("lyricsInput").value = '';
+  document.getElementById("exportOutput").value = '';
+  document.getElementById("progressContainer").innerHTML = '<h3>Progress</h3>';
+  document.getElementById("previewContainer").innerHTML = '';
+  document.getElementById("currentTime").textContent = '0:00';
+  document.getElementById("prevLine").textContent = '';
+  document.getElementById("currentLine").textContent = 'Press "Start Recording" when ready';
+  document.getElementById("nextLine").textContent = '';
+  
+  // Reset button states
+  document.getElementById("startRecording").disabled = false;
+  document.getElementById("markLine").disabled = true;
+  document.getElementById("finishRecording").disabled = true;
+  
+  // Reset to first tab
+  showTab('setupTab');
+};
   };
 
   closeBtn.onclick = closeModal;
