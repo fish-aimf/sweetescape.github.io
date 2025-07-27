@@ -5082,8 +5082,6 @@ initLyricMaker(song) {
   // Reset to first tab
   showTab('setupTab');
 };
-  };
-
   closeBtn.onclick = closeModal;
 
   // Tab switching
