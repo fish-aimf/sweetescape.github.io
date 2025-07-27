@@ -1466,31 +1466,53 @@ handleTouchEnd(e) {
   
   // Find the song data to update UI properly
   let currentSong = null;
+  let foundInLibrary = false;
+  let foundInPlaylist = false;
   
   // Check if we're playing from current playlist
   if (this.currentPlaylist && this.currentPlaylist.songs[this.currentSongIndex]) {
-    currentSong = this.currentPlaylist.songs[this.currentSongIndex];
-  } else {
-    // Try to find in song library
-    currentSong = this.songLibrary.find(s => s.videoId === videoId);
-    
-    // If not found in library, search all playlists
-    if (!currentSong) {
-      for (const playlist of this.playlists) {
-        if (playlist.songs && Array.isArray(playlist.songs)) {
-          currentSong = playlist.songs.find(s => s.videoId === videoId);
-          if (currentSong) break;
-        }
-      }
+    const playlistSong = this.currentPlaylist.songs[this.currentSongIndex];
+    if (playlistSong.videoId === videoId) {
+      currentSong = playlistSong;
+      foundInPlaylist = true;
     }
-    
-    // Update current song index if found in library
-    if (currentSong && !this.currentPlaylist) {
+  }
+  
+  // If not found in current playlist context, search everywhere
+  if (!currentSong) {
+    // Try to find in song library first
+    currentSong = this.songLibrary.find(s => s.videoId === videoId);
+    if (currentSong) {
+      foundInLibrary = true;
+      // Update current song index and clear playlist context
       const songIndex = this.songLibrary.findIndex(s => s.videoId === videoId);
       if (songIndex !== -1) {
         this.currentSongIndex = songIndex;
+        this.currentPlaylist = null; // Clear playlist context when playing from library
+      }
+    } else {
+      // Search all playlists
+      for (const playlist of this.playlists) {
+        if (playlist.songs && Array.isArray(playlist.songs)) {
+          const playlistSong = playlist.songs.find(s => s.videoId === videoId);
+          if (playlistSong) {
+            currentSong = playlistSong;
+            // Set the playlist context if we found the song in a different playlist
+            if (!this.currentPlaylist || this.currentPlaylist.id !== playlist.id) {
+              this.currentPlaylist = playlist;
+              this.currentSongIndex = playlist.songs.findIndex(s => s.videoId === videoId);
+            }
+            foundInPlaylist = true;
+            break;
+          }
+        }
       }
     }
+  }
+  
+  // Store current song reference for UI updates
+  if (currentSong) {
+    this.currentPlayingSong = currentSong;
   }
   
   try {
@@ -1660,7 +1682,6 @@ playPreviousSong() {
       this.updatePlayerUI();
     }
   }
-// Fix playSongFromPlaylist method
 playSongFromPlaylist(index) {
   if (!this.currentPlaylist || index >= this.currentPlaylist.songs.length)
     return;
@@ -1693,24 +1714,53 @@ playSongFromPlaylist(index) {
     timestamp: Date.now()
   };
 }
+
 updatePlayerUI() {
     let currentSong;
-    if (this.currentPlaylist && this.currentPlaylist.songs[this.currentSongIndex]) {
+    
+    // First check if we have a stored reference to currently playing song
+    if (this.currentPlayingSong) {
+        currentSong = this.currentPlayingSong;
+    }
+    // Then check current playlist context
+    else if (this.currentPlaylist && this.currentPlaylist.songs[this.currentSongIndex]) {
         currentSong = this.currentPlaylist.songs[this.currentSongIndex];
-    } else if (this.songLibrary[this.currentSongIndex]) {
+    } 
+    // Then check song library
+    else if (this.songLibrary[this.currentSongIndex]) {
         currentSong = this.songLibrary[this.currentSongIndex];
-    } else {
+    } 
+    // Finally, try to get from YouTube player
+    else {
         if (this.ytPlayer && this.ytPlayer.getVideoData) {
             try {
                 const videoData = this.ytPlayer.getVideoData();
                 const currentVideoId = videoData.video_id;
-                currentSong = this.songLibrary.find(s => s.videoId === currentVideoId) ||
-                             (this.currentPlaylist && this.currentPlaylist.songs.find(s => s.videoId === currentVideoId));
+                if (currentVideoId) {
+                    currentSong = this.songLibrary.find(s => s.videoId === currentVideoId);
+                    if (!currentSong && this.currentPlaylist) {
+                        currentSong = this.currentPlaylist.songs.find(s => s.videoId === currentVideoId);
+                    }
+                    // If still not found, search all playlists
+                    if (!currentSong) {
+                        for (const playlist of this.playlists) {
+                            if (playlist.songs && Array.isArray(playlist.songs)) {
+                                currentSong = playlist.songs.find(s => s.videoId === currentVideoId);
+                                if (currentSong) break;
+                            }
+                        }
+                    }
+                    // Store the found song for future reference
+                    if (currentSong) {
+                        this.currentPlayingSong = currentSong;
+                    }
+                }
             } catch (e) {
                 console.warn('Could not get current video data:', e);
             }
         }
     }
+    
     if (!currentSong) {
         this.elements.currentSongName.textContent = "No Song Playing";
         this.elements.nextSongName.textContent = "-";
@@ -1722,11 +1772,16 @@ updatePlayerUI() {
         this.updatePageTitle(); 
         return;
     }
-    this.elements.currentSongName.textContent = currentSong.name;
+    
+    // Use name or title, whichever is available
+    const songName = currentSong.name || currentSong.title || "Unknown Song";
+    this.elements.currentSongName.textContent = songName;
+    
     if (this.isLooping) {
-        this.elements.nextSongName.textContent = currentSong.name;
+        this.elements.nextSongName.textContent = songName;
     } else if (this.songQueue.length > 0) {
-        this.elements.nextSongName.textContent = `Queue: ${this.songQueue[0].name}`;
+        const queueSongName = this.songQueue[0].name || this.songQueue[0].title || "Unknown Song";
+        this.elements.nextSongName.textContent = `Queue: ${queueSongName}`;
     } else if (!this.isAutoplayEnabled) {
         this.elements.nextSongName.textContent = "Autoplay disabled";
     } else {
@@ -1750,7 +1805,8 @@ updatePlayerUI() {
                 this.elements.nextSongName.textContent !== "No next song available" &&
                 this.elements.nextSongName.textContent !== "End of playlist"
             ) {
-                this.elements.nextSongName.textContent = source[nextIndex].name;
+                const nextSongName = source[nextIndex].name || source[nextIndex].title || "Unknown Song";
+                this.elements.nextSongName.textContent = nextSongName;
             }
         } else {
             const nextSongIndex = (this.currentSongIndex + 1) % source.length;
@@ -1761,21 +1817,26 @@ updatePlayerUI() {
             ) {
                 this.elements.nextSongName.textContent = "End of playlist";
             } else {
-                this.elements.nextSongName.textContent = nextSong.name;
+                const nextSongName = nextSong.name || nextSong.title || "Unknown Song";
+                this.elements.nextSongName.textContent = nextSongName;
             }
         }
     }
+    
     const playPauseIcon = this.elements.playPauseBtn.querySelector("i");
     if (playPauseIcon) {
         playPauseIcon.classList.remove("fa-play", "fa-pause");
         playPauseIcon.classList.add(this.isPlaying ? "fa-pause" : "fa-play");
     }
+    
     if (this.elements.autoplayBtn) {
         this.elements.autoplayBtn.classList.toggle("active", this.isAutoplayEnabled);
     }
+    
     if (this.currentPlaylist && this.isSidebarVisible) {
         this.renderPlaylistSidebar();
     }
+    
     this.updatePageTitle();
 }
   escapeJsString(str) {
@@ -1901,6 +1962,9 @@ updatePlayerUI() {
   }
 onPlayerStateChange(event) {
     if (event.data === YT.PlayerState.ENDED) {
+        // Clear the current playing song reference when song ends
+        this.currentPlayingSong = null;
+        
         if (this.isLooping) {
             this.playSongById(
                 this.currentPlaylist
@@ -4271,7 +4335,7 @@ removeGhostPreview() {
       }
     });
   }
-  saveRecentlyPlayedSong(song) {
+saveRecentlyPlayedSong(song) {
   if (!this.db || !song) return;
   
   // Ensure we have all required properties for recently played songs
@@ -4428,7 +4492,7 @@ removeGhostPreview() {
     const formatted = this.formatDuration(totalSeconds);
     return hasAnyDuration ? formatted : `~${formatted}`;
   }
-createDetailsSection(title, items, type) {
+  createDetailsSection(title, items, type) {
   if (!this.elements.additionalDetails || items.length === 0) return;
   
   const section = document.createElement("div");
@@ -4571,7 +4635,6 @@ createDetailsSection(title, items, type) {
   section.appendChild(itemsList);
   this.elements.additionalDetails.appendChild(section);
 }
-
 refreshSpecificSection(sectionTitle) {
     if (!this.elements.additionalDetails) return;
     
@@ -4657,7 +4720,7 @@ refreshSpecificSection(sectionTitle) {
         itemsList.appendChild(itemElement);
     });
 }
-  validateSongData(song) {
+validateSongData(song) {
   if (!song) return false;
   
   // Check for required properties
@@ -4677,7 +4740,6 @@ refreshSpecificSection(sectionTitle) {
   
   return true;
 }
-
   refreshSuggestedSongs() {
     if (this.songLibrary.length > 0) {
       this.renderAdditionalDetails();
