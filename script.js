@@ -241,7 +241,8 @@ class AdvancedMusicPlayer {
         suggestedSongsDisplayLimit: document.getElementById("suggestedSongsDisplayLimit"),
         yourPicksDisplayLimit: document.getElementById("yourPicksDisplayLimit"),
         recentlyPlayedPlaylistsLimit: document.getElementById("recentlyPlayedPlaylistsLimit"),
-        saveDiscoverMoreSettings: document.getElementById("saveDiscoverMoreSettings")
+        saveDiscoverMoreSettings: document.getElementById("saveDiscoverMoreSettings"),
+      discordButton: document.getElementById("discordButton")
     };
     if (this.elements.speedBtn) {
       this.elements.speedBtn.textContent = this.currentSpeed + "x";
@@ -296,6 +297,9 @@ class AdvancedMusicPlayer {
     this.handleSongUrlInput = this.validateYouTubeUrl.bind(this);
     this.handleSongNameRightClick = this.handleSongNameRightClick.bind(this);
     this.handleAddSong = this.addSongToLibrary.bind(this);
+     this.handleDiscordClick = () => {
+    window.open('https://discord.gg/fwfGnTHzq2', '_blank');
+  };
     this.handleSongUrlKeydown = (e) => {
       if (e.key === "Enter") {
         this.addSongToLibrary();
@@ -390,7 +394,8 @@ class AdvancedMusicPlayer {
       [this.elements.volumeSlider, "input", this.handleVolumeChange],
       [this.elements.progressBar, "click", this.handleSeekMusic],
       [this.elements.currentSongName, "contextmenu", this.handleSongNameRightClick],
-      [this.elements.toggleControlBarBtn, "click", this.handleToggleControlBar]
+      [this.elements.toggleControlBarBtn, "click", this.handleToggleControlBar],
+      [this.elements.discordButton, "click", this.handleDiscordClick]
     ];
     eventBindings.forEach(([element, event, handler]) => {
       if (element) {
