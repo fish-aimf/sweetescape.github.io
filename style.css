@@ -3674,10 +3674,4 @@ body:has(#ytPlayer.fullscreen-video) {
 .lyrics-search-btn:hover {
   background-color: #555;
 }
-#discordButton i {
-  color: #5865F2; /* Discord blurple */
-}
-#discordButton:hover {
-  background-color: #5865F2;
-  color: white;
-}
+
