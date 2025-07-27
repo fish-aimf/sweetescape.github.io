@@ -214,4 +214,4 @@
 - redid the whole lyric maker and styles and logic and added import lyrics by youtube transcript subtitles. v31.0.0
 - tried to add music identitfication. however all the apis used are very bad.v31.0.0
 - fixed play logic and playplaylist logic fixed recently played song as well v31.1.0
-- made a join discord server button and a discord server
+- made a join discord server button and a discord server v31.2.0
