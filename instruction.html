@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instructions</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px var(--shadow-color);
+        }
+
+        .main-title {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            color: var(--text-primary);
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            color: var(--accent-color);
+            margin-bottom: 15px;
+            font-weight: 500;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 8px;
+        }
+
+        .section-content {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .instruction-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            margin: 15px 0;
+            display: block;
+        }
+
+        .image-description {
+            font-style: italic;
+            color: var(--text-secondary);
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .main-title {
+                font-size: 1.5rem;
+            }
+            
+            .section-title {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="main-title">Instructions</h1>
+
+        <div class="section">
+            <h2 class="section-title">Hotkey</h2>
+            <div class="section-content">
+                etc etc etc
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Something here to be added</h2>
+            <img src="https://i.ibb.co/67qfx2t3" alt="Instruction Image" class="instruction-image">
+            <p class="image-description">Description of image</p>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Next thing</h2>
+            <img src="https://i.ibb.co/kgV5XdLB" alt="Instruction Image" class="instruction-image">
+            <p class="image-description">Description of image here</p>
+        </div>
+
+        <!-- Add more sections as needed -->
+        <div class="section">
+            <h2 class="section-title">Another Section</h2>
+            <img src="#" alt="Placeholder" class="instruction-image" style="display: none;">
+            <p class="image-description">To be expanded later...</p>
+        </div>
+    </div>
+</body>
+</html>
