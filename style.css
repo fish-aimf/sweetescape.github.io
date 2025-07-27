@@ -764,7 +764,7 @@ body {
     border: none;
     color: white;
     padding: 0;
-    margin-left: 100px;
+    margin-left: 2px;
     cursor: pointer;
     transition: opacity 0.3s;
     position: absolute;
