@@ -1837,15 +1837,25 @@ updatePlayerUI() {
   }
 onPlayerStateChange(event) {
     if (event.data === YT.PlayerState.ENDED) {
+        console.log("Song ended - Debug info:");
+        console.log("isLooping:", this.isLooping);
+        console.log("isAutoplayEnabled:", this.isAutoplayEnabled);
+        console.log("currentSongIndex:", this.currentSongIndex);
+        console.log("currentPlaylist:", this.currentPlaylist);
+        console.log("songLibrary length:", this.songLibrary.length);
+        
         if (this.isLooping) {
+            console.log("Looping current song");
             this.playSongById(
                 this.currentPlaylist
                     ? this.currentPlaylist.songs[this.currentSongIndex].videoId
                     : this.songLibrary[this.currentSongIndex].videoId
             );
         } else if (this.isAutoplayEnabled) {
+            console.log("Autoplay enabled - calling playNextSong()");
             this.playNextSong(); 
         } else {
+            console.log("Autoplay disabled - stopping playback");
             this.isPlaying = false;
             if (this.progressInterval) {
                 clearInterval(this.progressInterval);
@@ -1908,7 +1918,7 @@ onPlayerStateChange(event) {
             this.renderFullscreenLyrics();
         }
     }
-  if (event.data === YT.PlayerState.PLAYING) {
+    if (event.data === YT.PlayerState.PLAYING) {
         this.visualizer.isActive = true;
     }
 }
