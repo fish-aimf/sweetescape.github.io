@@ -411,6 +411,7 @@
 
 
     <!-- Settings Modal -->
+<!-- Settings Modal -->
 <div id="settingsModal" class="settings-modal">
     <div class="settings-modal-content">
         <div class="settings-modal-header">
@@ -420,58 +421,44 @@
             </button>
         </div>
         <div class="settings-modal-body">
-            <div id="settingsContent" class="settings-content">
+            <!-- Settings Tabs -->
+            <div class="settings-tabs">
+                <button class="settings-tab-btn active" data-tab="theme">
+                    <i class="fas fa-palette"></i>
+                    Theme
+                </button>
+                <button class="settings-tab-btn" data-tab="recommendation">
+                    <i class="fas fa-music"></i>
+                    Recommendation
+                </button>
+                <button class="settings-tab-btn" data-tab="feedback">
+                    <i class="fas fa-comment"></i>
+                    Feedback
+                </button>
+                <button class="settings-tab-btn" data-tab="additional">
+                    <i class="fas fa-cog"></i>
+                    Additional
+                </button>
+            </div>
+
+            <!-- Tab Contents -->
+            <div class="settings-tab-content">
                 
-                <!-- Collapsible Feedback Section -->
-                <div class="settings-section collapsible-section">
-                    <div class="section-header" data-section="feedback">
-                        <h3>Feedback</h3>
-                        <i class="fas fa-chevron-down section-arrow"></i>
+                <!-- Theme Tab -->
+                <div class="tab-panel active" id="themePanel">
+                    <div class="setting-group">
+                        <label>Theme Mode:</label>
+                        <select id="themeMode">
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                            <option value="custom">Custom</option>
+                        </select>
                     </div>
-                    <div class="section-content" id="feedbackContent">
-                        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd_TCuV0fb6j0Psu2-QowYAlK440IOd4f1XxhzswTfWOkLHyw/viewform?embedded=true" width="640" height="656" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
-                    </div>
-                </div>
-
-                <!-- Collapsible Advertisement Settings Section -->
-                <div class="settings-section collapsible-section">
-                    <div class="section-header" data-section="advertisement">
-                        <h3>Advertisement Settings</h3>
-                        <i class="fas fa-chevron-down section-arrow"></i>
-                    </div>
-                    <div class="section-content" id="advertisementContent">
-                        <div class="setting-group">
-                            <label for="adsToggle">Enable Advertisements:</label>
-                            <div class="toggle-switch">
-                                <input type="checkbox" id="adsToggle" class="toggle-input">
-                                <label for="adsToggle" class="toggle-label">
-                                    <span class="toggle-slider"></span>
-                                </label>
-                            </div>
-                            <p class="setting-description">Turning on advertisements won't even give me a hundredth of a cent</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Collapsible Theme Settings Section -->
-                <div class="settings-section collapsible-section">
-                    <div class="section-header" data-section="theme">
-                        <h3>Theme Settings</h3>
-                        <i class="fas fa-chevron-down section-arrow"></i>
-                    </div>
-                    <div class="section-content" id="themeContent">
-                        <div class="setting-group">
-                            <label>Theme Mode:</label>
-                            <select id="themeMode">
-                                <option value="light">Light</option>
-                                <option value="dark">Dark</option>
-                                <option value="custom">Custom</option>
-                            </select>
-                        </div>
+                    
+                    <div class="custom-theme-section" id="customThemeSection">
+                        <h3>Customize Colors</h3>
                         
-                        <div class="custom-theme-section" id="customThemeSection">
-                            <h3>Customize Colors</h3>
-                            
+                        <div class="color-picker-grid">
                             <div class="color-picker-group">
                                 <label for="primaryColorPicker">Primary Color:</label>
                                 <input type="color" id="primaryColorPicker" value="#3b82f6">
@@ -519,9 +506,11 @@
                             
                             <div class="color-picker-group">
                                 <label for="shadowColorPicker">Shadow Color:</label>
-                                <input type="color" id="shadowColorPicker" value="#000000">
-                                <input type="range" id="shadowOpacity" min="0" max="1" step="0.1" value="0.1">
-                                <span>Opacity</span>
+                                <div class="shadow-controls">
+                                    <input type="color" id="shadowColorPicker" value="#000000">
+                                    <input type="range" id="shadowOpacity" min="0" max="1" step="0.1" value="0.1">
+                                    <span>Opacity</span>
+                                </div>
                             </div>
                             
                             <div class="color-picker-group">
@@ -530,100 +519,109 @@
                             </div>
                             
                             <div class="color-picker-group">
-                                <label for="errorHoverColorPicker">Error Hover Color:</label>
-                                <input type="color" id="errorHoverColorPicker" value="#c82333">
-                            </div>
-                            
-                            <div class="color-picker-group">
                                 <label for="youtubeRedColorPicker">YouTube Red:</label>
                                 <input type="color" id="youtubeRedColorPicker" value="#FF0000">
                             </div>
-                            
-                            <div class="theme-buttons">
-                                <button id="saveCustomTheme" onclick="musicPlayer.handleSaveCustomTheme()">Save Theme</button>
-                                <button onclick="musicPlayer.resetCustomTheme()">Reset to Defaults</button>
+                        </div>
+                        
+                        <div class="theme-buttons">
+                            <button id="saveCustomTheme" onclick="musicPlayer.handleSaveCustomTheme()">Save Theme</button>
+                            <button onclick="musicPlayer.resetCustomTheme()">Reset to Defaults</button>
+                        </div>
+                        
+                        <div class="theme-import-export">
+                            <h4>Import/Export Theme</h4>
+                            <div class="import-export-group">
+                                <button onclick="musicPlayer.exportTheme()">Export Theme to Clipboard</button>
+                                <button onclick="musicPlayer.importTheme()">Import Theme</button>
                             </div>
-                            
-                            <div class="theme-import-export">
-                                <h4>Import/Export Theme</h4>
-                                
-                                <div class="import-export-group">
-                                    <button onclick="musicPlayer.exportTheme()">Export Theme to Clipboard</button>
-                                    <button onclick="musicPlayer.importTheme()">Import Theme</button>
-                                </div>
-                                
-                                <div class="theme-input-group">
-                                    <label for="themeImportText">Paste Theme Code:</label>
-                                    <textarea id="themeImportText" placeholder="Paste your theme code here..." rows="4"></textarea>
-                                </div>
+                            <div class="theme-input-group">
+                                <label for="themeImportText">Paste Theme Code:</label>
+                                <textarea id="themeImportText" placeholder="Paste your theme code here..." rows="4"></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Collapsible Discover More Settings Section -->
-                <div class="settings-section collapsible-section">
-                    <div class="section-header" data-section="discoverMore">
-                        <h3>Recommendation settings</h3>
-                        <i class="fas fa-chevron-down section-arrow"></i>
+                <!-- Recommendation Tab -->
+                <div class="tab-panel" id="recommendationPanel">
+                    <div class="setting-group">
+                        <label for="recentlyPlayedStorageLimit">Store Last Songs:</label>
+                        <div class="number-input-group">
+                            <input type="number" id="recentlyPlayedStorageLimit" min="1" max="100" value="20">
+                            <span class="input-suffix">songs</span>
+                        </div>
+                        <p class="setting-description">Maximum number of recently played songs to store</p>
                     </div>
-                    <div class="section-content" id="discoverMoreContent">
-                        
-                        <!-- Recently Listened To Storage Setting -->
-                        <div class="setting-group">
-                            <label for="recentlyPlayedStorageLimit">Store Last Songs:</label>
-                            <div class="number-input-group">
-                                <input type="number" id="recentlyPlayedStorageLimit" min="1" max="100" value="20">
-                                <span class="input-suffix">songs</span>
-                            </div>
-                            <p class="setting-description">Maximum number of recently played songs to store</p>
-                        </div>
 
-                        <!-- Recently Listened To Display Setting -->
-                        <div class="setting-group">
-                            <label for="recentlyPlayedDisplayLimit">Recently Listened To Display:</label>
-                            <div class="number-input-group">
-                                <input type="number" id="recentlyPlayedDisplayLimit" min="1" max="10" value="3">
-                                <span class="input-suffix">songs</span>
-                            </div>
-                            <p class="setting-description">Number of songs to show in Recently Listened To section</p>
+                    <div class="setting-group">
+                        <label for="recentlyPlayedDisplayLimit">Recently Listened To Display:</label>
+                        <div class="number-input-group">
+                            <input type="number" id="recentlyPlayedDisplayLimit" min="1" max="10" value="3">
+                            <span class="input-suffix">songs</span>
                         </div>
+                        <p class="setting-description">Number of songs to show in Recently Listened To section</p>
+                    </div>
 
-                        <!-- Suggested Songs Display Setting -->
-                        <div class="setting-group">
-                            <label for="suggestedSongsDisplayLimit">Suggested Songs Display:</label>
-                            <div class="number-input-group">
-                                <input type="number" id="suggestedSongsDisplayLimit" min="1" max="10" value="2">
-                                <span class="input-suffix">songs</span>
-                            </div>
-                            <p class="setting-description">Number of songs to show in Suggested section</p>
+                    <div class="setting-group">
+                        <label for="suggestedSongsDisplayLimit">Suggested Songs Display:</label>
+                        <div class="number-input-group">
+                            <input type="number" id="suggestedSongsDisplayLimit" min="1" max="10" value="2">
+                            <span class="input-suffix">songs</span>
                         </div>
+                        <p class="setting-description">Number of songs to show in Suggested section</p>
+                    </div>
 
-                        <!-- Your Picks Display Setting -->
-                        <div class="setting-group">
-                            <label for="yourPicksDisplayLimit">Your Picks Display:</label>
-                            <div class="number-input-group">
-                                <input type="number" id="yourPicksDisplayLimit" min="1" max="10" value="2">
-                                <span class="input-suffix">songs</span>
-                            </div>
-                            <p class="setting-description">Number of songs to show in Your Picks section</p>
+                    <div class="setting-group">
+                        <label for="yourPicksDisplayLimit">Your Picks Display:</label>
+                        <div class="number-input-group">
+                            <input type="number" id="yourPicksDisplayLimit" min="1" max="10" value="2">
+                            <span class="input-suffix">songs</span>
                         </div>
+                        <p class="setting-description">Number of songs to show in Your Picks section</p>
+                    </div>
 
-                        <!-- Recently Played Playlists Display Setting -->
-                        <div class="setting-group">
-                            <label for="recentlyPlayedPlaylistsLimit">Recently Played Playlists Display:</label>
-                            <div class="number-input-group">
-                                <input type="number" id="recentlyPlayedPlaylistsLimit" min="1" max="5" value="1">
-                                <span class="input-suffix">playlists</span>
-                            </div>
-                            <p class="setting-description">Number of playlists to show in Recently Played Playlists section</p>
+                    <div class="setting-group">
+                        <label for="recentlyPlayedPlaylistsLimit">Recently Played Playlists Display:</label>
+                        <div class="number-input-group">
+                            <input type="number" id="recentlyPlayedPlaylistsLimit" min="1" max="5" value="1">
+                            <span class="input-suffix">playlists</span>
                         </div>
+                        <p class="setting-description">Number of playlists to show in Recently Played Playlists section</p>
+                    </div>
 
-                        <!-- Save Button -->
-                        <div class="setting-group">
-                            <button id="saveDiscoverMoreSettings" class="save-settings-btn">Save Recommendation Settings</button>
+                    <div class="setting-group">
+                        <button id="saveDiscoverMoreSettings" class="save-settings-btn">Save Recommendation Settings</button>
+                    </div>
+                </div>
+
+                <!-- Feedback Tab -->
+                <div class="tab-panel" id="feedbackPanel">
+                    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd_TCuV0fb6j0Psu2-QowYAlK440IOd4f1XxhzswTfWOkLHyw/viewform?embedded=true" width="100%" height="600" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
+                </div>
+
+                <!-- Additional Tab -->
+                <div class="tab-panel" id="additionalPanel">
+                    <div class="setting-group">
+                        <label for="adsToggle">Enable Advertisements:</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="adsToggle" class="toggle-input">
+                            <label for="adsToggle" class="toggle-label">
+                                <span class="toggle-slider"></span>
+                            </label>
                         </div>
+                        <p class="setting-description">Turning on advertisements won't even give me a hundredth of a cent</p>
+                    </div>
 
+                    <div class="setting-group">
+                        <label for="visualizerToggle">Enable Music Visualizer:</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="visualizerToggle" class="toggle-input" checked>
+                            <label for="visualizerToggle" class="toggle-label">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <p class="setting-description">Show animated background visualizer while music is playing</p>
                     </div>
                 </div>
 
@@ -631,7 +629,6 @@
         </div>
     </div>
 </div>
-
 
 
 
