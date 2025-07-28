@@ -215,3 +215,5 @@
 - tried to add music identitfication. however all the apis used are very bad.v31.0.0
 - fixed play logic and playplaylist logic fixed recently played song as well v31.1.0
 - made a join discord server button and a discord server v31.2.0
+- heavily bugged the website
+- added visualizer and visualizer settings not fixed bugs v31.3.0
