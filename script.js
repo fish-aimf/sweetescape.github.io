@@ -1927,90 +1927,78 @@ onPlayerError(event) {
 
   
 onPlayerStateChange(event) {
-  console.log("Player state changed:", event.data);
-  
-  if (event.data === YT.PlayerState.ENDED) {
-    console.log("Song ended - Debug info:");
-    console.log("isLooping:", this.isLooping);
-    console.log("isAutoplayEnabled:", this.isAutoplayEnabled);
-    console.log("currentSongIndex:", this.currentSongIndex);
-    console.log("currentPlaylist:", this.currentPlaylist);
-    console.log("songLibrary length:", this.songLibrary.length);
-    
-    // Clear all intervals when song ends
-    this.clearAllIntervals();
-    
-    if (this.isLooping) {
-      console.log("Looping current song");
-      const currentVideoId = this.getCurrentVideoId();
-      if (currentVideoId) {
-        setTimeout(() => {
-          this.playSongById(currentVideoId);
-        }, 100);
-      }
-    } else if (this.isAutoplayEnabled) {
-      console.log("Autoplay enabled - calling playNextSong()");
-      setTimeout(() => {
-        this.playNextSong();
-      }, 100);
-    } else {
-      console.log("Autoplay disabled - stopping playback");
-      this.isPlaying = false;
-      this.updatePlayerUI();
-      this.updatePageTitle();
-    }
-    
-    // Reset progress bar
-    if (this.elements.progressBar) {
-      this.elements.progressBar.value = 0;
-    }
-    if (this.elements.timeDisplay) {
-      this.elements.timeDisplay.textContent = "0:00/0:00";
-    }
-    
-  } else if (event.data === YT.PlayerState.PAUSED) {
-    this.isPlaying = false;
-    this.updatePlayerUI();
-    this.clearNonEssentialIntervals();
-    this.updatePageTitle();
-    
-  } else if (event.data === YT.PlayerState.PLAYING) {
-    this.isPlaying = true;
-    this.updatePlayerUI();
-    
-    // Set playback rate if different from default
-    if (this.currentSpeed !== 1) {
-      setTimeout(() => {
-        try {
-          this.ytPlayer.setPlaybackRate(this.currentSpeed);
-        } catch (error) {
-          console.warn("Failed to set playback rate:", error);
+    if (event.data === YT.PlayerState.ENDED) {
+        if (this.isLooping) {
+            this.playSongById(
+                this.currentPlaylist
+                    ? this.currentPlaylist.songs[this.currentSongIndex].videoId
+                    : this.songLibrary[this.currentSongIndex].videoId
+            );
+        } else if (this.isAutoplayEnabled) {
+            this.playNextSong(); 
+        } else {
+            this.isPlaying = false;
+            if (this.progressInterval) {
+                clearInterval(this.progressInterval);
+                this.progressInterval = null;
+            }
+            if (this.listeningTimeInterval) {
+                clearInterval(this.listeningTimeInterval);
+                this.listeningTimeInterval = null;
+            }
+            if (this.titleScrollInterval) {
+                clearInterval(this.titleScrollInterval);
+                this.titleScrollInterval = null;
+            }
+            if (this.lyricsInterval) {
+                clearInterval(this.lyricsInterval);
+                this.lyricsInterval = null;
+            }
+            if (this.fullscreenLyricsInterval) {
+                clearInterval(this.fullscreenLyricsInterval);
+                this.fullscreenLyricsInterval = null;
+            }
+            this.updatePlayerUI();
+            this.updatePageTitle(); 
         }
-      }, 200);
+        if (this.elements.progressBar) {
+            this.elements.progressBar.value = 0;
+        }
+        if (this.elements.timeDisplay) {
+            this.elements.timeDisplay.textContent = "0:00/0:00";
+        }
+    } else if (event.data === YT.PlayerState.PAUSED) {
+        this.isPlaying = false;
+        this.updatePlayerUI();
+        if (this.titleScrollInterval) {
+            clearInterval(this.titleScrollInterval);
+            this.titleScrollInterval = null;
+        }
+        this.updatePageTitle();
+        if (this.progressInterval) {
+            clearInterval(this.progressInterval);
+        }
+        if (this.lyricsInterval) {
+            clearInterval(this.lyricsInterval);
+        }
+        if (this.fullscreenLyricsInterval) {
+            clearInterval(this.fullscreenLyricsInterval);
+        }
+    } else if (event.data === YT.PlayerState.PLAYING) {
+        this.isPlaying = true;
+        this.updatePlayerUI();
+        if (this.currentSpeed !== 1) {
+            this.ytPlayer.setPlaybackRate(this.currentSpeed);
+        }
+        this.updateProgressBar();
+        this.startListeningTimeTracking();
+        if (document.getElementById("lyrics") && document.getElementById("lyrics").classList.contains("active")) {
+            this.renderLyricsTab();
+        }
+        if (this.isLyricsFullscreen) {
+            this.renderFullscreenLyrics();
+        }
     }
-    
-    this.updateProgressBar();
-    this.startListeningTimeTracking();
-    
-    // Handle lyrics if active
-    if (document.getElementById("lyrics") && document.getElementById("lyrics").classList.contains("active")) {
-      this.renderLyricsTab();
-    }
-    if (this.isLyricsFullscreen) {
-      this.renderFullscreenLyrics();
-    }
-    
-  } else if (event.data === YT.PlayerState.BUFFERING) {
-    console.log("Player is buffering");
-    
-  } else if (event.data === YT.PlayerState.CUED) {
-    console.log("Video cued");
-  }
-  
-  // Update visualizer state
-  if (this.visualizer) {
-    this.visualizer.isActive = (event.data === YT.PlayerState.PLAYING);
-  }
 }
   getCurrentVideoId() {
   if (!this.ytPlayer || !this.ytPlayer.getVideoData) return null;
