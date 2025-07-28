@@ -40,6 +40,7 @@ class AdvancedMusicPlayer {
     this.suggestedSongsDisplayLimit = 2;
     this.yourPicksDisplayLimit = 2;
     this.recentlyPlayedPlaylistsDisplayLimit = 1;
+    this.visualizerEnabled = true;
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
       'https://i2.res.24o.it/pdf2010/Editrice/ILSOLE24ORE/ILSOLE24ORE/Online/_Oggetti_Embedded/Documenti/2025/07/12/Preliminary%20Report%20VT.pdf?utm_source=chatgpt.com' ,
@@ -253,7 +254,8 @@ class AdvancedMusicPlayer {
         yourPicksDisplayLimit: document.getElementById("yourPicksDisplayLimit"),
         recentlyPlayedPlaylistsLimit: document.getElementById("recentlyPlayedPlaylistsLimit"),
         saveDiscoverMoreSettings: document.getElementById("saveDiscoverMoreSettings"),
-      discordButton: document.getElementById("discordButton")
+      discordButton: document.getElementById("discordButton"),
+      visualizerToggle: document.getElementById("visualizerToggle")
     };
     if (this.elements.speedBtn) {
       this.elements.speedBtn.textContent = this.currentSpeed + "x";
@@ -308,6 +310,15 @@ class AdvancedMusicPlayer {
     this.handleSongUrlInput = this.validateYouTubeUrl.bind(this);
     this.handleSongNameRightClick = this.handleSongNameRightClick.bind(this);
     this.handleAddSong = this.addSongToLibrary.bind(this);
+    const tabButtons = document.querySelectorAll('.settings-tab-btn');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', (e) => this.handleTabSwitch(e));
+    });
+    
+    // Add visualizer toggle listener
+    if (this.elements.visualizerToggle) {
+        this.elements.visualizerToggle.addEventListener('change', (e) => this.handleVisualizerToggle(e));
+    }
      this.handleDiscordClick = () => {
     window.open('https://discord.gg/fwfGnTHzq2', '_blank');
   };
@@ -6285,7 +6296,7 @@ initializeSettingsContent() {
     this.loadThemeMode();
     this.loadCustomThemeColors();
     this.loadAdvertisementSettingsInModal(); 
-    this.setupCollapsibleSections(); 
+    this.setupTabs();
     this.loadDiscoverMoreSettings();
     console.log("Settings modal opened - all settings loaded");
 }
@@ -6774,50 +6785,92 @@ initializeAdvertisementSettings() {
         this.updateAdvertisementDisplay();
     });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-setupCollapsibleSections() {
-    // Get all section headers
-    const sectionHeaders = document.querySelectorAll('.section-header');
+  loadVisualizerSettings() {
+    if (!this.db) return;
     
-    sectionHeaders.forEach(header => {
-        // Remove any existing event listeners to prevent duplicates
-        header.removeEventListener('click', this.handleSectionToggle);
-        
-        // Add click event listener
-        header.addEventListener('click', this.handleSectionToggle.bind(this));
-        
-        // Set initial state - all sections collapsed by default
-        const sectionType = header.dataset.section;
-        const content = document.getElementById(`${sectionType}Content`);
-        const arrow = header.querySelector('.section-arrow');
-        
-        if (content && arrow) {
-            content.classList.remove('expanded');
-            arrow.classList.remove('rotated');
+    const transaction = this.db.transaction(["settings"], "readonly");
+    const store = transaction.objectStore("settings");
+    const request = store.get("visualizerEnabled");
+    
+    request.onsuccess = () => {
+        const enabled = request.result ? request.result.value : true; // default to true
+        if (this.elements.visualizerToggle) {
+            this.elements.visualizerToggle.checked = enabled;
         }
-    });
+        
+        // Apply the setting
+        if (enabled) {
+            document.getElementById('musicVisualizer').style.display = 'block';
+            this.visualizer.isActive = true;
+        } else {
+            document.getElementById('musicVisualizer').style.display = 'none';
+            this.visualizer.isActive = false;
+        }
+    };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+setupTabs() {
+    // Set first tab as active by default
+    const firstTab = document.querySelector('.settings-tab-btn');
+    const firstPanel = document.querySelector('.tab-panel');
     
-    console.log("Collapsible sections initialized");
+    if (firstTab && firstPanel) {
+        firstTab.classList.add('active');
+        firstPanel.classList.add('active');
+    }
+}
+handleTabSwitch(event) {
+    const targetTab = event.target.closest('.settings-tab-btn').dataset.tab;
+    
+    // Remove active class from all tabs and panels
+    document.querySelectorAll('.settings-tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+    
+    // Add active class to clicked tab and corresponding panel
+    event.target.closest('.settings-tab-btn').classList.add('active');
+    document.getElementById(targetTab + 'Panel').classList.add('active');
+}
+
+// Add visualizer toggle handler
+handleVisualizerToggle(event) {
+    const isEnabled = event.target.checked;
+    
+    if (isEnabled) {
+        this.visualizer.isActive = true;
+        document.getElementById('musicVisualizer').style.display = 'block';
+        if (!this.visualizer.animationId) {
+            this.startVisualizer();
+        }
+    } else {
+        this.visualizer.isActive = false;
+        document.getElementById('musicVisualizer').style.display = 'none';
+        if (this.visualizer.animationId) {
+            cancelAnimationFrame(this.visualizer.animationId);
+            this.visualizer.animationId = null;
+        }
+    }
+    
+    this.saveSetting("visualizerEnabled", isEnabled);
 }
 
 handleSectionToggle(event) {
