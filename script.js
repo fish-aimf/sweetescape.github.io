@@ -1986,6 +1986,44 @@ onPlayerStateChange(event) {
     this.visualizer.isActive = (event.data === YT.PlayerState.PLAYING);
   }
 }
+  handleSongEnd() {
+  // Clear all intervals when song ends
+  this.clearAllIntervals();
+  
+  // Reset progress bar immediately
+  if (this.elements.progressBar) {
+    this.elements.progressBar.value = 0;
+  }
+  if (this.elements.timeDisplay) {
+    this.elements.timeDisplay.textContent = "0:00/0:00";
+  }
+  
+  if (this.isLooping) {
+    console.log("Looping current song");
+    const currentVideoId = this.getCurrentVideoId();
+    if (currentVideoId) {
+      // Immediately start the same song again
+      this.playSongById(currentVideoId);
+    }
+  } else if (this.isAutoplayEnabled) {
+    console.log("Autoplay enabled - calling playNextSong()");
+    // Immediately play next song
+    this.playNextSong();
+  } else {
+    console.log("Autoplay disabled - stopping playback");
+    this.isPlaying = false;
+    // Force stop the player to prevent related videos
+    if (this.ytPlayer) {
+      try {
+        this.ytPlayer.stopVideo();
+      } catch (error) {
+        console.warn("Error stopping video:", error);
+      }
+    }
+    this.updatePlayerUI();
+    this.updatePageTitle();
+  }
+}
   getCurrentVideoId() {
   if (!this.ytPlayer || !this.ytPlayer.getVideoData) return null;
   
