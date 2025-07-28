@@ -43,7 +43,6 @@ class AdvancedMusicPlayer {
     this.visualizerEnabled = true;
     // Add these lines in your constructor
 this.videoEndCheckInterval = null;
-this.endTriggered = false;
 this.triggerBeforeEnd = 1; // seconds before end to trigger
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
@@ -1545,6 +1544,12 @@ this.startVideoEndDetection();
     clearInterval(this.videoEndCheckInterval);
   }
   
+  this.endTriggered = false; // Reset the flag each time we start
+  this.videoEndCheckInterval = setInterval(() => {
+    this.checkVideoEnd();
+  }, 250);
+}
+  
   this.endTriggered = false;
   this.videoEndCheckInterval = setInterval(() => {
     this.checkVideoEnd();
@@ -1560,7 +1565,7 @@ stopVideoEndDetection() {
 }
 
 checkVideoEnd() {
-  if (!this.ytPlayer || !this.isPlaying || this.endTriggered) {
+  if (!this.ytPlayer || !this.isPlaying) {
     return;
   }
 
@@ -1572,10 +1577,22 @@ checkVideoEnd() {
       return;
     }
 
+    // Reset flag if we're back at the beginning (new song started)
+    if (currentTime < 2 && this.endTriggered) {
+      this.endTriggered = false;
+      console.log("Reset end trigger flag - new song detected");
+    }
+
+    // Don't check if already triggered for this song
+    if (this.endTriggered) {
+      return;
+    }
+
     const timeRemaining = duration - currentTime;
 
     if (timeRemaining <= this.triggerBeforeEnd) {
       console.log(`Time-based end trigger: ${timeRemaining.toFixed(2)}s remaining`);
+      this.endTriggered = true; // Set flag here instead
       this.handleTimeBasedEnd();
     }
   } catch (error) {
@@ -1584,7 +1601,6 @@ checkVideoEnd() {
 }
 
 handleTimeBasedEnd() {
-  this.endTriggered = true;
   this.stopVideoEndDetection();
   
   if (this.isLooping) {
