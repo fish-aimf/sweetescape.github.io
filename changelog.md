@@ -217,3 +217,4 @@
 - made a join discord server button and a discord server v31.2.0
 - heavily bugged the website
 - added visualizer and visualizer settings not fixed bugs v31.3.0
+- emergency bugfix v31.3.1
