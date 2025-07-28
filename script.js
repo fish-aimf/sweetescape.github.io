@@ -48,6 +48,7 @@ class AdvancedMusicPlayer {
       'https://www.desmos.com/3d'
     ];
     this.currentWebEmbedIndex = 0;
+    
     this.pageDisguises = [
       {
         favicon: "https://i.ibb.co/W4MfKV9X/image.png",
@@ -98,6 +99,14 @@ class AdvancedMusicPlayer {
     this.currentTabIndex = 0;
     this.setupChangelogModal();
     this.loadVersion();
+    this.visualizer = {
+        canvas: null,
+        ctx: null,
+        bars: [],
+        particles: [],
+        animationId: null,
+        isActive: false
+    };
     this.initDatabase()
       .then(() => {
         return Promise.all([
@@ -116,11 +125,13 @@ class AdvancedMusicPlayer {
         this.initializeTheme();
         this.initializeAutoplay();
         this.setupKeyboardControls();
+        
         this.renderInitialState();
         this.renderAdditionalDetails();
         this.setupLyricsTabContextMenu();
         this.initializeFullscreenLyrics();
         this.initializeAdvertisementSettings();
+        this.initializeVisualizer();
       })
       .catch((error) => {
         console.error("Error initializing music player:", error);
@@ -7479,6 +7490,143 @@ formatLyricText(text) {
 
 
 
+  initializeVisualizer() {
+    this.visualizer.canvas = document.getElementById('visualizerCanvas');
+    if (!this.visualizer.canvas) return;
+    
+    this.visualizer.ctx = this.visualizer.canvas.getContext('2d');
+    this.resizeCanvas();
+    this.createVisualizerBars();
+    this.startVisualizer();
+    
+    // Resize canvas when window resizes
+    window.addEventListener('resize', () => this.resizeCanvas());
+}
+
+resizeCanvas() {
+    if (!this.visualizer.canvas) return;
+    
+    this.visualizer.canvas.width = window.innerWidth;
+    this.visualizer.canvas.height = window.innerHeight;
+}
+
+createVisualizerBars() {
+    const barsContainer = document.getElementById('visualizerBars');
+    if (!barsContainer) return;
+    
+    // Create 50 bars
+    for (let i = 0; i < 50; i++) {
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.height = '4px';
+        barsContainer.appendChild(bar);
+        this.visualizer.bars.push(bar);
+    }
+}
+
+startVisualizer() {
+    this.visualizer.isActive = true;
+    this.animateVisualizer();
+}
+
+animateVisualizer() {
+    if (!this.visualizer.isActive) return;
+    
+    // Animate bars
+    this.animateBars();
+    
+    // Animate canvas particles
+    this.animateParticles();
+    
+    this.visualizer.animationId = requestAnimationFrame(() => this.animateVisualizer());
+}
+
+animateBars() {
+    this.visualizer.bars.forEach((bar, index) => {
+        // Create more dynamic movement when music is playing
+        let intensity = this.isPlaying ? 1.5 : 0.5;
+        let baseHeight = Math.random() * 100 * intensity;
+        
+        // Add rhythm-like pattern
+        let rhythmMultiplier = Math.sin(Date.now() * 0.01 + index * 0.3) * 0.5 + 0.5;
+        let height = baseHeight * rhythmMultiplier + 4;
+        
+        // More movement when music is playing
+        if (this.isPlaying) {
+            height += Math.sin(Date.now() * 0.005 + index * 0.1) * 30;
+        }
+        
+        bar.style.height = Math.max(4, height) + 'px';
+    });
+}
+
+animateParticles() {
+    const ctx = this.visualizer.ctx;
+    if (!ctx) return;
+    
+    ctx.clearRect(0, 0, this.visualizer.canvas.width, this.visualizer.canvas.height);
+    
+    // Create new particles occasionally
+    if (Math.random() < (this.isPlaying ? 0.3 : 0.1)) {
+        this.createParticle();
+    }
+    
+    // Update and draw particles
+    this.visualizer.particles = this.visualizer.particles.filter(particle => {
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        particle.life -= 0.01;
+        particle.opacity = particle.life;
+        
+        if (particle.life <= 0) return false;
+        
+        // Draw particle
+        ctx.save();
+        ctx.globalAlpha = particle.opacity * 0.6;
+        ctx.fillStyle = getComputedStyle(document.documentElement)
+            .getPropertyValue('--accent-color');
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        
+        return true;
+    });
+}
+
+createParticle() {
+    this.visualizer.particles.push({
+        x: Math.random() * this.visualizer.canvas.width,
+        y: Math.random() * this.visualizer.canvas.height,
+        vx: (Math.random() - 0.5) * 2,
+        vy: (Math.random() - 0.5) * 2,
+        size: Math.random() * 3 + 1,
+        life: 1,
+        opacity: 1
+    });
+}
+
+// Modify the existing onPlayerStateChange method to control visualizer intensity
+onPlayerStateChange(event) {
+    // ... existing code stays the same ...
+    
+    // Add this at the end of the method
+    if (event.data === YT.PlayerState.PLAYING) {
+        // ... existing code ...
+        this.visualizer.isActive = true;
+    } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+        // Keep visualizer running but at lower intensity
+        // The animateBars method already handles this with the this.isPlaying check
+    }
+}
+
+// Add cleanup method (call this when needed)
+destroyVisualizer() {
+    this.visualizer.isActive = false;
+    if (this.visualizer.animationId) {
+        cancelAnimationFrame(this.visualizer.animationId);
+    }
+}
 
 
 
@@ -7569,6 +7717,7 @@ clearTimersAndIntervals() {
   console.log(`Successfully cleared ${clearedCount} active timers`);
 }
 cleanupYouTubePlayer() {
+  this.destroyVisualizer();
   console.log("Initiating YouTube player cleanup");
   if (this.ytPlayer) {
     try {
@@ -7606,6 +7755,7 @@ restorePageAppearance() {
     }
     if (this.isWebEmbedVisible) {
       this.destroyWebEmbedOverlay();
+    
       console.log("Web embed overlay destroyed");
     }
     console.log("Page appearance restoration completed");
