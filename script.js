@@ -1908,6 +1908,9 @@ onPlayerStateChange(event) {
             this.renderFullscreenLyrics();
         }
     }
+  if (event.data === YT.PlayerState.PLAYING) {
+        this.visualizer.isActive = true;
+    }
 }
   toggleLoop() {
     this.isLooping = !this.isLooping;
