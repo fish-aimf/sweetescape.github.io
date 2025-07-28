@@ -41,10 +41,6 @@ class AdvancedMusicPlayer {
     this.yourPicksDisplayLimit = 2;
     this.recentlyPlayedPlaylistsDisplayLimit = 1;
     this.visualizerEnabled = true;
-    // Add these lines in your constructor
-this.videoEndCheckInterval = null;
-this.endTriggered = false;
-this.triggerBeforeEnd = 1; // seconds before end to trigger
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
       'https://i2.res.24o.it/pdf2010/Editrice/ILSOLE24ORE/ILSOLE24ORE/Online/_Oggetti_Embedded/Documenti/2025/07/12/Preliminary%20Report%20VT.pdf?utm_source=chatgpt.com' ,
@@ -1537,80 +1533,8 @@ handleTouchEnd(e) {
       }, 1000);
     }
   }
-   // Add this line at the very end of your playSongById method
-this.startVideoEndDetection();
 }
-  startVideoEndDetection() {
-  if (this.videoEndCheckInterval) {
-    clearInterval(this.videoEndCheckInterval);
-  }
-  
-  this.endTriggered = false; // Reset the flag each time we start
-  this.videoEndCheckInterval = setInterval(() => {
-    this.checkVideoEnd();
-  }, 250);
-}
-
-stopVideoEndDetection() {
-  if (this.videoEndCheckInterval) {
-    clearInterval(this.videoEndCheckInterval);
-    this.videoEndCheckInterval = null;
-  }
-  this.endTriggered = false;
-}
-
-checkVideoEnd() {
-  if (!this.ytPlayer || !this.isPlaying) {
-    return;
-  }
-
-  try {
-    const currentTime = this.ytPlayer.getCurrentTime();
-    const duration = this.ytPlayer.getDuration();
-
-    if (!currentTime || !duration || duration < 1) {
-      return;
-    }
-
-    // Reset flag if we're back at the beginning (new song started)
-    if (currentTime < 2 && this.endTriggered) {
-      this.endTriggered = false;
-      console.log("Reset end trigger flag - new song detected");
-    }
-
-    // Don't check if already triggered for this song
-    if (this.endTriggered) {
-      return;
-    }
-
-    const timeRemaining = duration - currentTime;
-
-    if (timeRemaining <= this.triggerBeforeEnd) {
-      console.log(`Time-based end trigger: ${timeRemaining.toFixed(2)}s remaining`);
-      this.endTriggered = true; // Set flag here instead
-      this.handleTimeBasedEnd();
-    }
-  } catch (error) {
-    console.warn("Error in time check:", error);
-  }
-}
-
-handleTimeBasedEnd() {
-  this.stopVideoEndDetection();
-  
-  if (this.isLooping) {
-    const currentVideoId = this.getCurrentVideoId();
-    if (currentVideoId) {
-      this.playSongById(currentVideoId);
-    }
-  } else if (this.isAutoplayEnabled) {
-    this.playNextSong();
-  } else {
-    this.isPlaying = false;
-    this.ytPlayer.pauseVideo();
-    this.updatePlayerUI();
-  }
-}
+ 
   togglePlayPause() {
     if (!this.ytPlayer) {
       console.warn("YouTube player not initialized");
