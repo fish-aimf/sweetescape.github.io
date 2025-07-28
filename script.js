@@ -1929,15 +1929,20 @@ onPlayerError(event) {
 onPlayerStateChange(event) {
     if (event.data === YT.PlayerState.ENDED) {
         if (this.isLooping) {
+            // Loop takes precedence - replay current song
             this.playSongById(
                 this.currentPlaylist
                     ? this.currentPlaylist.songs[this.currentSongIndex].videoId
                     : this.songLibrary[this.currentSongIndex].videoId
             );
         } else if (this.isAutoplayEnabled) {
-            this.playNextSong(); 
+            // Autoplay is enabled - continue to next song
+            this.playNextSong(); // This now handles queue automatically
         } else {
+            // Autoplay is disabled - stop playback and update UI
             this.isPlaying = false;
+            
+            // Clear any active intervals including fullscreen lyrics
             if (this.progressInterval) {
                 clearInterval(this.progressInterval);
                 this.progressInterval = null;
@@ -1958,43 +1963,67 @@ onPlayerStateChange(event) {
                 clearInterval(this.fullscreenLyricsInterval);
                 this.fullscreenLyricsInterval = null;
             }
+            
+            // Update UI and page title
             this.updatePlayerUI();
-            this.updatePageTitle(); 
+            this.updatePageTitle(); // This will set title to "Music" since isPlaying is false
         }
+        
+        // Reset progress bar regardless of what happens
         if (this.elements.progressBar) {
             this.elements.progressBar.value = 0;
         }
+        
+        // Update time display
         if (this.elements.timeDisplay) {
             this.elements.timeDisplay.textContent = "0:00/0:00";
         }
+        
     } else if (event.data === YT.PlayerState.PAUSED) {
         this.isPlaying = false;
         this.updatePlayerUI();
+        
+        // Stop title scrolling - your updatePageTitle will handle setting default title
         if (this.titleScrollInterval) {
             clearInterval(this.titleScrollInterval);
             this.titleScrollInterval = null;
         }
         this.updatePageTitle();
+        
+        // Stop progress tracking
         if (this.progressInterval) {
             clearInterval(this.progressInterval);
         }
+        
+        // Stop lyrics tracking including fullscreen lyrics
         if (this.lyricsInterval) {
             clearInterval(this.lyricsInterval);
         }
         if (this.fullscreenLyricsInterval) {
             clearInterval(this.fullscreenLyricsInterval);
         }
+        
     } else if (event.data === YT.PlayerState.PLAYING) {
         this.isPlaying = true;
         this.updatePlayerUI();
+        
+        // Apply playback speed if not default
         if (this.currentSpeed !== 1) {
             this.ytPlayer.setPlaybackRate(this.currentSpeed);
         }
+        
+        // Start progress tracking
         this.updateProgressBar();
+        
+        // Start listening time tracking
         this.startListeningTimeTracking();
+        
+        // Start lyrics if lyrics tab is active
         if (document.getElementById("lyrics") && document.getElementById("lyrics").classList.contains("active")) {
             this.renderLyricsTab();
         }
+        
+        // Restart fullscreen lyrics if in fullscreen mode
         if (this.isLyricsFullscreen) {
             this.renderFullscreenLyrics();
         }
