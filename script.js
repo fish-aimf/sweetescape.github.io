@@ -1823,12 +1823,17 @@ updatePlayerUI() {
       height: "1",
       width: "1",
       playerVars: {
-        playsinline: 1,
-        controls: 0,
-        disablekb: 1,
-        fs: 0,
-        modestbranding: 1,
-        rel: 0,
+        'rel': 0,          // Don't show related videos
+        'showinfo': 0,     // Don't show video info
+        'controls': 0,     // Hide player controls (if you want custom controls)
+        'disablekb': 1,    // Disable keyboard controls
+        'fs': 0,           // Disable fullscreen button
+        'modestbranding': 1, // Remove YouTube logo
+        'playsinline': 1,  // Play inline on mobile
+        'autoplay': 0,     // Don't autoplay 
+        'iv_load_policy': 3, // Don't show annotations
+        'start': 0,        // Start from beginning
+        'end': 0           // Play to the end
       },
       events: {
         onStateChange: this.onPlayerStateChange.bind(this),
