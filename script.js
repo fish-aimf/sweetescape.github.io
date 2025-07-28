@@ -41,6 +41,10 @@ class AdvancedMusicPlayer {
     this.yourPicksDisplayLimit = 2;
     this.recentlyPlayedPlaylistsDisplayLimit = 1;
     this.visualizerEnabled = true;
+    // Add these lines in your constructor
+this.videoEndCheckInterval = null;
+this.endTriggered = false;
+this.triggerBeforeEnd = 1; // seconds before end to trigger
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
       'https://i2.res.24o.it/pdf2010/Editrice/ILSOLE24ORE/ILSOLE24ORE/Online/_Oggetti_Embedded/Documenti/2025/07/12/Preliminary%20Report%20VT.pdf?utm_source=chatgpt.com' ,
@@ -1533,6 +1537,68 @@ handleTouchEnd(e) {
       }, 1000);
     }
   }
+   // Add this line at the very end of your playSongById method
+this.startVideoEndDetection();
+}
+  startVideoEndDetection() {
+  if (this.videoEndCheckInterval) {
+    clearInterval(this.videoEndCheckInterval);
+  }
+  
+  this.endTriggered = false;
+  this.videoEndCheckInterval = setInterval(() => {
+    this.checkVideoEnd();
+  }, 250);
+}
+
+stopVideoEndDetection() {
+  if (this.videoEndCheckInterval) {
+    clearInterval(this.videoEndCheckInterval);
+    this.videoEndCheckInterval = null;
+  }
+  this.endTriggered = false;
+}
+
+checkVideoEnd() {
+  if (!this.ytPlayer || !this.isPlaying || this.endTriggered) {
+    return;
+  }
+
+  try {
+    const currentTime = this.ytPlayer.getCurrentTime();
+    const duration = this.ytPlayer.getDuration();
+
+    if (!currentTime || !duration || duration < 1) {
+      return;
+    }
+
+    const timeRemaining = duration - currentTime;
+
+    if (timeRemaining <= this.triggerBeforeEnd) {
+      console.log(`Time-based end trigger: ${timeRemaining.toFixed(2)}s remaining`);
+      this.handleTimeBasedEnd();
+    }
+  } catch (error) {
+    console.warn("Error in time check:", error);
+  }
+}
+
+handleTimeBasedEnd() {
+  this.endTriggered = true;
+  this.stopVideoEndDetection();
+  
+  if (this.isLooping) {
+    const currentVideoId = this.getCurrentVideoId();
+    if (currentVideoId) {
+      this.playSongById(currentVideoId);
+    }
+  } else if (this.isAutoplayEnabled) {
+    this.playNextSong();
+  } else {
+    this.isPlaying = false;
+    this.ytPlayer.pauseVideo();
+    this.updatePlayerUI();
+  }
 }
 
   togglePlayPause() {
@@ -1929,62 +1995,78 @@ onPlayerError(event) {
 
   
 onPlayerStateChange(event) {
-  console.log("Player state changed:", event.data);
-  
-  if (event.data === YT.PlayerState.ENDED) {
-    console.log("Song ended - Debug info:");
-    console.log("isLooping:", this.isLooping);
-    console.log("isAutoplayEnabled:", this.isAutoplayEnabled);
-    console.log("currentSongIndex:", this.currentSongIndex);
-    console.log("currentPlaylist:", this.currentPlaylist);
-    console.log("songLibrary length:", this.songLibrary.length);
-    
-    // CRITICAL: Immediately handle the end state to prevent YouTube from showing related videos
-    this.handleSongEnd();
-    
-  } else if (event.data === YT.PlayerState.PAUSED) {
-    this.isPlaying = false;
-    this.updatePlayerUI();
-    this.clearNonEssentialIntervals();
-    this.updatePageTitle();
-    
-  } else if (event.data === YT.PlayerState.PLAYING) {
-    this.isPlaying = true;
-    this.updatePlayerUI();
-    
-    // Set playback rate if different from default
-    if (this.currentSpeed !== 1) {
-      setTimeout(() => {
-        try {
-          this.ytPlayer.setPlaybackRate(this.currentSpeed);
-        } catch (error) {
-          console.warn("Failed to set playback rate:", error);
+    if (event.data === YT.PlayerState.ENDED) {
+        // Only handle if time-based detection didn't trigger
+        if (!this.endTriggered) {
+            console.log("YouTube end event (fallback) - Debug info:");
+            console.log("isLooping:", this.isLooping);
+            console.log("isAutoplayEnabled:", this.isAutoplayEnabled);
+            console.log("currentSongIndex:", this.currentSongIndex);
+            console.log("currentPlaylist:", this.currentPlaylist);
+            console.log("songLibrary length:", this.songLibrary.length);
+            
+            this.handleTimeBasedEnd();
         }
-      }, 200);
+        
+        // Reset progress bar
+        if (this.elements.progressBar) {
+            this.elements.progressBar.value = 0;
+        }
+        if (this.elements.timeDisplay) {
+            this.elements.timeDisplay.textContent = "0:00/0:00";
+        }
+        
+    } else if (event.data === YT.PlayerState.PAUSED) {
+        this.isPlaying = false;
+        this.stopVideoEndDetection(); // Stop monitoring when paused
+        this.updatePlayerUI();
+        
+        if (this.titleScrollInterval) {
+            clearInterval(this.titleScrollInterval);
+            this.titleScrollInterval = null;
+        }
+        this.updatePageTitle();
+        
+        if (this.progressInterval) {
+            clearInterval(this.progressInterval);
+        }
+        if (this.lyricsInterval) {
+            clearInterval(this.lyricsInterval);
+        }
+        if (this.fullscreenLyricsInterval) {
+            clearInterval(this.fullscreenLyricsInterval);
+        }
+        
+    } else if (event.data === YT.PlayerState.PLAYING) {
+        this.isPlaying = true;
+        this.startVideoEndDetection(); // Start monitoring when playing
+        this.updatePlayerUI();
+        
+        if (this.currentSpeed !== 1) {
+            this.ytPlayer.setPlaybackRate(this.currentSpeed);
+        }
+        
+        this.updateProgressBar();
+        this.startListeningTimeTracking();
+        
+        if (document.getElementById("lyrics") && document.getElementById("lyrics").classList.contains("active")) {
+            this.renderLyricsTab();
+        }
+        if (this.isLyricsFullscreen) {
+            this.renderFullscreenLyrics();
+        }
+        
+    } else if (event.data === YT.PlayerState.BUFFERING) {
+        console.log("Player is buffering");
+        
+    } else if (event.data === YT.PlayerState.CUED) {
+        console.log("Video cued");
     }
     
-    this.updateProgressBar();
-    this.startListeningTimeTracking();
-    
-    // Handle lyrics if active
-    if (document.getElementById("lyrics") && document.getElementById("lyrics").classList.contains("active")) {
-      this.renderLyricsTab();
+    // Update visualizer state
+    if (event.data === YT.PlayerState.PLAYING) {
+        this.visualizer.isActive = true;
     }
-    if (this.isLyricsFullscreen) {
-      this.renderFullscreenLyrics();
-    }
-    
-  } else if (event.data === YT.PlayerState.BUFFERING) {
-    console.log("Player is buffering");
-    
-  } else if (event.data === YT.PlayerState.CUED) {
-    console.log("Video cued");
-  }
-  
-  // Update visualizer state
-  if (this.visualizer) {
-    this.visualizer.isActive = (event.data === YT.PlayerState.PLAYING);
-  }
 }
   handleSongEnd() {
   // Clear all intervals when song ends
