@@ -43,6 +43,7 @@ class AdvancedMusicPlayer {
     this.visualizerEnabled = true;
     // Add these lines in your constructor
 this.videoEndCheckInterval = null;
+this.endTriggered = false;
 this.triggerBeforeEnd = 1; // seconds before end to trigger
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
@@ -1549,12 +1550,6 @@ this.startVideoEndDetection();
     this.checkVideoEnd();
   }, 250);
 }
-  
-  this.endTriggered = false;
-  this.videoEndCheckInterval = setInterval(() => {
-    this.checkVideoEnd();
-  }, 250);
-}
 
 stopVideoEndDetection() {
   if (this.videoEndCheckInterval) {
@@ -1616,7 +1611,6 @@ handleTimeBasedEnd() {
     this.updatePlayerUI();
   }
 }
-
   togglePlayPause() {
     if (!this.ytPlayer) {
       console.warn("YouTube player not initialized");
