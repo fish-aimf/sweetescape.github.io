@@ -1864,12 +1864,12 @@ updatePlayerUI() {
     window.onYouTubeIframeAPIReady = () => this.initializeYouTubePlayer();
   }
 }
-  initializeYouTubePlayer() {
+initializeYouTubePlayer() {
   this.ytPlayer = new YT.Player("ytPlayer", {
     height: "1",
     width: "1",
     playerVars: {
-      'rel': 0,          // Don't show related videos
+      'rel': 0,          // Limit related videos to same channel
       'showinfo': 0,     // Don't show video info
       'controls': 0,     // Hide player controls
       'disablekb': 1,    // Disable keyboard controls
@@ -1878,10 +1878,12 @@ updatePlayerUI() {
       'playsinline': 1,  // Play inline on mobile
       'autoplay': 0,     // Don't autoplay 
       'iv_load_policy': 3, // Don't show annotations
-      'start': 0,        // Start from beginning
-      'end': 0,          // Play to the end
+      'cc_load_policy': 0, // Don't show closed captions
+      'cc_lang_pref': 'en', // Set caption language
+      'hl': 'en',        // Set interface language
       'enablejsapi': 1,  // Enable JS API
-      'origin': window.location.origin // Set origin for security
+      'origin': window.location.origin, // Set origin for security
+      'widget_referrer': window.location.href // Set referrer
     },
     events: {
       onReady: this.onPlayerReady.bind(this),
@@ -1927,107 +1929,62 @@ onPlayerError(event) {
 
   
 onPlayerStateChange(event) {
-    if (event.data === YT.PlayerState.ENDED) {
-        if (this.isLooping) {
-            // Loop takes precedence - replay current song
-            this.playSongById(
-                this.currentPlaylist
-                    ? this.currentPlaylist.songs[this.currentSongIndex].videoId
-                    : this.songLibrary[this.currentSongIndex].videoId
-            );
-        } else if (this.isAutoplayEnabled) {
-            // Autoplay is enabled - continue to next song
-            this.playNextSong(); // This now handles queue automatically
-        } else {
-            // Autoplay is disabled - stop playback and update UI
-            this.isPlaying = false;
-            
-            // Clear any active intervals including fullscreen lyrics
-            if (this.progressInterval) {
-                clearInterval(this.progressInterval);
-                this.progressInterval = null;
-            }
-            if (this.listeningTimeInterval) {
-                clearInterval(this.listeningTimeInterval);
-                this.listeningTimeInterval = null;
-            }
-            if (this.titleScrollInterval) {
-                clearInterval(this.titleScrollInterval);
-                this.titleScrollInterval = null;
-            }
-            if (this.lyricsInterval) {
-                clearInterval(this.lyricsInterval);
-                this.lyricsInterval = null;
-            }
-            if (this.fullscreenLyricsInterval) {
-                clearInterval(this.fullscreenLyricsInterval);
-                this.fullscreenLyricsInterval = null;
-            }
-            
-            // Update UI and page title
-            this.updatePlayerUI();
-            this.updatePageTitle(); // This will set title to "Music" since isPlaying is false
+  console.log("Player state changed:", event.data);
+  
+  if (event.data === YT.PlayerState.ENDED) {
+    console.log("Song ended - Debug info:");
+    console.log("isLooping:", this.isLooping);
+    console.log("isAutoplayEnabled:", this.isAutoplayEnabled);
+    console.log("currentSongIndex:", this.currentSongIndex);
+    console.log("currentPlaylist:", this.currentPlaylist);
+    console.log("songLibrary length:", this.songLibrary.length);
+    
+    // CRITICAL: Immediately handle the end state to prevent YouTube from showing related videos
+    this.handleSongEnd();
+    
+  } else if (event.data === YT.PlayerState.PAUSED) {
+    this.isPlaying = false;
+    this.updatePlayerUI();
+    this.clearNonEssentialIntervals();
+    this.updatePageTitle();
+    
+  } else if (event.data === YT.PlayerState.PLAYING) {
+    this.isPlaying = true;
+    this.updatePlayerUI();
+    
+    // Set playback rate if different from default
+    if (this.currentSpeed !== 1) {
+      setTimeout(() => {
+        try {
+          this.ytPlayer.setPlaybackRate(this.currentSpeed);
+        } catch (error) {
+          console.warn("Failed to set playback rate:", error);
         }
-        
-        // Reset progress bar regardless of what happens
-        if (this.elements.progressBar) {
-            this.elements.progressBar.value = 0;
-        }
-        
-        // Update time display
-        if (this.elements.timeDisplay) {
-            this.elements.timeDisplay.textContent = "0:00/0:00";
-        }
-        
-    } else if (event.data === YT.PlayerState.PAUSED) {
-        this.isPlaying = false;
-        this.updatePlayerUI();
-        
-        // Stop title scrolling - your updatePageTitle will handle setting default title
-        if (this.titleScrollInterval) {
-            clearInterval(this.titleScrollInterval);
-            this.titleScrollInterval = null;
-        }
-        this.updatePageTitle();
-        
-        // Stop progress tracking
-        if (this.progressInterval) {
-            clearInterval(this.progressInterval);
-        }
-        
-        // Stop lyrics tracking including fullscreen lyrics
-        if (this.lyricsInterval) {
-            clearInterval(this.lyricsInterval);
-        }
-        if (this.fullscreenLyricsInterval) {
-            clearInterval(this.fullscreenLyricsInterval);
-        }
-        
-    } else if (event.data === YT.PlayerState.PLAYING) {
-        this.isPlaying = true;
-        this.updatePlayerUI();
-        
-        // Apply playback speed if not default
-        if (this.currentSpeed !== 1) {
-            this.ytPlayer.setPlaybackRate(this.currentSpeed);
-        }
-        
-        // Start progress tracking
-        this.updateProgressBar();
-        
-        // Start listening time tracking
-        this.startListeningTimeTracking();
-        
-        // Start lyrics if lyrics tab is active
-        if (document.getElementById("lyrics") && document.getElementById("lyrics").classList.contains("active")) {
-            this.renderLyricsTab();
-        }
-        
-        // Restart fullscreen lyrics if in fullscreen mode
-        if (this.isLyricsFullscreen) {
-            this.renderFullscreenLyrics();
-        }
+      }, 200);
     }
+    
+    this.updateProgressBar();
+    this.startListeningTimeTracking();
+    
+    // Handle lyrics if active
+    if (document.getElementById("lyrics") && document.getElementById("lyrics").classList.contains("active")) {
+      this.renderLyricsTab();
+    }
+    if (this.isLyricsFullscreen) {
+      this.renderFullscreenLyrics();
+    }
+    
+  } else if (event.data === YT.PlayerState.BUFFERING) {
+    console.log("Player is buffering");
+    
+  } else if (event.data === YT.PlayerState.CUED) {
+    console.log("Video cued");
+  }
+  
+  // Update visualizer state
+  if (this.visualizer) {
+    this.visualizer.isActive = (event.data === YT.PlayerState.PLAYING);
+  }
 }
   getCurrentVideoId() {
   if (!this.ytPlayer || !this.ytPlayer.getVideoData) return null;
