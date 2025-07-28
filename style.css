@@ -3732,14 +3732,3 @@ body:has(#ytPlayer.fullscreen-video) {
     opacity: 0.4;
 }
 
-/* Ensure all containers have proper z-index */
-.app-container {
-    position: relative;
-    z-index: 1;
-}
-
-.left-banner,
-.right-banner {
-    position: relative;
-    z-index: 1;
-}
