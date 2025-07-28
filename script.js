@@ -1467,47 +1467,74 @@ handleTouchEnd(e) {
     });
   }
 }
-  playSongById(videoId) {
-    if (!this.ytPlayer) {
-      console.error("YouTube player not initialized");
-      return;
+ playSongById(videoId) {
+  if (!this.ytPlayer) {
+    console.error("YouTube player not initialized");
+    return;
+  }
+  
+  if (!videoId) {
+    console.error("No video ID provided");
+    return;
+  }
+  
+  try {
+    console.log("Loading video:", videoId);
+    
+    this.ytPlayer.loadVideoById({
+      videoId: videoId,
+      suggestedQuality: "small",
+    });
+    
+    // Set quality after a short delay
+    setTimeout(() => {
+      try {
+        this.ytPlayer.setPlaybackQuality("small");
+      } catch (error) {
+        console.warn("Failed to set video quality:", error);
+      }
+    }, 200);
+    
+    this.isPlaying = true;
+    this.updatePlayerUI();
+    
+    // Reset progress bar
+    if (this.elements.progressBar) {
+      this.elements.progressBar.value = 0;
     }
-    try {
-      this.ytPlayer.loadVideoById({
-        videoId: videoId,
-        suggestedQuality: "small",
-      });
+    
+    // Update playlist sidebar if visible
+    if (this.currentPlaylist && this.isSidebarVisible) {
+      this.renderPlaylistSidebar();
+    }
+    
+    // Set playback speed if different from default
+    if (this.currentSpeed !== 1) {
       setTimeout(() => {
         try {
-          this.ytPlayer.setPlaybackQuality("small");
+          this.ytPlayer.setPlaybackRate(this.currentSpeed);
         } catch (error) {
-          console.warn("Failed to set video quality:", error);
+          console.warn("Failed to set playback speed:", error);
         }
-      }, 200);
-      this.isPlaying = true;
-      this.updatePlayerUI();
-      if (this.elements.progressBar) {
-        this.elements.progressBar.value = 0;
-      }
-      if (this.currentPlaylist && this.isSidebarVisible) {
-        this.renderPlaylistSidebar();
-      }
-      if (this.currentSpeed !== 1) {
-        setTimeout(() => {
-          try {
-            this.ytPlayer.setPlaybackRate(this.currentSpeed);
-          } catch (error) {
-            console.warn("Failed to set playback speed:", error);
-          }
-        }, 500);
-      }
-      this.updateProgressBar();
-      this.updatePageTitle();
-    } catch (error) {
-      console.error("Error playing song with ID " + videoId + ":", error);
-      alert("Failed to play the video. Please try again.");
+      }, 500);
+    }
+    
+    this.updateProgressBar();
+    this.updatePageTitle();
+    
+  } catch (error) {
+    console.error("Error playing song with ID " + videoId + ":", error);
+    alert("Failed to play the video. Please try again.");
+    
+    // Try next song if autoplay is enabled
+    if (this.isAutoplayEnabled) {
+      setTimeout(() => {
+        this.playNextSong();
+      }, 1000);
     }
   }
+}
+
   togglePlayPause() {
     if (!this.ytPlayer) {
       console.warn("YouTube player not initialized");
@@ -1534,49 +1561,56 @@ handleTouchEnd(e) {
     }
   }
   playNextSong() {
+  // Handle queue first
   if (this.songQueue.length > 0) {
-    const nextSong = this.songQueue.shift(); 
+    const nextSong = this.songQueue.shift();
     this.saveQueue();
     this.updateQueueVisualIndicators();
+    
     const songInLibrary = this.songLibrary.find(s => s.videoId === nextSong.videoId);
     if (songInLibrary) {
       this.currentSongIndex = this.songLibrary.findIndex(s => s.id === songInLibrary.id);
       this.currentPlaylist = null;
     }
-    this.saveRecentlyPlayedSong(nextSong); 
+    
+    this.saveRecentlyPlayedSong(nextSong);
     this.playSongById(nextSong.videoId);
     this.updatePlayerUI();
     return;
   }
-  const source = this.currentPlaylist
-    ? this.currentPlaylist.songs
-    : this.songLibrary;
+  
+  const source = this.currentPlaylist ? this.currentPlaylist.songs : this.songLibrary;
   if (!source.length) return;
-  if (this.currentPlaylist && this.temporarilySkippedSongs.size > 0) {
+  
+  // Handle temporarily skipped songs in playlist
+  if (this.currentPlaylist && this.temporarilySkippedSongs && this.temporarilySkippedSongs.size > 0) {
     this.playNextNonSkippedSong();
     return;
   }
-  if (
-    this.currentSongIndex === source.length - 1 &&
-    !this.isPlaylistLooping
-  ) {
+  
+  // Check if we're at the end and not looping
+  if (this.currentSongIndex === source.length - 1 && !this.isPlaylistLooping) {
     if (this.ytPlayer) {
       this.ytPlayer.stopVideo();
       this.isPlaying = false;
       this.updatePlayerUI();
     }
     return;
-  } else {
-    this.currentSongIndex = (this.currentSongIndex + 1) % source.length;
   }
-  const currentSong = source[this.currentSongIndex]; 
-  this.saveRecentlyPlayedSong(currentSong); 
+  
+  // Move to next song
+  this.currentSongIndex = (this.currentSongIndex + 1) % source.length;
+  const currentSong = source[this.currentSongIndex];
+  
+  this.saveRecentlyPlayedSong(currentSong);
+  
   if (this.currentPlaylist) {
-    this.playSongById(source[this.currentSongIndex].videoId);
+    this.playSongById(currentSong.videoId);
   } else {
     this.playCurrentSong();
   }
 }
+
   playPreviousSong() {
   const source = this.currentPlaylist
     ? this.currentPlaylist.songs
@@ -1628,6 +1662,18 @@ playSongFromPlaylist(index) {
   this.currentSongIndex = index;
   this.saveRecentlyPlayedSong(song); 
   this.playSongById(song.videoId);
+}
+  async saveSetting(key, value) {
+  if (!this.db) return;
+  
+  return new Promise((resolve, reject) => {
+    const transaction = this.db.transaction(["settings"], "readwrite");
+    const store = transaction.objectStore("settings");
+    const request = store.put({ name: key, value: value });
+    
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
 }
 updatePlayerUI() {
     let currentSong;
@@ -1812,121 +1858,212 @@ updatePlayerUI() {
     }
   }
   setupYouTubePlayer() {
-    if (window.YT && window.YT.Player) {
-      this.initializeYouTubePlayer();
-    } else {
-      window.onYouTubeIframeAPIReady = () => this.initializeYouTubePlayer();
-    }
+  if (window.YT && window.YT.Player) {
+    this.initializeYouTubePlayer();
+  } else {
+    window.onYouTubeIframeAPIReady = () => this.initializeYouTubePlayer();
   }
-  initializeYouTubePlayer() {
-    this.ytPlayer = new YT.Player("ytPlayer", {
-      height: "1",
-      width: "1",
-      playerVars: {
-        'rel': 0,          // Don't show related videos
-        'showinfo': 0,     // Don't show video info
-        'controls': 0,     // Hide player controls (if you want custom controls)
-        'disablekb': 1,    // Disable keyboard controls
-        'fs': 0,           // Disable fullscreen button
-        'modestbranding': 1, // Remove YouTube logo
-        'playsinline': 1,  // Play inline on mobile
-        'autoplay': 0,     // Don't autoplay 
-        'iv_load_policy': 3, // Don't show annotations
-        'start': 0,        // Start from beginning
-        'end': 0           // Play to the end
-      },
-      events: {
-        onStateChange: this.onPlayerStateChange.bind(this),
-      },
-    });
-  }
-onPlayerStateChange(event) {
-    if (event.data === YT.PlayerState.ENDED) {
-        console.log("Song ended - Debug info:");
-        console.log("isLooping:", this.isLooping);
-        console.log("isAutoplayEnabled:", this.isAutoplayEnabled);
-        console.log("currentSongIndex:", this.currentSongIndex);
-        console.log("currentPlaylist:", this.currentPlaylist);
-        console.log("songLibrary length:", this.songLibrary.length);
-        
-        if (this.isLooping) {
-            console.log("Looping current song");
-            this.playSongById(
-                this.currentPlaylist
-                    ? this.currentPlaylist.songs[this.currentSongIndex].videoId
-                    : this.songLibrary[this.currentSongIndex].videoId
-            );
-        } else if (this.isAutoplayEnabled) {
-            console.log("Autoplay enabled - calling playNextSong()");
-            this.playNextSong(); 
-        } else {
-            console.log("Autoplay disabled - stopping playback");
-            this.isPlaying = false;
-            if (this.progressInterval) {
-                clearInterval(this.progressInterval);
-                this.progressInterval = null;
-            }
-            if (this.listeningTimeInterval) {
-                clearInterval(this.listeningTimeInterval);
-                this.listeningTimeInterval = null;
-            }
-            if (this.titleScrollInterval) {
-                clearInterval(this.titleScrollInterval);
-                this.titleScrollInterval = null;
-            }
-            if (this.lyricsInterval) {
-                clearInterval(this.lyricsInterval);
-                this.lyricsInterval = null;
-            }
-            if (this.fullscreenLyricsInterval) {
-                clearInterval(this.fullscreenLyricsInterval);
-                this.fullscreenLyricsInterval = null;
-            }
-            this.updatePlayerUI();
-            this.updatePageTitle(); 
-        }
-        if (this.elements.progressBar) {
-            this.elements.progressBar.value = 0;
-        }
-        if (this.elements.timeDisplay) {
-            this.elements.timeDisplay.textContent = "0:00/0:00";
-        }
-    } else if (event.data === YT.PlayerState.PAUSED) {
-        this.isPlaying = false;
-        this.updatePlayerUI();
-        if (this.titleScrollInterval) {
-            clearInterval(this.titleScrollInterval);
-            this.titleScrollInterval = null;
-        }
-        this.updatePageTitle();
-        if (this.progressInterval) {
-            clearInterval(this.progressInterval);
-        }
-        if (this.lyricsInterval) {
-            clearInterval(this.lyricsInterval);
-        }
-        if (this.fullscreenLyricsInterval) {
-            clearInterval(this.fullscreenLyricsInterval);
-        }
-    } else if (event.data === YT.PlayerState.PLAYING) {
-        this.isPlaying = true;
-        this.updatePlayerUI();
-        if (this.currentSpeed !== 1) {
-            this.ytPlayer.setPlaybackRate(this.currentSpeed);
-        }
-        this.updateProgressBar();
-        this.startListeningTimeTracking();
-        if (document.getElementById("lyrics") && document.getElementById("lyrics").classList.contains("active")) {
-            this.renderLyricsTab();
-        }
-        if (this.isLyricsFullscreen) {
-            this.renderFullscreenLyrics();
-        }
-    }
-    if (event.data === YT.PlayerState.PLAYING) {
-        this.visualizer.isActive = true;
-    }
 }
+  initializeYouTubePlayer() {
+  this.ytPlayer = new YT.Player("ytPlayer", {
+    height: "1",
+    width: "1",
+    playerVars: {
+      'rel': 0,          // Don't show related videos
+      'showinfo': 0,     // Don't show video info
+      'controls': 0,     // Hide player controls
+      'disablekb': 1,    // Disable keyboard controls
+      'fs': 0,           // Disable fullscreen button
+      'modestbranding': 1, // Remove YouTube logo
+      'playsinline': 1,  // Play inline on mobile
+      'autoplay': 0,     // Don't autoplay 
+      'iv_load_policy': 3, // Don't show annotations
+      'start': 0,        // Start from beginning
+      'end': 0,          // Play to the end
+      'enablejsapi': 1,  // Enable JS API
+      'origin': window.location.origin // Set origin for security
+    },
+    events: {
+      onReady: this.onPlayerReady.bind(this),
+      onStateChange: this.onPlayerStateChange.bind(this),
+      onError: this.onPlayerError.bind(this)
+    },
+  });
+}
+
+// Add player ready handler
+onPlayerReady(event) {
+  console.log("YouTube player is ready");
+  // Initialize autoplay state on player ready
+  this.initializeAutoplay();
+}
+  // Add error handler
+onPlayerError(event) {
+  console.error("YouTube player error:", event.data);
+  // Handle different error codes
+  switch(event.data) {
+    case 2:
+      console.error("Invalid video ID");
+      break;
+    case 5:
+      console.error("Video not available in HTML5 player");
+      break;
+    case 100:
+      console.error("Video not found or private");
+      break;
+    case 101:
+    case 150:
+      console.error("Video not allowed to be played in embedded players");
+      break;
+  }
+  
+  // Try to play next song if current one fails
+  if (this.isAutoplayEnabled) {
+    setTimeout(() => {
+      this.playNextSong();
+    }, 1000);
+  }
+}
+
+  
+onPlayerStateChange(event) {
+  console.log("Player state changed:", event.data);
+  
+  if (event.data === YT.PlayerState.ENDED) {
+    console.log("Song ended - Debug info:");
+    console.log("isLooping:", this.isLooping);
+    console.log("isAutoplayEnabled:", this.isAutoplayEnabled);
+    console.log("currentSongIndex:", this.currentSongIndex);
+    console.log("currentPlaylist:", this.currentPlaylist);
+    console.log("songLibrary length:", this.songLibrary.length);
+    
+    // Clear all intervals when song ends
+    this.clearAllIntervals();
+    
+    if (this.isLooping) {
+      console.log("Looping current song");
+      const currentVideoId = this.getCurrentVideoId();
+      if (currentVideoId) {
+        setTimeout(() => {
+          this.playSongById(currentVideoId);
+        }, 100);
+      }
+    } else if (this.isAutoplayEnabled) {
+      console.log("Autoplay enabled - calling playNextSong()");
+      setTimeout(() => {
+        this.playNextSong();
+      }, 100);
+    } else {
+      console.log("Autoplay disabled - stopping playback");
+      this.isPlaying = false;
+      this.updatePlayerUI();
+      this.updatePageTitle();
+    }
+    
+    // Reset progress bar
+    if (this.elements.progressBar) {
+      this.elements.progressBar.value = 0;
+    }
+    if (this.elements.timeDisplay) {
+      this.elements.timeDisplay.textContent = "0:00/0:00";
+    }
+    
+  } else if (event.data === YT.PlayerState.PAUSED) {
+    this.isPlaying = false;
+    this.updatePlayerUI();
+    this.clearNonEssentialIntervals();
+    this.updatePageTitle();
+    
+  } else if (event.data === YT.PlayerState.PLAYING) {
+    this.isPlaying = true;
+    this.updatePlayerUI();
+    
+    // Set playback rate if different from default
+    if (this.currentSpeed !== 1) {
+      setTimeout(() => {
+        try {
+          this.ytPlayer.setPlaybackRate(this.currentSpeed);
+        } catch (error) {
+          console.warn("Failed to set playback rate:", error);
+        }
+      }, 200);
+    }
+    
+    this.updateProgressBar();
+    this.startListeningTimeTracking();
+    
+    // Handle lyrics if active
+    if (document.getElementById("lyrics") && document.getElementById("lyrics").classList.contains("active")) {
+      this.renderLyricsTab();
+    }
+    if (this.isLyricsFullscreen) {
+      this.renderFullscreenLyrics();
+    }
+    
+  } else if (event.data === YT.PlayerState.BUFFERING) {
+    console.log("Player is buffering");
+    
+  } else if (event.data === YT.PlayerState.CUED) {
+    console.log("Video cued");
+  }
+  
+  // Update visualizer state
+  if (this.visualizer) {
+    this.visualizer.isActive = (event.data === YT.PlayerState.PLAYING);
+  }
+}
+  getCurrentVideoId() {
+  if (!this.ytPlayer || !this.ytPlayer.getVideoData) return null;
+  
+  try {
+    const videoData = this.ytPlayer.getVideoData();
+    return videoData.video_id;
+  } catch (error) {
+    console.warn("Could not get current video ID:", error);
+    
+    // Fallback: get from current song
+    if (this.currentPlaylist && this.currentPlaylist.songs[this.currentSongIndex]) {
+      return this.currentPlaylist.songs[this.currentSongIndex].videoId;
+    } else if (this.songLibrary[this.currentSongIndex]) {
+      return this.songLibrary[this.currentSongIndex].videoId;
+    }
+    
+    return null;
+  }
+}
+  clearAllIntervals() {
+  const intervals = [
+    'progressInterval',
+    'listeningTimeInterval', 
+    'titleScrollInterval',
+    'lyricsInterval',
+    'fullscreenLyricsInterval'
+  ];
+  
+  intervals.forEach(intervalName => {
+    if (this[intervalName]) {
+      clearInterval(this[intervalName]);
+      this[intervalName] = null;
+    }
+  });
+}
+
+// Helper method to clear non-essential intervals (keep progress tracking)
+clearNonEssentialIntervals() {
+  const intervals = [
+    'titleScrollInterval',
+    'lyricsInterval', 
+    'fullscreenLyricsInterval'
+  ];
+  
+  intervals.forEach(intervalName => {
+    if (this[intervalName]) {
+      clearInterval(this[intervalName]);
+      this[intervalName] = null;
+    }
+  });
+}
+
   toggleLoop() {
     this.isLooping = !this.isLooping;
     this.elements.loopBtn.classList.toggle("active", this.isLooping);
@@ -1937,35 +2074,61 @@ onPlayerStateChange(event) {
       this.ytPlayer.setVolume(volume);
     }
   }
-    toggleAutoplay() {
-    this.isAutoplayEnabled = !this.isAutoplayEnabled;
+   // Fixed autoplay toggle
+toggleAutoplay() {
+  this.isAutoplayEnabled = !this.isAutoplayEnabled;
+  
+  // Update button state immediately
+  if (this.elements.autoplayBtn) {
     this.elements.autoplayBtn.classList.toggle("active", this.isAutoplayEnabled);
-    this.updatePlayerUI();
-    if (this.db) {
-        this.saveSetting("autoplay", this.isAutoplayEnabled).catch((error) => {
-            console.error("Error saving autoplay setting:", error);
-        });
-    }
+  }
+  
+  // Update UI
+  this.updatePlayerUI();
+  
+  // Save setting to database
+  if (this.db) {
+    this.saveSetting("autoplay", this.isAutoplayEnabled).catch((error) => {
+      console.error("Error saving autoplay setting:", error);
+    });
+  }
+  
+  console.log("Autoplay toggled:", this.isAutoplayEnabled);
 }
+
+// Fixed autoplay initialization
 initializeAutoplay() {
-    if (!this.db) {
-        this.isAutoplayEnabled = true;
-        this.elements.autoplayBtn.classList.toggle("active", this.isAutoplayEnabled);
-        return;
+  if (!this.db) {
+    this.isAutoplayEnabled = true;
+    if (this.elements.autoplayBtn) {
+      this.elements.autoplayBtn.classList.toggle("active", this.isAutoplayEnabled);
     }
-    const transaction = this.db.transaction(["settings"], "readonly");
-    const store = transaction.objectStore("settings");
-    const request = store.get("autoplay");
-    request.onsuccess = () => {
-        const savedAutoplay = request.result ? request.result.value : true;
-        this.isAutoplayEnabled = savedAutoplay;
-        this.elements.autoplayBtn.classList.toggle("active", this.isAutoplayEnabled);
-    };
-    request.onerror = (event) => {
-        console.error("Error loading autoplay setting:", event.target.error);
-        this.isAutoplayEnabled = true;
-        this.elements.autoplayBtn.classList.toggle("active", this.isAutoplayEnabled);
-    };
+    return;
+  }
+  
+  const transaction = this.db.transaction(["settings"], "readonly");
+  const store = transaction.objectStore("settings");
+  const request = store.get("autoplay");
+  
+  request.onsuccess = () => {
+    const savedAutoplay = request.result ? request.result.value : true;
+    this.isAutoplayEnabled = savedAutoplay;
+    
+    if (this.elements.autoplayBtn) {
+      this.elements.autoplayBtn.classList.toggle("active", this.isAutoplayEnabled);
+    }
+    
+    console.log("Autoplay initialized:", this.isAutoplayEnabled);
+  };
+  
+  request.onerror = (event) => {
+    console.error("Error loading autoplay setting:", event.target.error);
+    this.isAutoplayEnabled = true;
+    
+    if (this.elements.autoplayBtn) {
+      this.elements.autoplayBtn.classList.toggle("active", this.isAutoplayEnabled);
+    }
+  };
 }
   switchTab(tabName) {
     this.elements.tabs.forEach((tab) => tab.classList.remove("active"));
