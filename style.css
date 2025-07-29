@@ -3971,7 +3971,7 @@ body:has(#ytPlayer.fullscreen-video) {
 }
 .watermark {
   position: fixed;
-  left: 1px; /* Small margin from left edge */
+  left: -10px; /* Small margin from left edge */
   top: 50%;
   transform: translateY(-50%) rotate(-90deg);
   transform-origin: center center;
