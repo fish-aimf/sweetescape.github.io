@@ -225,3 +225,4 @@
 - bug fully fixed v31.3.5
 - redid the watermark so it will also link to my github. v31.4.0
 - emergency bug fixes v31.4.1
+- finally issue solved once and for all v31.4.2
