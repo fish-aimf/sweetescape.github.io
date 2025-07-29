@@ -3971,11 +3971,11 @@ body:has(#ytPlayer.fullscreen-video) {
 }
 .watermark {
   position: fixed;
-  left: 10px; /* Small margin from left edge */
+  left: 1px; /* Small margin from left edge */
   top: 50%;
   transform: translateY(-50%) rotate(-90deg);
   transform-origin: center center;
-  font-size: 12px;
+  font-size: 10px;
   color: rgba(var(--text-primary-rgb, 51, 51, 51), 0.2); /* Uses theme text color with transparency */
   text-decoration: none;
   z-index: 9999;
