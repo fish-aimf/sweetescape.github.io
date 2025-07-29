@@ -2849,6 +2849,37 @@ body:has(#ytPlayer.fullscreen-video) {
     display: inline;
 }
 
+.visitor-counter a,
+.visitor-counter img {
+    pointer-events: none;
+}
+/* Tooltip */
+.visitor-counter::before {
+    content: "Total website visits";
+    position: absolute;
+    top: 100%; /* changed from bottom: 100% to top: 100% */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.visitor-counter:hover::before {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0.2s;
+}
+
+
 
 /* Settings Button */
 .settings-button {
