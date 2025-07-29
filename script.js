@@ -7859,19 +7859,7 @@ createParticle() {
     });
 }
 
-// Modify the existing onPlayerStateChange method to control visualizer intensity
-onPlayerStateChange(event) {
-    // ... existing code stays the same ...
-    
-    // Add this at the end of the method
-    if (event.data === YT.PlayerState.PLAYING) {
-        // ... existing code ...
-        this.visualizer.isActive = true;
-    } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
-        // Keep visualizer running but at lower intensity
-        // The animateBars method already handles this with the this.isPlaying check
-    }
-}
+
 
 // Add cleanup method (call this when needed)
 destroyVisualizer() {
