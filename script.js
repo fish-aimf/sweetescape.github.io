@@ -115,7 +115,8 @@ class AdvancedMusicPlayer {
           this.loadPlaylists(),
           this.loadSettings(),
           this.loadRecentlyPlayed(),
-          this.loadDiscoverMoreSettingsOnStartup()
+          this.loadDiscoverMoreSettingsOnStartup(),
+          this.loadVisualizerSettings()
         ]);
       })
       .then(() => {
@@ -126,6 +127,7 @@ class AdvancedMusicPlayer {
         this.initializeTheme();
         this.initializeAutoplay();
         this.setupKeyboardControls();
+        
         
         this.renderInitialState();
         this.renderAdditionalDetails();
