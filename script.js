@@ -134,7 +134,9 @@ class AdvancedMusicPlayer {
         this.setupLyricsTabContextMenu();
         this.initializeFullscreenLyrics();
         this.initializeAdvertisementSettings();
-        this.initializeVisualizer();
+  
+        this.initializeVisualizer(); // Initialize but don't start
+        this.loadVisualizerSettings();
       })
       .catch((error) => {
         console.error("Error initializing music player:", error);
@@ -7745,19 +7747,20 @@ formatLyricText(text) {
 
 
 
-  initializeVisualizer() {
-    this.visualizer.canvas = document.getElementById('visualizerCanvas');
-    if (!this.visualizer.canvas) return;
-    
-    this.visualizer.ctx = this.visualizer.canvas.getContext('2d');
-    this.resizeCanvas();
-    this.createVisualizerBars();
-    this.startVisualizer();
-    
-    // Resize canvas when window resizes
-    window.addEventListener('resize', () => this.resizeCanvas());
+ initializeVisualizer() {
+  this.visualizer.canvas = document.getElementById('visualizerCanvas');
+  if (!this.visualizer.canvas) return;
+  
+  this.visualizer.ctx = this.visualizer.canvas.getContext('2d');
+  this.resizeCanvas();
+  this.createVisualizerBars();
+  
+  // Don't auto-start - let loadVisualizerSettings() handle this
+  // this.startVisualizer(); // Remove this line
+  
+  // Resize canvas when window resizes
+  window.addEventListener('resize', () => this.resizeCanvas());
 }
-
 resizeCanvas() {
     if (!this.visualizer.canvas) return;
     
