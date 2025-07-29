@@ -222,4 +222,5 @@
 -emergency bugfixes v31.3.3
 - not ideal but emergency bugfixes worked v31.3.4
 - emergency bug fixes
-- bug fully fixed v31.3.5 
+- bug fully fixed v31.3.5
+- redid the watermark so it will also link to my github. v31.4.0
