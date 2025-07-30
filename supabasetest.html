@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Music Library Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .container {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+        }
+        input {
+            background: #3a3a3a;
+            color: white;
+            width: 200px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .song-list {
+            margin-top: 20px;
+        }
+        .song-item {
+            background: #3a3a3a;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success { background: #4CAF50; }
+        .error { background: #f44336; }
+    </style>
+</head>
+<body>
+    <h1>Supabase Music Library Test</h1>
+    
+    <div class="container">
+        <h3>Add Song</h3>
+        <input type="text" id="songname" placeholder="Song Name" />
+        <input type="text" id="songauthor" placeholder="Song Author" />
+        <input type="text" id="songurl" placeholder="YouTube URL" />
+        <button onclick="addSong()">Add Song</button>
+    </div>
+
+    <div class="container">
+        <h3>Actions</h3>
+        <button onclick="loadSongs()">Load All Songs</button>
+        <button onclick="clearAll()">Clear All Songs</button>
+    </div>
+
+    <div id="status"></div>
+    <div id="songs" class="song-list"></div>
+
+    <script>
+        // Initialize Supabase
+        const supabaseUrl = 'https://cwhxanbpymkngzpbsshh.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3aHhhbmJweW1rbmd6cGJzc2hoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NTQzMTksImV4cCI6MjA2OTQzMDMxOX0.6K3eM1XoWaPmyMHsLYgw0mAnSxYjME4clflL4PxQalQ';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        function showStatus(message, isError = false) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${isError ? 'error' : 'success'}">${message}</div>`;
+            setTimeout(() => statusDiv.innerHTML = '', 3000);
+        }
+
+        async function addSong() {
+            const songname = document.getElementById('songname').value.trim();
+            const songauthor = document.getElementById('songauthor').value.trim();
+            const songurl = document.getElementById('songurl').value.trim();
+
+            if (!songname || !songurl) {
+                showStatus('Please enter song name and URL', true);
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('musiclibrarypublic')
+                    .insert([
+                        { 
+                            songname: songname,
+                            songauthor: songauthor,
+                            songurl: songurl
+                        }
+                    ]);
+
+                if (error) throw error;
+
+                showStatus('Song added successfully!');
+                document.getElementById('songname').value = '';
+                document.getElementById('songauthor').value = '';
+                document.getElementById('songurl').value = '';
+                
+                // Reload songs
+                loadSongs();
+
+            } catch (error) {
+                console.error('Error adding song:', error);
+                showStatus('Error adding song: ' + error.message, true);
+            }
+        }
+
+        async function loadSongs() {
+            try {
+                const { data, error } = await supabase
+                    .from('musiclibrarypublic')
+                    .select('*');
+
+                if (error) throw error;
+
+                const songsDiv = document.getElementById('songs');
+                if (data && data.length > 0) {
+                    songsDiv.innerHTML = '<h3>Your Songs:</h3>' + 
+                        data.map(song => `
+                            <div class="song-item">
+                                <strong>${song.songname}</strong> 
+                                ${song.songauthor ? `by ${song.songauthor}` : ''}
+                                <br>
+                                <small>${song.songurl}</small>
+                            </div>
+                        `).join('');
+                    
+                    showStatus(`Loaded ${data.length} songs`);
+                } else {
+                    songsDiv.innerHTML = '<p>No songs found</p>';
+                    showStatus('No songs in library');
+                }
+
+            } catch (error) {
+                console.error('Error loading songs:', error);
+                showStatus('Error loading songs: ' + error.message, true);
+            }
+        }
+
+        async function clearAll() {
+            if (!confirm('Are you sure you want to delete all songs?')) return;
+
+            try {
+                const { error } = await supabase
+                    .from('musiclibrarypublic')
+                    .delete()
+                    .neq('id', 0); // This deletes all rows
+
+                if (error) throw error;
+
+                showStatus('All songs cleared!');
+                document.getElementById('songs').innerHTML = '';
+
+            } catch (error) {
+                console.error('Error clearing songs:', error);
+                showStatus('Error clearing songs: ' + error.message, true);
+            }
+        }
+
+        // Load songs on page load
+        window.onload = () => {
+            loadSongs();
+        };
+    </script>
+</body>
+</html>
