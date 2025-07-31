@@ -65,6 +65,16 @@
             display: flex;
             gap: 5px;
         }
+        .edit-form {
+            background: #4a4a4a;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .edit-form input {
+            width: 250px;
+            margin: 5px 10px 5px 0;
+        }
         .status {
             padding: 10px;
             border-radius: 5px;
@@ -367,7 +377,7 @@
                 if (data && data.length > 0) {
                     songsDiv.innerHTML = '<h3>Songs in ' + currentTable + ':</h3>' + 
                         data.map(song => `
-                            <div class="song-item">
+                            <div class="song-item" id="song-${song.id}">
                                 <div class="song-content">
                                     <strong>${song.songname}</strong> 
                                     ${song.songauthor ? `by ${song.songauthor}` : ''}
@@ -375,6 +385,7 @@
                                     <small><a href="${song.songurl}" target="_blank" style="color: #4CAF50;">${song.songurl}</a></small>
                                 </div>
                                 <div class="song-actions">
+                                    <button onclick="showEditForm(${song.id}, '${song.songname.replace(/'/g, "\\'")}', '${(song.songauthor || '').replace(/'/g, "\\'")}', '${song.songurl.replace(/'/g, "\\'")}')">Edit</button>
                                     <button class="danger" onclick="deleteSong(${song.id})">Delete</button>
                                 </div>
                             </div>
@@ -409,6 +420,61 @@
             } catch (error) {
                 console.error('Error deleting song:', error);
                 showStatus('Error deleting song: ' + error.message, true);
+            }
+        }
+
+        function showEditForm(songId, songname, songauthor, songurl) {
+            // Hide all other edit forms first
+            document.querySelectorAll('.edit-form').forEach(form => form.remove());
+            
+            const songElement = document.getElementById(`song-${songId}`);
+            const editForm = document.createElement('div');
+            editForm.className = 'edit-form';
+            editForm.innerHTML = `
+                <h4>Edit Song</h4>
+                <input type="text" id="edit-songname-${songId}" value="${songname}" placeholder="Song Name" />
+                <input type="text" id="edit-songauthor-${songId}" value="${songauthor}" placeholder="Song Author" />
+                <input type="text" id="edit-songurl-${songId}" value="${songurl}" placeholder="YouTube URL" />
+                <button onclick="updateSong(${songId})">Save Changes</button>
+                <button onclick="cancelEdit(${songId})">Cancel</button>
+            `;
+            
+            songElement.insertAdjacentElement('afterend', editForm);
+        }
+
+        function cancelEdit(songId) {
+            document.querySelectorAll('.edit-form').forEach(form => form.remove());
+        }
+
+        async function updateSong(songId) {
+            const songname = document.getElementById(`edit-songname-${songId}`).value.trim();
+            const songauthor = document.getElementById(`edit-songauthor-${songId}`).value.trim();
+            const songurl = document.getElementById(`edit-songurl-${songId}`).value.trim();
+
+            if (!songname || !songurl) {
+                showStatus('Please enter song name and URL', true);
+                return;
+            }
+
+            try {
+                const { error } = await supabase
+                    .from(currentTable)
+                    .update({
+                        songname: songname,
+                        songauthor: songauthor,
+                        songurl: songurl
+                    })
+                    .eq('id', songId);
+
+                if (error) throw error;
+
+                showStatus('Song updated successfully!');
+                document.querySelectorAll('.edit-form').forEach(form => form.remove());
+                loadSongs();
+
+            } catch (error) {
+                console.error('Error updating song:', error);
+                showStatus('Error updating song: ' + error.message, true);
             }
         }
 
