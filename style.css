@@ -3988,3 +3988,78 @@ body:has(#ytPlayer.fullscreen-video) {
 .watermark:hover {
   color: rgba(var(--text-primary-rgb, 51, 51, 51), 0.8); /* Theme-aware hover color */
 }
+
+
+.library-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.library-controls .action-button {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 12px;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.library-controls .action-button:hover {
+    background: var(--accent-color-hover);
+}
+
+.library-controls .action-button i {
+    font-size: 12px;
+}
+
+.song-item .song-actions {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.song-item .song-actions button {
+    padding: 5px 8px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.3s;
+}
+
+.song-item .play-btn {
+    background: #4CAF50;
+    color: white;
+}
+
+.song-item .queue-btn {
+    background: #2196F3;
+    color: white;
+}
+
+.song-item .favorite-btn {
+    background: #ddd;
+    color: #666;
+}
+
+.song-item .favorite-btn.active {
+    background: #f44336;
+    color: white;
+}
+
+.song-item .remove-btn {
+    background: #f44336;
+    color: white;
+}
+
+.song-item .song-actions button:hover {
+    opacity: 0.8;
+    transform: translateY(-1px);
+}
