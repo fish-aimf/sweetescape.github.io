@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <!-- start of google analytics -->
     <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-QKSKJE9HVN"></script>
+    
         <script>
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
@@ -138,17 +141,19 @@
                 </div>
                 <div class="tab-content">
                     <!-- Library Tab -->
-                    <div class="tab-pane active" id="library">
-                        <div class="library-manager">
-                            <!-- Combined search and modify library into a single row -->
-                            <div class="search-section">
-                                <input type="text" id="librarySearch" placeholder="Search songs...">
+                    <div id="library" class="tab-content">
+                            <h3>My Song Library</h3>
+                            <div class="library-controls">
+                                <button id="librarySourceToggle" class="action-button" onclick="musicPlayer.toggleLibrarySource()">
+                                    <i class="fas fa-globe"></i> Switch to Public Library
+                                </button>
                                 <button id="modifyLibraryBtn" class="action-button">
                                     <i class="fas fa-edit"></i> Modify Library
                                 </button>
                             </div>
                             <div id="songLibrary" class="song-list">
                             </div>
+                        </div>
                             <div id="youtubeSearchSuggestion" class="youtube-search-suggestion" style="display: none;">
                                 <div class="search-suggestion-content">
                                     <i class="fab fa-youtube"></i>
