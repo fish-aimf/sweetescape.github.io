@@ -100,20 +100,6 @@ class AdvancedMusicPlayer {
     this.currentTabIndex = 0;
     this.setupChangelogModal();
     this.loadVersion();
-    this.supabaseUrl = 'https://cwhxanbpymkngzpbsshh.supabase.co';
-  this.supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3aHhhbmJweW1rbmd6cGJzc2hoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NTQzMTksImV4cCI6MjA2OTQzMDMxOX0.6K3eM1XoWaPmyMHsLYgw0mAnSxYjME4clflL4PxQalQ';
-  this.supabase = null;
-  this.supabaseMode = false;
-  this.currentSupabaseTable = 'musiclibrarypublic';
-  this.localSongLibrary = []; // Backup for local data
-  this.localPlaylists = []; // Backup for local playlists
-  this.localLyrics = new Map(); // Store lyrics locally even in Supabase mode
-  
-  // Initialize Supabase
-  this.initializeSupabase();
-  
-  // Initialize Supabase
-  this.initializeSupabase();
     this.visualizer = {
         canvas: null,
         ctx: null,
@@ -157,40 +143,36 @@ class AdvancedMusicPlayer {
       });
   }
   initDatabase() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open("MusicPlayerDB", 2); // Increment version
-    request.onerror = (event) => {
-      console.error("IndexedDB error:", event.target.error);
-      reject("Could not open IndexedDB");
-    };
-    request.onsuccess = (event) => {
-      this.db = event.target.result;
-      resolve();
-    };
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      if (!db.objectStoreNames.contains("songLibrary")) {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open("MusicPlayerDB", 1);
+      request.onerror = (event) => {
+        console.error("IndexedDB error:", event.target.error);
+        reject("Could not open IndexedDB");
+      };
+      request.onsuccess = (event) => {
+        this.db = event.target.result;
+        resolve();
+      };
+      request.onupgradeneeded = (event) => {
+    const db = event.target.result;
+    if (!db.objectStoreNames.contains("songLibrary")) {
         db.createObjectStore("songLibrary", { keyPath: "id" });
-      }
-      if (!db.objectStoreNames.contains("playlists")) {
+    }
+    if (!db.objectStoreNames.contains("playlists")) {
         db.createObjectStore("playlists", { keyPath: "id" });
-      }
-      if (!db.objectStoreNames.contains("settings")) {
+    }
+    if (!db.objectStoreNames.contains("settings")) {
         db.createObjectStore("settings", { keyPath: "name" });
-      }
-      if (!db.objectStoreNames.contains("recentlyPlayed")) {
+    }
+    if (!db.objectStoreNames.contains("recentlyPlayed")) {
         db.createObjectStore("recentlyPlayed", { keyPath: "type" });
-      }
-      if (!db.objectStoreNames.contains("userSettings")) {
+    }
+    if (!db.objectStoreNames.contains("userSettings")) {
         db.createObjectStore("userSettings", { keyPath: "category" });
-      }
-      // Add new object store for lyrics
-      if (!db.objectStoreNames.contains("songLyrics")) {
-        db.createObjectStore("songLyrics", { keyPath: "videoId" });
-      }
-    };
-  });
-}
+    }
+};
+    });
+  }
   initializeElements() {
     this.elements = {
       songNameInput: document.getElementById("songName"),
@@ -749,62 +731,46 @@ handleTouchMove(e) {
 handleTouchEnd(e) {
   this.isDragging = false;
 }
-  async addSongToLibrary() {
-  if (this.supabaseMode) {
-    alert("Cannot add songs in Supabase mode. The public library is read-only. Switch to local mode to add songs.");
-    return;
-  }
-
-  const name = this.elements.songNameInput.value.trim();
-  const url = this.elements.songUrlInput.value.trim();
-  const author = this.elements.songAuthorInput.value.trim();
-
-  if (!name || !url) {
-    alert("Please enter both song name and YouTube URL");
-    return;
-  }
-
-  try {
-    const videoId = this.extractVideoId(url);
+  addSongToLibrary() {
+    const songName = this.elements.songNameInput.value.trim();
+    const songAuthor = this.elements.songAuthorInput.value.trim();
+    const songUrl = this.elements.songUrlInput.value.trim();
+    if (!songName || !songUrl) {
+      alert("Please enter both song name and URL");
+      return;
+    }
+    const videoId = this.extractYouTubeId(songUrl);
     if (!videoId) {
       alert("Invalid YouTube URL");
       return;
     }
-
-    // Check for duplicates
-    const duplicate = this.songLibrary.find(song => song.videoId === videoId);
-    if (duplicate) {
+    if (this.songLibrary.some((song) => song.videoId === videoId)) {
       alert("This song is already in your library");
       return;
     }
-
     const newSong = {
       id: Date.now(),
-      name: name,
-      author: author,
+      name: songName,
+      author: songAuthor,
       videoId: videoId,
-      url: url,
       favorite: false,
-      lyrics: ""
     };
-
-    // Save to IndexedDB (local mode only)
     this.songLibrary.push(newSong);
-    await this.saveSongLibrary();
-
-    // Clear inputs
-    this.elements.songNameInput.value = "";
-    this.elements.songUrlInput.value = "";
-    this.elements.songAuthorInput.value = "";
-
-    this.renderSongLibrary();
-    alert("Song added successfully!");
-
-  } catch (error) {
-    console.error("Error adding song:", error);
-    alert("Failed to add song: " + error.message);
+    this.saveSongLibrary()
+      .then(() => {
+        this.renderSongLibrary();
+        this.updatePlaylistSelection();
+        this.elements.songNameInput.value = "";
+        this.elements.songAuthorInput.value = "";
+        this.elements.songUrlInput.value = "";
+        this.removeYouTubeThumbnailPreview();
+        this.closeLibraryModal();
+      })
+      .catch((error) => {
+        console.error("Error adding song to library:", error);
+        alert("Failed to save song. Please try again.");
+      });
   }
-}
   handleUrlPaste() {
       const songUrl = this.elements.songUrlInput.value.trim();
       const songName = this.elements.songNameInput.value.trim();
@@ -852,110 +818,91 @@ handleTouchEnd(e) {
         });
     });
   }
-renderSongLibrary() {
-  try {
-    if (!this.elements.songLibrary) return;
-    
-    const sortedLibrary = [...this.songLibrary].sort((a, b) => {
-      if (a.favorite !== b.favorite) {
-        return a.favorite ? -1 : 1;
-      }
-      return a.name.localeCompare(b.name);
-    });
-    
-    const fragment = document.createDocumentFragment();
-    
-    if (sortedLibrary.length === 0) {
-      const emptyMessage = document.createElement("div");
-      emptyMessage.classList.add("empty-library-message");
-      emptyMessage.textContent = this.supabaseMode 
-        ? "No songs found in public library"
-        : "Your library is empty. Add songs to get started!";
-      fragment.appendChild(emptyMessage);
-    } else {
-      // Add read-only indicator
-      if (this.supabaseMode) {
-        const readOnlyIndicator = document.createElement("div");
-        readOnlyIndicator.classList.add("supabase-mode-indicator");
-        readOnlyIndicator.innerHTML = `
-          <div style="background: #e3f2fd; color: #1976d2; padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center;">
-            📚 Viewing Public Library (Read-Only) - Playlists & Lyrics stored locally
-          </div>
-        `;
-        fragment.appendChild(readOnlyIndicator);
-      }
-      
-      sortedLibrary.forEach((song) => {
-        const songElement = this.createSongElement(song);
-        fragment.appendChild(songElement);
+  renderSongLibrary() {
+    try {
+      if (!this.elements.songLibrary) return;
+      const sortedLibrary = [...this.songLibrary].sort((a, b) => {
+        if (a.favorite !== b.favorite) {
+          return a.favorite ? -1 : 1;
+        }
+        return a.name.localeCompare(b.name);
       });
+      const fragment = document.createDocumentFragment();
+      if (sortedLibrary.length === 0) {
+        const emptyMessage = document.createElement("div");
+        emptyMessage.classList.add("empty-library-message");
+        emptyMessage.textContent =
+          "Your library is empty. Add songs to get started!";
+        fragment.appendChild(emptyMessage);
+      } else {
+        sortedLibrary.forEach((song) => {
+          const songElement = this.createSongElement(song);
+          fragment.appendChild(songElement);
+        });
+      }
+      this.elements.songLibrary.innerHTML = "";
+      this.elements.songLibrary.appendChild(fragment);
+    } catch (error) {
+      console.error("Error rendering song library:", error);
+      this.elements.songLibrary.innerHTML =
+        '<div class="error-message">Failed to display song library</div>';
     }
-    
-    this.elements.songLibrary.innerHTML = "";
-    this.elements.songLibrary.appendChild(fragment);
-    
-  } catch (error) {
-    console.error("Error rendering song library:", error);
-    this.elements.songLibrary.innerHTML =
-      '<div class="error-message">Failed to display song library</div>';
   }
-}
   createSongElement(song) {
-  const songElement = document.createElement("div");
-  songElement.classList.add("song-item");
-  
-  const isReadOnly = this.supabaseMode;
-  
-  songElement.innerHTML = `
-    <span class="song-name" data-song-id="${song.id}">
-      ${this.escapeHtml(song.name)}
-      ${song.author ? `<small style="color: var(--text-secondary); display: block; font-size: 0.4em;">by ${this.escapeHtml(song.author)}</small>` : ""}
-    </span>
-    <div class="song-actions">
-      <button class="favorite-btn" data-song-id="${song.id}">
-        <i class="fa ${song.favorite ? "fa-star" : "fa-star-o"}"></i>
-      </button>
-      <button class="play-btn" data-song-id="${song.id}">Play</button>
-      ${isReadOnly ? '' : `<button class="remove-btn" data-song-id="${song.id}">Remove</button>`}
-    </div>
-  `;
-  
-  this.attachSongElementListeners(songElement, song);
-  return songElement;
-}
-
+    const songElement = document.createElement("div");
+    songElement.classList.add("song-item");
+    songElement.innerHTML = `
+            <span class="song-name" data-song-id="${song.id}">
+                ${this.escapeHtml(song.name)}
+                ${
+                  song.author
+                    ? `<small style="color: var(--text-secondary); display: block; font-size: 0.4em;">by ${this.escapeHtml(
+                        song.author
+                      )}</small>`
+                    : ""
+                }
+            </span>
+            <div class="song-actions">
+                <button class="favorite-btn" data-song-id="${song.id}">
+                    <i class="fa ${
+                      song.favorite ? "fa-star" : "fa-star-o"
+                    }"></i>
+                </button>
+                <button class="play-btn" data-song-id="${song.id}">Play</button>
+                <button class="remove-btn" data-song-id="${
+                  song.id
+                }">Remove</button>
+            </div>
+        `;
+    this.attachSongElementListeners(songElement, song);
+    return songElement;
+  }
   escapeHtml(text) {
     const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
   }
- attachSongElementListeners(songElement, song) {
-  const favoriteBtn = songElement.querySelector(".favorite-btn");
-  const playBtn = songElement.querySelector(".play-btn");
-  const removeBtn = songElement.querySelector(".remove-btn");
-  const songNameSpan = songElement.querySelector(".song-name");
-
-  favoriteBtn.addEventListener("click", () => this.toggleFavorite(song.id));
-  playBtn.addEventListener("click", () => this.playSong(song.id));
-  
-  if (removeBtn) {
+  attachSongElementListeners(songElement, song) {
+    const favoriteBtn = songElement.querySelector(".favorite-btn");
+    const playBtn = songElement.querySelector(".play-btn");
+    const removeBtn = songElement.querySelector(".remove-btn");
+    const songNameSpan = songElement.querySelector(".song-name");
+    favoriteBtn.addEventListener("click", () => this.toggleFavorite(song.id));
+    playBtn.addEventListener("click", () => this.playSong(song.id));
     removeBtn.addEventListener("click", () => this.removeSong(song.id));
-  }
-
-  let clickTimeout;
-  songNameSpan.addEventListener("click", () => {
-    if (clickTimeout) {
-      clearTimeout(clickTimeout);
-      clickTimeout = null;
-      // In Supabase mode, only allow lyrics editing
-      this.openSongEditModal(song.id, this.supabaseMode);
-    } else {
-      clickTimeout = setTimeout(() => {
+    let clickTimeout;
+    songNameSpan.addEventListener("click", () => {
+      if (clickTimeout) {
+        clearTimeout(clickTimeout);
         clickTimeout = null;
-      }, 300);
-    }
-  });
-}
+        this.openSongEditModal(song.id);
+      } else {
+        clickTimeout = setTimeout(() => {
+          clickTimeout = null;
+        }, 300);
+      }
+    });
+  }
   filterLibrarySongs() {
     const searchTerm = this.elements.librarySearch.value.toLowerCase();
     const songItems = this.elements.songLibrary.querySelectorAll(".song-item");
@@ -1000,50 +947,41 @@ renderSongLibrary() {
     window.open(searchUrl, "_blank");
     this.openLibraryModal();
   }
-  async removeSong(songId) {
-  if (this.supabaseMode) {
-    alert("Cannot remove songs in Supabase mode. The public library is read-only. Switch to local mode to remove songs.");
-    return;
-  }
-
-  try {
-    const song = this.songLibrary.find(song => song.id === songId);
-    if (!song) return;
-
+  removeSong(songId) {
+    const song = this.songLibrary.find((song) => song.id === songId);
+    if (!song) return Promise.resolve();
     const videoId = song.videoId;
-
-    // Remove from local array
-    this.songLibrary = this.songLibrary.filter(song => song.id !== songId);
-
-    // Save to IndexedDB
-    await this.saveSongLibrary();
-
-    // Update favorites playlist
-    let favoritesPlaylist = this.playlists.find(p => 
-      p.name.toLowerCase() === "favorites" ||
-      p.name.toLowerCase() === "favourite" ||
-      p.name.toLowerCase() === "favourite songs" ||
-      p.name.toLowerCase() === "favorite songs"
-    );
-
-    if (favoritesPlaylist) {
-      const originalLength = favoritesPlaylist.songs.length;
-      favoritesPlaylist.songs = favoritesPlaylist.songs.filter(s => s.videoId !== videoId);
-      
-      if (originalLength !== favoritesPlaylist.songs.length) {
-        await this.savePlaylists();
-      }
-    }
-
-    this.renderSongLibrary();
-    this.renderPlaylists();
-    this.updatePlaylistSelection();
-
-  } catch (error) {
-    console.error("Error removing song:", error);
-    alert("Failed to remove song: " + error.message);
+    this.songLibrary = this.songLibrary.filter((song) => song.id !== songId);
+    return this.saveSongLibrary()
+      .then(() => {
+        let favoritesPlaylist = this.playlists.find(
+          (p) =>
+            p.name.toLowerCase() === "favorites" ||
+            p.name.toLowerCase() === "favourite" ||
+            p.name.toLowerCase() === "favourite songs" ||
+            p.name.toLowerCase() === "favorite songs"
+        );
+        if (favoritesPlaylist) {
+          const originalLength = favoritesPlaylist.songs.length;
+          favoritesPlaylist.songs = favoritesPlaylist.songs.filter(
+            (s) => s.videoId !== videoId
+          );
+          if (originalLength !== favoritesPlaylist.songs.length) {
+            return this.savePlaylists();
+          }
+        }
+        return Promise.resolve();
+      })
+      .then(() => {
+        this.renderSongLibrary();
+        this.renderPlaylists();
+        this.updatePlaylistSelection();
+      })
+      .catch((error) => {
+        console.error("Error removing song:", error);
+        alert("Failed to remove song. Please try again.");
+      });
   }
-}
   createPlaylist() {
     const playlistName = this.elements.newPlaylistName.value.trim();
     if (!playlistName) {
@@ -3265,31 +3203,21 @@ saveListeningTime() {
       { offset: Number.NEGATIVE_INFINITY }
     ).element;
   }
-  async toggleFavorite(songId) {
-  try {
-    const song = this.songLibrary.find(s => s.id === songId);
-    if (!song) return;
-
-    song.favorite = !song.favorite;
-
-    if (!this.supabaseMode) {
-      // Save to IndexedDB only in local mode
-      await this.saveSongLibrary();
+  toggleFavorite(songId) {
+    const songIndex = this.songLibrary.findIndex((song) => song.id === songId);
+    if (songIndex === -1) return;
+    const song = this.songLibrary[songIndex];
+    const newFavoriteStatus = !song.favorite;
+    song.favorite = newFavoriteStatus;
+    const favoriteBtn = document.querySelector(
+      `.favorite-btn[data-song-id="${songId}"]`
+    );
+    if (favoriteBtn) {
+      const icon = favoriteBtn.querySelector("i");
+      icon.className = `fa ${newFavoriteStatus ? "fa-star" : "fa-star-o"}`;
     }
-    // In Supabase mode, favorites are just stored in memory
-
-    // Update favorites playlist (always stored locally)
-    await this.syncFavoritesPlaylist();
-    
-    this.renderSongLibrary();
-    this.renderPlaylists();
-
-  } catch (error) {
-    console.error("Error toggling favorite:", error);
-    alert("Failed to update favorite status: " + error.message);
+    this.batchFavoriteUpdate(song, newFavoriteStatus);
   }
-}
-
   syncFavoritesOnLoad() {
     return new Promise((resolve) => {
       try {
@@ -3820,42 +3748,64 @@ removeGhostPreview() {
     document.body.appendChild(modal);
     modalContent.scrollTop = 0;
   }
-  async updateSongDetails(songId, newName, newAuthor, newLyrics) {
-  try {
-    const song = this.songLibrary.find(s => s.id === songId);
-    if (!song) return;
-
-    if (this.supabaseMode) {
-      // In Supabase mode, only allow lyrics editing
-      if (newName !== song.name || newAuthor !== song.author) {
-        alert("Cannot edit song name or author in Supabase mode. Only lyrics can be edited.");
-        return;
+  updateSongDetails(songId, newName, newAuthor, newVideoId, newLyrics = "") {
+    return new Promise((resolve, reject) => {
+      try {
+        const songIndex = this.songLibrary.findIndex(
+          (song) => song.id === songId
+        );
+        if (songIndex === -1) {
+          reject(new Error("Song not found"));
+          return;
+        }
+        const oldVideoId = this.songLibrary[songIndex].videoId;
+        const wasFavorite = this.songLibrary[songIndex].favorite;
+        this.songLibrary[songIndex].name = newName;
+        this.songLibrary[songIndex].author = newAuthor;
+        this.songLibrary[songIndex].videoId = newVideoId;
+        this.songLibrary[songIndex].lyrics = newLyrics;
+        this.playlists.forEach((playlist) => {
+          const playlistSongIndex = playlist.songs.findIndex(
+            (s) => s.id === songId
+          );
+          if (playlistSongIndex !== -1) {
+            playlist.songs[playlistSongIndex].name = newName;
+            playlist.songs[playlistSongIndex].author = newAuthor;
+            playlist.songs[playlistSongIndex].videoId = newVideoId;
+            playlist.songs[playlistSongIndex].lyrics = newLyrics;
+          }
+        });
+        this.saveSongLibrary()
+          .then(() => this.savePlaylists())
+          .then(() => {
+            if (
+              this.currentPlaylist &&
+              this.currentPlaylist.songs[this.currentSongIndex]?.id === songId
+            ) {
+              if (this.elements.currentSongName) {
+                this.elements.currentSongName.textContent = newName;
+              }
+              if (
+                document.getElementById("lyrics").classList.contains("active")
+              ) {
+                this.renderLyricsTab();
+              }
+            }
+            if (this.isSidebarVisible && this.currentPlaylist) {
+              this.renderCurrentPlaylistInSidebar();
+            }
+            resolve();
+          })
+          .catch((error) => {
+            console.error("Error saving updated song details:", error);
+            reject(error);
+          });
+      } catch (error) {
+        console.error("Exception in updateSongDetails:", error);
+        reject(error);
       }
-    }
-
-    // Update song details
-    song.name = newName;
-    song.author = newAuthor;
-    song.lyrics = newLyrics;
-
-    if (this.supabaseMode) {
-      // Save lyrics locally
-      await this.saveLocalLyrics(song.videoId, newLyrics);
-    } else {
-      // Save everything to IndexedDB
-      await this.saveSongLibrary();
-    }
-
-    this.renderSongLibrary();
-    if (this.currentPlaylist) {
-      this.renderPlaylistSidebar();
-    }
-
-  } catch (error) {
-    console.error("Error updating song details:", error);
-    alert("Failed to update song details: " + error.message);
+    });
   }
-}
   formatTime(seconds) {
     if (isNaN(seconds) || seconds < 0) return "0:00";
     const minutes = Math.floor(seconds / 60);
@@ -7923,171 +7873,6 @@ destroyVisualizer() {
         cancelAnimationFrame(this.visualizer.animationId);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-initializeSupabase() {
-  if (window.supabase) {
-    this.supabase = window.supabase.createClient(this.supabaseUrl, this.supabaseKey);
-    console.log('Supabase initialized');
-  } else {
-    console.warn('Supabase library not loaded');
-  }
-}
-
-// Toggle between Supabase and IndexedDB modes
-async toggleSupabaseMode() {
-  try {
-    if (!this.supabase) {
-      alert('Supabase is not available');
-      return;
-    }
-
-    if (this.supabaseMode) {
-      // Switch from Supabase to Local
-      console.log('Switching to local mode...');
-      
-      // Restore local data
-      this.songLibrary = [...this.localSongLibrary];
-      
-      // Playlists stay the same (they were always local in Supabase mode)
-      // Lyrics stay the same (they were always local in Supabase mode)
-      
-      this.supabaseMode = false;
-      console.log('Switched to local mode');
-    } else {
-      // Switch from Local to Supabase  
-      console.log('Switching to Supabase mode...');
-      
-      // Backup local data
-      this.localSongLibrary = [...this.songLibrary];
-      
-      // Load Supabase data (read-only)
-      await this.loadSupabaseSongLibrary();
-      
-      // Load local lyrics for Supabase songs
-      await this.loadLocalLyrics();
-      
-      this.supabaseMode = true;
-      console.log('Switched to Supabase mode (read-only library, local playlists/lyrics)');
-    }
-    
-    // Re-render everything
-    this.renderSongLibrary();
-    this.renderPlaylists();
-    this.updatePlaylistSelection();
-    
-    // Show status
-    const mode = this.supabaseMode ? 'Supabase (Read-Only)' : 'Local';
-    console.log(`Now using ${mode} storage mode`);
-    
-  } catch (error) {
-    console.error('Error toggling Supabase mode:', error);
-    alert('Failed to toggle storage mode: ' + error.message);
-  }
-}
-
-// Load songs from Supabase (read-only)
-async loadSupabaseSongLibrary() {
-  try {
-    const { data, error } = await this.supabase
-      .from(this.currentSupabaseTable)
-      .select('*')
-      .order('songname');
-
-    if (error) throw error;
-
-    // Convert Supabase format to our internal format
-    this.songLibrary = (data || []).map(song => ({
-      id: song.id,
-      name: song.songname || '',
-      author: song.songauthor || '',
-      videoId: this.extractVideoId(song.songurl || ''),
-      url: song.songurl || '',
-      favorite: false, // Favorites are handled locally
-      lyrics: '' // Lyrics are handled locally
-    }));
-
-    console.log(`Loaded ${this.songLibrary.length} songs from Supabase (read-only)`);
-    return this.songLibrary;
-    
-  } catch (error) {
-    console.error('Error loading Supabase songs:', error);
-    this.songLibrary = [];
-    throw error;
-  }
-}
-
-// Load local lyrics for songs (works with Supabase mode)
-async loadLocalLyrics() {
-  try {
-    if (!this.db) return;
-    
-    const transaction = this.db.transaction(['songLyrics'], 'readonly');
-    const store = transaction.objectStore('songLyrics');
-    const request = store.getAll();
-    
-    request.onsuccess = () => {
-      this.localLyrics = new Map();
-      (request.result || []).forEach(item => {
-        this.localLyrics.set(item.videoId, item.lyrics);
-      });
-      
-      // Apply lyrics to current songs
-      this.songLibrary.forEach(song => {
-        if (this.localLyrics.has(song.videoId)) {
-          song.lyrics = this.localLyrics.get(song.videoId);
-        }
-      });
-    };
-    
-  } catch (error) {
-    console.error('Error loading local lyrics:', error);
-  }
-}
-
-// Save lyrics locally (works in both modes)
-async saveLocalLyrics(videoId, lyrics) {
-  try {
-    if (!this.db) return;
-    
-    this.localLyrics.set(videoId, lyrics);
-    
-    const transaction = this.db.transaction(['songLyrics'], 'readwrite');
-    const store = transaction.objectStore('songLyrics');
-    
-    await new Promise((resolve, reject) => {
-      const request = store.put({ videoId, lyrics });
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
-    
-  } catch (error) {
-    console.error('Error saving local lyrics:', error);
-  }
-}
-  extractVideoId(url) {
-  if (!url) return null;
-  
-  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-  const match = url.match(regex);
-  
-  return match ? match[1] : null;
-}
-
-
-  
-
 
 
 
