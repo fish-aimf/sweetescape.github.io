@@ -100,6 +100,20 @@ class AdvancedMusicPlayer {
     this.currentTabIndex = 0;
     this.setupChangelogModal();
     this.loadVersion();
+    this.supabaseUrl = 'https://cwhxanbpymkngzpbsshh.supabase.co';
+  this.supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3aHhhbmJweW1rbmd6cGJzc2hoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NTQzMTksImV4cCI6MjA2OTQzMDMxOX0.6K3eM1XoWaPmyMHsLYgw0mAnSxYjME4clflL4PxQalQ';
+  this.supabase = null;
+  this.supabaseMode = false;
+  this.currentSupabaseTable = 'musiclibrarypublic';
+  this.localSongLibrary = []; // Backup for local data
+  this.localPlaylists = []; // Backup for local playlists
+  this.localLyrics = new Map(); // Store lyrics locally even in Supabase mode
+  
+  // Initialize Supabase
+  this.initializeSupabase();
+  
+  // Initialize Supabase
+  this.initializeSupabase();
     this.visualizer = {
         canvas: null,
         ctx: null,
@@ -731,46 +745,62 @@ handleTouchMove(e) {
 handleTouchEnd(e) {
   this.isDragging = false;
 }
-  addSongToLibrary() {
-    const songName = this.elements.songNameInput.value.trim();
-    const songAuthor = this.elements.songAuthorInput.value.trim();
-    const songUrl = this.elements.songUrlInput.value.trim();
-    if (!songName || !songUrl) {
-      alert("Please enter both song name and URL");
-      return;
-    }
-    const videoId = this.extractYouTubeId(songUrl);
+  async addSongToLibrary() {
+  if (this.supabaseMode) {
+    alert("Cannot add songs in Supabase mode. The public library is read-only. Switch to local mode to add songs.");
+    return;
+  }
+
+  const name = this.elements.songNameInput.value.trim();
+  const url = this.elements.songUrlInput.value.trim();
+  const author = this.elements.songAuthorInput.value.trim();
+
+  if (!name || !url) {
+    alert("Please enter both song name and YouTube URL");
+    return;
+  }
+
+  try {
+    const videoId = this.extractVideoId(url);
     if (!videoId) {
       alert("Invalid YouTube URL");
       return;
     }
-    if (this.songLibrary.some((song) => song.videoId === videoId)) {
+
+    // Check for duplicates
+    const duplicate = this.songLibrary.find(song => song.videoId === videoId);
+    if (duplicate) {
       alert("This song is already in your library");
       return;
     }
+
     const newSong = {
       id: Date.now(),
-      name: songName,
-      author: songAuthor,
+      name: name,
+      author: author,
       videoId: videoId,
+      url: url,
       favorite: false,
+      lyrics: ""
     };
+
+    // Save to IndexedDB (local mode only)
     this.songLibrary.push(newSong);
-    this.saveSongLibrary()
-      .then(() => {
-        this.renderSongLibrary();
-        this.updatePlaylistSelection();
-        this.elements.songNameInput.value = "";
-        this.elements.songAuthorInput.value = "";
-        this.elements.songUrlInput.value = "";
-        this.removeYouTubeThumbnailPreview();
-        this.closeLibraryModal();
-      })
-      .catch((error) => {
-        console.error("Error adding song to library:", error);
-        alert("Failed to save song. Please try again.");
-      });
+    await this.saveSongLibrary();
+
+    // Clear inputs
+    this.elements.songNameInput.value = "";
+    this.elements.songUrlInput.value = "";
+    this.elements.songAuthorInput.value = "";
+
+    this.renderSongLibrary();
+    alert("Song added successfully!");
+
+  } catch (error) {
+    console.error("Error adding song:", error);
+    alert("Failed to add song: " + error.message);
   }
+}
   handleUrlPaste() {
       const songUrl = this.elements.songUrlInput.value.trim();
       const songName = this.elements.songNameInput.value.trim();
@@ -947,41 +977,50 @@ handleTouchEnd(e) {
     window.open(searchUrl, "_blank");
     this.openLibraryModal();
   }
-  removeSong(songId) {
-    const song = this.songLibrary.find((song) => song.id === songId);
-    if (!song) return Promise.resolve();
-    const videoId = song.videoId;
-    this.songLibrary = this.songLibrary.filter((song) => song.id !== songId);
-    return this.saveSongLibrary()
-      .then(() => {
-        let favoritesPlaylist = this.playlists.find(
-          (p) =>
-            p.name.toLowerCase() === "favorites" ||
-            p.name.toLowerCase() === "favourite" ||
-            p.name.toLowerCase() === "favourite songs" ||
-            p.name.toLowerCase() === "favorite songs"
-        );
-        if (favoritesPlaylist) {
-          const originalLength = favoritesPlaylist.songs.length;
-          favoritesPlaylist.songs = favoritesPlaylist.songs.filter(
-            (s) => s.videoId !== videoId
-          );
-          if (originalLength !== favoritesPlaylist.songs.length) {
-            return this.savePlaylists();
-          }
-        }
-        return Promise.resolve();
-      })
-      .then(() => {
-        this.renderSongLibrary();
-        this.renderPlaylists();
-        this.updatePlaylistSelection();
-      })
-      .catch((error) => {
-        console.error("Error removing song:", error);
-        alert("Failed to remove song. Please try again.");
-      });
+  async removeSong(songId) {
+  if (this.supabaseMode) {
+    alert("Cannot remove songs in Supabase mode. The public library is read-only. Switch to local mode to remove songs.");
+    return;
   }
+
+  try {
+    const song = this.songLibrary.find(song => song.id === songId);
+    if (!song) return;
+
+    const videoId = song.videoId;
+
+    // Remove from local array
+    this.songLibrary = this.songLibrary.filter(song => song.id !== songId);
+
+    // Save to IndexedDB
+    await this.saveSongLibrary();
+
+    // Update favorites playlist
+    let favoritesPlaylist = this.playlists.find(p => 
+      p.name.toLowerCase() === "favorites" ||
+      p.name.toLowerCase() === "favourite" ||
+      p.name.toLowerCase() === "favourite songs" ||
+      p.name.toLowerCase() === "favorite songs"
+    );
+
+    if (favoritesPlaylist) {
+      const originalLength = favoritesPlaylist.songs.length;
+      favoritesPlaylist.songs = favoritesPlaylist.songs.filter(s => s.videoId !== videoId);
+      
+      if (originalLength !== favoritesPlaylist.songs.length) {
+        await this.savePlaylists();
+      }
+    }
+
+    this.renderSongLibrary();
+    this.renderPlaylists();
+    this.updatePlaylistSelection();
+
+  } catch (error) {
+    console.error("Error removing song:", error);
+    alert("Failed to remove song: " + error.message);
+  }
+}
   createPlaylist() {
     const playlistName = this.elements.newPlaylistName.value.trim();
     if (!playlistName) {
@@ -7873,6 +7912,160 @@ destroyVisualizer() {
         cancelAnimationFrame(this.visualizer.animationId);
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+initializeSupabase() {
+  if (window.supabase) {
+    this.supabase = window.supabase.createClient(this.supabaseUrl, this.supabaseKey);
+    console.log('Supabase initialized');
+  } else {
+    console.warn('Supabase library not loaded');
+  }
+}
+
+// Toggle between Supabase and IndexedDB modes
+async toggleSupabaseMode() {
+  try {
+    if (!this.supabase) {
+      alert('Supabase is not available');
+      return;
+    }
+
+    if (this.supabaseMode) {
+      // Switch from Supabase to Local
+      console.log('Switching to local mode...');
+      
+      // Restore local data
+      this.songLibrary = [...this.localSongLibrary];
+      
+      // Playlists stay the same (they were always local in Supabase mode)
+      // Lyrics stay the same (they were always local in Supabase mode)
+      
+      this.supabaseMode = false;
+      console.log('Switched to local mode');
+    } else {
+      // Switch from Local to Supabase  
+      console.log('Switching to Supabase mode...');
+      
+      // Backup local data
+      this.localSongLibrary = [...this.songLibrary];
+      
+      // Load Supabase data (read-only)
+      await this.loadSupabaseSongLibrary();
+      
+      // Load local lyrics for Supabase songs
+      await this.loadLocalLyrics();
+      
+      this.supabaseMode = true;
+      console.log('Switched to Supabase mode (read-only library, local playlists/lyrics)');
+    }
+    
+    // Re-render everything
+    this.renderSongLibrary();
+    this.renderPlaylists();
+    this.updatePlaylistSelection();
+    
+    // Show status
+    const mode = this.supabaseMode ? 'Supabase (Read-Only)' : 'Local';
+    console.log(`Now using ${mode} storage mode`);
+    
+  } catch (error) {
+    console.error('Error toggling Supabase mode:', error);
+    alert('Failed to toggle storage mode: ' + error.message);
+  }
+}
+
+// Load songs from Supabase (read-only)
+async loadSupabaseSongLibrary() {
+  try {
+    const { data, error } = await this.supabase
+      .from(this.currentSupabaseTable)
+      .select('*')
+      .order('songname');
+
+    if (error) throw error;
+
+    // Convert Supabase format to our internal format
+    this.songLibrary = (data || []).map(song => ({
+      id: song.id,
+      name: song.songname || '',
+      author: song.songauthor || '',
+      videoId: this.extractVideoId(song.songurl || ''),
+      url: song.songurl || '',
+      favorite: false, // Favorites are handled locally
+      lyrics: '' // Lyrics are handled locally
+    }));
+
+    console.log(`Loaded ${this.songLibrary.length} songs from Supabase (read-only)`);
+    return this.songLibrary;
+    
+  } catch (error) {
+    console.error('Error loading Supabase songs:', error);
+    this.songLibrary = [];
+    throw error;
+  }
+}
+
+// Load local lyrics for songs (works with Supabase mode)
+async loadLocalLyrics() {
+  try {
+    if (!this.db) return;
+    
+    const transaction = this.db.transaction(['songLyrics'], 'readonly');
+    const store = transaction.objectStore('songLyrics');
+    const request = store.getAll();
+    
+    request.onsuccess = () => {
+      this.localLyrics = new Map();
+      (request.result || []).forEach(item => {
+        this.localLyrics.set(item.videoId, item.lyrics);
+      });
+      
+      // Apply lyrics to current songs
+      this.songLibrary.forEach(song => {
+        if (this.localLyrics.has(song.videoId)) {
+          song.lyrics = this.localLyrics.get(song.videoId);
+        }
+      });
+    };
+    
+  } catch (error) {
+    console.error('Error loading local lyrics:', error);
+  }
+}
+
+// Save lyrics locally (works in both modes)
+async saveLocalLyrics(videoId, lyrics) {
+  try {
+    if (!this.db) return;
+    
+    this.localLyrics.set(videoId, lyrics);
+    
+    const transaction = this.db.transaction(['songLyrics'], 'readwrite');
+    const store = transaction.objectStore('songLyrics');
+    
+    await new Promise((resolve, reject) => {
+      const request = store.put({ videoId, lyrics });
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+    
+  } catch (error) {
+    console.error('Error saving local lyrics:', error);
+  }
+}
+
 
 
 
