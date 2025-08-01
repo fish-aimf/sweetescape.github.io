@@ -227,3 +227,4 @@
 - emergency bug fixes v31.4.1
 - finally issue solved once and for all v31.4.2
 - fixed issue where visualizer settings are not saved. v31.5.0
+- tried to add supabase v31.5.1
