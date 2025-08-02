@@ -251,6 +251,20 @@
                         <button onclick="addSong()">Add Song</button>
                     </div>
                 </div>
+                <div>
+    <h4>Mass Import Songs</h4>
+    <div class="playlist-form">
+        <select id="massImportArtistSelect">
+            <option value="">Select Playlist</option>
+        </select>
+    </div>
+    <textarea id="massImportText" placeholder="Format: Song Name, YouTube URL, Author (optional)
+Example:
+Shape of You, https://youtube.com/watch?v=abc123, Ed Sheeran
+Blinding Lights, https://youtube.com/watch?v=def456
+Perfect, https://youtube.com/watch?v=ghi789, Ed Sheeran"></textarea>
+    <button onclick="massImportSongs()">Import Songs</button>
+</div>
             </div>
 
             <!-- Artists and Songs Display -->
