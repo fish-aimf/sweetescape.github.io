@@ -173,21 +173,21 @@
             word-break: break-all;
         }
 
-        .admin-controls {
+        .playlist-controls {
             background: #fed7d7;
             padding: 20px;
             border-radius: 10px;
             margin-bottom: 30px;
         }
 
-        .admin-form {
+        .playlist-form {
             display: flex;
             gap: 10px;
             margin: 10px 0;
             flex-wrap: wrap;
         }
 
-        .admin-form input {
+        .playlist-form input {
             flex: 1;
             min-width: 200px;
         }
@@ -215,7 +215,6 @@
                 <input type="password" id="password" placeholder="Enter your password">
             </div>
             <button onclick="login()">Login</button>
-            <button onclick="signUp()" class="btn-secondary">Sign Up</button>
             <div id="authError" class="error"></div>
             <div id="authSuccess" class="success"></div>
         </div>
@@ -229,12 +228,12 @@
             </div>
 
             <!-- Playlist Management Controls -->
-            <div id="playlistControls" class="admin-controls">
+            <div id="playlistControls" class="playlist-controls">
                 <h3>🎵 Playlist Management</h3>
                 
                 <div>
                     <h4>Create New Playlist</h4>
-                    <div class="admin-form">
+                    <div class="playlist-form">
                         <input type="text" id="newArtistName" placeholder="Playlist name (e.g. 'Taylor Swift's Songs')">
                         <button onclick="addArtist()">Create Playlist</button>
                     </div>
@@ -242,7 +241,7 @@
 
                 <div>
                     <h4>Add Song to Playlist</h4>
-                    <div class="admin-form">
+                    <div class="playlist-form">
                         <select id="songArtistSelect">
                             <option value="">Select Playlist</option>
                         </select>
