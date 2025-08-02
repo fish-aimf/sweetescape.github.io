@@ -53,32 +53,6 @@ async function login() {
     }
 }
 
-async function signUp() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    
-    if (!email || !password) {
-        showError('authError', 'Please enter both email and password');
-        return;
-    }
-
-    if (password.length < 6) {
-        showError('authError', 'Password must be at least 6 characters long');
-        return;
-    }
-
-    const { data, error } = await supabase.auth.signUp({
-        email: email,
-        password: password
-    });
-
-    if (error) {
-        showError('authError', error.message);
-    } else {
-        showSuccess('authSuccess', 'Account created successfully! Please check your email for verification (if required).');
-    }
-}
-
 async function logout() {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -199,7 +173,7 @@ function updateArtistSelect() {
         artists.map(artist => `<option value="${artist.id}">🎵 ${artist.name}</option>`).join('');
 }
 
-// Admin CRUD operations
+// Playlist CRUD operations
 async function addArtist() {
     const name = document.getElementById('newArtistName').value.trim();
     
