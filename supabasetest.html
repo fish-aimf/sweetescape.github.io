@@ -173,8 +173,6 @@
 
         let currentUser = null;
         let currentTable = null;
-        let isAdmin = false;
-let adminViewMode = false;
 
         function showStatus(message, isError = false) {
             const statusDiv = document.getElementById('status');
@@ -187,65 +185,38 @@ let adminViewMode = false;
             statusDiv.innerHTML = `<div class="status ${isError ? 'error' : 'success'}">${message}</div>`;
             setTimeout(() => statusDiv.innerHTML = '', 3000);
         }
-        async function checkAdminStatus() {
-    try {
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', currentUser.id)
-            .single();
-
-        if (error) {
-            await supabase.from('profiles').insert([{
-                id: currentUser.id,
-                email: currentUser.email,
-                is_admin: false
-            }]);
-            isAdmin = false;
-        } else {
-            isAdmin = data.is_admin || false;
-        }
-
-        // Show/hide admin elements
-        document.getElementById('adminBadge').classList.toggle('hidden', !isAdmin);
-        document.getElementById('adminPanel').classList.toggle('hidden', !isAdmin);
-        document.getElementById('editDescBtn').classList.toggle('hidden', !isAdmin);
-    } catch (error) {
-        console.error('Error checking admin status:', error);
-        isAdmin = false;
-    }
-}
 
         async function login() {
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value.trim();
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
 
-    if (!email || !password) {
-        showLoginStatus('Please enter email and password', true);
-        return;
-    }
+            if (!email || !password) {
+                showLoginStatus('Please enter email and password', true);
+                return;
+            }
 
-    try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password
-        });
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
 
-        if (error) throw error;
+                if (error) throw error;
 
-        currentUser = data.user;
-        document.getElementById('userEmail').textContent = currentUser.email;
-        document.getElementById('loginForm').classList.add('hidden');
-        document.getElementById('mainApp').classList.remove('hidden');
-        
-        await checkAdminStatus();
-        showStatus('Logged in successfully!');
-        loadTables();
-    } catch (error) {
-        console.error('Login error:', error);
-        showLoginStatus('Login failed: ' + error.message, true);
-    }
-}
+                currentUser = data.user;
+                document.getElementById('userEmail').textContent = currentUser.email;
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                
+                showStatus('Logged in successfully!');
+                loadTables();
+
+            } catch (error) {
+                console.error('Login error:', error);
+                showLoginStatus('Login failed: ' + error.message, true);
+            }
+        }
+
         async function logout() {
             try {
                 await supabase.auth.signOut();
@@ -263,96 +234,87 @@ let adminViewMode = false;
         }
 
         async function loadTables() {
-    try {
-        let query = supabase.from('music_tables').select('*');
-        if (!adminViewMode) {
-            query = query.eq('owner_id', currentUser.id);
-        }
+            try {
+                const { data, error } = await supabase
+                    .from('music_tables')
+                    .select('*')
+                    .eq('owner_id', currentUser.id);
 
-        const { data, error } = await query;
-        if (error) throw error;
+                if (error) throw error;
 
-        const tableSelect = document.getElementById('tableSelect');
-        const tablesList = document.getElementById('tablesList');
-        
-        tableSelect.innerHTML = '<option value="">Select a table...</option>';
-        
-        if (data && data.length > 0) {
-            data.forEach(table => {
-                const option = document.createElement('option');
-                option.value = table.table_name;
-                option.textContent = `${table.table_name}${adminViewMode && table.owner_id !== currentUser.id ? ' (Not yours)' : ''}`;
-                tableSelect.appendChild(option);
-            });
-
-            tablesList.innerHTML = data.map(table => {
-                const isOwner = table.owner_id === currentUser.id;
-                const canEdit = isOwner || isAdmin;
+                const tableSelect = document.getElementById('tableSelect');
+                const tablesList = document.getElementById('tablesList');
                 
-                return `
-                    <div class="table-item">
-                        <div class="table-info">
-                            <div><strong>${table.table_name}</strong> 
-                                ${adminViewMode && !isOwner ? '<span class="owner-info">(Not yours)</span>' : ''}
-                            </div>
-                            ${table.description ? `<div class="table-description">${table.description}</div>` : ''}
-                            <div class="owner-info">Created: ${new Date(table.created_at).toLocaleDateString()}</div>
+                // Clear and populate select
+                tableSelect.innerHTML = '<option value="">Select a table...</option>';
+                
+                if (data && data.length > 0) {
+                    data.forEach(table => {
+                        const option = document.createElement('option');
+                        option.value = table.table_name;
+                        option.textContent = table.table_name;
+                        tableSelect.appendChild(option);
+                    });
+
+                    // Display tables list
+                    tablesList.innerHTML = data.map(table => `
+                        <div class="table-item">
+                            <span><strong>${table.table_name}</strong> (Created: ${new Date(table.created_at).toLocaleDateString()})</span>
+                            <button class="danger" onclick="deleteTableFromList('${table.table_name}')">Delete</button>
                         </div>
-                        <div class="table-actions">
-                            ${canEdit ? `<button class="danger" onclick="deleteTableFromList('${table.table_name}')">Delete</button>` : ''}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        } else {
-            tablesList.innerHTML = '<p>No tables found. Create your first table above!</p>';
+                    `).join('');
+                } else {
+                    tablesList.innerHTML = '<p>No tables created yet. Create your first table above!</p>';
+                }
+
+            } catch (error) {
+                console.error('Error loading tables:', error);
+                showStatus('Error loading tables: ' + error.message, true);
+            }
         }
-    } catch (error) {
-        console.error('Error loading tables:', error);
-        showStatus('Error loading tables: ' + error.message, true);
-    }
-}
 
         async function createTable() {
-    const tableName = document.getElementById('newTableName').value.trim();
-    const tableDescription = document.getElementById('newTableDescription').value.trim();
-    
-    if (!tableName) {
-        showStatus('Please enter a table name', true);
-        return;
-    }
+            const tableName = document.getElementById('newTableName').value.trim();
+            
+            if (!tableName) {
+                showStatus('Please enter a table name', true);
+                return;
+            }
 
-    if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(tableName)) {
-        showStatus('Table name must start with a letter and contain only letters, numbers, and underscores', true);
-        return;
-    }
+            // Validate table name (alphanumeric and underscores only)
+            if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(tableName)) {
+                showStatus('Table name must start with a letter and contain only letters, numbers, and underscores', true);
+                return;
+            }
 
-    try {
-        const { error: registryError } = await supabase
-            .from('music_tables')
-            .insert([{
-                table_name: tableName,
-                owner_id: currentUser.id,
-                description: tableDescription || null
-            }]);
+            try {
+                // First, register the table in our music_tables registry
+                const { error: registryError } = await supabase
+                    .from('music_tables')
+                    .insert([{
+                        table_name: tableName,
+                        owner_id: currentUser.id
+                    }]);
 
-        if (registryError) throw registryError;
+                if (registryError) throw registryError;
 
-        const { error: createError } = await supabase.rpc('create_music_table', {
-            table_name: tableName
-        });
+                // Create the actual songs table using RPC function
+                const { error: createError } = await supabase.rpc('create_music_table', {
+                    table_name: tableName
+                });
 
-        if (createError) throw createError;
+                if (createError) throw createError;
 
-        showStatus('Table created successfully!');
-        document.getElementById('newTableName').value = '';
-        document.getElementById('newTableDescription').value = '';
-        loadTables();
-    } catch (error) {
-        console.error('Error creating table:', error);
-        showStatus('Error creating table: ' + error.message, true);
-    }
-}
+                showStatus('Table created successfully!');
+                document.getElementById('newTableName').value = '';
+                loadTables();
+
+            } catch (error) {
+                console.error('Error creating table:', error);
+                showStatus('Error creating table: ' + error.message, true);
+            }
+        }
+
         async function switchTable() {
             const tableName = document.getElementById('tableSelect').value;
             
@@ -586,84 +548,6 @@ let adminViewMode = false;
                 showStatus('Error deleting table: ' + error.message, true);
             }
         }
-        async function loadAllTables() {
-    if (!isAdmin) {
-        showStatus('Admin privileges required', true);
-        return;
-    }
-
-    try {
-        const { data, error } = await supabase.rpc('get_all_tables');
-        if (error) throw error;
-
-        const adminTablesList = document.getElementById('adminTablesList');
-        
-        if (data && data.length > 0) {
-            adminTablesList.innerHTML = '<h4>All Tables in System:</h4>' + 
-                data.map(table => `
-                    <div class="table-item">
-                        <div class="table-info">
-                            <div><strong>${table.table_name}</strong></div>
-                            ${table.description ? `<div class="table-description">${table.description}</div>` : ''}
-                            <div class="owner-info">Owner: ${table.owner_email || 'Unknown'}</div>
-                            <div class="owner-info">Created: ${new Date(table.created_at).toLocaleDateString()}</div>
-                        </div>
-                        <div class="table-actions">
-                            <button onclick="switchToTable('${table.table_name}')">Manage</button>
-                            <button class="danger" onclick="deleteTableFromList('${table.table_name}')">Delete</button>
-                        </div>
-                    </div>
-                `).join('');
-        } else {
-            adminTablesList.innerHTML = '<p>No tables found in the system.</p>';
-        }
-    } catch (error) {
-        console.error('Error loading all tables:', error);
-        showStatus('Error loading all tables: ' + error.message, true);
-    }
-}
-
-function toggleAdminTableView() {
-    if (!isAdmin) {
-        showStatus('Admin privileges required', true);
-        return;
-    }
-    
-    adminViewMode = !adminViewMode;
-    loadTables();
-    showStatus(adminViewMode ? 'Switched to admin view (all tables)' : 'Switched to user view (your tables)');
-}
-
-async function editTableDescription() {
-    if (!currentTable) return;
-
-    try {
-        const { data, error } = await supabase
-            .from('music_tables')
-            .select('description')
-            .eq('table_name', currentTable)
-            .single();
-
-        if (error) throw error;
-
-        const newDescription = prompt('Enter new description:', data.description || '');
-        if (newDescription === null) return;
-
-        const { error: updateError } = await supabase
-            .from('music_tables')
-            .update({ description: newDescription || null })
-            .eq('table_name', currentTable);
-
-        if (updateError) throw updateError;
-
-        showStatus('Table description updated successfully!');
-        switchTable();
-        loadTables();
-    } catch (error) {
-        console.error('Error updating table description:', error);
-        showStatus('Error updating table description: ' + error.message, true);
-    }
-}
 
         // Check for existing session on page load
         window.onload = async () => {
