@@ -139,15 +139,15 @@ function displayArtists() {
     const container = document.getElementById('artistsContainer');
     
     if (artists.length === 0) {
-        container.innerHTML = '<p style="text-align: center;">No artists found.</p>';
+        container.innerHTML = '<p style="text-align: center;">No playlists found.</p>';
         return;
     }
 
     container.innerHTML = artists.map(artist => `
         <div class="artist-card">
             <div class="artist-header">
-                <div class="artist-name">${artist.name}</div>
-                ${isAdmin ? `<button onclick="deleteArtist(${artist.id})" class="btn-danger">Delete Artist</button>` : ''}
+                <div class="artist-name">🎵 ${artist.name}</div>
+                <button onclick="deleteArtist(${artist.id})" class="btn-danger">Delete Playlist</button>
             </div>
             <div class="songs">
                 ${artist.songs.length === 0 ? '<p>No songs yet.</p>' : 
@@ -158,7 +158,7 @@ function displayArtists() {
                             <div class="song-url">
                                 <a href="${song.youtube_url}" target="_blank">${song.youtube_url}</a>
                             </div>
-                            ${isAdmin ? `<button onclick="deleteSong(${song.id})" class="btn-danger" style="margin-top: 10px;">Delete Song</button>` : ''}
+                            <button onclick="deleteSong(${song.id})" class="btn-danger" style="margin-top: 10px;">Delete Song</button>
                         </div>
                     `).join('')
                 }
