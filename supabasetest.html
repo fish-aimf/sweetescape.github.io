@@ -230,27 +230,32 @@
 
             <!-- Admin Controls -->
             <div id="adminControls" class="admin-controls hidden">
-                <h3>Admin Controls</h3>
+                <h3>🎵 Playlist Management (Admin Only)</h3>
                 
                 <div>
-                    <h4>Add New Artist</h4>
+                    <h4>Create New Playlist</h4>
                     <div class="admin-form">
-                        <input type="text" id="newArtistName" placeholder="Artist name">
-                        <button onclick="addArtist()">Add Artist</button>
+                        <input type="text" id="newArtistName" placeholder="Playlist name (e.g. 'Taylor Swift's Songs')">
+                        <button onclick="addArtist()">Create Playlist</button>
                     </div>
                 </div>
 
                 <div>
-                    <h4>Add New Song</h4>
+                    <h4>Add Song to Playlist</h4>
                     <div class="admin-form">
                         <select id="songArtistSelect">
-                            <option value="">Select Artist</option>
+                            <option value="">Select Playlist</option>
                         </select>
                         <input type="text" id="newSongName" placeholder="Song name">
                         <input type="text" id="newSongAuthor" placeholder="Author">
                         <input type="url" id="newSongUrl" placeholder="YouTube URL">
                         <button onclick="addSong()">Add Song</button>
                     </div>
+                </div>
+
+                <!-- Debug Info -->
+                <div style="margin-top: 20px; padding: 10px; background: #fff3cd; border-radius: 5px;">
+                    <small><strong>Debug Info:</strong> User ID: <span id="debugUserId"></span> | Admin Status: <span id="debugAdminStatus"></span></small>
                 </div>
             </div>
 
