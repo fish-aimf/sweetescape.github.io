@@ -150,6 +150,12 @@ function updateUserInfo() {
     const userInfoDiv = document.getElementById('userInfo');
     const adminBadge = isAdmin ? '<span class="admin-badge">ADMIN</span>' : '';
     userInfoDiv.innerHTML = `Welcome, ${currentUser.email}${adminBadge}`;
+    
+    // Update debug info
+    if (document.getElementById('debugUserId')) {
+        document.getElementById('debugUserId').textContent = currentUser.id;
+        document.getElementById('debugAdminStatus').textContent = isAdmin ? 'YES' : 'NO';
+    }
 }
 
 // Data loading functions
@@ -218,8 +224,8 @@ function displayArtists() {
 
 function updateArtistSelect() {
     const select = document.getElementById('songArtistSelect');
-    select.innerHTML = '<option value="">Select Artist</option>' + 
-        artists.map(artist => `<option value="${artist.id}">${artist.name}</option>`).join('');
+    select.innerHTML = '<option value="">Select Playlist</option>' + 
+        artists.map(artist => `<option value="${artist.id}">🎵 ${artist.name}</option>`).join('');
 }
 
 // Admin CRUD operations
@@ -227,7 +233,7 @@ async function addArtist() {
     const name = document.getElementById('newArtistName').value.trim();
     
     if (!name) {
-        showError('appError', 'Please enter an artist name');
+        showError('appError', 'Please enter a playlist name');
         return;
     }
 
@@ -237,9 +243,9 @@ async function addArtist() {
         .select();
 
     if (error) {
-        showError('appError', 'Error adding artist: ' + error.message);
+        showError('appError', 'Error creating playlist: ' + error.message);
     } else {
-        showSuccess('appSuccess', 'Artist added successfully!');
+        showSuccess('appSuccess', 'Playlist created successfully!');
         document.getElementById('newArtistName').value = '';
         loadArtistsAndSongs();
         setTimeout(() => clearMessages(), 3000);
@@ -289,7 +295,7 @@ async function addSong() {
 }
 
 async function deleteArtist(artistId) {
-    if (!confirm('Are you sure you want to delete this artist and all their songs?')) {
+    if (!confirm('Are you sure you want to delete this playlist and all its songs?')) {
         return;
     }
 
@@ -299,9 +305,9 @@ async function deleteArtist(artistId) {
         .eq('id', artistId);
 
     if (error) {
-        showError('appError', 'Error deleting artist: ' + error.message);
+        showError('appError', 'Error deleting playlist: ' + error.message);
     } else {
-        showSuccess('appSuccess', 'Artist deleted successfully!');
+        showSuccess('appSuccess', 'Playlist deleted successfully!');
         loadArtistsAndSongs();
         setTimeout(() => clearMessages(), 3000);
     }
