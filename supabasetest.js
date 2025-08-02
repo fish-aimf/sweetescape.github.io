@@ -4,7 +4,6 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let currentUser = null;
-let isAdmin = false;
 let artists = [];
 
 // Check if user is already logged in
@@ -86,7 +85,6 @@ async function logout() {
         showError('appError', error.message);
     } else {
         currentUser = null;
-        isAdmin = false;
         showLoginForm();
     }
 }
@@ -102,7 +100,6 @@ function showLoginForm() {
 function showMainApp() {
     document.getElementById('loginForm').classList.add('hidden');
     document.getElementById('mainApp').classList.remove('hidden');
-    checkAdminStatus();
     loadArtistsAndSongs();
     updateUserInfo();
 }
@@ -127,35 +124,9 @@ function showSuccess(elementId, message) {
     document.getElementById(elementId).textContent = message;
 }
 
-// Admin functions
-async function checkAdminStatus() {
-    if (!currentUser) return;
-
-    const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .single();
-
-    isAdmin = !error && data;
-    
-    if (isAdmin) {
-        document.getElementById('adminControls').classList.remove('hidden');
-    } else {
-        document.getElementById('adminControls').classList.add('hidden');
-    }
-}
-
 function updateUserInfo() {
     const userInfoDiv = document.getElementById('userInfo');
-    const adminBadge = isAdmin ? '<span class="admin-badge">ADMIN</span>' : '';
-    userInfoDiv.innerHTML = `Welcome, ${currentUser.email}${adminBadge}`;
-    
-    // Update debug info
-    if (document.getElementById('debugUserId')) {
-        document.getElementById('debugUserId').textContent = currentUser.id;
-        document.getElementById('debugAdminStatus').textContent = isAdmin ? 'YES' : 'NO';
-    }
+    userInfoDiv.innerHTML = `Welcome, ${currentUser.email}`;
 }
 
 // Data loading functions
