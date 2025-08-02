@@ -171,6 +171,10 @@ function updateArtistSelect() {
     const select = document.getElementById('songArtistSelect');
     select.innerHTML = '<option value="">Select Playlist</option>' + 
         artists.map(artist => `<option value="${artist.id}">🎵 ${artist.name}</option>`).join('');
+    // Also update mass import select
+const massImportSelect = document.getElementById('massImportArtistSelect');
+massImportSelect.innerHTML = '<option value="">Select Playlist</option>' + 
+    artists.map(artist => `<option value="${artist.id}">🎵 ${artist.name}</option>`).join('');
 }
 
 // Playlist CRUD operations
@@ -272,6 +276,70 @@ async function deleteSong(songId) {
         showError('appError', 'Error deleting song: ' + error.message);
     } else {
         showSuccess('appSuccess', 'Song deleted successfully!');
+        loadArtistsAndSongs();
+        setTimeout(() => clearMessages(), 3000);
+    }
+}
+
+async function massImportSongs() {
+    const artistId = document.getElementById('massImportArtistSelect').value;
+    const importText = document.getElementById('massImportText').value.trim();
+
+    if (!artistId) {
+        showError('appError', 'Please select a playlist');
+        return;
+    }
+
+    if (!importText) {
+        showError('appError', 'Please enter songs to import');
+        return;
+    }
+
+    const lines = importText.split('\n').filter(line => line.trim());
+    const songsToImport = [];
+    const errors = [];
+
+    lines.forEach((line, index) => {
+        const parts = line.split(',').map(part => part.trim());
+        if (parts.length < 2) {
+            errors.push(`Line ${index + 1}: Missing name or URL`);
+            return;
+        }
+
+        const name = parts[0];
+        const youtubeUrl = parts[1];
+        const author = parts[2] || 'Unknown';
+
+        if (!youtubeUrl.includes('youtube.com') && !youtubeUrl.includes('youtu.be')) {
+            errors.push(`Line ${index + 1}: Invalid YouTube URL`);
+            return;
+        }
+
+        songsToImport.push({
+            name: name,
+            author: author,
+            youtube_url: youtubeUrl,
+            artist_id: parseInt(artistId),
+            created_by: currentUser.id
+        });
+    });
+
+    if (errors.length > 0) {
+        showError('appError', 'Import errors:\n' + errors.join('\n'));
+        return;
+    }
+
+    const { data, error } = await supabase
+        .from('songs')
+        .insert(songsToImport)
+        .select();
+
+    if (error) {
+        showError('appError', 'Error importing songs: ' + error.message);
+    } else {
+        showSuccess('appSuccess', `Successfully imported ${songsToImport.length} songs!`);
+        document.getElementById('massImportText').value = '';
+        document.getElementById('massImportArtistSelect').value = '';
         loadArtistsAndSongs();
         setTimeout(() => clearMessages(), 3000);
     }
