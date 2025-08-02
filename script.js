@@ -41,6 +41,9 @@ class AdvancedMusicPlayer {
     this.yourPicksDisplayLimit = 2;
     this.recentlyPlayedPlaylistsDisplayLimit = 1;
     this.visualizerEnabled = true;
+    this.pipEnabled = false; // Add this line
+    this.pipVideo = null; // Add this line
+    this.isTabVisible = true;
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
       'https://i2.res.24o.it/pdf2010/Editrice/ILSOLE24ORE/ILSOLE24ORE/Online/_Oggetti_Embedded/Documenti/2025/07/12/Preliminary%20Report%20VT.pdf?utm_source=chatgpt.com' ,
@@ -259,7 +262,8 @@ class AdvancedMusicPlayer {
         recentlyPlayedPlaylistsLimit: document.getElementById("recentlyPlayedPlaylistsLimit"),
         saveDiscoverMoreSettings: document.getElementById("saveDiscoverMoreSettings"),
       discordButton: document.getElementById("discordButton"),
-      visualizerToggle: document.getElementById("visualizerToggle")
+      visualizerToggle: document.getElementById("visualizerToggle"),
+      pipToggle: document.getElementById("pipToggle")
     };
     if (this.elements.speedBtn) {
       this.elements.speedBtn.textContent = this.currentSpeed + "x";
@@ -440,7 +444,8 @@ class AdvancedMusicPlayer {
         [this.elements.settingsModal, "click", this.handleSettingsModalClick],
         [this.elements.themeMode, "change", this.handleThemeModeChange],
         [this.elements.saveCustomTheme, "click", this.handleSaveCustomTheme],
-      [this.elements.adsToggle, "change", this.handleAdsToggle.bind(this)]
+      [this.elements.adsToggle, "change", this.handleAdsToggle.bind(this)],
+      [this.elements.pipToggle, "change", this.handlePipToggle.bind(this)]
     ];
 settingsEventBindings.forEach(([element, event, handler], index) => {
     if (element) {
@@ -449,6 +454,7 @@ settingsEventBindings.forEach(([element, event, handler], index) => {
         console.warn(`Settings element not found for event binding at index ${index}`);
     }
 });
+    document.addEventListener('visibilitychange', this.handleVisibilityChange.bind(this));
   }
   setupKeyboardControls() {
     document.addEventListener("keydown", (e) => {
@@ -6481,7 +6487,6 @@ setupChangelogModal() {
 
   
 
-// Update your existing handleOpenSettings method to include setupCollapsibleSections
 handleOpenSettings() {
     this.elements.settingsModal.style.display = "block";
     document.body.style.overflow = "hidden";
@@ -7744,6 +7749,184 @@ formatLyricText(text) {
   
   return text;
 }
+  handlePipToggle(event) {
+    this.pipEnabled = event.target.checked;
+    this.saveSetting("pipEnabled", this.pipEnabled);
+    
+    if (!this.pipEnabled && this.pipVideo) {
+        this.exitPictureInPicture();
+    }
+}
+
+// Add new method for handling visibility changes
+handleVisibilityChange() {
+    this.isTabVisible = !document.hidden;
+    
+    if (!this.isTabVisible && this.pipEnabled && this.ytPlayer && this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+        this.enterPictureInPicture();
+    } else if (this.isTabVisible && this.pipVideo) {
+        this.exitPictureInPicture();
+    }
+}
+
+// Add new method to enter Picture-in-Picture
+async enterPictureInPicture() {
+    try {
+        if (!document.pictureInPictureEnabled) {
+            console.warn('Picture-in-Picture not supported');
+            return;
+        }
+
+        // Create a canvas to capture YouTube video
+        if (!this.pipVideo) {
+            this.pipVideo = document.createElement('video');
+            this.pipVideo.muted = true;
+            this.pipVideo.style.display = 'none';
+            document.body.appendChild(this.pipVideo);
+            
+            // Create a media stream from canvas
+            this.createPipCanvas();
+        }
+
+        // Start Picture-in-Picture
+        await this.pipVideo.requestPictureInPicture();
+        
+        // Add event listeners for PiP controls
+        this.pipVideo.addEventListener('enterpictureinpicture', this.handlePipEnter.bind(this));
+        this.pipVideo.addEventListener('leavepictureinpicture', this.handlePipLeave.bind(this));
+        
+    } catch (error) {
+        console.error('Failed to enter Picture-in-Picture:', error);
+    }
+}
+
+// Add new method to create PiP canvas
+createPipCanvas() {
+    this.pipCanvas = document.createElement('canvas');
+    this.pipCanvas.width = 320;
+    this.pipCanvas.height = 180;
+    this.pipCtx = this.pipCanvas.getContext('2d');
+    
+    // Create video stream from canvas
+    const stream = this.pipCanvas.captureStream(30);
+    this.pipVideo.srcObject = stream;
+    this.pipVideo.play();
+    
+    // Start drawing current song info to canvas
+    this.updatePipCanvas();
+}
+
+// Add new method to update PiP canvas
+updatePipCanvas() {
+    if (!this.pipCanvas || !this.pipCtx) return;
+    
+    const ctx = this.pipCtx;
+    const canvas = this.pipCanvas;
+    
+    // Clear canvas
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    if (this.currentSong) {
+        // Draw song info
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        
+        // Song title
+        const title = this.currentSong.name || 'Unknown Song';
+        ctx.fillText(title.length > 25 ? title.substring(0, 25) + '...' : title, canvas.width / 2, 40);
+        
+        // Artist
+        ctx.font = '12px Arial';
+        const artist = this.currentSong.artist || 'Unknown Artist';
+        ctx.fillText(artist.length > 30 ? artist.substring(0, 30) + '...' : artist, canvas.width / 2, 60);
+        
+        // Progress bar
+        if (this.ytPlayer) {
+            const currentTime = this.ytPlayer.getCurrentTime() || 0;
+            const duration = this.ytPlayer.getDuration() || 1;
+            const progress = currentTime / duration;
+            
+            // Progress bar background
+            ctx.fillStyle = '#333333';
+            ctx.fillRect(20, 100, canvas.width - 40, 6);
+            
+            // Progress bar fill
+            ctx.fillStyle = '#5D9C59';
+            ctx.fillRect(20, 100, (canvas.width - 40) * progress, 6);
+            
+            // Time display
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(this.formatTime(currentTime), 20, 125);
+            ctx.textAlign = 'right';
+            ctx.fillText(this.formatTime(duration), canvas.width - 20, 125);
+        }
+        
+        // Play/Pause button
+        ctx.fillStyle = '#5D9C59';
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, 150, 20, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        ctx.fillStyle = '#ffffff';
+        if (this.ytPlayer && this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+            // Pause icon
+            ctx.fillRect(canvas.width / 2 - 6, 140, 4, 20);
+            ctx.fillRect(canvas.width / 2 + 2, 140, 4, 20);
+        } else {
+            // Play icon
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2 - 5, 140);
+            ctx.lineTo(canvas.width / 2 + 8, 150);
+            ctx.lineTo(canvas.width / 2 - 5, 160);
+            ctx.closePath();
+            ctx.fill();
+        }
+    }
+    
+    // Continue updating if PiP is active
+    if (this.pipVideo && document.pictureInPictureElement === this.pipVideo) {
+        requestAnimationFrame(() => this.updatePipCanvas());
+    }
+}
+
+// Add new method to handle PiP enter
+handlePipEnter() {
+    console.log('Entered Picture-in-Picture mode');
+    this.updatePipCanvas();
+    
+    // Add click handler for play/pause
+    this.pipVideo.addEventListener('click', this.handlePipClick.bind(this));
+}
+
+// Add new method to handle PiP leave
+handlePipLeave() {
+    console.log('Left Picture-in-Picture mode');
+}
+
+// Add new method to handle PiP clicks
+handlePipClick(event) {
+    if (this.ytPlayer) {
+        if (this.ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+            this.ytPlayer.pauseVideo();
+        } else {
+            this.ytPlayer.playVideo();
+        }
+    }
+}
+
+// Add new method to exit Picture-in-Picture
+exitPictureInPicture() {
+    if (document.pictureInPictureElement) {
+        document.exitPictureInPicture().catch(error => {
+            console.error('Failed to exit Picture-in-Picture:', error);
+        });
+    }
+}
+
 
 
 
