@@ -228,3 +228,4 @@
 - finally issue solved once and for all v31.4.2
 - fixed issue where visualizer settings are not saved. v31.5.0
 - tried to add supabase v31.5.1
+- added a lot of experimental supabase. I will work on implimenting a song discovery system and songs hosted on supabase for the next few days. reworking the current confusing import layout. v31.5.2
