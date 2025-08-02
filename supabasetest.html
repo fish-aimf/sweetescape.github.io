@@ -228,9 +228,9 @@
                 <button onclick="logout()" class="btn-secondary">Logout</button>
             </div>
 
-            <!-- Admin Controls -->
-            <div id="adminControls" class="admin-controls hidden">
-                <h3>🎵 Playlist Management (Admin Only)</h3>
+            <!-- Playlist Management Controls -->
+            <div id="playlistControls" class="admin-controls">
+                <h3>🎵 Playlist Management</h3>
                 
                 <div>
                     <h4>Create New Playlist</h4>
@@ -251,11 +251,6 @@
                         <input type="url" id="newSongUrl" placeholder="YouTube URL">
                         <button onclick="addSong()">Add Song</button>
                     </div>
-                </div>
-
-                <!-- Debug Info -->
-                <div style="margin-top: 20px; padding: 10px; background: #fff3cd; border-radius: 5px;">
-                    <small><strong>Debug Info:</strong> User ID: <span id="debugUserId"></span> | Admin Status: <span id="debugAdminStatus"></span></small>
                 </div>
             </div>
 
