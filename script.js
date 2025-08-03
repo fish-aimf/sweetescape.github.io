@@ -42,6 +42,8 @@ class AdvancedMusicPlayer {
     this.recentlyPlayedPlaylistsDisplayLimit = 1;
     this.visualizerEnabled = true;
     this.supabase = null;
+    this.allArtists = [];
+    this.searchTimeout = null;
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
       'https://i2.res.24o.it/pdf2010/Editrice/ILSOLE24ORE/ILSOLE24ORE/Online/_Oggetti_Embedded/Documenti/2025/07/12/Preliminary%20Report%20VT.pdf?utm_source=chatgpt.com' ,
@@ -265,7 +267,6 @@ class AdvancedMusicPlayer {
 closeFindSongs: document.getElementById("closeFindSongs"),
 findSongsDiv: document.getElementById("findSongsDiv"),
 findSongsSearch: document.getElementById("findSongsSearch"),
-searchFindSongs: document.getElementById("searchFindSongs"),
 findSongsResults: document.getElementById("findSongsResults")
     };
     if (this.elements.speedBtn) {
@@ -364,10 +365,13 @@ findSongsResults: document.getElementById("findSongsResults")
     }
     this.elements.findSongsBtn?.addEventListener("click", this.openFindSongs.bind(this));
 this.elements.closeFindSongs?.addEventListener("click", this.closeFindSongs.bind(this));
-this.elements.searchFindSongs?.addEventListener("click", this.searchSupabasePlaylists.bind(this));
-this.elements.findSongsSearch?.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") this.searchSupabasePlaylists();
+    this.elements.findSongsSearch?.addEventListener("input", () => {
+    clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+        this.filterResults();
+    }, 300);
 });
+
     this.addQueueStyles();
     this.setupTimerEventListeners();
     this.setupLayoutEventListeners();
@@ -7895,12 +7899,15 @@ destroyVisualizer() {
     this.supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 }
 
-openFindSongs() {
+async openFindSongs() {
     if (!this.supabase) {
         this.initSupabase();
     }
     this.elements.findSongsDiv.style.display = "flex";
     this.elements.findSongsSearch.focus();
+  
+    await this.loadAllArtists();
+    this.displaySearchResults(this.allArtists);
 }
 
 closeFindSongs() {
@@ -7909,38 +7916,6 @@ closeFindSongs() {
     this.elements.findSongsSearch.value = "";
 }
 
-async searchSupabasePlaylists() {
-    const searchTerm = this.elements.findSongsSearch.value.trim();
-    if (!searchTerm) {
-        alert("Please enter a search term");
-        return;
-    }
-
-    this.elements.findSongsResults.innerHTML = '<div class="loading-spinner">Searching...</div>';
-
-    try {
-        const { data: artists, error } = await this.supabase
-            .from('artists')
-            .select(`
-                id,
-                name,
-                songs (
-                    id,
-                    name,
-                    author,
-                    youtube_url
-                )
-            `)
-            .ilike('name', `%${searchTerm}%`);
-
-        if (error) throw error;
-
-        this.displaySearchResults(artists);
-    } catch (error) {
-        console.error('Error searching playlists:', error);
-        this.elements.findSongsResults.innerHTML = '<div class="loading-spinner">Error loading results</div>';
-    }
-}
 
 displaySearchResults(artists) {
     if (!artists || artists.length === 0) {
@@ -8012,6 +7987,52 @@ async addPlaylistToLibrary(artistId, artistName) {
         console.error('Error adding playlist to library:', error);
         alert('Error adding playlist to library');
     }
+}
+  async loadAllArtists() {
+    if (this.allArtists.length > 0) return; // Already loaded
+    
+    this.elements.findSongsResults.innerHTML = '<div class="loading-spinner">Loading playlists...</div>';
+    
+    try {
+        const { data: artists, error } = await this.supabase
+            .from('artists')
+            .select(`
+                id,
+                name,
+                songs (
+                    id,
+                    name,
+                    author,
+                    youtube_url
+                )
+            `)
+            .order('id', { ascending: true });
+
+        if (error) throw error;
+        this.allArtists = artists || [];
+    } catch (error) {
+        console.error('Error loading artists:', error);
+        this.elements.findSongsResults.innerHTML = '<div class="loading-spinner">Error loading playlists</div>';
+    }
+}
+
+filterResults() {
+    const searchTerm = this.elements.findSongsSearch.value.trim().toLowerCase();
+    
+    if (!searchTerm) {
+        this.displaySearchResults(this.allArtists);
+        return;
+    }
+    
+    const filteredArtists = this.allArtists.filter(artist => 
+        artist.name.toLowerCase().includes(searchTerm) ||
+        artist.songs.some(song => 
+            song.name.toLowerCase().includes(searchTerm) ||
+            (song.author && song.author.toLowerCase().includes(searchTerm))
+        )
+    );
+    
+    this.displaySearchResults(filteredArtists);
 }
 
 
