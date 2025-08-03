@@ -3997,6 +3997,7 @@ body:has(#ytPlayer.fullscreen-video) {
     border: none;
     cursor: pointer;
     transition: background-color 0.3s;
+    margin-right: 12px;
 }
 
 .find-songs-btn:hover {
