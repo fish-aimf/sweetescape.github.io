@@ -41,6 +41,7 @@ class AdvancedMusicPlayer {
     this.yourPicksDisplayLimit = 2;
     this.recentlyPlayedPlaylistsDisplayLimit = 1;
     this.visualizerEnabled = true;
+    this.supabase = null;
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
       'https://i2.res.24o.it/pdf2010/Editrice/ILSOLE24ORE/ILSOLE24ORE/Online/_Oggetti_Embedded/Documenti/2025/07/12/Preliminary%20Report%20VT.pdf?utm_source=chatgpt.com' ,
@@ -259,7 +260,13 @@ class AdvancedMusicPlayer {
         recentlyPlayedPlaylistsLimit: document.getElementById("recentlyPlayedPlaylistsLimit"),
         saveDiscoverMoreSettings: document.getElementById("saveDiscoverMoreSettings"),
       discordButton: document.getElementById("discordButton"),
-      visualizerToggle: document.getElementById("visualizerToggle")
+      visualizerToggle: document.getElementById("visualizerToggle"),
+      findSongsBtn: document.getElementById("findSongsBtn"),
+closeFindSongs: document.getElementById("closeFindSongs"),
+findSongsDiv: document.getElementById("findSongsDiv"),
+findSongsSearch: document.getElementById("findSongsSearch"),
+searchFindSongs: document.getElementById("searchFindSongs"),
+findSongsResults: document.getElementById("findSongsResults")
     };
     if (this.elements.speedBtn) {
       this.elements.speedBtn.textContent = this.currentSpeed + "x";
@@ -355,6 +362,12 @@ class AdvancedMusicPlayer {
       this.elements.autofillBtn.addEventListener("mouseenter", this.showGhostPreview.bind(this));
       this.elements.autofillBtn.addEventListener("mouseleave", this.removeGhostPreview.bind(this));
     }
+    this.elements.findSongsBtn?.addEventListener("click", this.openFindSongs.bind(this));
+this.elements.closeFindSongs?.addEventListener("click", this.closeFindSongs.bind(this));
+this.elements.searchFindSongs?.addEventListener("click", this.searchSupabasePlaylists.bind(this));
+this.elements.findSongsSearch?.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") this.searchSupabasePlaylists();
+});
     this.addQueueStyles();
     this.setupTimerEventListeners();
     this.setupLayoutEventListeners();
@@ -7875,6 +7888,131 @@ destroyVisualizer() {
 }
 
 
+
+  initSupabase() {
+    const supabaseUrl = 'https://cwhxanbpymkngzpbsshh.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3aHhhbmJweW1rbmd6cGJzc2hoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NTQzMTksImV4cCI6MjA2OTQzMDMxOX0.6K3eM1XoWaPmyMHsLYgw0mAnSxYjME4clflL4PxQalQ';
+    this.supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+}
+
+openFindSongs() {
+    if (!this.supabase) {
+        this.initSupabase();
+    }
+    this.elements.findSongsDiv.style.display = "flex";
+    this.elements.findSongsSearch.focus();
+}
+
+closeFindSongs() {
+    this.elements.findSongsDiv.style.display = "none";
+    this.elements.findSongsResults.innerHTML = "";
+    this.elements.findSongsSearch.value = "";
+}
+
+async searchSupabasePlaylists() {
+    const searchTerm = this.elements.findSongsSearch.value.trim();
+    if (!searchTerm) {
+        alert("Please enter a search term");
+        return;
+    }
+
+    this.elements.findSongsResults.innerHTML = '<div class="loading-spinner">Searching...</div>';
+
+    try {
+        const { data: artists, error } = await this.supabase
+            .from('artists')
+            .select(`
+                id,
+                name,
+                songs (
+                    id,
+                    name,
+                    author,
+                    youtube_url
+                )
+            `)
+            .ilike('name', `%${searchTerm}%`);
+
+        if (error) throw error;
+
+        this.displaySearchResults(artists);
+    } catch (error) {
+        console.error('Error searching playlists:', error);
+        this.elements.findSongsResults.innerHTML = '<div class="loading-spinner">Error loading results</div>';
+    }
+}
+
+displaySearchResults(artists) {
+    if (!artists || artists.length === 0) {
+        this.elements.findSongsResults.innerHTML = '<div class="loading-spinner">No results found</div>';
+        return;
+    }
+
+    this.elements.findSongsResults.innerHTML = artists.map(artist => {
+        const songsPreview = artist.songs.slice(0, 5);
+        const remainingSongs = artist.songs.length - 5;
+        
+        return `
+            <div class="playlist-result">
+                <div class="playlist-header">
+                    <div class="playlist-name">${artist.name}</div>
+                    <div class="song-count">${artist.songs.length} songs</div>
+                </div>
+                <div class="playlist-songs">
+                    ${songsPreview.map(song => `
+                        <div class="song-preview">${song.name} ${song.author ? `- ${song.author}` : ''}</div>
+                    `).join('')}
+                    ${remainingSongs > 0 ? `<div class="song-preview">... and ${remainingSongs} more songs</div>` : ''}
+                </div>
+                <div class="playlist-actions">
+                    <button class="view-all-btn" onclick="musicPlayer.viewAllSongs(${artist.id}, '${artist.name}')">
+                        View All
+                    </button>
+                    <button class="add-to-library-btn" onclick="musicPlayer.addPlaylistToLibrary(${artist.id}, '${artist.name}')">
+                        Add to Library
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async viewAllSongs(artistId, artistName) {
+    try {
+        const { data: songs, error } = await this.supabase
+            .from('songs')
+            .select('*')
+            .eq('artist_id', artistId);
+
+        if (error) throw error;
+
+        alert(`${artistName} - All Songs:\n\n${songs.map(song => `${song.name} ${song.author ? `- ${song.author}` : ''}`).join('\n')}`);
+    } catch (error) {
+        console.error('Error fetching all songs:', error);
+        alert('Error loading all songs');
+    }
+}
+
+async addPlaylistToLibrary(artistId, artistName) {
+    try {
+        const { data: songs, error } = await this.supabase
+            .from('songs')
+            .select('*')
+            .eq('artist_id', artistId);
+
+        if (error) throw error;
+
+        const importText = songs.map(song => `${song.name}, ${song.youtube_url}, ${song.author || ''}`).join('\n');
+        const playlistImportText = `${artistName}{\n${importText}\n}`;
+        
+        this.importLibrary(playlistImportText);
+        this.closeFindSongs();
+        
+    } catch (error) {
+        console.error('Error adding playlist to library:', error);
+        alert('Error adding playlist to library');
+    }
+}
 
 
 
