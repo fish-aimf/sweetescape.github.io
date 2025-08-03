@@ -3455,46 +3455,159 @@ removeYouTubeThumbnailPreview() {
 parseVideoTitle(title) {
     if (!title) return { author: "", songName: "" };
     let cleanTitle = title.trim();
+    
+    // Comprehensive list of patterns to remove
     const removePatterns = [
+        // Official designations in parentheses
         /\(official\s+video\)/gi,
         /\(official\s+audio\)/gi,
+        /\(official\s+music\s+video\)/gi,
         /\(official\)/gi,
         /\(music\s+video\)/gi,
         /\(lyric\s+video\)/gi,
         /\(lyrics\)/gi,
+        /\(acoustic\s+version\)/gi,
+        /\(live\s+version\)/gi,
+        /\(live\)/gi,
+        /\(unplugged\)/gi,
+        /\(radio\s+edit\)/gi,
+        /\(extended\s+version\)/gi,
+        /\(full\s+version\)/gi,
+        /\(clean\s+version\)/gi,
+        /\(explicit\)/gi,
+        /\(ft\.?\s+[^)]+\)/gi,
+        /\(feat\.?\s+[^)]+\)/gi,
+        /\(featuring\s+[^)]+\)/gi,
+        /\(remix\)/gi,
+        /\(cover\)/gi,
+        /\(karaoke\)/gi,
+        /\(instrumental\)/gi,
+        
+        // Official designations in square brackets
         /\[official\s+video\]/gi,
         /\[official\s+audio\]/gi,
+        /\[official\s+music\s+video\]/gi,
         /\[official\]/gi,
         /\[music\s+video\]/gi,
         /\[lyric\s+video\]/gi,
         /\[lyrics\]/gi,
+        /\[acoustic\s+version\]/gi,
+        /\[live\s+version\]/gi,
+        /\[live\]/gi,
+        /\[unplugged\]/gi,
+        /\[radio\s+edit\]/gi,
+        /\[extended\s+version\]/gi,
+        /\[full\s+version\]/gi,
+        /\[clean\s+version\]/gi,
+        /\[explicit\]/gi,
+        /\[ft\.?\s+[^\]]+\]/gi,
+        /\[feat\.?\s+[^\]]+\]/gi,
+        /\[featuring\s+[^\]]+\]/gi,
+        /\[remix\]/gi,
+        /\[cover\]/gi,
+        /\[karaoke\]/gi,
+        /\[instrumental\]/gi,
+        
+        // Without brackets/parentheses
         /official\s+video/gi,
         /official\s+audio/gi,
+        /official\s+music\s+video/gi,
         /music\s+video/gi,
         /lyric\s+video/gi,
+        /acoustic\s+version/gi,
+        /live\s+version/gi,
+        /radio\s+edit/gi,
+        /extended\s+version/gi,
+        /full\s+version/gi,
+        /clean\s+version/gi,
+        
+        // Quality indicators
         /\(hd\)/gi,
         /\[hd\]/gi,
         /\(4k\)/gi,
         /\[4k\]/gi,
+        /\(1080p\)/gi,
+        /\[1080p\]/gi,
+        /\(720p\)/gi,
+        /\[720p\]/gi,
+        /\(uhd\)/gi,
+        /\[uhd\]/gi,
+        
+        // Remastered versions
         /\(remastered\)/gi,
-        /\[remastered\]/gi
+        /\[remastered\]/gi,
+        /\(remaster\)/gi,
+        /\[remaster\]/gi,
+        /\(\d{4}\s+remaster\)/gi,
+        /\[\d{4}\s+remaster\]/gi,
+        
+        // Years
+        /\(\d{4}\)/gi,
+        /\[\d{4}\]/gi,
+        
+        // Common suffixes
+        /\s*-\s*topic$/gi,
+        /\s*topic$/gi,
+        /\s*vevo$/gi,
+        /\s*records$/gi,
+        /\s*entertainment$/gi,
+        
+        // Hashtags and social media elements
+        /#\w+/g,
+        /@\w+/g,
+        
+        // Multiple spaces and dashes
+        /\s*-{2,}\s*/g,
+        /\s*\|\s*/g,
+        
+        // Empty parentheses/brackets after removal
+        /\(\s*\)/g,
+        /\[\s*\]/g,
+        
+        // Extra whitespace
+        /\s+/g
     ];
+    
+    // Apply all removal patterns
     removePatterns.forEach(pattern => {
-        cleanTitle = cleanTitle.replace(pattern, "");
+        cleanTitle = cleanTitle.replace(pattern, pattern === /\s+/g ? " " : "");
     });
-    cleanTitle = cleanTitle.replace(/\s+/g, " ").trim();
-    const hyphenIndex = cleanTitle.indexOf(" - ");
-    if (hyphenIndex !== -1) {
-        const author = cleanTitle.substring(0, hyphenIndex).trim();
-        const songName = cleanTitle.substring(hyphenIndex + 3).trim();
-        return { author, songName };
+    
+    // Final cleanup
+    cleanTitle = cleanTitle.trim();
+    
+    // Remove leading/trailing punctuation
+    cleanTitle = cleanTitle.replace(/^[^\w]+|[^\w]+$/g, "");
+    
+    // Parse artist and song
+    const separators = [
+        { pattern: /\s+-\s+/, split: " - " },
+        { pattern: /\s+–\s+/, split: " – " },
+        { pattern: /\s+—\s+/, split: " — " },
+        { pattern: /\s+by\s+/i, split: " by ", reverse: true }
+    ];
+    
+    for (const separator of separators) {
+        const index = cleanTitle.search(separator.pattern);
+        if (index !== -1) {
+            let parts = cleanTitle.split(separator.pattern);
+            if (parts.length >= 2) {
+                if (separator.reverse) {
+                    // For "by" separator, song comes first, then artist
+                    const songName = parts[0].trim();
+                    const author = parts.slice(1).join(separator.split).trim();
+                    return { author, songName };
+                } else {
+                    // For dash separators, artist comes first, then song
+                    const author = parts[0].trim();
+                    const songName = parts.slice(1).join(separator.split).trim();
+                    return { author, songName };
+                }
+            }
+        }
     }
-    const byIndex = cleanTitle.toLowerCase().indexOf(" by ");
-    if (byIndex !== -1) {
-        const songName = cleanTitle.substring(0, byIndex).trim();
-        const author = cleanTitle.substring(byIndex + 4).trim();
-        return { author, songName };
-    }
+    
+    // If no separator found, return the cleaned title as song name
     return { author: "", songName: cleanTitle };
 }
 handleAutofill() {
@@ -3515,6 +3628,7 @@ handleAutofill() {
             alert("Could not fetch video information for autofill");
         });
 }
+
 showGhostPreview(event) {
     const songUrl = this.elements.songUrlInput.value.trim();
     if (!songUrl) return;
@@ -3531,31 +3645,68 @@ showGhostPreview(event) {
             console.warn("Could not fetch title for ghost preview:", error);
         });
 }
+
 createGhostPreview(songName, author, event) {
     this.removeGhostPreview();
     const nameInput = this.elements.songNameInput;
     const authorInput = this.elements.songAuthorInput;
+    
     if (songName && songName !== nameInput.value) {
         const nameRect = nameInput.getBoundingClientRect();
         const nameGhost = document.createElement("div");
         nameGhost.classList.add("ghost-preview");
         nameGhost.textContent = songName;
-        nameGhost.style.left = nameRect.left + "px";
-        nameGhost.style.top = nameRect.top + "px";
-        nameGhost.style.width = nameRect.width + "px";
-        nameGhost.style.height = nameRect.height + "px";
+        nameGhost.style.cssText = `
+            position: fixed;
+            left: ${nameRect.left}px;
+            top: ${nameRect.top}px;
+            width: ${nameRect.width}px;
+            height: ${nameRect.height}px;
+            background-color: rgba(255, 255, 0, 0.3);
+            color: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(255, 255, 0, 0.6);
+            border-radius: 4px;
+            padding: 8px;
+            box-sizing: border-box;
+            font-size: 14px;
+            z-index: 1000;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        `;
         nameGhost.id = "nameGhost";
         document.body.appendChild(nameGhost);
     }
+    
     if (author && author !== authorInput.value) {
         const authorRect = authorInput.getBoundingClientRect();
         const authorGhost = document.createElement("div");
         authorGhost.classList.add("ghost-preview");
         authorGhost.textContent = author;
-        authorGhost.style.left = authorRect.left + "px";
-        authorGhost.style.top = authorRect.top + "px";
-        authorGhost.style.width = authorRect.width + "px";
-        authorGhost.style.height = authorRect.height + "px";
+        authorGhost.style.cssText = `
+            position: fixed;
+            left: ${authorRect.left}px;
+            top: ${authorRect.top}px;
+            width: ${authorRect.width}px;
+            height: ${authorRect.height}px;
+            background-color: rgba(0, 255, 255, 0.3);
+            color: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(0, 255, 255, 0.6);
+            border-radius: 4px;
+            padding: 8px;
+            box-sizing: border-box;
+            font-size: 14px;
+            z-index: 1000;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        `;
         authorGhost.id = "authorGhost";
         document.body.appendChild(authorGhost);
     }
