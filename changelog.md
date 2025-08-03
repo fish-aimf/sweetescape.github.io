@@ -229,3 +229,5 @@
 - fixed issue where visualizer settings are not saved. v31.5.0
 - tried to add supabase v31.5.1
 - added a lot of experimental supabase. I will work on implimenting a song discovery system and songs hosted on supabase for the next few days. reworking the current confusing import layout. v31.5.2
+- implimented supabase, will redesign new user experience better in future. v32.0.0
+- made it such that lyrics without timestamps can be accepted just without highlighting or autoscroll
