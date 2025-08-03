@@ -4971,20 +4971,37 @@ refreshSpecificSection(sectionTitle) {
     lyricsPlayer.classList.add("lyrics-player");
     const lyricsArray = [];
     const timingsArray = [];
+    let hasTimestamps = false;
     const lines = songWithLyrics.lyrics
         .split("\n")
         .filter((line) => line.trim() !== "");
+    
+    // First, check if any line has timestamps
     for (const line of lines) {
-        const match = line.match(/(.*)\s*\[(\d+):(\d+)\]/);
-        if (match) {
-            const lyric = match[1].trim();
-            const minutes = parseInt(match[2]);
-            const seconds = parseInt(match[3]);
-            const timeInSeconds = minutes * 60 + seconds;
-            lyricsArray.push(lyric);
-            timingsArray.push(timeInSeconds);
+        if (line.match(/.*\s*\[(\d+):(\d+)\]/)) {
+            hasTimestamps = true;
+            break;
         }
     }
+    
+    // Parse lyrics based on whether timestamps exist
+    for (const line of lines) {
+        if (hasTimestamps) {
+            const match = line.match(/(.*)\s*\[(\d+):(\d+)\]/);
+            if (match) {
+                const lyric = match[1].trim();
+                const minutes = parseInt(match[2]);
+                const seconds = parseInt(match[3]);
+                const timeInSeconds = minutes * 60 + seconds;
+                lyricsArray.push(lyric);
+                timingsArray.push(timeInSeconds);
+            }
+        } else {
+            // No timestamps, just add the line as is
+            lyricsArray.push(line.trim());
+        }
+    }
+    
     const lyricsDisplay = document.createElement("div");
     lyricsDisplay.classList.add("lyrics-display");
     lyricsDisplay.style.margin = "20px 0";
@@ -4994,6 +5011,7 @@ refreshSpecificSection(sectionTitle) {
     lyricsDisplay.style.backgroundColor = "var(--bg-primary)";
     lyricsDisplay.style.height = "400px";
     lyricsDisplay.style.overflowY = "auto";
+    
     for (let i = 0; i < lyricsArray.length; i++) {
         const lineElement = document.createElement("div");
         lineElement.classList.add("lyric-line");
@@ -5006,6 +5024,7 @@ refreshSpecificSection(sectionTitle) {
         lineElement.style.color = "var(--text-secondary)";
         lyricsDisplay.appendChild(lineElement);
     }
+    
     lyricsPlayer.appendChild(lyricsDisplay);
     const expandButton = document.createElement("button");
     expandButton.classList.add("lyrics-expand-btn");
@@ -5013,10 +5032,14 @@ refreshSpecificSection(sectionTitle) {
     expandButton.addEventListener('click', () => this.enterLyricsFullscreen());
     lyricsPlayer.appendChild(expandButton);
     this.elements.lyricsPane.appendChild(lyricsPlayer);
+    
+    // Clear any existing interval
     if (this.lyricsInterval) {
         clearInterval(this.lyricsInterval);
     }
-    if (this.ytPlayer && this.isPlaying) {
+    
+    // Only start highlighting if we have timestamps and player is playing
+    if (hasTimestamps && this.ytPlayer && this.isPlaying) {
         this.lyricsInterval = setInterval(() => {
             if (this.ytPlayer && this.ytPlayer.getCurrentTime) {
                 const currentTime = this.ytPlayer.getCurrentTime();
@@ -5026,45 +5049,47 @@ refreshSpecificSection(sectionTitle) {
     }
 }
   updateHighlightedLyric(currentTime, lyrics, timings) {
-    if (!lyrics.length || !timings.length) return;
+    // Only proceed if we have both lyrics and timings
+    if (!lyrics.length || !timings.length || timings.length !== lyrics.length) return;
+    
     let highlightIndex = -1;
     for (let i = 0; i < timings.length; i++) {
-      if (currentTime >= timings[i]) {
-        if (i === timings.length - 1 || currentTime < timings[i + 1]) {
-          highlightIndex = i;
+        if (currentTime >= timings[i]) {
+            if (i === timings.length - 1 || currentTime < timings[i + 1]) {
+                highlightIndex = i;
+            }
         }
-      }
     }
+    
     if (highlightIndex !== this.currentHighlightedLyricIndex) {
-      const allLines = document.querySelectorAll(".lyric-line");
-      allLines.forEach((line) => {
-        line.classList.remove("active");
-        line.style.backgroundColor = "";
-        line.style.color = "var(--text-secondary)";
-        line.style.fontWeight = "normal";
-        line.style.fontSize = "";
-        line.style.transform = "";
-      });
-      if (highlightIndex !== -1) {
-        const currentElement = document.getElementById(
-          `lyric-${highlightIndex}`
-        );
-        if (currentElement) {
-          currentElement.classList.add("active");
-          currentElement.style.backgroundColor = "var(--accent-color)";
-          currentElement.style.color = "var(--text-primary)";
-          currentElement.style.fontWeight = "bold";
-          currentElement.style.fontSize = "1.1em";
-          currentElement.style.transform = "scale(1.02)";
-          currentElement.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-          });
+        const allLines = document.querySelectorAll(".lyric-line");
+        allLines.forEach((line) => {
+            line.classList.remove("active");
+            line.style.backgroundColor = "";
+            line.style.color = "var(--text-secondary)";
+            line.style.fontWeight = "normal";
+            line.style.fontSize = "";
+            line.style.transform = "";
+        });
+        
+        if (highlightIndex !== -1) {
+            const currentElement = document.getElementById(`lyric-${highlightIndex}`);
+            if (currentElement) {
+                currentElement.classList.add("active");
+                currentElement.style.backgroundColor = "var(--accent-color)";
+                currentElement.style.color = "var(--text-primary)";
+                currentElement.style.fontWeight = "bold";
+                currentElement.style.fontSize = "1.1em";
+                currentElement.style.transform = "scale(1.02)";
+                currentElement.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                });
+            }
         }
-      }
-      this.currentHighlightedLyricIndex = highlightIndex;
+        this.currentHighlightedLyricIndex = highlightIndex;
     }
-  }
+}
   openLyricsLibraryModal() {
     const modal = document.createElement("div");
     modal.classList.add("lyrics-library-modal");
@@ -6316,6 +6341,7 @@ renderFullscreenLyrics() {
         ? this.currentPlaylist.songs[this.currentSongIndex]
         : this.songLibrary[this.currentSongIndex];
     if (!currentSong) return;
+    
     let songWithLyrics = currentSong;
     if (this.currentPlaylist) {
         const libraryMatch = this.songLibrary.find(
@@ -6325,27 +6351,46 @@ renderFullscreenLyrics() {
             songWithLyrics = libraryMatch;
         }
     }
+    
     if (!songWithLyrics.lyrics || songWithLyrics.lyrics.trim() === "") {
         this.elements.fullscreenLyricsDisplay.innerHTML = '<div class="no-lyrics-message">No lyrics available</div>';
         return;
     }
+    
     this.elements.fullscreenLyricsDisplay.innerHTML = '';
     const lyricsArray = [];
     const timingsArray = [];
+    let hasTimestamps = false;
     const lines = songWithLyrics.lyrics
         .split("\n")
         .filter((line) => line.trim() !== "");
+    
+    // First, check if any line has timestamps
     for (const line of lines) {
-        const match = line.match(/(.*)\s*\[(\d+):(\d+)\]/);
-        if (match) {
-            const lyric = match[1].trim();
-            const minutes = parseInt(match[2]);
-            const seconds = parseInt(match[3]);
-            const timeInSeconds = minutes * 60 + seconds;
-            lyricsArray.push(lyric);
-            timingsArray.push(timeInSeconds);
+        if (line.match(/.*\s*\[(\d+):(\d+)\]/)) {
+            hasTimestamps = true;
+            break;
         }
     }
+    
+    // Parse lyrics based on whether timestamps exist
+    for (const line of lines) {
+        if (hasTimestamps) {
+            const match = line.match(/(.*)\s*\[(\d+):(\d+)\]/);
+            if (match) {
+                const lyric = match[1].trim();
+                const minutes = parseInt(match[2]);
+                const seconds = parseInt(match[3]);
+                const timeInSeconds = minutes * 60 + seconds;
+                lyricsArray.push(lyric);
+                timingsArray.push(timeInSeconds);
+            }
+        } else {
+            // No timestamps, just add the line as is
+            lyricsArray.push(line.trim());
+        }
+    }
+    
     for (let i = 0; i < lyricsArray.length; i++) {
         const lineElement = document.createElement("div");
         lineElement.classList.add("lyric-line");
@@ -6358,12 +6403,16 @@ renderFullscreenLyrics() {
         lineElement.style.color = "var(--text-secondary)";
         this.elements.fullscreenLyricsDisplay.appendChild(lineElement);
     }
+    
+    // Clear any existing interval
     if (this.fullscreenLyricsInterval) {
         clearInterval(this.fullscreenLyricsInterval);
         this.fullscreenLyricsInterval = null;
     }
     this.currentFullscreenHighlightedLyricIndex = -1;
-    if (this.ytPlayer && this.isPlaying && this.ytPlayer.getCurrentTime) {
+    
+    // Only start highlighting if we have timestamps and player is playing
+    if (hasTimestamps && this.ytPlayer && this.isPlaying && this.ytPlayer.getCurrentTime) {
         this.fullscreenLyricsInterval = setInterval(() => {
             if (this.ytPlayer && this.ytPlayer.getCurrentTime && this.isPlaying && this.isLyricsFullscreen) {
                 try {
@@ -6376,8 +6425,11 @@ renderFullscreenLyrics() {
         }, 100);
     }
 }
+
 updateFullscreenHighlightedLyric(currentTime, lyrics, timings) {
-    if (!lyrics.length || !timings.length) return;
+    // Only proceed if we have both lyrics and timings
+    if (!lyrics.length || !timings.length || timings.length !== lyrics.length) return;
+    
     let highlightIndex = -1;
     for (let i = 0; i < timings.length; i++) {
         if (currentTime >= timings[i]) {
@@ -6386,6 +6438,7 @@ updateFullscreenHighlightedLyric(currentTime, lyrics, timings) {
             }
         }
     }
+    
     if (highlightIndex !== this.currentFullscreenHighlightedLyricIndex) {
         const allLines = this.elements.fullscreenLyricsDisplay.querySelectorAll(".lyric-line");
         allLines.forEach((line) => {
@@ -6396,6 +6449,7 @@ updateFullscreenHighlightedLyric(currentTime, lyrics, timings) {
             line.style.fontSize = "";
             line.style.transform = "";
         });
+        
         if (highlightIndex !== -1) {
             const currentElement = document.getElementById(`fullscreen-lyric-${highlightIndex}`);
             if (currentElement) {
