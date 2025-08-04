@@ -8105,7 +8105,7 @@ async addPlaylistToLibrary(artistId, artistName) {
     }
 }
   async loadAllArtists() {
-    if (this.allArtists.length > 0) return; // Already loaded
+    if (this.allArtists.length > 0) return; 
     
     this.elements.findSongsResults.innerHTML = '<div class="loading-spinner">Loading playlists...</div>';
     
