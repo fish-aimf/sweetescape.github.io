@@ -6944,7 +6944,7 @@ importTheme() {
     }
     
     this.applyImportedTheme(themeData);
-    this.showNotification("Theme imported successfully!", "success");
+    this.showNotification("Theme imported successfully! Press save theme buttom.", "success");
     this.elements.themeImportText.value = '';
     
   } catch (error) {
