@@ -835,7 +835,7 @@ handleTouchEnd(e) {
         });
     });
   }
-  renderSongLibrary() {
+renderSongLibrary() {
     try {
       if (!this.elements.songLibrary) return;
       const sortedLibrary = [...this.songLibrary].sort((a, b) => {
@@ -848,8 +848,17 @@ handleTouchEnd(e) {
       if (sortedLibrary.length === 0) {
         const emptyMessage = document.createElement("div");
         emptyMessage.classList.add("empty-library-message");
-        emptyMessage.textContent =
-          "Your library is empty. Add songs to get started!";
+        emptyMessage.textContent = "Your library is empty.";
+        
+        const addSongsButton = document.createElement("button");
+        addSongsButton.classList.add("add-songs-button");
+        addSongsButton.textContent = "Add Songs";
+        addSongsButton.addEventListener("click", () => {
+          this.openFindSongs();
+        });
+        
+        emptyMessage.appendChild(document.createElement("br"));
+        emptyMessage.appendChild(addSongsButton);
         fragment.appendChild(emptyMessage);
       } else {
         sortedLibrary.forEach((song) => {
