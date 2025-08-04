@@ -4115,13 +4115,6 @@ body:has(#ytPlayer.fullscreen-video) {
 }
 
 
-.empty-library-message {
-    text-align: center;
-    padding: 2rem;
-    color: var(--text-secondary);
-    font-size: 1rem;
-}
-
 .add-songs-button {
     background-color: var(--accent-color);
     color: var(--button-text-color);
@@ -4153,10 +4146,4 @@ body:has(#ytPlayer.fullscreen-video) {
     box-shadow: 0 0 0 3px rgba(93, 156, 89, 0.3);
 }
 
-[data-theme='dark'] .add-songs-button:focus {
-    box-shadow: 0 0 0 3px rgba(58, 107, 53, 0.4);
-}
 
-[data-theme='custom'] .add-songs-button:focus {
-    box-shadow: 0 0 0 3px var(--accent-color)40;
-}
