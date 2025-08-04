@@ -4309,48 +4309,17 @@ removeGhostPreview() {
     const instructions = document.createElement("div");
     instructions.classList.add("welcome-instructions");
     this.loadInstructions(instructions);
-    const selectContainer = document.createElement("div");
-    selectContainer.classList.add("select-container");
-    const selectLabel = document.createElement("label");
-    selectLabel.textContent = "Choose a starter playlist: ";
-    selectLabel.htmlFor = "welcomePresetList";
-    const presetSelect = document.createElement("select");
-    presetSelect.id = "welcomePresetList";
-    presetSelect.classList.add("playlist-select");
-    const defaultOption = document.createElement("option");
-    defaultOption.value = "custom";
-    defaultOption.textContent = "Choose a playlist...";
-    presetSelect.appendChild(defaultOption);
-    selectContainer.appendChild(selectLabel);
-    selectContainer.appendChild(presetSelect);
-    const textarea = document.createElement("textarea");
-    textarea.id = "welcomeImportTextarea";
-    textarea.placeholder = "Selected playlist songs will appear here...";
-    textarea.style.width = "100%";
-    textarea.style.height = "150px";
-    textarea.readOnly = true;
-    const importBtn = document.createElement("button");
-    importBtn.textContent = "Import Selected Playlist";
-    importBtn.classList.add("welcome-import-btn");
-    importBtn.onclick = () => {
-      this.importLibrary(textarea.value);
-      modal.remove();
-    };
     const skipBtn = document.createElement("button");
-    skipBtn.textContent = "Didn't ask";
+    skipBtn.textContent = "Get Started";
     skipBtn.classList.add("welcome-skip-btn");
     skipBtn.onclick = () => modal.remove();
     modalContent.appendChild(closeBtn);
     modalContent.appendChild(heading);
     modalContent.appendChild(instructions);
-    modalContent.appendChild(selectContainer);
-    modalContent.appendChild(textarea);
-    modalContent.appendChild(importBtn);
     modalContent.appendChild(skipBtn);
     modal.appendChild(modalContent);
     document.body.appendChild(modal);
-    this.loadFileList(presetSelect, textarea);
-  }
+}
   loadInstructions(instructionsElement) {
     fetch("instructions.txt")
       .then((response) => {
