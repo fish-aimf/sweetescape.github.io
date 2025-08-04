@@ -1,21 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music Player - Supabase Test</title>
+    <title>Music Player - Dark Theme</title>
     <style>
+        :root {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --accent-color: #3A6B35; 
+            --hover-color: #4D7C46; 
+            --border-color: #444;
+            --button-text-color: #ffffff;
+            --shadow-color: rgba(0,0,0,0.1);
+            --error-color: #dc3545;
+            --error-hover: #c82333;
+            --youtube-red: #FF0000;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--hover-color);
+        }
+
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-primary);
             min-height: 100vh;
-            color: #333;
+            color: var(--text-primary);
         }
 
         .container {
@@ -25,12 +59,13 @@
         }
 
         .login-form, .main-app {
-            background: white;
+            background: var(--bg-secondary);
             border-radius: 15px;
             padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px var(--shadow-color);
             margin: 50px auto;
             max-width: 500px;
+            border: 1px solid var(--border-color);
         }
 
         .main-app {
@@ -40,7 +75,12 @@
         h1, h2 {
             text-align: center;
             margin-bottom: 30px;
-            color: #4a5568;
+            color: var(--text-primary);
+        }
+
+        h3, h4 {
+            color: var(--text-primary);
+            margin-bottom: 15px;
         }
 
         .input-group {
@@ -51,36 +91,45 @@
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
-            color: #4a5568;
+            color: var(--text-secondary);
         }
 
-        input[type="email"], input[type="password"], input[type="text"], input[type="url"] {
+        input[type="email"], input[type="password"], input[type="text"], input[type="url"], select, textarea {
             width: 100%;
             padding: 12px;
-            border: 2px solid #e2e8f0;
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             font-size: 16px;
             transition: border-color 0.3s;
+            background: var(--bg-primary);
+            color: var(--text-primary);
         }
 
-        input:focus {
+        input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--accent-color);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: monospace;
         }
 
         button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: var(--accent-color);
+            color: var(--button-text-color);
             border: none;
             padding: 12px 24px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
-            transition: transform 0.2s;
+            transition: all 0.2s;
             margin: 5px;
         }
 
         button:hover {
+            background: var(--hover-color);
             transform: translateY(-2px);
         }
 
@@ -90,13 +139,13 @@
         }
 
         .error {
-            color: #e53e3e;
+            color: var(--error-color);
             text-align: center;
             margin: 10px 0;
         }
 
         .success {
-            color: #38a169;
+            color: var(--accent-color);
             text-align: center;
             margin: 10px 0;
         }
@@ -109,13 +158,14 @@
             text-align: center;
             margin-bottom: 20px;
             padding: 15px;
-            background: #f7fafc;
+            background: var(--bg-primary);
             border-radius: 8px;
+            border: 1px solid var(--border-color);
         }
 
         .admin-badge {
-            background: #38a169;
-            color: white;
+            background: var(--accent-color);
+            color: var(--button-text-color);
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 12px;
@@ -124,16 +174,17 @@
 
         .artists-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 20px;
             margin-top: 30px;
         }
 
         .artist-card {
-            background: #f7fafc;
+            background: var(--bg-secondary);
             border-radius: 10px;
             padding: 20px;
-            border: 2px solid #e2e8f0;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 8px var(--shadow-color);
         }
 
         .artist-header {
@@ -141,43 +192,81 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .artist-name {
             font-size: 20px;
             font-weight: bold;
-            color: #4a5568;
+            color: var(--text-primary);
+        }
+
+        .songs-container {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 8px;
         }
 
         .song-item {
-            background: white;
-            padding: 15px;
-            margin: 10px 0;
+            background: var(--bg-primary);
+            padding: 12px;
+            margin: 8px 0;
             border-radius: 8px;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid var(--accent-color);
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .song-item:hover {
+            background: var(--bg-secondary);
+            transform: translateX(5px);
+        }
+
+        .song-content {
+            flex-grow: 1;
         }
 
         .song-name {
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+            font-size: 16px;
         }
 
         .song-author {
-            color: #718096;
-            margin-bottom: 5px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 4px;
         }
 
         .song-url {
             font-size: 12px;
-            color: #4299e1;
+            color: var(--accent-color);
             word-break: break-all;
+            opacity: 0.8;
+        }
+
+        .song-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 12px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            margin: 0;
         }
 
         .playlist-controls {
-            background: #fed7d7;
+            background: var(--bg-secondary);
             padding: 20px;
             border-radius: 10px;
             margin-bottom: 30px;
+            border: 1px solid var(--border-color);
         }
 
         .playlist-form {
@@ -187,17 +276,72 @@
             flex-wrap: wrap;
         }
 
-        .playlist-form input {
+        .playlist-form input, .playlist-form select {
             flex: 1;
             min-width: 200px;
         }
 
         .btn-danger {
-            background: #e53e3e;
+            background: var(--error-color);
+        }
+
+        .btn-danger:hover {
+            background: var(--error-hover);
         }
 
         .btn-secondary {
-            background: #718096;
+            background: var(--text-secondary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--text-primary);
+            color: var(--bg-primary);
+        }
+
+        .btn-youtube {
+            background: var(--youtube-red);
+            color: white;
+        }
+
+        .btn-youtube:hover {
+            background: #cc0000;
+        }
+
+        .empty-playlist {
+            text-align: center;
+            color: var(--text-secondary);
+            font-style: italic;
+            padding: 20px;
+        }
+
+        .playlist-stats {
+            text-align: right;
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .playlist-form {
+                flex-direction: column;
+            }
+            
+            .playlist-form input, .playlist-form select {
+                min-width: 100%;
+            }
+            
+            .song-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .song-actions {
+                margin-left: 0;
+                margin-top: 8px;
+                width: 100%;
+                justify-content: flex-end;
+            }
         }
     </style>
 </head>
@@ -251,25 +395,26 @@
                         <button onclick="addSong()">Add Song</button>
                     </div>
                 </div>
+                
                 <div>
-    <h4>Mass Import Songs</h4>
-    <div class="playlist-form">
-        <select id="massImportArtistSelect">
-            <option value="">Select Playlist</option>
-        </select>
-    </div>
-    <textarea id="massImportText" placeholder="Format: Song Name, YouTube URL, Author (optional)
+                    <h4>Mass Import Songs</h4>
+                    <div class="playlist-form">
+                        <select id="massImportArtistSelect">
+                            <option value="">Select Playlist</option>
+                        </select>
+                    </div>
+                    <textarea id="massImportText" placeholder="Format: Song Name, YouTube URL, Author (optional)
 Example:
 Shape of You, https://youtube.com/watch?v=abc123, Ed Sheeran
 Blinding Lights, https://youtube.com/watch?v=def456
 Perfect, https://youtube.com/watch?v=ghi789, Ed Sheeran"></textarea>
-    <button onclick="massImportSongs()">Import Songs</button>
-</div>
+                    <button onclick="massImportSongs()">Import Songs</button>
+                </div>
             </div>
 
             <!-- Artists and Songs Display -->
             <div id="artistsContainer" class="artists-container">
-                <!-- Artists will be loaded here -->
+                <!-- Artists will be loaded here dynamically -->
             </div>
 
             <div id="appError" class="error"></div>
@@ -278,6 +423,172 @@ Perfect, https://youtube.com/watch?v=ghi789, Ed Sheeran"></textarea>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabasetest.js"></script>
+    <script>
+        // Mock functions for demonstration - replace with your actual supabasetest.js
+        function login() {
+            // Your login logic here
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            loadMockData();
+        }
+        
+        function logout() {
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('loginForm').classList.remove('hidden');
+        }
+        
+        function addArtist() {
+            const name = document.getElementById('newArtistName').value;
+            if (name) {
+                document.getElementById('authSuccess').textContent = `Playlist "${name}" created!`;
+                document.getElementById('newArtistName').value = '';
+                setTimeout(() => document.getElementById('authSuccess').textContent = '', 3000);
+            }
+        }
+        
+        function addSong() {
+            const songName = document.getElementById('newSongName').value;
+            if (songName) {
+                document.getElementById('appSuccess').textContent = 'Song added successfully!';
+                document.getElementById('newSongName').value = '';
+                document.getElementById('newSongAuthor').value = '';
+                document.getElementById('newSongUrl').value = '';
+                setTimeout(() => document.getElementById('appSuccess').textContent = '', 3000);
+            }
+        }
+        
+        function massImportSongs() {
+            const text = document.getElementById('massImportText').value;
+            if (text.trim()) {
+                document.getElementById('appSuccess').textContent = 'Songs imported successfully!';
+                document.getElementById('massImportText').value = '';
+                setTimeout(() => document.getElementById('appSuccess').textContent = '', 3000);
+            }
+        }
+        
+        function deleteSong(id) {
+            if (confirm('Are you sure you want to delete this song?')) {
+                document.getElementById('appSuccess').textContent = 'Song deleted successfully!';
+                setTimeout(() => document.getElementById('appSuccess').textContent = '', 3000);
+            }
+        }
+        
+        function editSong(id) {
+            alert('Edit functionality would open a modal here');
+        }
+        
+        function openYoutube(url) {
+            window.open(url, '_blank');
+        }
+        
+        function loadMockData() {
+            const mockData = `
+                <div class="artist-card">
+                    <div class="artist-header">
+                        <div class="artist-name">🎤 Pop Hits</div>
+                        <button class="btn-danger btn-small" onclick="if(confirm('Delete playlist?')) alert('Playlist deleted')">Delete Playlist</button>
+                    </div>
+                    <div class="songs-container">
+                        <div class="song-item">
+                            <div class="song-content">
+                                <div class="song-name">Shape of You</div>
+                                <div class="song-author">Ed Sheeran</div>
+                                <div class="song-url">https://youtube.com/watch?v=abc123</div>
+                            </div>
+                            <div class="song-actions">
+                                <button class="btn-youtube btn-small" onclick="openYoutube('https://youtube.com/watch?v=abc123')">▶️</button>
+                                <button class="btn-small" onclick="editSong(1)">✏️</button>
+                                <button class="btn-danger btn-small" onclick="deleteSong(1)">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="song-item">
+                            <div class="song-content">
+                                <div class="song-name">Blinding Lights</div>
+                                <div class="song-author">The Weeknd</div>
+                                <div class="song-url">https://youtube.com/watch?v=def456</div>
+                            </div>
+                            <div class="song-actions">
+                                <button class="btn-youtube btn-small" onclick="openYoutube('https://youtube.com/watch?v=def456')">▶️</button>
+                                <button class="btn-small" onclick="editSong(2)">✏️</button>
+                                <button class="btn-danger btn-small" onclick="deleteSong(2)">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="song-item">
+                            <div class="song-content">
+                                <div class="song-name">Perfect</div>
+                                <div class="song-author">Ed Sheeran</div>
+                                <div class="song-url">https://youtube.com/watch?v=ghi789</div>
+                            </div>
+                            <div class="song-actions">
+                                <button class="btn-youtube btn-small" onclick="openYoutube('https://youtube.com/watch?v=ghi789')">▶️</button>
+                                <button class="btn-small" onclick="editSong(3)">✏️</button>
+                                <button class="btn-danger btn-small" onclick="deleteSong(3)">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="song-item">
+                            <div class="song-content">
+                                <div class="song-name">Watermelon Sugar</div>
+                                <div class="song-author">Harry Styles</div>
+                                <div class="song-url">https://youtube.com/watch?v=jkl012</div>
+                            </div>
+                            <div class="song-actions">
+                                <button class="btn-youtube btn-small" onclick="openYoutube('https://youtube.com/watch?v=jkl012')">▶️</button>
+                                <button class="btn-small" onclick="editSong(4)">✏️</button>
+                                <button class="btn-danger btn-small" onclick="deleteSong(4)">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="song-item">
+                            <div class="song-content">
+                                <div class="song-name">Levitating</div>
+                                <div class="song-author">Dua Lipa</div>
+                                <div class="song-url">https://youtube.com/watch?v=mno345</div>
+                            </div>
+                            <div class="song-actions">
+                                <button class="btn-youtube btn-small" onclick="openYoutube('https://youtube.com/watch?v=mno345')">▶️</button>
+                                <button class="btn-small" onclick="editSong(5)">✏️</button>
+                                <button class="btn-danger btn-small" onclick="deleteSong(5)">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="playlist-stats">5 songs</div>
+                </div>
+                
+                <div class="artist-card">
+                    <div class="artist-header">
+                        <div class="artist-name">🎸 Rock Classics</div>
+                        <button class="btn-danger btn-small" onclick="if(confirm('Delete playlist?')) alert('Playlist deleted')">Delete Playlist</button>
+                    </div>
+                    <div class="songs-container">
+                        <div class="song-item">
+                            <div class="song-content">
+                                <div class="song-name">Bohemian Rhapsody</div>
+                                <div class="song-author">Queen</div>
+                                <div class="song-url">https://youtube.com/watch?v=pqr678</div>
+                            </div>
+                            <div class="song-actions">
+                                <button class="btn-youtube btn-small" onclick="openYoutube('https://youtube.com/watch?v=pqr678')">▶️</button>
+                                <button class="btn-small" onclick="editSong(6)">✏️</button>
+                                <button class="btn-danger btn-small" onclick="deleteSong(6)">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="song-item">
+                            <div class="song-content">
+                                <div class="song-name">Stairway to Heaven</div>
+                                <div class="song-author">Led Zeppelin</div>
+                                <div class="song-url">https://youtube.com/watch?v=stu901</div>
+                            </div>
+                            <div class="song-actions">
+                                <button class="btn-youtube btn-small" onclick="openYoutube('https://youtube.com/watch?v=stu901')">▶️</button>
+                                <button class="btn-small" onclick="editSong(7)">✏️</button>
+                                <button class="btn-danger btn-small" onclick="deleteSong(7)">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="playlist-stats">2 songs</div>
+                </div>
+            `;
+            document.getElementById('artistsContainer').innerHTML = mockData;
+        }
+    </script>
 </body>
 </html>
