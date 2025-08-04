@@ -6883,30 +6883,43 @@ showNotification(message, type = "info") {
   }, 3000);
 }
 exportTheme() {
+  try {
     const themeData = {
-        primary: this.elements.primaryColorPicker.value,
-        background: this.elements.backgroundColorPicker.value,
-        secondary: this.elements.secondaryColorPicker.value,
-        textPrimary: this.elements.textPrimaryColorPicker.value,
-        textSecondary: this.elements.textSecondaryColorPicker.value,
-        hover: this.elements.hoverColorPicker.value,
-        border: this.elements.borderColorPicker.value,
-        accent: this.elements.accentColorPicker.value,
-        buttonText: this.elements.buttonTextColorPicker.value,
-        shadow: this.elements.shadowColorPicker.value,
-        shadowOpacity: this.elements.shadowOpacity.value,
-        error: this.elements.errorColorPicker.value,
-        errorHover: this.elements.errorHoverColorPicker.value,
-        youtubeRed: this.elements.youtubeRedColorPicker.value
+      primary: this.elements.primaryColorPicker?.value || '#000000',
+      background: this.elements.backgroundColorPicker?.value || '#ffffff',
+      secondary: this.elements.secondaryColorPicker?.value || '#cccccc',
+      textPrimary: this.elements.textPrimaryColorPicker?.value || '#000000',
+      textSecondary: this.elements.textSecondaryColorPicker?.value || '#666666',
+      hover: this.elements.hoverColorPicker?.value || '#eeeeee',
+      border: this.elements.borderColorPicker?.value || '#dddddd',
+      accent: this.elements.accentColorPicker?.value || '#007bff',
+      buttonText: this.elements.buttonTextColorPicker?.value || '#ffffff',
+      shadow: this.elements.shadowColorPicker?.value || '#000000',
+      shadowOpacity: this.elements.shadowOpacity?.value || '0.1',
+      error: this.elements.errorColorPicker?.value || '#f44336',
+      errorHover: this.elements.errorHoverColorPicker?.value || '#d32f2f',
+      youtubeRed: this.elements.youtubeRedColorPicker?.value || '#ff0000'
     };
+    
     const themeString = JSON.stringify(themeData, null, 2);
-    navigator.clipboard.writeText(themeString).then(() => {
+    
+    // Check if clipboard API is available
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(themeString).then(() => {
         this.showNotification("Theme exported to clipboard!", "success");
-    }).catch(err => {
+      }).catch(err => {
         console.error('Failed to copy theme: ', err);
-        this.showNotification("Failed to copy theme", "error");
-    });
+        this.fallbackCopyToClipboard(themeString);
+      });
+    } else {
+      this.fallbackCopyToClipboard(themeString);
+    }
+  } catch (error) {
+    console.error('Export error:', error);
+    this.showNotification("Failed to export theme", "error");
+  }
 }
+
 importTheme() {
     const themeText = this.elements.themeImportText.value.trim();
     if (!themeText) {
