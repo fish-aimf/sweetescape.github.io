@@ -4113,3 +4113,50 @@ body:has(#ytPlayer.fullscreen-video) {
     padding: 20px;
     color: var(--text-secondary);
 }
+
+
+.empty-library-message {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+.add-songs-button {
+    background-color: var(--accent-color);
+    color: var(--button-text-color);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px var(--shadow-color);
+    margin-top: 1rem;
+    min-width: 120px;
+}
+
+.add-songs-button:hover {
+    background-color: var(--hover-color);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px var(--shadow-color);
+}
+
+.add-songs-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.add-songs-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(93, 156, 89, 0.3);
+}
+
+[data-theme='dark'] .add-songs-button:focus {
+    box-shadow: 0 0 0 3px rgba(58, 107, 53, 0.4);
+}
+
+[data-theme='custom'] .add-songs-button:focus {
+    box-shadow: 0 0 0 3px var(--accent-color)40;
+}
