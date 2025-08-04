@@ -6921,47 +6921,103 @@ exportTheme() {
 }
 
 importTheme() {
-    const themeText = this.elements.themeImportText.value.trim();
-    if (!themeText) {
-        this.showNotification("Please paste a theme code first", "error");
-        return;
+  const themeText = this.elements.themeImportText?.value?.trim();
+  if (!themeText) {
+    this.showNotification("Please paste a theme code first", "error");
+    return;
+  }
+  
+  try {
+    const themeData = JSON.parse(themeText);
+    
+    // Validate that it's actually a theme object
+    if (typeof themeData !== 'object' || themeData === null) {
+      throw new Error('Invalid theme format: not an object');
     }
-    try {
-        const themeData = JSON.parse(themeText);
-        this.applyImportedTheme(themeData);
-        this.showNotification("Theme imported successfully!", "success");
-        this.elements.themeImportText.value = '';
-    } catch (error) {
-        console.error('Failed to parse theme:', error);
-        this.showNotification("Invalid theme format", "error");
+    
+    // Check if it has at least some expected theme properties
+    const expectedProps = ['primary', 'background', 'secondary', 'textPrimary'];
+    const hasValidProps = expectedProps.some(prop => themeData.hasOwnProperty(prop));
+    
+    if (!hasValidProps) {
+      throw new Error('Invalid theme format: missing expected properties');
     }
+    
+    this.applyImportedTheme(themeData);
+    this.showNotification("Theme imported successfully!", "success");
+    this.elements.themeImportText.value = '';
+    
+  } catch (error) {
+    console.error('Failed to parse theme:', error);
+    this.showNotification("Invalid theme format", "error");
+  }
 }
 applyImportedTheme(themeData) {
-    if (themeData.primary) this.elements.primaryColorPicker.value = themeData.primary;
-    if (themeData.background) this.elements.backgroundColorPicker.value = themeData.background;
-    if (themeData.secondary) this.elements.secondaryColorPicker.value = themeData.secondary;
-    if (themeData.textPrimary) this.elements.textPrimaryColorPicker.value = themeData.textPrimary;
-    if (themeData.textSecondary) this.elements.textSecondaryColorPicker.value = themeData.textSecondary;
-    if (themeData.hover) this.elements.hoverColorPicker.value = themeData.hover;
-    if (themeData.border) this.elements.borderColorPicker.value = themeData.border;
-    if (themeData.accent) this.elements.accentColorPicker.value = themeData.accent;
-    if (themeData.buttonText) this.elements.buttonTextColorPicker.value = themeData.buttonText;
-    if (themeData.shadow) this.elements.shadowColorPicker.value = themeData.shadow;
-    if (themeData.shadowOpacity) this.elements.shadowOpacity.value = themeData.shadowOpacity;
-    if (themeData.error) this.elements.errorColorPicker.value = themeData.error;
-    if (themeData.errorHover) this.elements.errorHoverColorPicker.value = themeData.errorHover;
-    if (themeData.youtubeRed) this.elements.youtubeRedColorPicker.value = themeData.youtubeRed;
-    this.handleSaveCustomTheme();
+  try {
+    // Validate hex colors before applying
+    const isValidHex = (hex) => /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(hex);
+    
+    if (themeData.primary && isValidHex(themeData.primary)) {
+      this.elements.primaryColorPicker.value = themeData.primary;
+    }
+    if (themeData.background && isValidHex(themeData.background)) {
+      this.elements.backgroundColorPicker.value = themeData.background;
+    }
+    if (themeData.secondary && isValidHex(themeData.secondary)) {
+      this.elements.secondaryColorPicker.value = themeData.secondary;
+    }
+    if (themeData.textPrimary && isValidHex(themeData.textPrimary)) {
+      this.elements.textPrimaryColorPicker.value = themeData.textPrimary;
+    }
+    if (themeData.textSecondary && isValidHex(themeData.textSecondary)) {
+      this.elements.textSecondaryColorPicker.value = themeData.textSecondary;
+    }
+    if (themeData.hover && isValidHex(themeData.hover)) {
+      this.elements.hoverColorPicker.value = themeData.hover;
+    }
+    if (themeData.border && isValidHex(themeData.border)) {
+      this.elements.borderColorPicker.value = themeData.border;
+    }
+    if (themeData.accent && isValidHex(themeData.accent)) {
+      this.elements.accentColorPicker.value = themeData.accent;
+    }
+    if (themeData.buttonText && isValidHex(themeData.buttonText)) {
+      this.elements.buttonTextColorPicker.value = themeData.buttonText;
+    }
+    if (themeData.shadow && isValidHex(themeData.shadow)) {
+      this.elements.shadowColorPicker.value = themeData.shadow;
+    }
+    if (themeData.shadowOpacity && !isNaN(parseFloat(themeData.shadowOpacity))) {
+      this.elements.shadowOpacity.value = themeData.shadowOpacity;
+    }
+    if (themeData.error && isValidHex(themeData.error)) {
+      this.elements.errorColorPicker.value = themeData.error;
+    }
+    if (themeData.errorHover && isValidHex(themeData.errorHover)) {
+      this.elements.errorHoverColorPicker.value = themeData.errorHover;
+    }
+    if (themeData.youtubeRed && isValidHex(themeData.youtubeRed)) {
+      this.elements.youtubeRedColorPicker.value = themeData.youtubeRed;
+    }
+    
+    // Only call save if the method exists
+    if (typeof this.handleSaveCustomTheme === 'function') {
+      this.handleSaveCustomTheme();
+    }
+  } catch (error) {
+    console.error('Error applying imported theme:', error);
+    this.showNotification("Error applying theme", "error");
+  }
 }
 hexToRgba(hex, opacity) {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    if (result) {
-        const r = parseInt(result[1], 16);
-        const g = parseInt(result[2], 16);
-        const b = parseInt(result[3], 16);
-        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-    }
-    return `rgba(0, 0, 0, ${opacity})`;
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (result) {
+    const r = parseInt(result[1], 16);
+    const g = parseInt(result[2], 16);
+    const b = parseInt(result[3], 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }
+  return `rgba(0, 0, 0, ${opacity})`;
 }
 async loadAdvertisementSettings() {
     try {
