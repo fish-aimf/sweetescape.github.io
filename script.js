@@ -4318,14 +4318,29 @@ removeGhostPreview() {
     const instructions = document.createElement("div");
     instructions.classList.add("welcome-instructions");
     this.loadInstructions(instructions);
+    const buttonContainer = document.createElement("div");
+    buttonContainer.classList.add("welcome-buttons");
+    
     const skipBtn = document.createElement("button");
     skipBtn.textContent = "Get Started";
     skipBtn.classList.add("welcome-skip-btn");
     skipBtn.onclick = () => modal.remove();
+    
+    const addSongsBtn = document.createElement("button");
+    addSongsBtn.textContent = "Add Songs to Get Started";
+    addSongsBtn.classList.add("welcome-add-songs-btn");
+    addSongsBtn.onclick = () => {
+        this.openFindSongs();
+        modal.remove();
+    };
+    
+    buttonContainer.appendChild(skipBtn);
+    buttonContainer.appendChild(addSongsBtn);
+    
     modalContent.appendChild(closeBtn);
     modalContent.appendChild(heading);
     modalContent.appendChild(instructions);
-    modalContent.appendChild(skipBtn);
+    modalContent.appendChild(buttonContainer);
     modal.appendChild(modalContent);
     document.body.appendChild(modal);
 }
