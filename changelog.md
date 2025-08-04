@@ -231,3 +231,5 @@
 - added a lot of experimental supabase. I will work on implimenting a song discovery system and songs hosted on supabase for the next few days. reworking the current confusing import layout. v31.5.2
 - implimented supabase, will redesign new user experience better in future. v32.0.0
 - made it such that lyrics without timestamps can be accepted just without highlighting or autoscroll. v32.1.0
+- new welcome message redid, adding songs becomes more intuitive. added more buttons to open the find songs modal v32.2.0
+- fixed import export theme bug v32.3.0
