@@ -4070,8 +4070,9 @@ body:has(#ytPlayer.fullscreen-video) {
 .playlist-name {
     font-size: 18px;
     font-weight: bold;
-    color: var(--accent-color);
+    color: var(--text-primary);
 }
+
 
 .playlist-songs {
     margin: 10px 0;
