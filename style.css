@@ -2189,8 +2189,9 @@ body {
     font-size: 1.1rem;
     font-weight: 600;
     margin-bottom: 4px;
-    color: inherit;
+    color: var(--text-primary);
 }
+
 
 .playlist-info {
     font-size: 0.9rem;
