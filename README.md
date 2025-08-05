@@ -34,6 +34,8 @@ This repositary is just used as source code for:
 
 deployed at sweetescape.glitch.me now sweetescape.vercel.app
 
+This is currently supabase enabled
+
 Version 100?
 
 Will I put ads I don't actually know
