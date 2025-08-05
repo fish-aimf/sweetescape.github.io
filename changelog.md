@@ -233,3 +233,4 @@
 - made it such that lyrics without timestamps can be accepted just without highlighting or autoscroll. v32.1.0
 - new welcome message redid, adding songs becomes more intuitive. added more buttons to open the find songs modal v32.2.0
 - fixed import export theme bug v32.3.0
+- changed colour of playlist name to primary text colour v32.4.0
