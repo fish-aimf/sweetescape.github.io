@@ -3244,45 +3244,6 @@ body:has(#ytPlayer.fullscreen-video) {
   height: 26px;
 }
 
-/* Hide the native checkbox */
-.toggle-input {
-  display: none;
-}
-
-/* Toggle background (the track) */
-.toggle-label {
-  display: block;
-  width: 100%;
-  height: 100%;
-  background-color: var(--border-color);
-  border-radius: 50px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-/* The slider (knob) */
-.toggle-slider {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 20px;
-  height: 20px;
-  background-color: var(--bg-secondary);
-  border-radius: 50%;
-  transition: transform 0.3s ease, background-color 0.3s ease;
-  box-shadow: 0 2px 4px var(--shadow-color);
-}
-
-/* Toggle ON state */
-.toggle-input:checked + .toggle-label {
-  background-color: var(--accent-color);
-}
-
-.toggle-input:checked + .toggle-label .toggle-slider {
-  transform: translateX(24px);
-  background-color: var(--button-text-color);
-}
-
 .collapsible-section {
     border: 1px solid var(--border-color, #475569);
     border-radius: 8px;
