@@ -3056,7 +3056,6 @@ body:has(#ytPlayer.fullscreen-video) {
     min-height: 100vh;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
-/* Advertisement Settings Toggle Switch */
 .toggle-switch {
     position: relative;
     display: inline-block;
@@ -3067,7 +3066,7 @@ body:has(#ytPlayer.fullscreen-video) {
 }
 .toggle-label {
     display: block;
-    width: 50px;
+    width: 40px;
     height: 24px;
     background-color: var(--bg-primary);
     border-radius: 12px;
@@ -3088,13 +3087,11 @@ body:has(#ytPlayer.fullscreen-video) {
     box-shadow: 0 2px 4px var(--shadow-color);
 }
 .toggle-input:checked + .toggle-label .toggle-slider {
-    transform: translateX(24px);
+    transform: translateX(18px);
 }
 .toggle-label:hover {
     background-color: var(--bg-secondary);
 }
-
-
 /* Settings section styling */
 .settings-section {
     margin-bottom: 30px;
