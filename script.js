@@ -7135,13 +7135,22 @@ initializeAdvertisementSettings() {
             this.elements.visualizerToggle.checked = enabled;
         }
         
-        // Apply the setting
+        // Apply the setting and start visualizer if enabled
         if (enabled) {
             document.getElementById('musicVisualizer').style.display = 'block';
             this.visualizer.isActive = true;
+            // Actually start the visualizer animation
+            if (!this.visualizer.animationId) {
+                this.startVisualizer();
+            }
         } else {
             document.getElementById('musicVisualizer').style.display = 'none';
             this.visualizer.isActive = false;
+            // Stop animation if running
+            if (this.visualizer.animationId) {
+                cancelAnimationFrame(this.visualizer.animationId);
+                this.visualizer.animationId = null;
+            }
         }
     };
 }
@@ -7934,38 +7943,42 @@ animateVisualizer() {
 
 animateBars() {
     this.visualizer.bars.forEach((bar, index) => {
-        // Create more dynamic movement when music is playing
-        let intensity = this.isPlaying ? 1.5 : 0.5;
+        // Much less movement when not playing
+        let intensity = this.isPlaying ? 1.5 : 0.15; // Reduced from 0.5 to 0.15
         let baseHeight = Math.random() * 100 * intensity;
         
         // Add rhythm-like pattern
         let rhythmMultiplier = Math.sin(Date.now() * 0.01 + index * 0.3) * 0.5 + 0.5;
         let height = baseHeight * rhythmMultiplier + 4;
         
-        // More movement when music is playing
+        // More movement when music is playing, much less when paused
         if (this.isPlaying) {
             height += Math.sin(Date.now() * 0.005 + index * 0.1) * 30;
+        } else {
+            // Very subtle movement when paused
+            height += Math.sin(Date.now() * 0.002 + index * 0.1) * 5; // Much smaller amplitude
         }
         
         bar.style.height = Math.max(4, height) + 'px';
     });
 }
-
 animateParticles() {
     const ctx = this.visualizer.ctx;
     if (!ctx) return;
     
     ctx.clearRect(0, 0, this.visualizer.canvas.width, this.visualizer.canvas.height);
     
-    // Create new particles occasionally
-    if (Math.random() < (this.isPlaying ? 0.3 : 0.1)) {
+    // Create fewer particles when not playing
+    if (Math.random() < (this.isPlaying ? 0.3 : 0.05)) { // Reduced from 0.1 to 0.05
         this.createParticle();
     }
     
     // Update and draw particles
     this.visualizer.particles = this.visualizer.particles.filter(particle => {
-        particle.x += particle.vx;
-        particle.y += particle.vy;
+        // Slower movement when not playing
+        let speedMultiplier = this.isPlaying ? 1 : 0.3;
+        particle.x += particle.vx * speedMultiplier;
+        particle.y += particle.vy * speedMultiplier;
         particle.life -= 0.01;
         particle.opacity = particle.life;
         
@@ -7973,7 +7986,7 @@ animateParticles() {
         
         // Draw particle
         ctx.save();
-        ctx.globalAlpha = particle.opacity * 0.6;
+        ctx.globalAlpha = particle.opacity * (this.isPlaying ? 0.6 : 0.3); // Less opacity when paused
         ctx.fillStyle = getComputedStyle(document.documentElement)
             .getPropertyValue('--accent-color');
         ctx.beginPath();
@@ -7984,7 +7997,6 @@ animateParticles() {
         return true;
     });
 }
-
 createParticle() {
     this.visualizer.particles.push({
         x: Math.random() * this.visualizer.canvas.width,
