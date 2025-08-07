@@ -3222,12 +3222,7 @@ body:has(#ytPlayer.fullscreen-video) {
 
 
 /* Toggle Switch Container */
-.toggle-switch {
-  display: inline-block;
-  position: relative;
-  width: 50px;
-  height: 26px;
-}
+
 
 .collapsible-section {
     border: 1px solid var(--border-color, #475569);
