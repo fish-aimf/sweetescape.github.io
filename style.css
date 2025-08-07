@@ -4092,7 +4092,7 @@ body:has(#ytPlayer.fullscreen-video) {
     box-shadow: 0 2px 4px var(--shadow-color);
 }
 .toggle-input:checked + .toggle-label .toggle-slider {
-    transform: translateX(50px);
+    transform: translateX(120px);
 }
 .toggle-label:hover {
     background-color: var(--bg-secondary);
