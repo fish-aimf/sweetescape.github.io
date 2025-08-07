@@ -235,3 +235,4 @@
 - fixed import export theme bug v32.3.0
 - changed colour of playlist name to primary text colour v32.4.0
 - fixed visualizer on load bug. made visualizer move less when not playing and generate less particles as well. v32.5.0
+- fixed setting slider css v32.5.1
