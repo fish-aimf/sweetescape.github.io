@@ -3062,50 +3062,38 @@ body:has(#ytPlayer.fullscreen-video) {
     display: inline-block;
     margin-left: 10px;
 }
-
 .toggle-input {
     display: none;
 }
-
 .toggle-label {
     display: block;
     width: 50px;
     height: 24px;
-    background-color: var(--secondary-bg-color, #475569);
+    background-color: var(--bg-primary);
     border-radius: 12px;
     cursor: pointer;
     transition: background-color 0.3s ease;
     position: relative;
+    border: 2px solid var(--border-color);
 }
-
 .toggle-slider {
     position: absolute;
     top: 2px;
     left: 2px;
-    width: 20px;
-    height: 20px;
-    background-color: white;
+    width: 16px;
+    height: 16px;
+    background-color: var(--text-primary);
     border-radius: 50%;
     transition: transform 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 4px var(--shadow-color);
 }
-
-.toggle-input:checked + .toggle-label {
-    background-color: var(--primary-color, #3b82f6);
-}
-
 .toggle-input:checked + .toggle-label .toggle-slider {
-    transform: translateX(26px);
+    transform: translateX(24px);
 }
-
 .toggle-label:hover {
-    background-color: var(--hover-color, #2563eb);
+    background-color: var(--bg-secondary);
 }
 
-.toggle-input:checked + .toggle-label:hover {
-    background-color: var(--primary-color, #3b82f6);
-    filter: brightness(1.1);
-}
 
 /* Settings section styling */
 .settings-section {
