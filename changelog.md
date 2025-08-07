@@ -234,3 +234,4 @@
 - new welcome message redid, adding songs becomes more intuitive. added more buttons to open the find songs modal v32.2.0
 - fixed import export theme bug v32.3.0
 - changed colour of playlist name to primary text colour v32.4.0
+- fixed visualizer on load bug. made visualizer move less when not playing and generate less particles as well. v32.5.0
