@@ -139,21 +139,20 @@
                 </div>
                 <div class="tab-content">
                     <!-- Library Tab -->
-                    <div class="tab-pane active" id="library">
+                    <div class="tab-pane active" id="library" title="Find all your songs to play">
                         <div class="library-manager">
-                            <!-- Combined search and modify library into a single row -->
-                            <div class="search-section">
+                            <div class="search-section" title="If you dont see it just open it automatically in youtube to put it in.">
                                 <input type="text" id="librarySearch" placeholder="Search songs...">
                                 <button id="findSongsBtn" class="action-button find-songs-btn">
-    <i class="fas fa-search"></i> Find Songs
-</button>
-                                <button id="modifyLibraryBtn" class="action-button">
+                                    <i class="fas fa-search"></i> Find Songs
+                                </button>
+                                <button id="modifyLibraryBtn" class="action-button" title="click here to add songs via youtube url or import and export">
                                     <i class="fas fa-edit"></i> Modify Library
                                 </button>
                             </div>
                             <div id="songLibrary" class="song-list">
                             </div>
-                            <div id="youtubeSearchSuggestion" class="youtube-search-suggestion" style="display: none;">
+                            <div id="youtubeSearchSuggestion" class="youtube-search-suggestion" style="display: none;" title="open youtube and copy the URL">
                                 <div class="search-suggestion-content">
                                     <i class="fab fa-youtube"></i>
                                     <span>Not finding what you're looking for?</span>
@@ -164,7 +163,7 @@
                     </div>
                     
                     <!-- Playlists Tab -->
-                    <div class="tab-pane" id="playlists">
+                    <div class="tab-pane" id="playlists" title="Organize your songs into playlists">
                         <div class="playlist-manager">
                             <div class="create-playlist">
                                 <input type="text" id="newPlaylistName" placeholder="New Playlist Name">
@@ -174,7 +173,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="tab-pane" id="lyrics">
+                    <div class="tab-pane" id="lyrics" title="Right click to view all your lyrics saved">
                       <div class="lyrics-container">
                           <div class="lyrics-content" id="lyricsContent">
                               <p class="no-lyrics-message">No song playing or no lyrics available</p>
