@@ -236,3 +236,5 @@
 - changed colour of playlist name to primary text colour v32.4.0
 - fixed visualizer on load bug. made visualizer move less when not playing and generate less particles as well. v32.5.0
 - fixed setting slider css v32.5.1
+- added some on hover title hints v32.6.0
+- added some new playlists
