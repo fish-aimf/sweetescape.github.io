@@ -5265,7 +5265,6 @@ refreshSpecificSection(sectionTitle) {
       e.preventDefault();
       this.openLyricsLibraryModal();
     });
-    lyricsTab.title = "rightclick to view lyric library";
   }
   openLyricsMakerModal(songId) {
   const song = this.songLibrary.find((s) => s.id === songId);
