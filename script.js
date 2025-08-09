@@ -291,10 +291,16 @@ findSongsResults: document.getElementById("findSongsResults")
     this.handleAddSong = this.addSongToLibrary.bind(this);
     this.handleFilterLibrary = this.filterLibrarySongs.bind(this);
     this.handleLibrarySearchKeydown = (e) => {
-      if (e.key === "Enter" && this.elements.youtubeSearchSuggestion.style.display !== "none") {
-        this.searchYouTube(this.elements.librarySearch.value.trim());
+       if (this.elements.librarySearch) {
+    this.elements.librarySearch.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        const searchTerm = this.elements.librarySearch.value.trim();
+        if (this.isYouTubeUrl(searchTerm)) {
+          this.openModifyLibraryWithUrl(searchTerm);
+        }
       }
-    };
+    });
+  }
     this.handleCreatePlaylist = this.createPlaylist.bind(this);
     this.handleClosePlaylistModal = this.closePlaylistModal.bind(this);
     this.handleSearchSongsToAdd = this.searchSongsToAddToPlaylist.bind(this);
@@ -930,38 +936,80 @@ renderSongLibrary() {
     });
   }
   filterLibrarySongs() {
-    const searchTerm = this.elements.librarySearch.value.toLowerCase();
-    const songItems = this.elements.songLibrary.querySelectorAll(".song-item");
-    let resultsFound = false;
-    songItems.forEach((item) => {
-      const songElement = item.querySelector("span");
-      const songName = songElement.textContent.toLowerCase();
-      const songId = songElement.dataset.songId;
-      const song = this.songLibrary.find((s) => s.id == songId);
-      const authorMatch =
-        song && song.author && song.author.toLowerCase().includes(searchTerm);
-      const isVisible = songName.includes(searchTerm) || authorMatch;
-      item.style.display = isVisible ? "flex" : "none";
-      if (isVisible) {
-        resultsFound = true;
-      }
-    });
-    if (!resultsFound && searchTerm.trim() !== "") {
-      this.showYouTubeSearchSuggestion(searchTerm);
-    } else {
-      this.hideYouTubeSearchSuggestion();
+  const searchTerm = this.elements.librarySearch.value.toLowerCase();
+  const songItems = this.elements.songLibrary.querySelectorAll(".song-item");
+  let resultsFound = false;
+
+  // Check if the search term is a YouTube URL
+  const isYouTubeUrl = this.isYouTubeUrl(searchTerm);
+
+  songItems.forEach((item) => {
+    const songElement = item.querySelector("span");
+    const songName = songElement.textContent.toLowerCase();
+    const songId = songElement.dataset.songId;
+    const song = this.songLibrary.find((s) => s.id == songId);
+    const authorMatch =
+      song && song.author && song.author.toLowerCase().includes(searchTerm);
+    const isVisible = songName.includes(searchTerm) || authorMatch;
+    item.style.display = isVisible ? "flex" : "none";
+    if (isVisible) {
+      resultsFound = true;
     }
+  });
+
+  if (!resultsFound && searchTerm.trim() !== "") {
+    if (isYouTubeUrl) {
+      this.showAddSongSuggestion(searchTerm);
+    } else {
+      this.showYouTubeSearchSuggestion(searchTerm);
+    }
+  } else {
+    this.hideYouTubeSearchSuggestion();
   }
-  showYouTubeSearchSuggestion(searchTerm) {
-    const querySpan =
-      this.elements.youtubeSearchSuggestion.querySelector(".search-query");
-    querySpan.textContent = `Search for "${searchTerm}" on YouTube`;
-    this.elements.youtubeSearchSuggestion.style.display = "block";
-    this.elements.youtubeSearchSuggestion.onclick = null;
-    this.elements.youtubeSearchSuggestion.onclick = () => {
-      this.searchYouTube(searchTerm);
-    };
+}
+
+// Helper method to detect YouTube URLs
+isYouTubeUrl(url) {
+  const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)/i;
+  return youtubeRegex.test(url.trim());
+}
+
+// New method to show "Add your song" suggestion
+showAddSongSuggestion(youtubeUrl) {
+  const querySpan = this.elements.youtubeSearchSuggestion.querySelector(".search-query");
+  querySpan.textContent = "Add your song";
+  this.elements.youtubeSearchSuggestion.style.display = "block";
+  this.elements.youtubeSearchSuggestion.onclick = null;
+  this.elements.youtubeSearchSuggestion.onclick = () => {
+    this.openModifyLibraryWithUrl(youtubeUrl);
+  };
+}
+
+
+// New method to open modify library modal with pre-filled URL
+openModifyLibraryWithUrl(youtubeUrl) {
+  // Open the modify library modal
+  this.openLibraryModal();
+  
+  // Pre-fill the song name input with the YouTube URL
+  // You might need to adjust this selector based on your actual input field for URLs
+  if (this.elements.songNameInput) {
+    this.elements.songNameInput.value = youtubeUrl.trim();
   }
+  
+  // Clear the search bar
+  this.elements.librarySearch.value = "";
+  this.hideYouTubeSearchSuggestion();
+}
+showYouTubeSearchSuggestion(searchTerm) {
+  const querySpan = this.elements.youtubeSearchSuggestion.querySelector(".search-query");
+  querySpan.textContent = `Search for "${searchTerm}" on YouTube`;
+  this.elements.youtubeSearchSuggestion.style.display = "block";
+  this.elements.youtubeSearchSuggestion.onclick = null;
+  this.elements.youtubeSearchSuggestion.onclick = () => {
+    this.searchYouTube(searchTerm);
+  };
+}
   hideYouTubeSearchSuggestion() {
     this.elements.youtubeSearchSuggestion.style.display = "none";
   }
