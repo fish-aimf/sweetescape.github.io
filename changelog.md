@@ -238,4 +238,4 @@
 - fixed setting slider css v32.5.1
 - added some on hover title hints v32.6.0
 - added some new playlists v32.7.0
-- pasting in youtube url to search bar now makes it easier to add. v32.8.0
+- might not be able to make big changes due to being very busy, in the meantime ill add some playlists v32.7.0
