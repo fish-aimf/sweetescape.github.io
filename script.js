@@ -855,7 +855,7 @@ renderSongLibrary() {
                 if (a.favorite !== b.favorite) {
                     return a.favorite ? -1 : 1;
                 }
-                return a.id - b.id; // Lower ID = added first
+                return b.id - a.id; // Higher ID = added more recently
             });
         }
         
