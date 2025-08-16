@@ -120,6 +120,7 @@ class AdvancedMusicPlayer {
           this.loadRecentlyPlayed(),
           this.loadDiscoverMoreSettingsOnStartup(),
           this.loadVisualizerSettings()
+          this.loadLibrarySortSetting()
         ]);
       })
       .then(() => {
@@ -267,7 +268,8 @@ class AdvancedMusicPlayer {
 closeFindSongs: document.getElementById("closeFindSongs"),
 findSongsDiv: document.getElementById("findSongsDiv"),
 findSongsSearch: document.getElementById("findSongsSearch"),
-findSongsResults: document.getElementById("findSongsResults")
+findSongsResults: document.getElementById("findSongsResults"),
+      librarySortToggle: document.getElementById("librarySortToggle"),
     };
     if (this.elements.speedBtn) {
       this.elements.speedBtn.textContent = this.currentSpeed + "x";
@@ -439,7 +441,7 @@ this.elements.closeFindSongs?.addEventListener("click", this.closeFindSongs.bind
       [this.elements.currentSongName, "contextmenu", this.handleSongNameRightClick],
       [this.elements.toggleControlBarBtn, "click", this.handleToggleControlBar],
       [this.elements.discordButton, "click", this.handleDiscordClick],
-      [this.elements.librarySortToggle, "change", this.handleLibrarySortToggle.bind(this)]
+      [this.elements.librarySortToggle, "change", this.handleLibrarySortToggle.bind(this)],
     ];
     eventBindings.forEach(([element, event, handler]) => {
       if (element) {
@@ -850,12 +852,12 @@ renderSongLibrary() {
                 return a.name.localeCompare(b.name);
             });
         } else {
-            // Original order (by ID - which is chronological)
+            // Use natural order (time added) - just move favorites to top
             sortedLibrary = [...this.songLibrary].sort((a, b) => {
                 if (a.favorite !== b.favorite) {
                     return a.favorite ? -1 : 1;
                 }
-                return b.id - a.id; // Higher ID = added more recently
+                return 0; // Keep original order
             });
         }
         
@@ -885,7 +887,10 @@ renderSongLibrary() {
         this.elements.songLibrary.appendChild(fragment);
     } catch (error) {
         console.error("Error rendering song library:", error);
-       
+        this.elements.songLibrary.innerHTML =
+            '
+Failed to display song library
+';
     }
 }
   createSongElement(song) {
@@ -8176,7 +8181,7 @@ filterResults() {
     
     this.displaySearchResults(filteredArtists);
 }
-  handleLibrarySortToggle(event) {
+ handleLibrarySortToggle(event) {
     this.librarySortAlphabetically = event.target.checked;
     this.renderSongLibrary();
     this.saveSetting("librarySortAlphabetically", this.librarySortAlphabetically);
@@ -8193,9 +8198,19 @@ loadLibrarySortSetting() {
         if (this.elements.librarySortToggle) {
             this.elements.librarySortToggle.checked = this.librarySortAlphabetically;
         }
+        // Re-render library after loading setting
+        if (this.elements.songLibrary) {
+            this.renderSongLibrary();
+        }
+    };
+    
+    request.onerror = () => {
+        this.librarySortAlphabetically = true;
+        if (this.elements.librarySortToggle) {
+            this.elements.librarySortToggle.checked = true;
+        }
     };
 }
-
 
 
 
