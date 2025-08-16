@@ -757,7 +757,8 @@
     </div>
 </div>
     <!-- AI Song Generator Modal - Add after findSongsDiv -->
-<div id="aiGeneratorDiv" class="ai-generator-container" style="display: none;">
+<!-- AI Song Generator Modal - Add after findSongsDiv -->
+<div id="" class="ai-generator-container" style="display: none;">
     <div class="ai-generator-content">
         <div class="ai-generator-header">
             <div class="ai-generator-header-content">
@@ -776,6 +777,14 @@
             <div class="form-group">
                 <label for="aiSongCount">Number of Songs:</label>
                 <input type="number" id="aiSongCount" min="1" max="50" value="10" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="aiRequiredSongs">Required Songs (Optional):</label>
+                <input type="text" id="aiRequiredSongs" placeholder="Enter specific songs that must be included (comma-separated)">
+                <small style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 5px; display: block;">
+                    Example: Young black and rich, God's plan, Started from the bottom
+                </small>
             </div>
             
             <div class="ai-button-group">
