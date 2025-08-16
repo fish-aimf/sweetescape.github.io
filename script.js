@@ -8287,7 +8287,6 @@ loadLibraryReverseSetting() {
     };
 }
   openAiGenerator() {
-    this.elements.aiGeneratorDiv.style.display = "flex";
     
     // Pre-fill with search term from find songs modal
     const searchTerm = this.elements.findSongsSearch.value.trim();
