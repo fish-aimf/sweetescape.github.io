@@ -41,6 +41,11 @@ class AdvancedMusicPlayer {
     this.yourPicksDisplayLimit = 2;
     this.recentlyPlayedPlaylistsDisplayLimit = 1;
     this.visualizerEnabled = true;
+    //these keys are protected and only allowed use for sweetescape.vercel.app so dont even think of stealing
+    this.GEMINI_API_KEY = 'AIzaSyAGa1IpwVMUmNo-YH9JyWStpWprkpkhGWk';
+    this.YOUTUBE_API_KEY = 'AIzaSyDuU3N7J2vNI8aIj2O_jHFAna4ZflssgzU';
+    this.GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+    this.YOUTUBE_API_URL = 'https://www.googleapis.com/youtube/v3/search';
     this.supabase = null;
     this.allArtists = [];
     this.searchTimeout = null;
@@ -274,6 +279,17 @@ findSongsResults: document.getElementById("findSongsResults"),
       librarySortToggle: document.getElementById("librarySortToggle"),
       libraryReverseToggle: document.getElementById("libraryReverseToggle")
     };
+    this.elements.aiGeneratorDiv = document.getElementById("aiGeneratorDiv");
+    this.elements.closeAiGenerator = document.getElementById("closeAiGenerator");
+    this.elements.aiArtistName = document.getElementById("aiArtistName");
+    this.elements.aiSongCount = document.getElementById("aiSongCount");
+    this.elements.aiGenerateBtn = document.getElementById("aiGenerateBtn");
+    this.elements.aiCopyBtn = document.getElementById("aiCopyBtn");
+    this.elements.aiImportBtn = document.getElementById("aiImportBtn");
+    this.elements.aiOutputSection = document.getElementById("aiOutputSection");
+    this.elements.aiOutput = document.getElementById("aiOutput");
+    this.elements.openAiGeneratorBtn = document.getElementById("openAiGeneratorBtn");
+    this.elements.notFindingSection = document.getElementById("notFindingSection");
     if (this.elements.speedBtn) {
       this.elements.speedBtn.textContent = this.currentSpeed + "x";
     }
@@ -331,6 +347,26 @@ findSongsResults: document.getElementById("findSongsResults"),
     tabButtons.forEach(button => {
         button.addEventListener('click', (e) => this.handleTabSwitch(e));
     });
+
+
+
+
+
+    if (this.elements.openAiGeneratorBtn) {
+        this.elements.openAiGeneratorBtn.addEventListener("click", () => this.openAiGenerator());
+    }
+    if (this.elements.closeAiGenerator) {
+        this.elements.closeAiGenerator.addEventListener("click", () => this.closeAiGenerator());
+    }
+    if (this.elements.aiGenerateBtn) {
+        this.elements.aiGenerateBtn.addEventListener("click", () => this.generateAiSongs());
+    }
+    if (this.elements.aiCopyBtn) {
+        this.elements.aiCopyBtn.addEventListener("click", () => this.copyAiResults());
+    }
+    if (this.elements.aiImportBtn) {
+        this.elements.aiImportBtn.addEventListener("click", () => this.importAiResults());
+    }
     
     // Add visualizer toggle listener
     if (this.elements.visualizerToggle) {
@@ -8071,6 +8107,7 @@ closeFindSongs() {
 displaySearchResults(artists) {
     if (!artists || artists.length === 0) {
         this.elements.findSongsResults.innerHTML = '<div class="loading-spinner">No results found</div>';
+        this.elements.notFindingSection.style.display = "block";
         return;
     }
 
@@ -8101,7 +8138,11 @@ displaySearchResults(artists) {
             </div>
         `;
     }).join('');
+    
+    // Show the "not finding" section at the bottom
+    this.elements.notFindingSection.style.display = "block";
 }
+
 
 async viewAllSongs(artistId, artistName) {
     try {
@@ -8243,6 +8284,310 @@ loadLibraryReverseSetting() {
             this.elements.libraryReverseToggle.checked = false;
         }
     };
+}
+  openAiGenerator() {
+    this.elements.aiGeneratorDiv.style.display = "flex";
+    
+    // Pre-fill with search term from find songs modal
+    const searchTerm = this.elements.findSongsSearch.value.trim();
+    if (searchTerm) {
+        this.elements.aiArtistName.value = searchTerm;
+    }
+    
+    this.elements.aiArtistName.focus();
+}
+
+closeAiGenerator() {
+    this.elements.aiGeneratorDiv.style.display = "none";
+    this.elements.aiOutputSection.style.display = "none";
+    this.elements.aiOutput.innerHTML = "";
+    this.elements.aiCopyBtn.style.display = "none";
+    this.elements.aiImportBtn.style.display = "none";
+    this.currentAiResults = '';
+    this.removeAiMessages();
+}
+
+async generateAiSongs() {
+    const artist = this.elements.aiArtistName.value.trim();
+    const quantity = this.elements.aiSongCount.value;
+    const generateBtn = this.elements.aiGenerateBtn;
+    const outputContainer = this.elements.aiOutput;
+
+    if (!artist) {
+        this.showAiError('Please enter an artist name');
+        return;
+    }
+
+    if (!quantity || quantity < 1 || quantity > 50) {
+        this.showAiError('Please enter a valid number of songs (1-50)');
+        return;
+    }
+
+    generateBtn.disabled = true;
+    generateBtn.textContent = 'Generating...';
+    this.elements.aiCopyBtn.style.display = 'none';
+    this.elements.aiImportBtn.style.display = 'none';
+    this.elements.aiOutputSection.style.display = 'block';
+    outputContainer.innerHTML = '<div class="ai-loading">Getting song list from AI</div>';
+
+    try {
+        const songData = await this.getSongTitlesFromGemini(artist, quantity);
+        
+        outputContainer.innerHTML = '<div class="ai-loading">Searching YouTube for official videos</div>';
+        
+        const songsWithLinks = await this.searchYouTubeForSongs(songData, artist);
+        
+        const formattedOutput = songsWithLinks
+            .map(song => `${song.title},${song.url},${song.artist}`)
+            .join('\n');
+        
+        outputContainer.textContent = formattedOutput;
+        this.currentAiResults = formattedOutput;
+        this.elements.aiCopyBtn.style.display = 'inline-block';
+        this.elements.aiImportBtn.style.display = 'inline-block';
+        this.showAiSuccess(`Found ${songsWithLinks.length} songs with verified YouTube links!`);
+
+    } catch (error) {
+        console.error('Error:', error);
+        outputContainer.innerHTML = '';
+        this.elements.aiOutputSection.style.display = 'none';
+        this.showAiError(`Failed to generate song list: ${error.message}`);
+    } finally {
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate Song List';
+    }
+}
+
+async getSongTitlesFromGemini(author, quantity) {
+    const isSpecificArtist = !author.toLowerCase().includes('top') && 
+                            !author.toLowerCase().includes('best') && 
+                            !author.toLowerCase().includes('popular') &&
+                            !author.toLowerCase().includes('various') &&
+                            !author.toLowerCase().includes('playlist') &&
+                            !author.toLowerCase().includes('spotify') &&
+                            !author.toLowerCase().includes('songs in');
+
+    let prompt;
+    
+    if (isSpecificArtist) {
+        prompt = `List exactly ${quantity} popular songs by the artist "${author}". 
+
+REQUIREMENTS:
+- Only provide song titles, no YouTube links or URLs
+- Each song title on a separate line
+- First word capitalized, rest lowercase
+- No commas in song titles
+- No additional text, numbering, or formatting
+- Only songs actually performed by ${author}
+
+Example format:
+Shape of you
+Thinking out loud
+Perfect
+
+Provide exactly ${quantity} song titles by ${author}:`;
+    } else {
+        prompt = `Based on the query "${author}", list exactly ${quantity} songs that match this request.
+
+REQUIREMENTS:
+- Only provide song titles, no YouTube links or URLs
+- Each song title on a separate line
+- First word capitalized, rest lowercase
+- No commas in song titles
+- No additional text, numbering, or formatting
+- Include the actual artist name after each song title (format: "Song title by Artist name")
+
+Provide exactly ${quantity} songs for "${author}":`;
+    }
+
+    const response = await fetch(`${this.GEMINI_API_URL}?key=${this.GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            contents: [{
+                parts: [{ text: prompt }]
+            }],
+            generationConfig: {
+                temperature: 0.3
+            }
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error(`Gemini API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+        const result = data.candidates[0].content.parts[0].text;
+        const lines = result.split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0)
+            .slice(0, quantity);
+        
+        if (isSpecificArtist) {
+            return lines.map(title => ({ title, artist: author }));
+        } else {
+            return lines.map(line => {
+                const match = line.match(/^(.+?)\s+by\s+(.+)$/i);
+                if (match) {
+                    return {
+                        title: match[1].trim(),
+                        artist: match[2].trim()
+                    };
+                } else {
+                    return {
+                        title: line,
+                        artist: 'Unknown'
+                    };
+                }
+            });
+        }
+    } else {
+        throw new Error('No valid response from Gemini API');
+    }
+}
+
+async searchYouTubeForSongs(songData, authorQuery) {
+    const songsWithLinks = [];
+    
+    for (let i = 0; i < songData.length; i++) {
+        const { title, artist } = songData[i];
+        
+        try {
+            const outputContainer = this.elements.aiOutput;
+            outputContainer.innerHTML = `<div class="ai-loading">Searching YouTube for "${title}" by ${artist} (${i + 1}/${songData.length})</div>`;
+            
+            const searchQuery = `${title} ${artist} official`;
+            
+            const response = await fetch(
+                `${this.YOUTUBE_API_URL}?part=snippet&maxResults=3&q=${encodeURIComponent(searchQuery)}&type=video&key=${this.YOUTUBE_API_KEY}`
+            );
+            
+            if (!response.ok) {
+                console.error(`YouTube API error for "${title}":`, response.status);
+                continue;
+            }
+            
+            const data = await response.json();
+            
+            if (data.items && data.items.length > 0) {
+                const bestMatch = this.findBestYouTubeMatch(data.items, title, artist);
+                
+                if (bestMatch) {
+                    songsWithLinks.push({
+                        title: title,
+                        artist: artist,
+                        url: `https://www.youtube.com/watch?v=${bestMatch.id.videoId}`
+                    });
+                }
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+        } catch (error) {
+            console.error(`Error searching for "${title}":`, error);
+            continue;
+        }
+    }
+    
+    return songsWithLinks;
+}
+
+findBestYouTubeMatch(items, songTitle, artist) {
+    const scoredItems = items.map(item => {
+        const title = item.snippet.title.toLowerCase();
+        const channelTitle = item.snippet.channelTitle.toLowerCase();
+        
+        let score = 0;
+        
+        if (title.includes(songTitle.toLowerCase())) {
+            score += 10;
+        }
+        
+        if (title.includes(artist.toLowerCase())) {
+            score += 8;
+        }
+        
+        if (channelTitle.includes('vevo') || 
+            channelTitle.includes('official') || 
+            channelTitle.includes(artist.toLowerCase())) {
+            score += 15;
+        }
+        
+        if (channelTitle.includes(artist.toLowerCase())) {
+            score += 12;
+        }
+        
+        if (title.includes('official')) {
+            score += 5;
+        }
+        
+        if (title.includes('music video') || title.includes('official video')) {
+            score += 3;
+        }
+        
+        return { ...item, score };
+    });
+    
+    scoredItems.sort((a, b) => b.score - a.score);
+    
+    return scoredItems[0]?.score > 10 ? scoredItems[0] : null;
+}
+
+async copyAiResults() {
+    try {
+        await navigator.clipboard.writeText(this.currentAiResults);
+        this.showAiSuccess('Copied to clipboard!');
+    } catch (error) {
+        const textArea = document.createElement('textarea');
+        textArea.value = this.currentAiResults;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        this.showAiSuccess('Copied to clipboard!');
+    }
+}
+
+importAiResults() {
+    if (!this.currentAiResults) {
+        this.showAiError('No results to import');
+        return;
+    }
+    
+    const artistName = this.elements.aiArtistName.value.trim();
+    const playlistImportText = `${artistName}{\n${this.currentAiResults}\n}`;
+    
+    this.importLibrary(playlistImportText);
+    this.closeAiGenerator();
+    this.closeFindSongs();
+}
+
+showAiError(message) {
+    this.removeAiMessages();
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'ai-error';
+    errorDiv.textContent = message;
+    this.elements.aiGeneratorDiv.querySelector('.ai-generator-form').appendChild(errorDiv);
+    setTimeout(() => this.removeAiMessages(), 5000);
+}
+
+showAiSuccess(message) {
+    this.removeAiMessages();
+    const successDiv = document.createElement('div');
+    successDiv.className = 'ai-success';
+    successDiv.textContent = message;
+    this.elements.aiGeneratorDiv.querySelector('.ai-generator-form').appendChild(successDiv);
+    setTimeout(() => this.removeAiMessages(), 3000);
+}
+
+removeAiMessages() {
+    const messages = this.elements.aiGeneratorDiv.querySelectorAll('.ai-error, .ai-success');
+    messages.forEach(msg => msg.remove());
 }
 
 
