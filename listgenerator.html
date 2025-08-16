@@ -232,8 +232,10 @@
     </div>
 
     <script>
-        const API_KEY = 'AIzaSyAGa1IpwVMUmNo-YH9JyWStpWprkpkhGWk';
-        const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+        const GEMINI_API_KEY = 'AIzaSyAGa1IpwVMUmNo-YH9JyWStpWprkpkhGWk';
+        const YOUTUBE_API_KEY = 'AIzaSyDuU3N7J2vNI8aIj2O_jHFAna4ZflssgzU';
+        const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+        const YOUTUBE_API_URL = 'https://www.googleapis.com/youtube/v3/search';
 
         async function generateSongs() {
             const author = document.getElementById('author').value.trim();
@@ -253,73 +255,36 @@
                 return;
             }
 
+            if (YOUTUBE_API_KEY === 'YOUR_YOUTUBE_API_KEY_HERE') {
+                showError('Please add your YouTube API key to the code');
+                return;
+            }
+
             // Show loading state
             generateBtn.disabled = true;
             generateBtn.textContent = 'Generating...';
             copyBtn.style.display = 'none';
             outputContainer.style.display = 'block';
-            outputContainer.innerHTML = '<div class="loading">Generating song list</div>';
+            outputContainer.innerHTML = '<div class="loading">Getting song list from AI</div>';
             outputContainer.parentElement.style.display = 'block';
 
-            // Prepare the prompt
-            const prompt = `You are a music expert with access to current YouTube data. Your task is to find EXACTLY ${quantity} popular songs by "${author}" with their correct official YouTube video links.
-
-MANDATORY PROCESS FOR EACH SONG:
-1. Think of a popular song by ${author}
-2. Search YouTube for the OFFICIAL music video of that exact song by ${author}
-3. Verify the video title contains both the song name AND "${author}"
-4. Verify the channel is official (artist's channel, VEVO, or major label)
-5. Cross-check the video ID matches the actual song
-
-STRICT OUTPUT FORMAT (comma-separated, one line per song):
-Song title,https://www.youtube.com/watch?v=EXACT_VIDEO_ID,${author}
-
-CRITICAL RULES:
-- Song titles: First word capitalized, rest lowercase, NO commas allowed
-- YouTube URLs must be 100% accurate - DO NOT FABRICATE video IDs
-- Each URL must lead to the correct song by ${author}, not a different artist or song
-- If you cannot verify a YouTube link is correct, DO NOT include that song
-- Use only official channels: ${author}VEVO, ${author} official, or verified music channels
-- Double-check each video ID corresponds to the right song
-- NO placeholder or estimated URLs - only confirmed working links
-
-VERIFICATION STEP: Before finalizing, mentally confirm each YouTube link goes to the correct song by ${author}.
-
-Examples of correct format:
-Bohemian rhapsody,https://www.youtube.com/watch?v=fJ9rUzIMcZQ,Queen
-Hotel california,https://www.youtube.com/watch?v=09839DpTctU,Eagles
-
-Now provide exactly ${quantity} verified songs by ${author}:`;
-
             try {
-                const response = await fetch(`${API_URL}?key=${API_KEY}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: prompt
-                            }]
-                        }]
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
+                // Step 1: Get song titles from Gemini (no YouTube links)
+                const songTitles = await getSongTitlesFromGemini(author, quantity);
                 
-                if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-                    const result = data.candidates[0].content.parts[0].text;
-                    outputContainer.textContent = result;
-                    copyBtn.style.display = 'block';
-                    showSuccess('Song list generated successfully!');
-                } else {
-                    throw new Error('No valid response from API');
-                }
+                outputContainer.innerHTML = '<div class="loading">Searching YouTube for official videos</div>';
+                
+                // Step 2: Search YouTube for each song
+                const songsWithLinks = await searchYouTubeForSongs(songTitles, author);
+                
+                // Step 3: Format and display results
+                const formattedOutput = songsWithLinks
+                    .map(song => `${song.title},${song.url},${author}`)
+                    .join('\n');
+                
+                outputContainer.textContent = formattedOutput;
+                copyBtn.style.display = 'block';
+                showSuccess(`Found ${songsWithLinks.length} songs with verified YouTube links!`);
 
             } catch (error) {
                 console.error('Error:', error);
@@ -330,6 +295,155 @@ Now provide exactly ${quantity} verified songs by ${author}:`;
                 generateBtn.disabled = false;
                 generateBtn.textContent = 'Generate Song List';
             }
+        }
+
+        async function getSongTitlesFromGemini(author, quantity) {
+            const prompt = `List exactly ${quantity} popular songs by the artist "${author}". 
+
+REQUIREMENTS:
+- Only provide song titles, no YouTube links or URLs
+- Each song title on a separate line
+- First word capitalized, rest lowercase
+- No commas in song titles
+- No additional text, numbering, or formatting
+- Only songs actually performed by ${author}
+
+Example format:
+Shape of you
+Thinking out loud
+Perfect
+
+Provide exactly ${quantity} song titles by ${author}:`;
+
+            const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: prompt }]
+                    }],
+                    generationConfig: {
+                        temperature: 0.3  // Lower temperature for more consistent results
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Gemini API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+                const result = data.candidates[0].content.parts[0].text;
+                return result.split('\n')
+                    .map(title => title.trim())
+                    .filter(title => title.length > 0)
+                    .slice(0, quantity); // Ensure we don't exceed requested quantity
+            } else {
+                throw new Error('No valid response from Gemini API');
+            }
+        }
+
+        async function searchYouTubeForSongs(songTitles, author) {
+            const songsWithLinks = [];
+            
+            for (let i = 0; i < songTitles.length; i++) {
+                const title = songTitles[i];
+                
+                try {
+                    // Update loading message
+                    const outputContainer = document.getElementById('output');
+                    outputContainer.innerHTML = `<div class="loading">Searching YouTube for "${title}" (${i + 1}/${songTitles.length})</div>`;
+                    
+                    const searchQuery = `${title} ${author} official`;
+                    
+                    const response = await fetch(
+                        `${YOUTUBE_API_URL}?part=snippet&maxResults=3&q=${encodeURIComponent(searchQuery)}&type=video&key=${YOUTUBE_API_KEY}`
+                    );
+                    
+                    if (!response.ok) {
+                        console.error(`YouTube API error for "${title}":`, response.status);
+                        continue;
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.items && data.items.length > 0) {
+                        // Find the best match (preferably official or VEVO)
+                        const bestMatch = findBestYouTubeMatch(data.items, title, author);
+                        
+                        if (bestMatch) {
+                            songsWithLinks.push({
+                                title: title,
+                                url: `https://www.youtube.com/watch?v=${bestMatch.id.videoId}`
+                            });
+                        }
+                    }
+                    
+                    // Small delay to avoid rate limiting
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                } catch (error) {
+                    console.error(`Error searching for "${title}":`, error);
+                    continue;
+                }
+            }
+            
+            return songsWithLinks;
+        }
+
+        function findBestYouTubeMatch(items, songTitle, author) {
+            // Score each video based on relevance
+            const scoredItems = items.map(item => {
+                const title = item.snippet.title.toLowerCase();
+                const channelTitle = item.snippet.channelTitle.toLowerCase();
+                const description = (item.snippet.description || '').toLowerCase();
+                
+                let score = 0;
+                
+                // Check if song title appears in video title
+                if (title.includes(songTitle.toLowerCase())) {
+                    score += 10;
+                }
+                
+                // Check if artist appears in video title
+                if (title.includes(author.toLowerCase())) {
+                    score += 8;
+                }
+                
+                // Prefer official channels
+                if (channelTitle.includes('vevo') || 
+                    channelTitle.includes('official') || 
+                    channelTitle.includes(author.toLowerCase())) {
+                    score += 15;
+                }
+                
+                // Check channel title for artist name
+                if (channelTitle.includes(author.toLowerCase())) {
+                    score += 12;
+                }
+                
+                // Prefer videos with "official" in title
+                if (title.includes('official')) {
+                    score += 5;
+                }
+                
+                // Prefer music videos
+                if (title.includes('music video') || title.includes('official video')) {
+                    score += 3;
+                }
+                
+                return { ...item, score };
+            });
+            
+            // Sort by score and return the best match
+            scoredItems.sort((a, b) => b.score - a.score);
+            
+            // Only return if score is reasonable (above 10)
+            return scoredItems[0]?.score > 10 ? scoredItems[0] : null;
         }
 
         async function copyOutput() {
