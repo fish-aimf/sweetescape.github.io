@@ -240,3 +240,4 @@
 - added some new playlists v32.7.0
 - might not be able to make big changes due to being very busy, in the meantime ill add some playlists v32.7.0
 - added some music artists v32.7.1
+- added new setting: sort library by time added/ alphabetical order. v33.0.0
