@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Songs Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .form-section {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1rem;
+        }
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .generate-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .generate-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .copy-btn {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            display: none;
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .output-section {
+            padding: 0 40px 40px;
+        }
+
+        .output-container {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            min-height: 200px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            display: none;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid #667eea;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            margin-left: 10px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            color: #e74c3c;
+            background: #fdf2f2;
+            border: 1px solid #fecaca;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .success {
+            color: #27ae60;
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .form-section, .output-section {
+                padding: 20px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 Top Songs Generator</h1>
+            <p>Generate a list of top songs by any artist using AI</p>
+        </div>
+        
+        <div class="form-section">
+            <div class="form-group">
+                <label for="author">Artist Name:</label>
+                <input type="text" id="author" placeholder="Enter artist name (e.g., Taylor Swift, The Beatles)" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="quantity">Number of Songs:</label>
+                <input type="number" id="quantity" min="1" max="50" value="10" required>
+            </div>
+            
+            <div class="button-group">
+                <button class="generate-btn" onclick="generateSongs()">Generate Song List</button>
+                <button class="copy-btn" onclick="copyOutput()">Copy to Clipboard</button>
+            </div>
+        </div>
+        
+        <div class="output-section">
+            <div class="output-container" id="output"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = 'AIzaSyAGa1IpwVMUmNo-YH9JyWStpWprkpkhGWk';
+        const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+        async function generateSongs() {
+            const author = document.getElementById('author').value.trim();
+            const quantity = document.getElementById('quantity').value;
+            const generateBtn = document.querySelector('.generate-btn');
+            const copyBtn = document.querySelector('.copy-btn');
+            const outputContainer = document.getElementById('output');
+
+            // Validation
+            if (!author) {
+                showError('Please enter an artist name');
+                return;
+            }
+
+            if (!quantity || quantity < 1 || quantity > 50) {
+                showError('Please enter a valid number of songs (1-50)');
+                return;
+            }
+
+            // Show loading state
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Generating...';
+            copyBtn.style.display = 'none';
+            outputContainer.style.display = 'block';
+            outputContainer.innerHTML = '<div class="loading">Generating song list</div>';
+            outputContainer.parentElement.style.display = 'block';
+
+            // Prepare the prompt
+            const prompt = `Provide a list of the top ${quantity} songs by ${author}. Each song must be on a new line, and each field must be separated by newline. The fields should be in this exact order: \`Name\`, \`youtube url\`, \`author\`. search on youtube and Only use official YouTube video links that are real and working. Ensure the song titles do not contain commas. Do not include any additional conversational text.`;
+
+            try {
+                const response = await fetch(`${API_URL}?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+                    const result = data.candidates[0].content.parts[0].text;
+                    outputContainer.textContent = result;
+                    copyBtn.style.display = 'block';
+                    showSuccess('Song list generated successfully!');
+                } else {
+                    throw new Error('No valid response from API');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                outputContainer.innerHTML = '';
+                outputContainer.style.display = 'none';
+                showError(`Failed to generate song list: ${error.message}`);
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = 'Generate Song List';
+            }
+        }
+
+        async function copyOutput() {
+            const outputContainer = document.getElementById('output');
+            const text = outputContainer.textContent;
+
+            try {
+                await navigator.clipboard.writeText(text);
+                showSuccess('Copied to clipboard!');
+            } catch (error) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showSuccess('Copied to clipboard!');
+            }
+        }
+
+        function showError(message) {
+            removeMessages();
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            document.querySelector('.form-section').appendChild(errorDiv);
+            setTimeout(removeMessages, 5000);
+        }
+
+        function showSuccess(message) {
+            removeMessages();
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = message;
+            document.querySelector('.form-section').appendChild(successDiv);
+            setTimeout(removeMessages, 3000);
+        }
+
+        function removeMessages() {
+            const messages = document.querySelectorAll('.error, .success');
+            messages.forEach(msg => msg.remove());
+        }
+
+        // Allow Enter key to trigger generation
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !document.querySelector('.generate-btn').disabled) {
+                generateSongs();
+            }
+        });
+    </script>
+</body>
+</html>
