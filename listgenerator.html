@@ -262,26 +262,34 @@
             outputContainer.parentElement.style.display = 'block';
 
             // Prepare the prompt
-            const prompt = `You are a music database expert. Provide EXACTLY ${quantity} songs by the artist "${author}". 
+            const prompt = `You are a music expert with access to current YouTube data. Your task is to find EXACTLY ${quantity} popular songs by "${author}" with their correct official YouTube video links.
 
-CRITICAL REQUIREMENTS:
-1. ONLY include songs that are actually performed by ${author} - verify each song is genuinely by this artist
-2. Each song must be formatted as: "Song title,https://www.youtube.com/watch?v=VIDEO_ID,${author}" (all on ONE line, comma-separated)
-3. Song titles: First word capitalized, rest lowercase, NO commas in titles
-4. YouTube links MUST be real, working, official videos - use ONLY verified official channels or VEVO channels
-5. Before including any YouTube link, mentally verify it matches the exact song and artist
-6. Do NOT guess or create fake YouTube URLs - only use links you are confident exist
-7. If you cannot find an official YouTube link for a song, skip that song and choose a different one
-8. The artist name should be exactly: ${author}
-9. Each song on a separate line, no blank lines, no numbering, no additional text
+MANDATORY PROCESS FOR EACH SONG:
+1. Think of a popular song by ${author}
+2. Search YouTube for the OFFICIAL music video of that exact song by ${author}
+3. Verify the video title contains both the song name AND "${author}"
+4. Verify the channel is official (artist's channel, VEVO, or major label)
+5. Cross-check the video ID matches the actual song
 
-DOUBLE-CHECK: Each YouTube URL must lead to the correct song by ${author}. Do not hallucinate links. If unsure about a link, don't include that song.
+STRICT OUTPUT FORMAT (comma-separated, one line per song):
+Song title,https://www.youtube.com/watch?v=EXACT_VIDEO_ID,${author}
 
-Format example:
-Shake it off,https://www.youtube.com/watch?v=nfWlot6h_JM,Taylor swift
-Bad blood,https://www.youtube.com/watch?v=QcIy9NiNbmo,Taylor swift
+CRITICAL RULES:
+- Song titles: First word capitalized, rest lowercase, NO commas allowed
+- YouTube URLs must be 100% accurate - DO NOT FABRICATE video IDs
+- Each URL must lead to the correct song by ${author}, not a different artist or song
+- If you cannot verify a YouTube link is correct, DO NOT include that song
+- Use only official channels: ${author}VEVO, ${author} official, or verified music channels
+- Double-check each video ID corresponds to the right song
+- NO placeholder or estimated URLs - only confirmed working links
 
-Provide exactly ${quantity} songs now:`;
+VERIFICATION STEP: Before finalizing, mentally confirm each YouTube link goes to the correct song by ${author}.
+
+Examples of correct format:
+Bohemian rhapsody,https://www.youtube.com/watch?v=fJ9rUzIMcZQ,Queen
+Hotel california,https://www.youtube.com/watch?v=09839DpTctU,Eagles
+
+Now provide exactly ${quantity} verified songs by ${author}:`;
 
             try {
                 const response = await fetch(`${API_URL}?key=${API_KEY}`, {
