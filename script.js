@@ -121,7 +121,8 @@ class AdvancedMusicPlayer {
           this.loadDiscoverMoreSettingsOnStartup(),
           this.loadVisualizerSettings(),
           
-          this.loadLibrarySortSetting()
+          this.loadLibrarySortSetting(),
+          this.loadLibraryReverseSetting()
         ]);
       })
       .then(() => {
@@ -140,7 +141,7 @@ class AdvancedMusicPlayer {
         this.initializeFullscreenLyrics();
         this.initializeAdvertisementSettings();
   
-        this.initializeVisualizer(); // Initialize but don't start
+        this.initializeVisualizer(); 
         this.loadVisualizerSettings();
       })
       .catch((error) => {
@@ -271,6 +272,7 @@ findSongsDiv: document.getElementById("findSongsDiv"),
 findSongsSearch: document.getElementById("findSongsSearch"),
 findSongsResults: document.getElementById("findSongsResults"),
       librarySortToggle: document.getElementById("librarySortToggle"),
+      libraryReverseToggle: document.getElementById("libraryReverseToggle")
     };
     if (this.elements.speedBtn) {
       this.elements.speedBtn.textContent = this.currentSpeed + "x";
@@ -443,6 +445,7 @@ this.elements.closeFindSongs?.addEventListener("click", this.closeFindSongs.bind
       [this.elements.toggleControlBarBtn, "click", this.handleToggleControlBar],
       [this.elements.discordButton, "click", this.handleDiscordClick],
       [this.elements.librarySortToggle, "change", this.handleLibrarySortToggle.bind(this)],
+      [this.elements.libraryReverseToggle, "change", this.handleLibraryReverseToggle.bind(this)]
     ];
     eventBindings.forEach(([element, event, handler]) => {
       if (element) {
@@ -845,20 +848,21 @@ renderSongLibrary() {
         
         let sortedLibrary;
         if (this.librarySortAlphabetically !== false) {
-            // Alphabetical sorting (current behavior)
+            // Alphabetical sorting
             sortedLibrary = [...this.songLibrary].sort((a, b) => {
                 if (a.favorite !== b.favorite) {
                     return a.favorite ? -1 : 1;
                 }
-                return a.name.localeCompare(b.name);
+                const result = a.name.localeCompare(b.name);
+                return this.libraryReverseOrder ? -result : result;
             });
         } else {
-            // Use natural order (time added) - just move favorites to top
+            // Natural order (time added)
             sortedLibrary = [...this.songLibrary].sort((a, b) => {
                 if (a.favorite !== b.favorite) {
                     return a.favorite ? -1 : 1;
                 }
-                return 0; // Keep original order
+                return this.libraryReverseOrder ? -1 : 0;
             });
         }
         
@@ -889,7 +893,7 @@ renderSongLibrary() {
     } catch (error) {
         console.error("Error rendering song library:", error);
         this.elements.songLibrary.innerHTML =
-          'Failed to display song library';
+            '<div class="error-message">Failed to display song library</div>';
     }
 }
   createSongElement(song) {
@@ -6584,6 +6588,7 @@ initializeSettingsContent() {
     this.setupTabs();
     this.loadDiscoverMoreSettings();
   this.loadLibrarySortSetting();
+  this.loadLibraryReverseSetting();
     console.log("Settings modal opened - all settings loaded");
 }
 
@@ -8207,6 +8212,35 @@ loadLibrarySortSetting() {
         this.librarySortAlphabetically = true;
         if (this.elements.librarySortToggle) {
             this.elements.librarySortToggle.checked = true;
+        }
+    };
+}
+  handleLibraryReverseToggle(event) {
+    this.libraryReverseOrder = event.target.checked;
+    this.renderSongLibrary();
+    this.saveSetting("libraryReverseOrder", this.libraryReverseOrder);
+}
+
+loadLibraryReverseSetting() {
+    if (!this.db) return;
+    const transaction = this.db.transaction(["settings"], "readonly");
+    const store = transaction.objectStore("settings");
+    const request = store.get("libraryReverseOrder");
+    
+    request.onsuccess = () => {
+        this.libraryReverseOrder = request.result ? request.result.value : false;
+        if (this.elements.libraryReverseToggle) {
+            this.elements.libraryReverseToggle.checked = this.libraryReverseOrder;
+        }
+        if (this.elements.songLibrary) {
+            this.renderSongLibrary();
+        }
+    };
+    
+    request.onerror = () => {
+        this.libraryReverseOrder = false;
+        if (this.elements.libraryReverseToggle) {
+            this.elements.libraryReverseToggle.checked = false;
         }
     };
 }
