@@ -262,7 +262,26 @@
             outputContainer.parentElement.style.display = 'block';
 
             // Prepare the prompt
-            const prompt = `Provide a list of the top ${quantity} songs by ${author}. Each song must be on a new line, and each field must be separated by newline. The fields should be in this exact order: \`Name\`, \`youtube url\`, \`author\`. with each field seperated by a comma and in the same line. You are to make only the first word uppercase and the rest lowercase.  search on youtube and Only use official YouTube video links that are real and working. The links must be real and ensure they are still working. you are not to hallucinate fake links to videos that are taken down. Use search functions to find working links. Ensure the song titles do not contain commas. Do not include any additional conversational text. `;
+            const prompt = `You are a music database expert. Provide EXACTLY ${quantity} songs by the artist "${author}". 
+
+CRITICAL REQUIREMENTS:
+1. ONLY include songs that are actually performed by ${author} - verify each song is genuinely by this artist
+2. Each song must be formatted as: "Song title,https://www.youtube.com/watch?v=VIDEO_ID,${author}" (all on ONE line, comma-separated)
+3. Song titles: First word capitalized, rest lowercase, NO commas in titles
+4. YouTube links MUST be real, working, official videos - use ONLY verified official channels or VEVO channels
+5. Before including any YouTube link, mentally verify it matches the exact song and artist
+6. Do NOT guess or create fake YouTube URLs - only use links you are confident exist
+7. If you cannot find an official YouTube link for a song, skip that song and choose a different one
+8. The artist name should be exactly: ${author}
+9. Each song on a separate line, no blank lines, no numbering, no additional text
+
+DOUBLE-CHECK: Each YouTube URL must lead to the correct song by ${author}. Do not hallucinate links. If unsure about a link, don't include that song.
+
+Format example:
+Shake it off,https://www.youtube.com/watch?v=nfWlot6h_JM,Taylor swift
+Bad blood,https://www.youtube.com/watch?v=QcIy9NiNbmo,Taylor swift
+
+Provide exactly ${quantity} songs now:`;
 
             try {
                 const response = await fetch(`${API_URL}?key=${API_KEY}`, {
