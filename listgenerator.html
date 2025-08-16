@@ -262,7 +262,7 @@
             outputContainer.parentElement.style.display = 'block';
 
             // Prepare the prompt
-            const prompt = `Provide a list of the top ${quantity} songs by ${author}. Each song must be on a new line, and each field must be separated by newline. The fields should be in this exact order: \`Name\`, \`youtube url\`, \`author\`. search on youtube and Only use official YouTube video links that are real and working. Ensure the song titles do not contain commas. Do not include any additional conversational text.`;
+            const prompt = `Provide a list of the top ${quantity} songs by ${author}. Each song must be on a new line, and each field must be separated by newline. The fields should be in this exact order: \`Name\`, \`youtube url\`, \`author\`. with each field seperated by a comma and in the same line. You are to make only the first word uppercase and the rest lowercase.  search on youtube and Only use official YouTube video links that are real and working. The links must be real and ensure they are still working. you are not to hallucinate fake links to videos that are taken down. Use search functions to find working links. Ensure the song titles do not contain commas. Do not include any additional conversational text. `;
 
             try {
                 const response = await fetch(`${API_URL}?key=${API_KEY}`, {
