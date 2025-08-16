@@ -251,4 +251,5 @@
 - added required songs. v34.1.0
 - added regenerate songs v34.2.0
 - made it make playlist v34.3.0
+- added 6 youtube api keys and logic to cycle through when limits are up to ensure that service is always avalible. 
 - AI enabled playlist generator to search the web and return urls and playlists based on your prompt v34.3.0
