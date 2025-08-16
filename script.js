@@ -43,7 +43,7 @@ class AdvancedMusicPlayer {
     this.visualizerEnabled = true;
     //these keys are protected and only allowed use for sweetescape.vercel.app so dont even think of stealing
     this.GEMINI_API_KEY = 'AIzaSyAGa1IpwVMUmNo-YH9JyWStpWprkpkhGWk';
-    this.YOUTUBE_API_KEY = 'AIzaSyDuU3N7J2vNI8aIj2O_jHFAna4ZflssgzU';
+    this.YOUTUBE_API_KEY = 'AIzaSyDPT2lmIab9DPC-ltZh4sWrlhapwp0mgTA';
     this.GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
     this.YOUTUBE_API_URL = 'https://www.googleapis.com/youtube/v3/search';
     this.supabase = null;
