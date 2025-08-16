@@ -8378,7 +8378,7 @@ async generateAiSongs() {
         this.showAiError(`Failed to generate song list: ${error.message}`);
     } finally {
         generateBtn.disabled = false;
-        generateBtn.textContent = 'Generate Song List';
+        generateBtn.textContent = 'Regenerate Song List';
     }
 }
 async getSongTitlesFromGemini(author, quantity) {
