@@ -241,4 +241,14 @@
 - might not be able to make big changes due to being very busy, in the meantime ill add some playlists v32.7.0
 - added some music artists v32.7.1
 - added new setting: sort library by time added/ alphabetical order. v33.0.0
-- added reverse library. v33.1.0
+- added reverse library button in setting new setting. v33.1.0
+- AI enabled playlist generator and more in find more section v34.0.0
+- AI automatically listens to prompts and generate a list of youtube url and made easy import of the songs you want.
+- Choose how many, what author, and what songs required to be included.
+- very reliable for large artists, less reliable for small authors.
+- allow copy and paste and import.
+- changed styles a bit. v34.0.1
+- added required songs. v34.1.0
+- added regenerate songs v34.2.0
+- made it make playlist v34.3.0
+- AI enabled playlist generator to search the web and return urls and playlists based on your prompt v34.3.0
