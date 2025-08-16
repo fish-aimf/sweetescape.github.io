@@ -438,7 +438,8 @@ this.elements.closeFindSongs?.addEventListener("click", this.closeFindSongs.bind
       [this.elements.progressBar, "click", this.handleSeekMusic],
       [this.elements.currentSongName, "contextmenu", this.handleSongNameRightClick],
       [this.elements.toggleControlBarBtn, "click", this.handleToggleControlBar],
-      [this.elements.discordButton, "click", this.handleDiscordClick]
+      [this.elements.discordButton, "click", this.handleDiscordClick],
+      [this.elements.librarySortToggle, "change", this.handleLibrarySortToggle.bind(this)]
     ];
     eventBindings.forEach(([element, event, handler]) => {
       if (element) {
@@ -837,43 +838,59 @@ handleTouchEnd(e) {
   }
 renderSongLibrary() {
     try {
-      if (!this.elements.songLibrary) return;
-      const sortedLibrary = [...this.songLibrary].sort((a, b) => {
-        if (a.favorite !== b.favorite) {
-          return a.favorite ? -1 : 1;
+        if (!this.elements.songLibrary) return;
+        
+        let sortedLibrary;
+        if (this.librarySortAlphabetically !== false) {
+            // Alphabetical sorting (current behavior)
+            sortedLibrary = [...this.songLibrary].sort((a, b) => {
+                if (a.favorite !== b.favorite) {
+                    return a.favorite ? -1 : 1;
+                }
+                return a.name.localeCompare(b.name);
+            });
+        } else {
+            // Original order (by ID - which is chronological)
+            sortedLibrary = [...this.songLibrary].sort((a, b) => {
+                if (a.favorite !== b.favorite) {
+                    return a.favorite ? -1 : 1;
+                }
+                return a.id - b.id; // Lower ID = added first
+            });
         }
-        return a.name.localeCompare(b.name);
-      });
-      const fragment = document.createDocumentFragment();
-      if (sortedLibrary.length === 0) {
-        const emptyMessage = document.createElement("div");
-        emptyMessage.classList.add("empty-library-message");
-        emptyMessage.textContent = "Your library is empty.";
         
-        const addSongsButton = document.createElement("button");
-        addSongsButton.classList.add("add-songs-button");
-        addSongsButton.textContent = "Add Songs";
-        addSongsButton.addEventListener("click", () => {
-          this.openFindSongs();
-        });
-        
-        emptyMessage.appendChild(document.createElement("br"));
-        emptyMessage.appendChild(addSongsButton);
-        fragment.appendChild(emptyMessage);
-      } else {
-        sortedLibrary.forEach((song) => {
-          const songElement = this.createSongElement(song);
-          fragment.appendChild(songElement);
-        });
-      }
-      this.elements.songLibrary.innerHTML = "";
-      this.elements.songLibrary.appendChild(fragment);
+        const fragment = document.createDocumentFragment();
+        if (sortedLibrary.length === 0) {
+            const emptyMessage = document.createElement("div");
+            emptyMessage.classList.add("empty-library-message");
+            emptyMessage.textContent = "Your library is empty.";
+            
+            const addSongsButton = document.createElement("button");
+            addSongsButton.classList.add("add-songs-button");
+            addSongsButton.textContent = "Add Songs";
+            addSongsButton.addEventListener("click", () => {
+                this.openFindSongs();
+            });
+            
+            emptyMessage.appendChild(document.createElement("br"));
+            emptyMessage.appendChild(addSongsButton);
+            fragment.appendChild(emptyMessage);
+        } else {
+            sortedLibrary.forEach((song) => {
+                const songElement = this.createSongElement(song);
+                fragment.appendChild(songElement);
+            });
+        }
+        this.elements.songLibrary.innerHTML = "";
+        this.elements.songLibrary.appendChild(fragment);
     } catch (error) {
-      console.error("Error rendering song library:", error);
-      this.elements.songLibrary.innerHTML =
-        '<div class="error-message">Failed to display song library</div>';
+        console.error("Error rendering song library:", error);
+        this.elements.songLibrary.innerHTML =
+            '
+Failed to display song library
+';
     }
-  }
+}
   createSongElement(song) {
     const songElement = document.createElement("div");
     songElement.classList.add("song-item");
@@ -6565,6 +6582,7 @@ initializeSettingsContent() {
     this.loadAdvertisementSettingsInModal(); 
     this.setupTabs();
     this.loadDiscoverMoreSettings();
+  this.loadLibrarySortSetting();
     console.log("Settings modal opened - all settings loaded");
 }
 
@@ -8160,6 +8178,25 @@ filterResults() {
     );
     
     this.displaySearchResults(filteredArtists);
+}
+  handleLibrarySortToggle(event) {
+    this.librarySortAlphabetically = event.target.checked;
+    this.renderSongLibrary();
+    this.saveSetting("librarySortAlphabetically", this.librarySortAlphabetically);
+}
+
+loadLibrarySortSetting() {
+    if (!this.db) return;
+    const transaction = this.db.transaction(["settings"], "readonly");
+    const store = transaction.objectStore("settings");
+    const request = store.get("librarySortAlphabetically");
+    
+    request.onsuccess = () => {
+        this.librarySortAlphabetically = request.result ? request.result.value : true;
+        if (this.elements.librarySortToggle) {
+            this.elements.librarySortToggle.checked = this.librarySortAlphabetically;
+        }
+    };
 }
 
 
