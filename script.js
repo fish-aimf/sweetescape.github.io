@@ -889,9 +889,7 @@ renderSongLibrary() {
     } catch (error) {
         console.error("Error rendering song library:", error);
         this.elements.songLibrary.innerHTML =
-            '
-Failed to display song library
-';
+          'Failed to display song library';
     }
 }
   createSongElement(song) {
