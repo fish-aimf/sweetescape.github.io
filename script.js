@@ -8359,7 +8359,6 @@ async generateAiSongs() {
         generateBtn.textContent = 'Generate Song List';
     }
 }
-
 async getSongTitlesFromGemini(author, quantity) {
     const requiredSongs = this.elements.aiRequiredSongs.value.trim();
     const requiredSongsList = requiredSongs ? requiredSongs.split(',').map(s => s.trim()).filter(s => s) : [];
@@ -8375,42 +8374,40 @@ async getSongTitlesFromGemini(author, quantity) {
     let prompt;
     
     if (isSpecificArtist) {
-        prompt = `List exactly ${quantity} popular songs by the artist "${author}". 
+        prompt = `You are a music database. List ONLY real, existing songs by the artist "${author}". 
 
-${requiredSongsList.length > 0 ? `REQUIRED SONGS THAT MUST BE INCLUDED:
+${requiredSongsList.length > 0 ? `First, include these specific songs if they are real songs by ${author}:
 ${requiredSongsList.map(song => `- ${song}`).join('\n')}
 
-` : ''}REQUIREMENTS:
-- Only provide song titles, no YouTube links or URLs
+Then add more songs to reach exactly ${quantity} total songs.
+
+` : ''}STRICT REQUIREMENTS:
+- ONLY list songs that actually exist and were performed by ${author}
+- NO made-up or fictional song titles
 - Each song title on a separate line
-- First word capitalized, rest lowercase
+- No numbering, bullets, or extra formatting
 - No commas in song titles
-- No additional text, numbering, or formatting
-- Only songs actually performed by ${author}
-${requiredSongsList.length > 0 ? `- MUST include all the required songs listed above` : ''}
+- Exactly ${quantity} songs total
 
-Example format:
-Shape of you
-Thinking out loud
-Perfect
-
-Provide exactly ${quantity} song titles by ${author}:`;
+Real songs by ${author}:`;
     } else {
-        prompt = `Based on the query "${author}", list exactly ${quantity} songs that match this request.
+        prompt = `You are a music database. Based on the query "${author}", list exactly ${quantity} real, existing songs.
 
-${requiredSongsList.length > 0 ? `REQUIRED SONGS THAT MUST BE INCLUDED:
+${requiredSongsList.length > 0 ? `First, include these specific songs if they match the query:
 ${requiredSongsList.map(song => `- ${song}`).join('\n')}
 
-` : ''}REQUIREMENTS:
-- Only provide song titles, no YouTube links or URLs
-- Each song title on a separate line
-- First word capitalized, rest lowercase
-- No commas in song titles
-- No additional text, numbering, or formatting
-- Include the actual artist name after each song title (format: "Song title by Artist name")
-${requiredSongsList.length > 0 ? `- MUST include all the required songs listed above with their respective artists` : ''}
+Then add more songs to reach exactly ${quantity} total songs.
 
-Provide exactly ${quantity} songs for "${author}":`;
+` : ''}STRICT REQUIREMENTS:
+- ONLY list songs that actually exist
+- NO made-up or fictional song titles
+- Format: "Song title by Artist name"
+- Each on a separate line
+- No numbering, bullets, or extra formatting
+- No commas in song titles
+- Exactly ${quantity} songs total
+
+Real songs for "${author}":`;
     }
 
     const response = await fetch(`${this.GEMINI_API_URL}?key=${this.GEMINI_API_KEY}`, {
@@ -8423,7 +8420,10 @@ Provide exactly ${quantity} songs for "${author}":`;
                 parts: [{ text: prompt }]
             }],
             generationConfig: {
-                temperature: 0.3
+                temperature: 0.1, // Lower temperature for more accurate results
+                maxOutputTokens: 1000,
+                topP: 0.8,
+                topK: 10
             }
         })
     });
@@ -8438,7 +8438,7 @@ Provide exactly ${quantity} songs for "${author}":`;
         const result = data.candidates[0].content.parts[0].text;
         const lines = result.split('\n')
             .map(line => line.trim())
-            .filter(line => line.length > 0)
+            .filter(line => line.length > 0 && !line.match(/^\d+\./) && !line.startsWith('-') && !line.startsWith('*'))
             .slice(0, quantity);
         
         if (isSpecificArtist) {
@@ -8463,9 +8463,9 @@ Provide exactly ${quantity} songs for "${author}":`;
         throw new Error('No valid response from Gemini API');
     }
 }
-
 async searchYouTubeForSongs(songData, authorQuery) {
     const songsWithLinks = [];
+    const usedVideoIds = new Set(); // Track used video IDs to prevent duplicates
     
     for (let i = 0; i < songData.length; i++) {
         const { title, artist } = songData[i];
@@ -8474,98 +8474,161 @@ async searchYouTubeForSongs(songData, authorQuery) {
             const outputContainer = this.elements.aiOutput;
             outputContainer.innerHTML = `<div class="ai-loading">Searching YouTube for "${title}" by ${artist} (${i + 1}/${songData.length})</div>`;
             
-            const searchQuery = `${title} ${artist} official`;
+            // Try multiple search strategies
+            const searchQueries = [
+                `"${title}" "${artist}"`, // Exact match first
+                `${title} ${artist} official`,
+                `${title} ${artist}`,
+                `${artist} ${title}`
+            ];
             
-            const response = await fetch(
-                `${this.YOUTUBE_API_URL}?part=snippet&maxResults=3&q=${encodeURIComponent(searchQuery)}&type=video&key=${this.YOUTUBE_API_KEY}`
-            );
+            let bestMatch = null;
             
-            if (!response.ok) {
-                console.error(`YouTube API error for "${title}":`, response.status);
-                continue;
-            }
-            
-            const data = await response.json();
-            
-            if (data.items && data.items.length > 0) {
-                const bestMatch = this.findBestYouTubeMatch(data.items, title, artist);
-                
-                if (bestMatch) {
-                    songsWithLinks.push({
-                        title: title,
-                        artist: artist,
-                        url: `https://www.youtube.com/watch?v=${bestMatch.id.videoId}`
-                    });
+            for (const searchQuery of searchQueries) {
+                try {
+                    const response = await fetch(
+                        `${this.YOUTUBE_API_URL}?part=snippet&maxResults=5&q=${encodeURIComponent(searchQuery)}&type=video&key=${this.YOUTUBE_API_KEY}`
+                    );
+                    
+                    if (!response.ok) {
+                        console.error(`YouTube API error for "${title}":`, response.status);
+                        continue;
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.items && data.items.length > 0) {
+                        // Filter out already used videos
+                        const availableItems = data.items.filter(item => !usedVideoIds.has(item.id.videoId));
+                        
+                        if (availableItems.length > 0) {
+                            bestMatch = this.findBestYouTubeMatch(availableItems, title, artist);
+                            if (bestMatch) {
+                                usedVideoIds.add(bestMatch.id.videoId);
+                                break; // Found a good match, stop searching
+                            }
+                        }
+                    }
+                    
+                    // Small delay between searches
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                } catch (searchError) {
+                    console.error(`Error with search query "${searchQuery}":`, searchError);
+                    continue;
                 }
             }
             
-            await new Promise(resolve => setTimeout(resolve, 100));
+            if (bestMatch) {
+                songsWithLinks.push({
+                    title: title,
+                    artist: artist,
+                    url: `https://www.youtube.com/watch?v=${bestMatch.id.videoId}`
+                });
+            } else {
+                console.log(`No suitable YouTube video found for: "${title}" by ${artist}`);
+            }
             
         } catch (error) {
-            console.error(`Error searching for "${title}":`, error);
+            console.error(`Error searching for "${title}" by ${artist}:`, error);
             continue;
         }
     }
     
     return songsWithLinks;
 }
-
 findBestYouTubeMatch(items, songTitle, artist) {
     const scoredItems = items.map(item => {
         const title = item.snippet.title.toLowerCase();
         const channelTitle = item.snippet.channelTitle.toLowerCase();
+        const description = (item.snippet.description || '').toLowerCase();
         
         let score = 0;
+        const songTitleLower = songTitle.toLowerCase();
+        const artistLower = artist.toLowerCase();
         
-        if (title.includes(songTitle.toLowerCase())) {
-            score += 10;
+        // Exact title match (highest priority)
+        if (title === songTitleLower) {
+            score += 50;
+        } else if (title.includes(songTitleLower)) {
+            score += 25;
         }
         
-        if (title.includes(artist.toLowerCase())) {
-            score += 8;
+        // Exact artist match in title
+        if (title.includes(artistLower)) {
+            score += 20;
         }
         
-        if (channelTitle.includes('vevo') || 
+        // Channel verification (very important)
+        if (channelTitle === artistLower || 
+            channelTitle === `${artistLower}vevo` ||
+            channelTitle === `${artistLower}official` ||
+            channelTitle.includes(`${artistLower} `)) {
+            score += 30;
+        }
+        
+        // Official indicators
+        if (title.includes('official') || 
             channelTitle.includes('official') || 
-            channelTitle.includes(artist.toLowerCase())) {
+            channelTitle.includes('vevo')) {
             score += 15;
         }
         
-        if (channelTitle.includes(artist.toLowerCase())) {
-            score += 12;
+        // Music video indicators
+        if (title.includes('music video') || 
+            title.includes('official video') || 
+            title.includes('mv')) {
+            score += 10;
         }
         
-        if (title.includes('official')) {
-            score += 5;
+        // Penalize covers, remixes, live versions unless they're the original artist
+        if ((title.includes('cover') || title.includes('remix') || title.includes('live')) && 
+            !channelTitle.includes(artistLower)) {
+            score -= 20;
         }
         
-        if (title.includes('music video') || title.includes('official video')) {
-            score += 3;
+        // Penalize if the channel doesn't match the artist at all
+        if (!channelTitle.includes(artistLower) && 
+            !channelTitle.includes('vevo') && 
+            !channelTitle.includes('official') &&
+            !description.includes(artistLower)) {
+            score -= 10;
         }
         
-        // Add points for any partial match
-        const songWords = songTitle.toLowerCase().split(' ');
-        const artistWords = artist.toLowerCase().split(' ');
-        
-        songWords.forEach(word => {
-            if (word.length > 2 && title.includes(word)) {
-                score += 2;
-            }
-        });
-        
-        artistWords.forEach(word => {
-            if (word.length > 2 && (title.includes(word) || channelTitle.includes(word))) {
-                score += 2;
-            }
-        });
+        // Word-by-word matching for complex titles
+        const songWords = songTitleLower.split(/\s+/).filter(word => word.length > 2);
+        const matchedWords = songWords.filter(word => title.includes(word));
+        score += (matchedWords.length / songWords.length) * 15;
         
         return { ...item, score };
     });
     
     scoredItems.sort((a, b) => b.score - a.score);
     
-    // Lower the threshold from 10 to 5 for better matches
-    return scoredItems[0]?.score > 5 ? scoredItems[0] : null;
+    // Log scores for debugging
+    console.log(`Scoring results for "${songTitle}" by ${artist}:`);
+    scoredItems.slice(0, 3).forEach(item => {
+        console.log(`- Score: ${item.score}, Title: "${item.snippet.title}", Channel: "${item.snippet.channelTitle}"`);
+    });
+    
+    // Only return if score is reasonable (above 15 instead of 5)
+    return scoredItems[0]?.score > 15 ? scoredItems[0] : null;
+}
+
+// Add a validation method to check for hallucinations
+validateSongResults(songData, artist) {
+    // Simple validation - check if songs have reasonable titles
+    return songData.filter(song => {
+        const title = song.title.toLowerCase();
+        
+        // Filter out obviously fake titles
+        if (title.length < 2 || title.length > 100) return false;
+        if (title.includes('song ') && title.includes('by ')) return false; // AI generated format
+        if (title.match(/^\d+\./)) return false; // Numbered lists
+        if (title.includes('verse') && title.includes('chorus')) return false; // Song structure
+        
+        return true;
+    });
 }
 async copyAiResults() {
     try {
