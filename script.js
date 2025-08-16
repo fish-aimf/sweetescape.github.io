@@ -41,9 +41,19 @@ class AdvancedMusicPlayer {
     this.yourPicksDisplayLimit = 2;
     this.recentlyPlayedPlaylistsDisplayLimit = 1;
     this.visualizerEnabled = true;
-    //these keys are protected and only allowed use for sweetescape.vercel.app so dont even think of stealing
+    //these keys are restricted and only allowed use for sweetescape.vercel.app so dont even think of stealing
     this.GEMINI_API_KEY = 'AIzaSyAGa1IpwVMUmNo-YH9JyWStpWprkpkhGWk';
-    this.YOUTUBE_API_KEY = 'AIzaSyDPT2lmIab9DPC-ltZh4sWrlhapwp0mgTA';
+    this.YOUTUBE_API_KEYS = [
+        'AIzaSyDPT2lmIab9DPC-ltZh4sWrlhapwp0mgTA', // your current key
+        'AIzaSyAENxiCNCZPHgPt2-ip4-GUWcLTkxge8tc',
+        'AIzaSyCDKrOQyGllinvpfd-WxT-GLk-0fqeBPg4',
+        'AIzaSyC4j5HXlRifuJr-1kjxbNVxzu_xvVxniqs',
+        'AIzaSyBTm9f2GN9fu1sBnvq9gEW4Scck3-0NIP0',
+        'AIzaSyAxyLInnmvbWI9AnX9kOIHdSsaZFwfEpX4',
+        'AIzaSyBgNN14Ql_9ZzyNed0mS-KLt1l1ucieI9s'
+    ];
+    
+    this.activeYoutubeKeyIndex = 0;
     this.GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
     this.YOUTUBE_API_URL = 'https://www.googleapis.com/youtube/v3/search';
     this.supabase = null;
@@ -8530,7 +8540,7 @@ async searchYouTubeForSongs(songData, authorQuery) {
         
         try {
             const outputContainer = this.elements.aiOutput;
-            outputContainer.innerHTML = `<div class="ai-loading">Searching YouTube for "${title}" by ${artist} (${i + 1}/${songData.length})</div>`;
+            outputContainer.innerHTML = `<div class="ai-loading">Searching YouTube for "${title}" by ${artist} (${i + 1}/${songData.length}) - Using API key ${this.activeYoutubeKeyIndex + 1}</div>`;
             
             const mainArtist = artist.split(/\s+(?:ft\.?|feat\.?|featuring)\s+/i)[0].trim();
             
@@ -8547,34 +8557,7 @@ async searchYouTubeForSongs(songData, authorQuery) {
             
             for (const searchQuery of searchQueries) {
                 try {
-                    const response = await fetch(
-                        `${this.YOUTUBE_API_URL}?part=snippet&maxResults=8&q=${encodeURIComponent(searchQuery)}&type=video&key=${this.YOUTUBE_API_KEY}`
-                    );
-                    
-                    // Check for quota exceeded or other API errors
-                    if (!response.ok) {
-                        const errorData = await response.text();
-                        console.error(`YouTube API error for "${title}":`, response.status, errorData);
-                        
-                        // Show specific error messages
-                        if (response.status === 403) {
-                            throw new Error('YouTube API quota exceeded or access forbidden');
-                        } else if (response.status === 400) {
-                            throw new Error('YouTube API bad request - check API key');
-                        }
-                        continue;
-                    }
-                    
-                    const data = await response.json();
-                    
-                    // Check for API error in response
-                    if (data.error) {
-                        console.error('YouTube API error:', data.error);
-                        if (data.error.code === 403) {
-                            throw new Error('YouTube API quota exceeded');
-                        }
-                        continue;
-                    }
+                    const data = await this.searchYouTubeWithRotation(searchQuery);
                     
                     if (data.items && data.items.length > 0) {
                         const availableItems = data.items.filter(item => !usedVideoIds.has(item.id.videoId));
@@ -8588,13 +8571,13 @@ async searchYouTubeForSongs(songData, authorQuery) {
                         }
                     }
                     
-                    await new Promise(resolve => setTimeout(resolve, 200)); // Increase delay
+                    await new Promise(resolve => setTimeout(resolve, 200));
                     
                 } catch (searchError) {
                     console.error(`Error with search query "${searchQuery}":`, searchError);
                     
-                    // If quota exceeded, stop trying
-                    if (searchError.message.includes('quota exceeded')) {
+                    // If all keys failed, stop trying for this song
+                    if (searchError.message.includes('All API keys failed')) {
                         throw searchError;
                     }
                     continue;
@@ -8609,7 +8592,6 @@ async searchYouTubeForSongs(songData, authorQuery) {
                 });
             } else {
                 console.log(`No suitable YouTube video found for: "${title}" by ${artist}`);
-                // Add song without URL as fallback
                 songsWithLinks.push({
                     title: title,
                     artist: artist,
@@ -8620,9 +8602,9 @@ async searchYouTubeForSongs(songData, authorQuery) {
         } catch (error) {
             console.error(`Error searching for "${title}" by ${artist}:`, error);
             
-            // If quota exceeded, show error and return what we have
-            if (error.message.includes('quota exceeded')) {
-                outputContainer.innerHTML = `<div class="ai-loading">YouTube API quota exceeded. Returning results found so far...</div>`;
+            // If all API keys failed, show error and return what we have
+            if (error.message.includes('All API keys failed')) {
+                outputContainer.innerHTML = `<div class="ai-loading">All API keys exhausted for today. Returning results found so far...</div>`;
                 break;
             }
             
@@ -8637,6 +8619,65 @@ async searchYouTubeForSongs(songData, authorQuery) {
     }
     
     return songsWithLinks;
+}
+  // Method to get current API key
+getCurrentAPIKey() {
+    return this.YOUTUBE_API_KEYS[this.activeYoutubeKeyIndex];
+}
+
+// Method to rotate to next API key
+rotateToNextAPIKey() {
+    this.activeYoutubeKeyIndex = (this.activeYoutubeKeyIndex + 1) % this.YOUTUBE_API_KEYS.length;
+    console.log(`Rotated to API key index: ${this.activeYoutubeKeyIndex}`);
+}
+
+// Simple YouTube search with key rotation on quota errors
+async searchYouTubeWithRotation(searchQuery) {
+    for (let keyAttempt = 0; keyAttempt < this.YOUTUBE_API_KEYS.length; keyAttempt++) {
+        const currentKey = this.getCurrentAPIKey();
+        
+        try {
+            const response = await fetch(
+                `${this.YOUTUBE_API_URL}?part=snippet&maxResults=8&q=${encodeURIComponent(searchQuery)}&type=video&key=${currentKey}`
+            );
+            
+            if (!response.ok) {
+                const errorData = await response.text();
+                console.error(`YouTube API error with key ${this.activeYoutubeKeyIndex + 1}:`, response.status, errorData);
+                
+                // If quota exceeded (403), try next key
+                if (response.status === 403) {
+                    console.log(`Key ${this.activeYoutubeKeyIndex + 1} quota exceeded, trying next key...`);
+                    this.rotateToNextAPIKey();
+                    continue;
+                } else {
+                    // For other errors, also try next key
+                    this.rotateToNextAPIKey();
+                    continue;
+                }
+            }
+            
+            const data = await response.json();
+            
+            // Check for API error in response (another way quota errors can come)
+            if (data.error && data.error.code === 403) {
+                console.log(`Key ${this.activeYoutubeKeyIndex + 1} quota exceeded, trying next key...`);
+                this.rotateToNextAPIKey();
+                continue;
+            }
+            
+            // Success! Return the data
+            return data;
+            
+        } catch (fetchError) {
+            console.error(`Network error with key ${this.activeYoutubeKeyIndex + 1}:`, fetchError);
+            this.rotateToNextAPIKey();
+            continue;
+        }
+    }
+    
+    // If we've tried all keys and none worked
+    throw new Error('All API keys failed - try again later when quotas reset');
 }
 findBestYouTubeMatch(items, songTitle, artist) {
     const scoredItems = items.map(item => {
@@ -8782,6 +8823,7 @@ removeAiMessages() {
     const messages = this.elements.aiGeneratorDiv.querySelectorAll('.ai-error, .ai-success');
     messages.forEach(msg => msg.remove());
 }
+
 
 
 
