@@ -119,7 +119,8 @@ class AdvancedMusicPlayer {
           this.loadSettings(),
           this.loadRecentlyPlayed(),
           this.loadDiscoverMoreSettingsOnStartup(),
-          this.loadVisualizerSettings()
+          this.loadVisualizerSettings(),
+          
           this.loadLibrarySortSetting()
         ]);
       })
