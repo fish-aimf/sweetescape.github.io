@@ -245,11 +245,12 @@
 - AI enabled playlist generator and more in find more section v34.0.0
 - AI automatically listens to prompts and generate a list of youtube url and made easy import of the songs you want.
 - Choose how many, what author, and what songs required to be included.
+- Used google gemini and youtube api v3
 - very reliable for large artists, less reliable for small authors.
 - allow copy and paste and import.
 - changed styles a bit. v34.0.1
 - added required songs. v34.1.0
 - added regenerate songs v34.2.0
 - made it make playlist v34.3.0
-- added 6 youtube api keys and logic to cycle through when limits are up to ensure that service is always avalible. 
-- AI enabled playlist generator to search the web and return urls and playlists based on your prompt v34.3.0
+- added 6 youtube api keys and logic to cycle through when limits are up to ensure that service is always avalible. v34.4.0
+- AI enabled playlist generator to search the web and return urls and playlists based on your prompt v34.4.0
