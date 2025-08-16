@@ -270,16 +270,16 @@
 
             try {
                 // Step 1: Get song titles from Gemini (no YouTube links)
-                const songTitles = await getSongTitlesFromGemini(author, quantity);
+                const songData = await getSongTitlesFromGemini(author, quantity);
                 
                 outputContainer.innerHTML = '<div class="loading">Searching YouTube for official videos</div>';
                 
                 // Step 2: Search YouTube for each song
-                const songsWithLinks = await searchYouTubeForSongs(songTitles, author);
+                const songsWithLinks = await searchYouTubeForSongs(songData, author);
                 
                 // Step 3: Format and display results
                 const formattedOutput = songsWithLinks
-                    .map(song => `${song.title},${song.url},${author}`)
+                    .map(song => `${song.title},${song.url},${song.artist}`)
                     .join('\n');
                 
                 outputContainer.textContent = formattedOutput;
@@ -298,7 +298,20 @@
         }
 
         async function getSongTitlesFromGemini(author, quantity) {
-            const prompt = `List exactly ${quantity} popular songs by the artist "${author}". 
+            // Check if this is a specific artist query or a broader music query
+            const isSpecificArtist = !author.toLowerCase().includes('top') && 
+                                    !author.toLowerCase().includes('best') && 
+                                    !author.toLowerCase().includes('popular') &&
+                                    !author.toLowerCase().includes('various') &&
+                                    !author.toLowerCase().includes('playlist') &&
+                                    !author.toLowerCase().includes('spotify') &&
+                                    !author.toLowerCase().includes('songs in');
+
+            let prompt;
+            
+            if (isSpecificArtist) {
+                // Original prompt for specific artists
+                prompt = `List exactly ${quantity} popular songs by the artist "${author}". 
 
 REQUIREMENTS:
 - Only provide song titles, no YouTube links or URLs
@@ -314,6 +327,31 @@ Thinking out loud
 Perfect
 
 Provide exactly ${quantity} song titles by ${author}:`;
+            } else {
+                // Modified prompt for broader queries
+                prompt = `Based on the query "${author}", list exactly ${quantity} songs that match this request.
+
+REQUIREMENTS:
+- Only provide song titles, no YouTube links or URLs
+- Each song title on a separate line
+- First word capitalized, rest lowercase
+- No commas in song titles
+- No additional text, numbering, or formatting
+- Include the actual artist name after each song title (format: "Song title by Artist name")
+
+Examples:
+If query is "top phonk songs in 2020":
+Sahara by Hensonn
+Murder in my mind by Kordhell
+Rave by Dxrk digitz
+
+If query is "top songs in spotify":
+Flowers by Miley cyrus
+As it was by Harry styles
+Unholy by Sam smith
+
+Provide exactly ${quantity} songs for "${author}":`;
+            }
 
             const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
                 method: 'POST',
@@ -325,7 +363,7 @@ Provide exactly ${quantity} song titles by ${author}:`;
                         parts: [{ text: prompt }]
                     }],
                     generationConfig: {
-                        temperature: 0.3  // Lower temperature for more consistent results
+                        temperature: 0.3
                     }
                 })
             });
@@ -338,27 +376,49 @@ Provide exactly ${quantity} song titles by ${author}:`;
             
             if (data.candidates && data.candidates[0] && data.candidates[0].content) {
                 const result = data.candidates[0].content.parts[0].text;
-                return result.split('\n')
-                    .map(title => title.trim())
-                    .filter(title => title.length > 0)
-                    .slice(0, quantity); // Ensure we don't exceed requested quantity
+                const lines = result.split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line.length > 0)
+                    .slice(0, quantity);
+                
+                // Parse the results differently based on query type
+                if (isSpecificArtist) {
+                    return lines.map(title => ({ title, artist: author }));
+                } else {
+                    // For broader queries, extract song title and artist from "Song by Artist" format
+                    return lines.map(line => {
+                        const match = line.match(/^(.+?)\s+by\s+(.+)$/i);
+                        if (match) {
+                            return {
+                                title: match[1].trim(),
+                                artist: match[2].trim()
+                            };
+                        } else {
+                            // Fallback if format doesn't match
+                            return {
+                                title: line,
+                                artist: 'Unknown'
+                            };
+                        }
+                    });
+                }
             } else {
                 throw new Error('No valid response from Gemini API');
             }
         }
 
-        async function searchYouTubeForSongs(songTitles, author) {
+        async function searchYouTubeForSongs(songData, authorQuery) {
             const songsWithLinks = [];
             
-            for (let i = 0; i < songTitles.length; i++) {
-                const title = songTitles[i];
+            for (let i = 0; i < songData.length; i++) {
+                const { title, artist } = songData[i];
                 
                 try {
                     // Update loading message
                     const outputContainer = document.getElementById('output');
-                    outputContainer.innerHTML = `<div class="loading">Searching YouTube for "${title}" (${i + 1}/${songTitles.length})</div>`;
+                    outputContainer.innerHTML = `<div class="loading">Searching YouTube for "${title}" by ${artist} (${i + 1}/${songData.length})</div>`;
                     
-                    const searchQuery = `${title} ${author} official`;
+                    const searchQuery = `${title} ${artist} official`;
                     
                     const response = await fetch(
                         `${YOUTUBE_API_URL}?part=snippet&maxResults=3&q=${encodeURIComponent(searchQuery)}&type=video&key=${YOUTUBE_API_KEY}`
@@ -373,11 +433,12 @@ Provide exactly ${quantity} song titles by ${author}:`;
                     
                     if (data.items && data.items.length > 0) {
                         // Find the best match (preferably official or VEVO)
-                        const bestMatch = findBestYouTubeMatch(data.items, title, author);
+                        const bestMatch = findBestYouTubeMatch(data.items, title, artist);
                         
                         if (bestMatch) {
                             songsWithLinks.push({
                                 title: title,
+                                artist: artist,
                                 url: `https://www.youtube.com/watch?v=${bestMatch.id.videoId}`
                             });
                         }
@@ -395,7 +456,7 @@ Provide exactly ${quantity} song titles by ${author}:`;
             return songsWithLinks;
         }
 
-        function findBestYouTubeMatch(items, songTitle, author) {
+        function findBestYouTubeMatch(items, songTitle, artist) {
             // Score each video based on relevance
             const scoredItems = items.map(item => {
                 const title = item.snippet.title.toLowerCase();
@@ -410,19 +471,19 @@ Provide exactly ${quantity} song titles by ${author}:`;
                 }
                 
                 // Check if artist appears in video title
-                if (title.includes(author.toLowerCase())) {
+                if (title.includes(artist.toLowerCase())) {
                     score += 8;
                 }
                 
                 // Prefer official channels
                 if (channelTitle.includes('vevo') || 
                     channelTitle.includes('official') || 
-                    channelTitle.includes(author.toLowerCase())) {
+                    channelTitle.includes(artist.toLowerCase())) {
                     score += 15;
                 }
                 
                 // Check channel title for artist name
-                if (channelTitle.includes(author.toLowerCase())) {
+                if (channelTitle.includes(artist.toLowerCase())) {
                     score += 12;
                 }
                 
