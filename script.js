@@ -284,6 +284,7 @@ findSongsResults: document.getElementById("findSongsResults"),
     this.elements.aiArtistName = document.getElementById("aiArtistName");
     this.elements.aiSongCount = document.getElementById("aiSongCount");
     this.elements.aiGenerateBtn = document.getElementById("aiGenerateBtn");
+    this.elements.aiRequiredSongs = document.getElementById("aiRequiredSongs");
     this.elements.aiCopyBtn = document.getElementById("aiCopyBtn");
     this.elements.aiImportBtn = document.getElementById("aiImportBtn");
     this.elements.aiOutputSection = document.getElementById("aiOutputSection");
@@ -8303,6 +8304,7 @@ closeAiGenerator() {
     this.elements.aiOutput.innerHTML = "";
     this.elements.aiCopyBtn.style.display = "none";
     this.elements.aiImportBtn.style.display = "none";
+    this.elements.aiRequiredSongs.value = ""; // Add this line
     this.currentAiResults = '';
     this.removeAiMessages();
 }
@@ -8359,6 +8361,9 @@ async generateAiSongs() {
 }
 
 async getSongTitlesFromGemini(author, quantity) {
+    const requiredSongs = this.elements.aiRequiredSongs.value.trim();
+    const requiredSongsList = requiredSongs ? requiredSongs.split(',').map(s => s.trim()).filter(s => s) : [];
+    
     const isSpecificArtist = !author.toLowerCase().includes('top') && 
                             !author.toLowerCase().includes('best') && 
                             !author.toLowerCase().includes('popular') &&
@@ -8372,13 +8377,17 @@ async getSongTitlesFromGemini(author, quantity) {
     if (isSpecificArtist) {
         prompt = `List exactly ${quantity} popular songs by the artist "${author}". 
 
-REQUIREMENTS:
+${requiredSongsList.length > 0 ? `REQUIRED SONGS THAT MUST BE INCLUDED:
+${requiredSongsList.map(song => `- ${song}`).join('\n')}
+
+` : ''}REQUIREMENTS:
 - Only provide song titles, no YouTube links or URLs
 - Each song title on a separate line
 - First word capitalized, rest lowercase
 - No commas in song titles
 - No additional text, numbering, or formatting
 - Only songs actually performed by ${author}
+${requiredSongsList.length > 0 ? `- MUST include all the required songs listed above` : ''}
 
 Example format:
 Shape of you
@@ -8389,13 +8398,17 @@ Provide exactly ${quantity} song titles by ${author}:`;
     } else {
         prompt = `Based on the query "${author}", list exactly ${quantity} songs that match this request.
 
-REQUIREMENTS:
+${requiredSongsList.length > 0 ? `REQUIRED SONGS THAT MUST BE INCLUDED:
+${requiredSongsList.map(song => `- ${song}`).join('\n')}
+
+` : ''}REQUIREMENTS:
 - Only provide song titles, no YouTube links or URLs
 - Each song title on a separate line
 - First word capitalized, rest lowercase
 - No commas in song titles
 - No additional text, numbering, or formatting
 - Include the actual artist name after each song title (format: "Song title by Artist name")
+${requiredSongsList.length > 0 ? `- MUST include all the required songs listed above with their respective artists` : ''}
 
 Provide exactly ${quantity} songs for "${author}":`;
     }
@@ -8530,14 +8543,30 @@ findBestYouTubeMatch(items, songTitle, artist) {
             score += 3;
         }
         
+        // Add points for any partial match
+        const songWords = songTitle.toLowerCase().split(' ');
+        const artistWords = artist.toLowerCase().split(' ');
+        
+        songWords.forEach(word => {
+            if (word.length > 2 && title.includes(word)) {
+                score += 2;
+            }
+        });
+        
+        artistWords.forEach(word => {
+            if (word.length > 2 && (title.includes(word) || channelTitle.includes(word))) {
+                score += 2;
+            }
+        });
+        
         return { ...item, score };
     });
     
     scoredItems.sort((a, b) => b.score - a.score);
     
-    return scoredItems[0]?.score > 10 ? scoredItems[0] : null;
+    // Lower the threshold from 10 to 5 for better matches
+    return scoredItems[0]?.score > 5 ? scoredItems[0] : null;
 }
-
 async copyAiResults() {
     try {
         await navigator.clipboard.writeText(this.currentAiResults);
