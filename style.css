@@ -4077,52 +4077,81 @@ body:has(#ytPlayer.fullscreen-video) {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     background: rgba(0,0,0,0.9);
     z-index: 1100;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
 }
 
 .ai-generator-content {
     background: var(--bg-secondary);
-    border-radius: 15px;
-    width: 90%;
-    max-width: 800px;
-    max-height: 90vh;
+    width: 100vw;
+    height: 100vh;
     overflow: hidden;
-    box-shadow: 0 20px 40px var(--shadow-color);
-    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    border: none;
+    border-radius: 0;
 }
 
 .ai-generator-header {
-    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-    color: white;
-    padding: 30px;
+    background: var(--accent-color);
+    color: var(--button-text-color);
+    padding: 20px 30px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .ai-generator-header-content h1 {
-    font-size: 2rem;
-    margin-bottom: 10px;
+    font-size: 1.8rem;
+    margin-bottom: 5px;
     font-weight: 600;
+    color: var(--button-text-color);
 }
 
 .ai-generator-header-content p {
     opacity: 0.9;
     font-size: 1rem;
+    color: var(--button-text-color);
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--button-text-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+    background: rgba(255,255,255,0.2);
 }
 
 .ai-generator-form {
     padding: 30px;
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .ai-generator-form .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 0;
 }
 
 .ai-generator-form label {
@@ -4138,7 +4167,7 @@ body:has(#ytPlayer.fullscreen-video) {
     width: 100%;
     padding: 15px;
     border: 2px solid var(--border-color);
-    border-radius: 10px;
+    border-radius: 8px;
     font-size: 1rem;
     transition: all 0.3s ease;
     background: var(--bg-primary);
@@ -4149,23 +4178,22 @@ body:has(#ytPlayer.fullscreen-video) {
     outline: none;
     border-color: var(--accent-color);
     background: var(--bg-secondary);
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+    box-shadow: 0 0 0 3px rgba(93, 156, 89, 0.2);
 }
 
 .ai-button-group {
     display: flex;
     gap: 15px;
-    margin-top: 30px;
+    margin-top: 20px;
     flex-wrap: wrap;
 }
 
 .ai-generate-btn, .ai-copy-btn, .ai-import-btn {
     flex: 1;
     min-width: 150px;
-    padding: 15px;
+    padding: 15px 20px;
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
@@ -4173,58 +4201,66 @@ body:has(#ytPlayer.fullscreen-video) {
 }
 
 .ai-generate-btn {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
+    background: var(--accent-color);
+    color: var(--button-text-color);
 }
 
 .ai-generate-btn:hover:not(:disabled) {
+    background: var(--hover-color);
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 12px var(--shadow-color);
 }
 
 .ai-generate-btn:disabled {
-    background: #ccc;
+    background: var(--border-color);
+    color: var(--text-secondary);
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
 }
 
 .ai-copy-btn {
-    background: linear-gradient(135deg, #2ecc71, #27ae60);
-    color: white;
+    background: var(--text-secondary);
+    color: var(--button-text-color);
 }
 
 .ai-copy-btn:hover {
+    background: var(--text-primary);
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
+    box-shadow: 0 4px 12px var(--shadow-color);
 }
 
 .ai-import-btn {
-    background: linear-gradient(135deg, #f39c12, #e67e22);
-    color: white;
+    background: var(--hover-color);
+    color: var(--button-text-color);
 }
 
 .ai-import-btn:hover {
+    background: var(--accent-color);
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(243, 156, 18, 0.3);
+    box-shadow: 0 4px 12px var(--shadow-color);
 }
 
 .ai-output-section {
     padding: 0 30px 30px;
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .ai-output-container {
     background: var(--bg-primary);
     border: 2px solid var(--border-color);
-    border-radius: 10px;
-    min-height: 200px;
-    max-height: 300px;
+    border-radius: 8px;
     padding: 20px;
     font-family: 'Courier New', monospace;
     white-space: pre-wrap;
     word-wrap: break-word;
-    overflow-y: auto;
     color: var(--text-primary);
+    flex: 1;
+    overflow-y: auto;
+    min-height: 200px;
 }
 
 .ai-loading {
@@ -4267,11 +4303,11 @@ body:has(#ytPlayer.fullscreen-video) {
 }
 
 .generate-playlist-btn {
-    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-    color: white;
+    background: var(--accent-color);
+    color: var(--button-text-color);
     border: none;
     padding: 15px 30px;
-    border-radius: 10px;
+    border-radius: 8px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
@@ -4279,24 +4315,47 @@ body:has(#ytPlayer.fullscreen-video) {
 }
 
 .generate-playlist-btn:hover {
+    background: var(--hover-color);
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+    box-shadow: 0 4px 12px var(--shadow-color);
 }
 
 .ai-error {
     color: var(--error-color);
-    background: #fdf2f2;
-    border: 1px solid #fecaca;
+    background: var(--bg-primary);
+    border: 1px solid var(--error-color);
     padding: 15px;
     border-radius: 8px;
     margin-top: 15px;
 }
 
 .ai-success {
-    color: #27ae60;
-    background: #f0fff4;
-    border: 1px solid #9ae6b4;
+    color: var(--accent-color);
+    background: var(--bg-primary);
+    border: 1px solid var(--accent-color);
     padding: 15px;
     border-radius: 8px;
     margin-top: 15px;
+}
+
+@media (max-width: 768px) {
+    .ai-generator-header {
+        padding: 15px 20px;
+    }
+    
+    .ai-generator-header-content h1 {
+        font-size: 1.5rem;
+    }
+    
+    .ai-generator-form {
+        padding: 20px;
+    }
+    
+    .ai-button-group {
+        flex-direction: column;
+    }
+    
+    .ai-output-section {
+        padding: 0 20px 20px;
+    }
 }
