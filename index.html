@@ -749,6 +749,45 @@
             </div>
         <div id="findSongsResults" class="find-songs-results">
             <!-- Results will be populated here -->
+            <!-- Add this inside the find-songs-results div -->
+                <div class="not-finding-section" id="notFindingSection" style="display: none;">
+                    <p>Not finding what you're looking for?</p>
+                    <button class="generate-playlist-btn" id="openAiGeneratorBtn">Generate with AI</button>
+                </div>
+        </div>
+    </div>
+</div>
+    <!-- AI Song Generator Modal - Add after findSongsDiv -->
+<div id="aiGeneratorDiv" class="ai-generator-container" style="display: none;">
+    <div class="ai-generator-content">
+        <div class="ai-generator-header">
+            <div class="ai-generator-header-content">
+                <h1>🎵 AI Song Generator</h1>
+                <p>Generate a playlist using AI for any artist</p>
+            </div>
+            <button id="closeAiGenerator" class="close-btn">&times;</button>
+        </div>
+        
+        <div class="ai-generator-form">
+            <div class="form-group">
+                <label for="aiArtistName">Artist Name:</label>
+                <input type="text" id="aiArtistName" placeholder="Enter artist name (e.g., Taylor Swift, The Beatles)" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="aiSongCount">Number of Songs:</label>
+                <input type="number" id="aiSongCount" min="1" max="50" value="10" required>
+            </div>
+            
+            <div class="ai-button-group">
+                <button class="ai-generate-btn" id="aiGenerateBtn">Generate Song List</button>
+                <button class="ai-copy-btn" id="aiCopyBtn" style="display: none;">Copy to Clipboard</button>
+                <button class="ai-import-btn" id="aiImportBtn" style="display: none;">Import to Library</button>
+            </div>
+        </div>
+        
+        <div class="ai-output-section" style="display: none;" id="aiOutputSection">
+            <div class="ai-output-container" id="aiOutput"></div>
         </div>
     </div>
 </div>
