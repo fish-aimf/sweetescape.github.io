@@ -8523,7 +8523,7 @@ Real songs matching "${author}":`;
 }
 async searchYouTubeForSongs(songData, authorQuery) {
     const songsWithLinks = [];
-    const usedVideoIds = new Set(); // Track used video IDs to prevent duplicates
+    const usedVideoIds = new Set();
     
     for (let i = 0; i < songData.length; i++) {
         const { title, artist } = songData[i];
@@ -8532,12 +8532,15 @@ async searchYouTubeForSongs(songData, authorQuery) {
             const outputContainer = this.elements.aiOutput;
             outputContainer.innerHTML = `<div class="ai-loading">Searching YouTube for "${title}" by ${artist} (${i + 1}/${songData.length})</div>`;
             
-            // Try multiple search strategies
+            const mainArtist = artist.split(/\s+(?:ft\.?|feat\.?|featuring)\s+/i)[0].trim();
+            
             const searchQueries = [
-                `"${title}" "${artist}"`, // Exact match first
-                `${title} ${artist} official`,
+                `"${title}" "${mainArtist}"`,
+                `"${title}" "${artist}"`,
+                `${title} ${mainArtist} official`,
                 `${title} ${artist}`,
-                `${artist} ${title}`
+                `${mainArtist} ${title}`,
+                `${title}`
             ];
             
             let bestMatch = null;
@@ -8545,34 +8548,55 @@ async searchYouTubeForSongs(songData, authorQuery) {
             for (const searchQuery of searchQueries) {
                 try {
                     const response = await fetch(
-                        `${this.YOUTUBE_API_URL}?part=snippet&maxResults=5&q=${encodeURIComponent(searchQuery)}&type=video&key=${this.YOUTUBE_API_KEY}`
+                        `${this.YOUTUBE_API_URL}?part=snippet&maxResults=8&q=${encodeURIComponent(searchQuery)}&type=video&key=${this.YOUTUBE_API_KEY}`
                     );
                     
+                    // Check for quota exceeded or other API errors
                     if (!response.ok) {
-                        console.error(`YouTube API error for "${title}":`, response.status);
+                        const errorData = await response.text();
+                        console.error(`YouTube API error for "${title}":`, response.status, errorData);
+                        
+                        // Show specific error messages
+                        if (response.status === 403) {
+                            throw new Error('YouTube API quota exceeded or access forbidden');
+                        } else if (response.status === 400) {
+                            throw new Error('YouTube API bad request - check API key');
+                        }
                         continue;
                     }
                     
                     const data = await response.json();
                     
+                    // Check for API error in response
+                    if (data.error) {
+                        console.error('YouTube API error:', data.error);
+                        if (data.error.code === 403) {
+                            throw new Error('YouTube API quota exceeded');
+                        }
+                        continue;
+                    }
+                    
                     if (data.items && data.items.length > 0) {
-                        // Filter out already used videos
                         const availableItems = data.items.filter(item => !usedVideoIds.has(item.id.videoId));
                         
                         if (availableItems.length > 0) {
-                            bestMatch = this.findBestYouTubeMatch(availableItems, title, artist);
+                            bestMatch = this.findBestYouTubeMatch(availableItems, title, artist, mainArtist);
                             if (bestMatch) {
                                 usedVideoIds.add(bestMatch.id.videoId);
-                                break; // Found a good match, stop searching
+                                break;
                             }
                         }
                     }
                     
-                    // Small delay between searches
-                    await new Promise(resolve => setTimeout(resolve, 100));
+                    await new Promise(resolve => setTimeout(resolve, 200)); // Increase delay
                     
                 } catch (searchError) {
                     console.error(`Error with search query "${searchQuery}":`, searchError);
+                    
+                    // If quota exceeded, stop trying
+                    if (searchError.message.includes('quota exceeded')) {
+                        throw searchError;
+                    }
                     continue;
                 }
             }
@@ -8585,10 +8609,29 @@ async searchYouTubeForSongs(songData, authorQuery) {
                 });
             } else {
                 console.log(`No suitable YouTube video found for: "${title}" by ${artist}`);
+                // Add song without URL as fallback
+                songsWithLinks.push({
+                    title: title,
+                    artist: artist,
+                    url: `# No YouTube link found`
+                });
             }
             
         } catch (error) {
             console.error(`Error searching for "${title}" by ${artist}:`, error);
+            
+            // If quota exceeded, show error and return what we have
+            if (error.message.includes('quota exceeded')) {
+                outputContainer.innerHTML = `<div class="ai-loading">YouTube API quota exceeded. Returning results found so far...</div>`;
+                break;
+            }
+            
+            // Add song without URL
+            songsWithLinks.push({
+                title: title,
+                artist: artist,
+                url: `# API Error: ${error.message}`
+            });
             continue;
         }
     }
