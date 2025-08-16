@@ -8330,12 +8330,19 @@ async generateAiSongs() {
     this.elements.aiCopyBtn.style.display = 'none';
     this.elements.aiImportBtn.style.display = 'none';
     this.elements.aiOutputSection.style.display = 'block';
-    outputContainer.innerHTML = '<div class="ai-loading">Getting song list from AI</div>';
+    outputContainer.innerHTML = '<div class="ai-loading">Analyzing query type...</div>';
 
     try {
+        outputContainer.innerHTML = '<div class="ai-loading">Getting song list from AI...</div>';
         const songData = await this.getSongTitlesFromGemini(artist, quantity);
         
-        outputContainer.innerHTML = '<div class="ai-loading">Searching YouTube for official videos</div>';
+        // Show what type of query was detected
+        const queryType = songData[0]?.queryType || 'UNKNOWN';
+        const typeMessage = queryType === 'SPECIFIC_ARTIST' ? 
+            `Detected: Songs by ${artist}` : 
+            `Detected: Broad music request`;
+        
+        outputContainer.innerHTML = `<div class="ai-loading">${typeMessage}<br>Searching YouTube for official videos...</div>`;
         
         const songsWithLinks = await this.searchYouTubeForSongs(songData, artist);
         
@@ -8347,7 +8354,12 @@ async generateAiSongs() {
         this.currentAiResults = formattedOutput;
         this.elements.aiCopyBtn.style.display = 'inline-block';
         this.elements.aiImportBtn.style.display = 'inline-block';
-        this.showAiSuccess(`Found ${songsWithLinks.length} songs with verified YouTube links!`);
+        
+        const detectionInfo = queryType === 'SPECIFIC_ARTIST' ? 
+            `Found ${songsWithLinks.length} songs by ${artist}!` :
+            `Found ${songsWithLinks.length} songs matching your request!`;
+        
+        this.showAiSuccess(`${detectionInfo} All have verified YouTube links.`);
 
     } catch (error) {
         console.error('Error:', error);
@@ -8363,17 +8375,46 @@ async getSongTitlesFromGemini(author, quantity) {
     const requiredSongs = this.elements.aiRequiredSongs.value.trim();
     const requiredSongsList = requiredSongs ? requiredSongs.split(',').map(s => s.trim()).filter(s => s) : [];
     
-    const isSpecificArtist = !author.toLowerCase().includes('top') && 
-                            !author.toLowerCase().includes('best') && 
-                            !author.toLowerCase().includes('popular') &&
-                            !author.toLowerCase().includes('various') &&
-                            !author.toLowerCase().includes('playlist') &&
-                            !author.toLowerCase().includes('spotify') &&
-                            !author.toLowerCase().includes('songs in');
+    // First, ask AI to classify the query type
+    const classificationPrompt = `Analyze this music query and determine if it's asking for:
+A) Songs by a specific artist/band (e.g., "Drake", "Taylor Swift", "The Beatles", "ogryzek")
+B) A broader music category/request (e.g., "top 2024 spotify songs", "trending phonk", "best rap songs", "popular rock hits")
+
+Query: "${author}"
+
+Respond with only "SPECIFIC_ARTIST" or "BROAD_REQUEST"`;
+
+    const classificationResponse = await fetch(`${this.GEMINI_API_URL}?key=${this.GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            contents: [{
+                parts: [{ text: classificationPrompt }]
+            }],
+            generationConfig: {
+                temperature: 0.1,
+                maxOutputTokens: 50
+            }
+        })
+    });
+
+    if (!classificationResponse.ok) {
+        throw new Error(`Classification API error: ${classificationResponse.status}`);
+    }
+
+    const classificationData = await classificationResponse.json();
+    const classification = classificationData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "BROAD_REQUEST";
+    
+    console.log(`AI Classification for "${author}": ${classification}`);
+    
+    const isSpecificArtist = classification === "SPECIFIC_ARTIST";
 
     let prompt;
     
     if (isSpecificArtist) {
+        // For specific artists - all songs by that artist
         prompt = `You are a music database. List ONLY real, existing songs by the artist "${author}". 
 
 ${requiredSongsList.length > 0 ? `First, include these specific songs if they are real songs by ${author}:
@@ -8388,12 +8429,14 @@ Then add more songs to reach exactly ${quantity} total songs.
 - No numbering, bullets, or extra formatting
 - No commas in song titles
 - Exactly ${quantity} songs total
+- Include featured artists in parentheses if applicable (e.g., "Song Title (ft. Artist Name)")
 
 Real songs by ${author}:`;
     } else {
-        prompt = `You are a music database. Based on the query "${author}", list exactly ${quantity} real, existing songs.
+        // For broader requests - different songs by different artists
+        prompt = `You are a music database. Based on the request "${author}", list exactly ${quantity} real, existing songs that match this category/trend/criteria.
 
-${requiredSongsList.length > 0 ? `First, include these specific songs if they match the query:
+${requiredSongsList.length > 0 ? `First, include these specific songs if they match the request:
 ${requiredSongsList.map(song => `- ${song}`).join('\n')}
 
 Then add more songs to reach exactly ${quantity} total songs.
@@ -8401,13 +8444,16 @@ Then add more songs to reach exactly ${quantity} total songs.
 ` : ''}STRICT REQUIREMENTS:
 - ONLY list songs that actually exist
 - NO made-up or fictional song titles
-- Format: "Song title by Artist name"
-- Each on a separate line
+- Format: "Song Title by Artist Name"
+- Include all featured artists (e.g., "Song Title by Artist Name ft. Featured Artist")
+- Each song on a separate line
 - No numbering, bullets, or extra formatting
 - No commas in song titles
 - Exactly ${quantity} songs total
+- Songs should match the theme/genre/trend/criteria of "${author}"
+- Use different artists for variety unless the request specifically asks for one artist
 
-Real songs for "${author}":`;
+Real songs matching "${author}":`;
     }
 
     const response = await fetch(`${this.GEMINI_API_URL}?key=${this.GEMINI_API_KEY}`, {
@@ -8420,7 +8466,7 @@ Real songs for "${author}":`;
                 parts: [{ text: prompt }]
             }],
             generationConfig: {
-                temperature: 0.1, // Lower temperature for more accurate results
+                temperature: 0.1,
                 maxOutputTokens: 1000,
                 topP: 0.8,
                 topK: 10
@@ -8442,19 +8488,31 @@ Real songs for "${author}":`;
             .slice(0, quantity);
         
         if (isSpecificArtist) {
-            return lines.map(title => ({ title, artist: author }));
+            // For specific artists, all songs are by that artist
+            return lines.map(title => ({ 
+                title, 
+                artist: author,
+                queryType: 'SPECIFIC_ARTIST'
+            }));
         } else {
+            // For broader requests, parse "Song by Artist" format
             return lines.map(line => {
-                const match = line.match(/^(.+?)\s+by\s+(.+)$/i);
-                if (match) {
+                // Try to match "Song by Artist" or "Song by Artist ft. Featured Artist"
+                const byMatch = line.match(/^(.+?)\s+by\s+(.+)$/i);
+                if (byMatch) {
+                    const songTitle = byMatch[1].trim();
+                    const artistInfo = byMatch[2].trim(); // This includes ft. artists
                     return {
-                        title: match[1].trim(),
-                        artist: match[2].trim()
+                        title: songTitle,
+                        artist: artistInfo,
+                        queryType: 'BROAD_REQUEST'
                     };
                 } else {
+                    // Fallback: treat the whole line as title with unknown artist
                     return {
                         title: line,
-                        artist: 'Unknown'
+                        artist: 'Unknown',
+                        queryType: 'BROAD_REQUEST'
                     };
                 }
             });
