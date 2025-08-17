@@ -260,3 +260,4 @@
 - fixed input fields so google passwords wont incorrectly autofill email into the search bar v35.3.0
 - changed styles a bit v35.3.1
 - easily upgraded counter to https so mixed content warning will not show in console v35.3.2
+- made cors policy more straightforward and stops fetching ads instead of blocking them on browser level v35.3.3
