@@ -60,6 +60,8 @@ class AdvancedMusicPlayer {
     this.GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
     this.YOUTUBE_API_URL = 'https://www.googleapis.com/youtube/v3/search';
     this.supabase = null;
+    // Initialize global library search filter
+this.globalLibrarySearchFilter = '';
     this.allArtists = [];
     this.searchTimeout = null;
     this.webEmbedSites = [
@@ -8188,36 +8190,45 @@ async loadGlobalLibraryData() {
 
 displayGlobalLibraryArtists() {
     const container = document.getElementById('globalLibraryArtistsContainer');
-    const filteredArtists = this.globalLibraryArtists.filter(artist => 
-        artist.name.toLowerCase().includes(this.globalLibrarySearchFilter.toLowerCase()) ||
-        artist.songs.some(song => 
-            song.name.toLowerCase().includes(this.globalLibrarySearchFilter.toLowerCase()) ||
-            song.author.toLowerCase().includes(this.globalLibrarySearchFilter.toLowerCase())
-        )
-    );
+    
+    // Initialize search filter if undefined
+    const searchFilter = (this.globalLibrarySearchFilter || '').toLowerCase();
+    
+    const filteredArtists = this.globalLibraryArtists.filter(artist => {
+        // Safe check for artist name
+        const artistName = (artist.name || '').toLowerCase();
+        if (artistName.includes(searchFilter)) return true;
+        
+        // Safe check for songs
+        return artist.songs && artist.songs.some(song => {
+            const songName = (song.name || '').toLowerCase();
+            const songAuthor = (song.author || '').toLowerCase();
+            return songName.includes(searchFilter) || songAuthor.includes(searchFilter);
+        });
+    });
 
     container.innerHTML = filteredArtists.map(artist => `
         <div class="global-library-artist-card">
             <div class="global-library-artist-header">
-                <div class="global-library-artist-name">🎵 ${artist.name}</div>
+                <div class="global-library-artist-name">🎵 ${artist.name || 'Unnamed Playlist'}</div>
                 <button onclick="musicPlayer.deleteGlobalLibraryPlaylist(${artist.id})" class="global-library-btn-small global-library-btn-danger">Delete</button>
             </div>
             <div>
-                ${artist.songs.map(song => `
+                ${(artist.songs || []).map(song => `
                     <div class="global-library-song-item">
                         <div class="global-library-song-content">
-                            <div class="global-library-song-name">${song.name}</div>
-                            <div class="global-library-song-author">by ${song.author}</div>
+                            <div class="global-library-song-name">${song.name || 'Unnamed Song'}</div>
+                            <div class="global-library-song-author">by ${song.author || 'Unknown Artist'}</div>
                         </div>
                         <div class="global-library-song-actions">
-                            <button onclick="window.open('${song.youtube_url}', '_blank')" class="global-library-btn-small">▶️</button>
+                            <button onclick="window.open('${song.youtube_url || ''}', '_blank')" class="global-library-btn-small">▶️</button>
                             <button onclick="musicPlayer.deleteGlobalLibrarySong(${song.id})" class="global-library-btn-small global-library-btn-danger">🗑️</button>
                         </div>
                     </div>
                 `).join('')}
             </div>
             <div style="text-align: right; margin-top: 10px; color: var(--text-secondary); font-size: 12px;">
-                ${artist.songs.length} songs
+                ${(artist.songs || []).length} songs
             </div>
         </div>
     `).join('');
@@ -8316,12 +8327,10 @@ async deleteGlobalLibrarySong(songId) {
         this.loadGlobalLibraryData();
     }
 }
-
 globalLibrarySearch(query) {
-    this.globalLibrarySearchFilter = query;
+    this.globalLibrarySearchFilter = query || '';
     this.displayGlobalLibraryArtists();
 }
-
 showGlobalLibraryMessage(message, type) {
     const messagesDiv = document.getElementById('globalLibraryMessages');
     messagesDiv.innerHTML = `<div class="global-library-${type}">${message}</div>`;
