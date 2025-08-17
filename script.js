@@ -41,6 +41,9 @@ class AdvancedMusicPlayer {
     this.yourPicksDisplayLimit = 2;
     this.recentlyPlayedPlaylistsDisplayLimit = 1;
     this.visualizerEnabled = true;
+    this.globalLibrarySupabase = null;
+    this.globalLibraryCurrentUser = null;
+    this.globalLibraryArtists = [];
     //these keys are restricted and only allowed use for sweetescape.vercel.app so dont even think of stealing
     this.GEMINI_API_KEY = 'AIzaSyAGa1IpwVMUmNo-YH9JyWStpWprkpkhGWk';
     this.YOUTUBE_API_KEYS = [
@@ -158,6 +161,7 @@ class AdvancedMusicPlayer {
   
         this.initializeVisualizer(); 
         this.loadVisualizerSettings();
+        this.initializeGlobalLibrary();
       })
       .catch((error) => {
         console.error("Error initializing music player:", error);
@@ -427,6 +431,7 @@ this.elements.closeFindSongs?.addEventListener("click", this.closeFindSongs.bind
     this.addQueueStyles();
     this.setupTimerEventListeners();
     this.setupLayoutEventListeners();
+    this.setupGlobalLibraryEventListeners();
     this.setupExportButtonListeners();
     document.addEventListener('contextmenu', (e) => {
       if (e.target.classList.contains('play-btn') || 
@@ -8091,15 +8096,242 @@ destroyVisualizer() {
 
 
 
-  initSupabase() {
-    const supabaseUrl = 'https://cwhxanbpymkngzpbsshh.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3aHhhbmJweW1rbmd6cGJzc2hoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NTQzMTksImV4cCI6MjA2OTQzMDMxOX0.6K3eM1XoWaPmyMHsLYgw0mAnSxYjME4clflL4PxQalQ';
-    this.supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+ initSupabaseForFindSongs() {
+    if (!this.supabase) {
+        const supabaseUrl = 'https://cwhxanbpymkngzpbsshh.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3aHhhbmJweW1rbmd6cGJzc2hoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NTQzMTksImV4cCI6MjA2OTQzMDMxOX0.6K3eM1XoWaPmyMHsLYgw0mAnSxYjME4clflL4PxQalQ';
+        this.supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    }
 }
+initializeGlobalLibrary() {
+    this.initSupabaseForFindSongs();
+    this.globalLibrarySupabase = this.supabase;
+}
+
+setupGlobalLibraryEventListeners() {
+    document.getElementById('globalLibraryEditBtn').addEventListener('click', () => this.openGlobalLibraryModal());
+    document.getElementById('globalLibraryCloseBtn').addEventListener('click', () => this.closeGlobalLibraryModal());
+    document.getElementById('globalLibraryLoginBtn').addEventListener('click', () => this.globalLibraryLogin());
+    document.getElementById('globalLibraryLogoutBtn').addEventListener('click', () => this.globalLibraryLogout());
+    document.getElementById('globalLibraryCreateBtn').addEventListener('click', () => this.globalLibraryCreatePlaylist());
+    document.getElementById('globalLibraryAddSongBtn').addEventListener('click', () => this.globalLibraryAddSong());
+    document.getElementById('globalLibrarySearchBar').addEventListener('input', (e) => this.globalLibrarySearch(e.target.value));
+}
+
+openGlobalLibraryModal() {
+    document.getElementById('globalLibraryModal').style.display = 'block';
+    if (this.globalLibraryCurrentUser) {
+        this.showGlobalLibraryMainSection();
+    } else {
+        this.showGlobalLibraryLoginSection();
+    }
+}
+
+closeGlobalLibraryModal() {
+    document.getElementById('globalLibraryModal').style.display = 'none';
+}
+
+showGlobalLibraryLoginSection() {
+    document.getElementById('globalLibraryLoginSection').style.display = 'block';
+    document.getElementById('globalLibraryMainSection').style.display = 'none';
+}
+
+showGlobalLibraryMainSection() {
+    document.getElementById('globalLibraryLoginSection').style.display = 'none';
+    document.getElementById('globalLibraryMainSection').style.display = 'block';
+    document.getElementById('globalLibraryUserInfo').textContent = `Welcome, ${this.globalLibraryCurrentUser.email}`;
+    this.loadGlobalLibraryData();
+}
+
+async globalLibraryLogin() {
+    const email = document.getElementById('globalLibraryEmail').value;
+    const password = document.getElementById('globalLibraryPassword').value;
+    
+    if (!email || !password) {
+        this.showGlobalLibraryMessage('Please enter email and password', 'error');
+        return;
+    }
+
+    const { data, error } = await this.globalLibrarySupabase.auth.signInWithPassword({ email, password });
+    
+    if (error) {
+        this.showGlobalLibraryMessage(error.message, 'error');
+    } else {
+        this.globalLibraryCurrentUser = data.user;
+        this.showGlobalLibraryMainSection();
+        this.showGlobalLibraryMessage('Login successful!', 'success');
+    }
+}
+
+async globalLibraryLogout() {
+    await this.globalLibrarySupabase.auth.signOut();
+    this.globalLibraryCurrentUser = null;
+    this.showGlobalLibraryLoginSection();
+}
+
+async loadGlobalLibraryData() {
+    try {
+        const { data: artists, error } = await this.globalLibrarySupabase
+            .from('artists')
+            .select(`id, name, songs(id, name, author, youtube_url)`)
+            .order('name');
+
+        if (error) throw error;
+        
+        this.globalLibraryArtists = artists || [];
+        this.displayGlobalLibraryArtists();
+        this.updateGlobalLibraryPlaylistSelects();
+    } catch (error) {
+        this.showGlobalLibraryMessage('Error loading data: ' + error.message, 'error');
+    }
+}
+
+displayGlobalLibraryArtists() {
+    const container = document.getElementById('globalLibraryArtistsContainer');
+    const filteredArtists = this.globalLibraryArtists.filter(artist => 
+        artist.name.toLowerCase().includes(this.globalLibrarySearchFilter.toLowerCase()) ||
+        artist.songs.some(song => 
+            song.name.toLowerCase().includes(this.globalLibrarySearchFilter.toLowerCase()) ||
+            song.author.toLowerCase().includes(this.globalLibrarySearchFilter.toLowerCase())
+        )
+    );
+
+    container.innerHTML = filteredArtists.map(artist => `
+        <div class="global-library-artist-card">
+            <div class="global-library-artist-header">
+                <div class="global-library-artist-name">🎵 ${artist.name}</div>
+                <button onclick="musicPlayer.deleteGlobalLibraryPlaylist(${artist.id})" class="global-library-btn-small global-library-btn-danger">Delete</button>
+            </div>
+            <div>
+                ${artist.songs.map(song => `
+                    <div class="global-library-song-item">
+                        <div class="global-library-song-content">
+                            <div class="global-library-song-name">${song.name}</div>
+                            <div class="global-library-song-author">by ${song.author}</div>
+                        </div>
+                        <div class="global-library-song-actions">
+                            <button onclick="window.open('${song.youtube_url}', '_blank')" class="global-library-btn-small">▶️</button>
+                            <button onclick="musicPlayer.deleteGlobalLibrarySong(${song.id})" class="global-library-btn-small global-library-btn-danger">🗑️</button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            <div style="text-align: right; margin-top: 10px; color: var(--text-secondary); font-size: 12px;">
+                ${artist.songs.length} songs
+            </div>
+        </div>
+    `).join('');
+}
+
+updateGlobalLibraryPlaylistSelects() {
+    const selects = ['globalLibrarySongPlaylistSelect'];
+    selects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        select.innerHTML = '<option value="">Select Playlist</option>' + 
+            this.globalLibraryArtists.map(artist => `<option value="${artist.id}">🎵 ${artist.name}</option>`).join('');
+    });
+}
+
+async globalLibraryCreatePlaylist() {
+    const name = document.getElementById('globalLibraryNewPlaylistName').value.trim();
+    
+    if (!name) {
+        this.showGlobalLibraryMessage('Please enter a playlist name', 'error');
+        return;
+    }
+
+    const { error } = await this.globalLibrarySupabase
+        .from('artists')
+        .insert([{ name, created_by: this.globalLibraryCurrentUser.id }]);
+
+    if (error) {
+        this.showGlobalLibraryMessage('Error creating playlist: ' + error.message, 'error');
+    } else {
+        this.showGlobalLibraryMessage('Playlist created successfully!', 'success');
+        document.getElementById('globalLibraryNewPlaylistName').value = '';
+        this.loadGlobalLibraryData();
+    }
+}
+
+async globalLibraryAddSong() {
+    const artistId = document.getElementById('globalLibrarySongPlaylistSelect').value;
+    const name = document.getElementById('globalLibraryNewSongName').value.trim();
+    const author = document.getElementById('globalLibraryNewSongAuthor').value.trim();
+    const youtubeUrl = document.getElementById('globalLibraryNewSongUrl').value.trim();
+
+    if (!artistId || !name || !author || !youtubeUrl) {
+        this.showGlobalLibraryMessage('Please fill in all fields', 'error');
+        return;
+    }
+
+    if (!youtubeUrl.includes('youtube.com') && !youtubeUrl.includes('youtu.be')) {
+        this.showGlobalLibraryMessage('Please enter a valid YouTube URL', 'error');
+        return;
+    }
+
+    const { error } = await this.globalLibrarySupabase
+        .from('songs')
+        .insert([{ name, author, youtube_url: youtubeUrl, artist_id: parseInt(artistId), created_by: this.globalLibraryCurrentUser.id }]);
+
+    if (error) {
+        this.showGlobalLibraryMessage('Error adding song: ' + error.message, 'error');
+    } else {
+        this.showGlobalLibraryMessage('Song added successfully!', 'success');
+        document.getElementById('globalLibrarySongPlaylistSelect').value = '';
+        document.getElementById('globalLibraryNewSongName').value = '';
+        document.getElementById('globalLibraryNewSongAuthor').value = '';
+        document.getElementById('globalLibraryNewSongUrl').value = '';
+        this.loadGlobalLibraryData();
+    }
+}
+
+async deleteGlobalLibraryPlaylist(artistId) {
+    if (!confirm('Delete this playlist and all its songs?')) return;
+
+    const { error } = await this.globalLibrarySupabase
+        .from('artists')
+        .delete()
+        .eq('id', artistId);
+
+    if (error) {
+        this.showGlobalLibraryMessage('Error deleting playlist: ' + error.message, 'error');
+    } else {
+        this.showGlobalLibraryMessage('Playlist deleted successfully!', 'success');
+        this.loadGlobalLibraryData();
+    }
+}
+
+async deleteGlobalLibrarySong(songId) {
+    if (!confirm('Delete this song?')) return;
+
+    const { error } = await this.globalLibrarySupabase
+        .from('songs')
+        .delete()
+        .eq('id', songId);
+
+    if (error) {
+        this.showGlobalLibraryMessage('Error deleting song: ' + error.message, 'error');
+    } else {
+        this.showGlobalLibraryMessage('Song deleted successfully!', 'success');
+        this.loadGlobalLibraryData();
+    }
+}
+
+globalLibrarySearch(query) {
+    this.globalLibrarySearchFilter = query;
+    this.displayGlobalLibraryArtists();
+}
+
+showGlobalLibraryMessage(message, type) {
+    const messagesDiv = document.getElementById('globalLibraryMessages');
+    messagesDiv.innerHTML = `<div class="global-library-${type}">${message}</div>`;
+    setTimeout(() => messagesDiv.innerHTML = '', 3000);
+}
+  
 
 async openFindSongs() {
     if (!this.supabase) {
-        this.initSupabase();
+        this.initSupabaseForFindSongs();
     }
     this.elements.findSongsDiv.style.display = "flex";
     this.elements.findSongsSearch.focus();
@@ -8107,6 +8339,7 @@ async openFindSongs() {
     await this.loadAllArtists();
     this.displaySearchResults(this.allArtists);
 }
+  
 
 closeFindSongs() {
     this.elements.findSongsDiv.style.display = "none";
