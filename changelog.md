@@ -259,4 +259,4 @@
 - admins can manage global library and playlists. v35.2.0
 - fixed input fields so google passwords wont incorrectly autofill email into the search bar v35.3.0
 - changed styles a bit v35.3.1
-  
+- easily upgraded counter to https so mixed content warning will not show in console v35.3.2
