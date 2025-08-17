@@ -258,5 +258,5 @@
 - admins can modify add songs and import songs into global library. v35.1.0
 - admins can manage global library and playlists. v35.2.0
 - fixed input fields so google passwords wont incorrectly autofill email into the search bar v35.3.0
-- changed styles a bit
+- changed styles a bit v35.3.1
   
