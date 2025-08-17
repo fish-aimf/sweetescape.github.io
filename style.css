@@ -4622,3 +4622,18 @@ body:has(#ytPlayer.fullscreen-video) {
     outline: none;
     border-color: var(--accent-color);
 }
+
+
+.selected-playlist-info {
+    padding: 8px 12px;
+    background: var(--accent-color);
+    color: var(--button-text-color);
+    border-radius: 4px;
+    margin: 5px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.selected-playlist-info.no-selection {
+    background: var(--text-secondary);
+}
