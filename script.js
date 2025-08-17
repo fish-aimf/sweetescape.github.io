@@ -8154,7 +8154,7 @@ showGlobalLibraryMainSection() {
     );
     
     const optionsHTML = '<option value="">Choose a playlist...</option>' + 
-        filteredOptions.map(artist => `<option value="${artist.id}">🎵 ${artist.name} (${artist.songs.length} songs)</option>`).join('');
+        filteredOptions.map(artist => `<option value="${artist.id}"> ${artist.name} (${artist.songs.length} songs)</option>`).join('');
     
     select.innerHTML = optionsHTML;
 }
@@ -8224,7 +8224,7 @@ displayGlobalLibraryArtists() {
     container.innerHTML = filteredArtists.map(artist => `
         <div class="global-library-artist-card">
             <div class="global-library-artist-header">
-                <div class="global-library-artist-name">🎵 ${artist.name || 'Unnamed Playlist'}</div>
+                <div class="global-library-artist-name"> ${artist.name || 'Unnamed Playlist'}</div>
                 <button onclick="musicPlayer.deleteGlobalLibraryPlaylist(${artist.id})" class="global-library-btn-small global-library-btn-danger">Delete</button>
             </div>
             <div>
@@ -8268,7 +8268,7 @@ updateGlobalLibraryPlaylistSelects() {
     const select = document.getElementById('globalLibrarySelectedPlaylist');
     
     select.innerHTML = '<option value="">Choose a playlist...</option>' + 
-        this.globalLibraryArtists.map(artist => `<option value="${artist.id}">🎵 ${artist.name} (${artist.songs.length} songs)</option>`).join('');
+        this.globalLibraryArtists.map(artist => `<option value="${artist.id}"> ${artist.name} (${artist.songs.length} songs)</option>`).join('');
 }
 
 async globalLibraryMassImport() {
