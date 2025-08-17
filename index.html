@@ -768,9 +768,9 @@
         <!-- Login Form -->
         <div id="globalLibraryLoginSection">
             <h3>Login to Global Library</h3>
-            <input type="email" id="globalLibraryEmail" placeholder="Email">
-            <input type="password" id="globalLibraryPassword" placeholder="Password">
-            <button id="globalLibraryLoginBtn">Login</button>
+            <input type="email" id="globalLibraryEmail" placeholder="Email" class="global-library-input">
+            <input type="password" id="globalLibraryPassword" placeholder="Password" class="global-library-input">
+            <button id="globalLibraryLoginBtn" class="global-library-btn">Login</button>
             <div id="globalLibraryAuthError" class="error-message"></div>
         </div>
 
@@ -778,27 +778,46 @@
         <div id="globalLibraryMainSection" style="display: none;">
             <div class="global-library-user-info">
                 <span id="globalLibraryUserInfo"></span>
-                <button id="globalLibraryLogoutBtn">Logout</button>
+                <button id="globalLibraryLogoutBtn" class="global-library-btn global-library-btn-secondary">Logout</button>
             </div>
-            
-            <input type="text" id="globalLibrarySearchBar" placeholder="Search playlists and songs...">
             
             <div class="global-library-controls">
                 <div class="control-group">
                     <h4>Create Playlist</h4>
-                    <input type="text" id="globalLibraryNewPlaylistName" placeholder="Playlist name">
-                    <button id="globalLibraryCreateBtn">Create</button>
+                    <input type="text" id="globalLibraryNewPlaylistName" placeholder="Playlist name" class="global-library-input">
+                    <button id="globalLibraryCreateBtn" class="global-library-btn">Create</button>
                 </div>
                 
                 <div class="control-group">
                     <h4>Add Song</h4>
-                    <select id="globalLibrarySongPlaylistSelect"><option value="">Select Playlist</option></select>
-                    <input type="text" id="globalLibraryNewSongName" placeholder="Song name">
-                    <input type="text" id="globalLibraryNewSongAuthor" placeholder="Author">
-                    <input type="url" id="globalLibraryNewSongUrl" placeholder="YouTube URL">
-                    <button id="globalLibraryAddSongBtn">Add Song</button>
+                    <div class="playlist-select-container">
+                        <input type="text" id="globalLibraryPlaylistSearch" placeholder="Search playlists..." class="global-library-input playlist-search">
+                        <select id="globalLibrarySongPlaylistSelect" class="global-library-select">
+                            <option value="">Select Playlist</option>
+                        </select>
+                    </div>
+                    <input type="text" id="globalLibraryNewSongName" placeholder="Song name" class="global-library-input">
+                    <input type="text" id="globalLibraryNewSongAuthor" placeholder="Author" class="global-library-input">
+                    <input type="url" id="globalLibraryNewSongUrl" placeholder="YouTube URL" class="global-library-input">
+                    <button id="globalLibraryAddSongBtn" class="global-library-btn">Add Song</button>
+                </div>
+
+                <div class="control-group">
+                    <h4>Mass Import</h4>
+                    <div class="playlist-select-container">
+                        <select id="globalLibraryMassImportSelect" class="global-library-select">
+                            <option value="">Select Playlist for Import</option>
+                        </select>
+                    </div>
+                    <textarea id="globalLibraryMassImportText" placeholder="Format: Song Name, YouTube URL, Author
+Example:
+Shape of You, https://youtube.com/watch?v=abc123, Ed Sheeran
+Blinding Lights, https://youtube.com/watch?v=def456, The Weeknd" class="global-library-textarea"></textarea>
+                    <button id="globalLibraryMassImportBtn" class="global-library-btn">Import Songs</button>
                 </div>
             </div>
+
+            <input type="text" id="globalLibrarySearchBar" class="global-library-search-bar" placeholder="Search playlists and songs...">
             
             <div id="globalLibraryArtistsContainer"></div>
             <div id="globalLibraryMessages"></div>
