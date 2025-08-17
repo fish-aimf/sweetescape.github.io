@@ -142,7 +142,7 @@
                     <div class="tab-pane active" id="library">
                         <div class="library-manager">
                             <div class="search-section" title="find some premade playlists from famous artists">
-                                <input type="text" id="librarySearch" placeholder="Search songs...">
+                                <input type="text" id="librarySearch" placeholder="Search songs..." autocomplete="off">
                                 <button id="findSongsBtn" class="action-button find-songs-btn">
                                     <i class="fas fa-search"></i> Global library
                                 </button>
@@ -768,8 +768,10 @@
         <!-- Login Form -->
         <div id="globalLibraryLoginSection">
             <h3>Login to Global Library</h3>
-            <input type="email" id="globalLibraryEmail" placeholder="Email" class="global-library-input">
-            <input type="password" id="globalLibraryPassword" placeholder="Password" class="global-library-input">
+            <input type="email" id="globalLibraryEmail" placeholder="Email" class="global-library-input" autocomplete="username">
+
+            <input type="password" id="globalLibraryPassword" placeholder="Password" class="global-library-input" autocomplete="current-password">
+
             <button id="globalLibraryLoginBtn" class="global-library-btn">Login</button>
             <div id="globalLibraryAuthError" class="error-message"></div>
         </div>
