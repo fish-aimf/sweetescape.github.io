@@ -8120,6 +8120,7 @@ setupGlobalLibraryEventListeners() {
     document.getElementById('globalLibraryMassImportBtn').addEventListener('click', () => this.globalLibraryMassImport());
     document.getElementById('globalLibrarySearchBar').addEventListener('input', (e) => this.globalLibrarySearch(e.target.value));
     document.getElementById('globalLibraryPlaylistSearch').addEventListener('input', (e) => this.filterPlaylistSelect(e.target.value));
+    document.getElementById('globalLibrarySelectedPlaylist').addEventListener('change', (e) => this.updateSelectedPlaylist(e.target.value));
 }
 openGlobalLibraryModal() {
     document.getElementById('globalLibraryModal').style.display = 'block';
@@ -8146,21 +8147,17 @@ showGlobalLibraryMainSection() {
     this.loadGlobalLibraryData();
 }
   filterPlaylistSelect(searchQuery) {
-    const select = document.getElementById('globalLibrarySongPlaylistSelect');
-    const massImportSelect = document.getElementById('globalLibraryMassImportSelect');
+    const select = document.getElementById('globalLibrarySelectedPlaylist');
     
     const filteredOptions = this.globalLibraryArtists.filter(artist => 
         artist.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
     
-    const optionsHTML = '<option value="">Select Playlist</option>' + 
-        filteredOptions.map(artist => `<option value="${artist.id}">🎵 ${artist.name}</option>`).join('');
+    const optionsHTML = '<option value="">Choose a playlist...</option>' + 
+        filteredOptions.map(artist => `<option value="${artist.id}">🎵 ${artist.name} (${artist.songs.length} songs)</option>`).join('');
     
     select.innerHTML = optionsHTML;
-    massImportSelect.innerHTML = '<option value="">Select Playlist for Import</option>' + 
-        filteredOptions.map(artist => `<option value="${artist.id}">🎵 ${artist.name}</option>`).join('');
 }
-
 
 async globalLibraryLogin() {
     const email = document.getElementById('globalLibraryEmail').value;
@@ -8250,24 +8247,36 @@ displayGlobalLibraryArtists() {
         </div>
     `).join('');
 }
+updateSelectedPlaylist(playlistId) {
+    const playlistInfo = document.getElementById('selectedPlaylistName');
+    const infoContainer = document.querySelector('.selected-playlist-info');
+    
+    if (playlistId) {
+        const selectedPlaylist = this.globalLibraryArtists.find(artist => artist.id == playlistId);
+        if (selectedPlaylist) {
+            playlistInfo.textContent = `Selected: ${selectedPlaylist.name} (${selectedPlaylist.songs.length} songs)`;
+            infoContainer.classList.remove('no-selection');
+        }
+    } else {
+        playlistInfo.textContent = 'No playlist selected';
+        infoContainer.classList.add('no-selection');
+    }
+}
+
 
 updateGlobalLibraryPlaylistSelects() {
-    const select = document.getElementById('globalLibrarySongPlaylistSelect');
-    const massImportSelect = document.getElementById('globalLibraryMassImportSelect');
+    const select = document.getElementById('globalLibrarySelectedPlaylist');
     
-    select.innerHTML = '<option value="">Select Playlist</option>' + 
-        this.globalLibraryArtists.map(artist => `<option value="${artist.id}">🎵 ${artist.name}</option>`).join('');
-    
-    massImportSelect.innerHTML = '<option value="">Select Playlist for Import</option>' + 
-        this.globalLibraryArtists.map(artist => `<option value="${artist.id}">🎵 ${artist.name}</option>`).join('');
+    select.innerHTML = '<option value="">Choose a playlist...</option>' + 
+        this.globalLibraryArtists.map(artist => `<option value="${artist.id}">🎵 ${artist.name} (${artist.songs.length} songs)</option>`).join('');
 }
 
 async globalLibraryMassImport() {
-    const artistId = document.getElementById('globalLibraryMassImportSelect').value;
+    const artistId = document.getElementById('globalLibrarySelectedPlaylist').value;
     const importText = document.getElementById('globalLibraryMassImportText').value.trim();
 
     if (!artistId) {
-        this.showGlobalLibraryMessage('Please select a playlist', 'error');
+        this.showGlobalLibraryMessage('Please select a playlist first', 'error');
         return;
     }
 
@@ -8319,7 +8328,7 @@ async globalLibraryMassImport() {
     } else {
         this.showGlobalLibraryMessage(`Successfully imported ${songsToImport.length} songs!`, 'success');
         document.getElementById('globalLibraryMassImportText').value = '';
-        document.getElementById('globalLibraryMassImportSelect').value = '';
+        // Keep playlist selected for convenience
         this.loadGlobalLibraryData();
     }
 }
@@ -8345,13 +8354,18 @@ async globalLibraryCreatePlaylist() {
 }
 
 async globalLibraryAddSong() {
-    const artistId = document.getElementById('globalLibrarySongPlaylistSelect').value;
+    const artistId = document.getElementById('globalLibrarySelectedPlaylist').value;
     const name = document.getElementById('globalLibraryNewSongName').value.trim();
     const author = document.getElementById('globalLibraryNewSongAuthor').value.trim();
     const youtubeUrl = document.getElementById('globalLibraryNewSongUrl').value.trim();
 
-    if (!artistId || !name || !author || !youtubeUrl) {
-        this.showGlobalLibraryMessage('Please fill in all fields', 'error');
+    if (!artistId) {
+        this.showGlobalLibraryMessage('Please select a playlist first', 'error');
+        return;
+    }
+
+    if (!name || !author || !youtubeUrl) {
+        this.showGlobalLibraryMessage('Please fill in all song fields', 'error');
         return;
     }
 
@@ -8368,7 +8382,7 @@ async globalLibraryAddSong() {
         this.showGlobalLibraryMessage('Error adding song: ' + error.message, 'error');
     } else {
         this.showGlobalLibraryMessage('Song added successfully!', 'success');
-        document.getElementById('globalLibrarySongPlaylistSelect').value = '';
+        // Clear form but keep playlist selected
         document.getElementById('globalLibraryNewSongName').value = '';
         document.getElementById('globalLibraryNewSongAuthor').value = '';
         document.getElementById('globalLibraryNewSongUrl').value = '';
