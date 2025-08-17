@@ -8385,13 +8385,18 @@ async getSongTitlesFromGemini(author, quantity) {
     const requiredSongs = this.elements.aiRequiredSongs.value.trim();
     const requiredSongsList = requiredSongs ? requiredSongs.split(',').map(s => s.trim()).filter(s => s) : [];
     
+    // Get current date for context
+    const currentDate = new Date().toISOString().split('T')[0];
+    
     // First, ask AI to classify the query type
-    const classificationPrompt = `Analyze this music query and determine if it's asking for:
+    const classificationPrompt = `SEARCH THE INTERNET NOW to analyze this current music query and determine if it's asking for:
 A) Songs by a specific artist/band (e.g., "Drake", "Taylor Swift", "The Beatles", "ogryzek")
 B) A broader music category/request (e.g., "top 2024 spotify songs", "trending phonk", "best rap songs", "popular rock hits")
 
 Query: "${author}"
+Current date: ${currentDate}
 
+Use live internet search to verify if this is a real artist or a category request.
 Respond with only "SPECIFIC_ARTIST" or "BROAD_REQUEST"`;
 
     const classificationResponse = await fetch(`${this.GEMINI_API_URL}?key=${this.GEMINI_API_KEY}`, {
@@ -8425,34 +8430,48 @@ Respond with only "SPECIFIC_ARTIST" or "BROAD_REQUEST"`;
     
     if (isSpecificArtist) {
         // For specific artists - all songs by that artist
-        prompt = `You are a music database. List ONLY real, existing songs by the artist "${author}". 
+        prompt = `SEARCH THE INTERNET RIGHT NOW for the most current and complete discography of "${author}".
 
-${requiredSongsList.length > 0 ? `First, include these specific songs if they are real songs by ${author}:
+Current date: ${currentDate}
+
+MANDATORY: Use live internet search to find real, existing songs by ${author}. Check music streaming platforms, official discographies, and recent releases.
+
+${requiredSongsList.length > 0 ? `First, VERIFY these songs exist by searching online, and include them if they are real songs by ${author}:
 ${requiredSongsList.map(song => `- ${song}`).join('\n')}
 
-Then add more songs to reach exactly ${quantity} total songs.
+Then search the internet for more songs to reach exactly ${quantity} total songs.
 
-` : ''}STRICT REQUIREMENTS:
-- ONLY list songs that actually exist and were performed by ${author}
+` : ''}SEARCH REQUIREMENTS:
+- SEARCH music databases, Spotify, Apple Music, YouTube Music, and official artist pages
+- Include the LATEST releases from 2024 and 2025
+- VERIFY each song exists through internet search
 - NO made-up or fictional song titles
 - Each song title on a separate line
 - No numbering, bullets, or extra formatting
 - No commas in song titles
 - Exactly ${quantity} songs total
 - Include featured artists in parentheses if applicable (e.g., "Song Title (ft. Artist Name)")
+- Prioritize recent releases and popular tracks found through current internet search
 
-Real songs by ${author}:`;
+SEARCH THE INTERNET NOW and list real songs by ${author}:`;
     } else {
         // For broader requests - different songs by different artists
-        prompt = `You are a music database. Based on the request "${author}", list exactly ${quantity} real, existing songs that match this category/trend/criteria.
+        prompt = `SEARCH THE INTERNET RIGHT NOW for current music matching "${author}".
 
-${requiredSongsList.length > 0 ? `First, include these specific songs if they match the request:
+Current date: ${currentDate}
+
+MANDATORY: Use live internet search to find songs that match this category/trend/criteria. Check current charts, streaming platforms, and music databases.
+
+${requiredSongsList.length > 0 ? `First, SEARCH ONLINE to verify these songs match the request:
 ${requiredSongsList.map(song => `- ${song}`).join('\n')}
 
-Then add more songs to reach exactly ${quantity} total songs.
+Then search the internet for more matching songs to reach exactly ${quantity} total songs.
 
-` : ''}STRICT REQUIREMENTS:
-- ONLY list songs that actually exist
+` : ''}INTERNET SEARCH REQUIREMENTS:
+- SEARCH current music charts, Spotify playlists, trending lists, and streaming platforms
+- Find songs that are CURRENTLY popular or trending that match "${author}"
+- Include 2024 and 2025 releases when relevant
+- VERIFY each song exists through internet search
 - NO made-up or fictional song titles
 - Format: "Song Title by Artist Name"
 - Include all featured artists (e.g., "Song Title by Artist Name ft. Featured Artist")
@@ -8462,8 +8481,9 @@ Then add more songs to reach exactly ${quantity} total songs.
 - Exactly ${quantity} songs total
 - Songs should match the theme/genre/trend/criteria of "${author}"
 - Use different artists for variety unless the request specifically asks for one artist
+- Prioritize currently popular and recently released songs found through internet search
 
-Real songs matching "${author}":`;
+SEARCH THE INTERNET NOW for real songs matching "${author}":`;
     }
 
     const response = await fetch(`${this.GEMINI_API_URL}?key=${this.GEMINI_API_KEY}`, {
