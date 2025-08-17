@@ -742,6 +742,7 @@
     <div class="find-songs-content">
         <div class="find-songs-header">
             <h2>Find Songs from the Global Library</h2>
+            <button id="globalLibraryEditBtn" class="global-library-edit-btn" title="Edit Global Library">✏️</button>
             <button id="closeFindSongs" class="close-btn">&times;</button>
         </div>
         <div class="find-songs-search">
@@ -753,6 +754,54 @@
         <div class="not-finding-section" id="notFindingSection" style="display: none;">
             <p>Not finding what you're looking for?</p>
             <button class="generate-playlist-btn" id="openAiGeneratorBtn">Generate your wanted playlist with AI</button>
+        </div>
+    </div>
+</div>
+
+<div id="globalLibraryModal" class="global-library-modal" style="display: none;">
+    <div class="global-library-content">
+        <div class="global-library-header">
+            <h2>🎵 Global Library Management</h2>
+            <button id="globalLibraryCloseBtn" class="close-btn">&times;</button>
+        </div>
+        
+        <!-- Login Form -->
+        <div id="globalLibraryLoginSection">
+            <h3>Login to Global Library</h3>
+            <input type="email" id="globalLibraryEmail" placeholder="Email">
+            <input type="password" id="globalLibraryPassword" placeholder="Password">
+            <button id="globalLibraryLoginBtn">Login</button>
+            <div id="globalLibraryAuthError" class="error-message"></div>
+        </div>
+
+        <!-- Main Content -->
+        <div id="globalLibraryMainSection" style="display: none;">
+            <div class="global-library-user-info">
+                <span id="globalLibraryUserInfo"></span>
+                <button id="globalLibraryLogoutBtn">Logout</button>
+            </div>
+            
+            <input type="text" id="globalLibrarySearchBar" placeholder="Search playlists and songs...">
+            
+            <div class="global-library-controls">
+                <div class="control-group">
+                    <h4>Create Playlist</h4>
+                    <input type="text" id="globalLibraryNewPlaylistName" placeholder="Playlist name">
+                    <button id="globalLibraryCreateBtn">Create</button>
+                </div>
+                
+                <div class="control-group">
+                    <h4>Add Song</h4>
+                    <select id="globalLibrarySongPlaylistSelect"><option value="">Select Playlist</option></select>
+                    <input type="text" id="globalLibraryNewSongName" placeholder="Song name">
+                    <input type="text" id="globalLibraryNewSongAuthor" placeholder="Author">
+                    <input type="url" id="globalLibraryNewSongUrl" placeholder="YouTube URL">
+                    <button id="globalLibraryAddSongBtn">Add Song</button>
+                </div>
+            </div>
+            
+            <div id="globalLibraryArtistsContainer"></div>
+            <div id="globalLibraryMessages"></div>
         </div>
     </div>
 </div>
