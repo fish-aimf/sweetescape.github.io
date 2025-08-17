@@ -8117,9 +8117,10 @@ setupGlobalLibraryEventListeners() {
     document.getElementById('globalLibraryLogoutBtn').addEventListener('click', () => this.globalLibraryLogout());
     document.getElementById('globalLibraryCreateBtn').addEventListener('click', () => this.globalLibraryCreatePlaylist());
     document.getElementById('globalLibraryAddSongBtn').addEventListener('click', () => this.globalLibraryAddSong());
+    document.getElementById('globalLibraryMassImportBtn').addEventListener('click', () => this.globalLibraryMassImport());
     document.getElementById('globalLibrarySearchBar').addEventListener('input', (e) => this.globalLibrarySearch(e.target.value));
+    document.getElementById('globalLibraryPlaylistSearch').addEventListener('input', (e) => this.filterPlaylistSelect(e.target.value));
 }
-
 openGlobalLibraryModal() {
     document.getElementById('globalLibraryModal').style.display = 'block';
     if (this.globalLibraryCurrentUser) {
@@ -8144,6 +8145,22 @@ showGlobalLibraryMainSection() {
     document.getElementById('globalLibraryUserInfo').textContent = `Welcome, ${this.globalLibraryCurrentUser.email}`;
     this.loadGlobalLibraryData();
 }
+  filterPlaylistSelect(searchQuery) {
+    const select = document.getElementById('globalLibrarySongPlaylistSelect');
+    const massImportSelect = document.getElementById('globalLibraryMassImportSelect');
+    
+    const filteredOptions = this.globalLibraryArtists.filter(artist => 
+        artist.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    
+    const optionsHTML = '<option value="">Select Playlist</option>' + 
+        filteredOptions.map(artist => `<option value="${artist.id}">🎵 ${artist.name}</option>`).join('');
+    
+    select.innerHTML = optionsHTML;
+    massImportSelect.innerHTML = '<option value="">Select Playlist for Import</option>' + 
+        filteredOptions.map(artist => `<option value="${artist.id}">🎵 ${artist.name}</option>`).join('');
+}
+
 
 async globalLibraryLogin() {
     const email = document.getElementById('globalLibraryEmail').value;
@@ -8235,14 +8252,77 @@ displayGlobalLibraryArtists() {
 }
 
 updateGlobalLibraryPlaylistSelects() {
-    const selects = ['globalLibrarySongPlaylistSelect'];
-    selects.forEach(selectId => {
-        const select = document.getElementById(selectId);
-        select.innerHTML = '<option value="">Select Playlist</option>' + 
-            this.globalLibraryArtists.map(artist => `<option value="${artist.id}">🎵 ${artist.name}</option>`).join('');
-    });
+    const select = document.getElementById('globalLibrarySongPlaylistSelect');
+    const massImportSelect = document.getElementById('globalLibraryMassImportSelect');
+    
+    select.innerHTML = '<option value="">Select Playlist</option>' + 
+        this.globalLibraryArtists.map(artist => `<option value="${artist.id}">🎵 ${artist.name}</option>`).join('');
+    
+    massImportSelect.innerHTML = '<option value="">Select Playlist for Import</option>' + 
+        this.globalLibraryArtists.map(artist => `<option value="${artist.id}">🎵 ${artist.name}</option>`).join('');
 }
 
+async globalLibraryMassImport() {
+    const artistId = document.getElementById('globalLibraryMassImportSelect').value;
+    const importText = document.getElementById('globalLibraryMassImportText').value.trim();
+
+    if (!artistId) {
+        this.showGlobalLibraryMessage('Please select a playlist', 'error');
+        return;
+    }
+
+    if (!importText) {
+        this.showGlobalLibraryMessage('Please enter songs to import', 'error');
+        return;
+    }
+
+    const lines = importText.split('\n').filter(line => line.trim());
+    const songsToImport = [];
+    const errors = [];
+
+    lines.forEach((line, index) => {
+        const parts = line.split(',').map(part => part.trim());
+        if (parts.length < 2) {
+            errors.push(`Line ${index + 1}: Missing name or URL`);
+            return;
+        }
+
+        const name = parts[0];
+        const youtubeUrl = parts[1];
+        const author = parts[2] || 'Unknown';
+
+        if (!youtubeUrl.includes('youtube.com') && !youtubeUrl.includes('youtu.be')) {
+            errors.push(`Line ${index + 1}: Invalid YouTube URL`);
+            return;
+        }
+
+        songsToImport.push({
+            name: name,
+            author: author,
+            youtube_url: youtubeUrl,
+            artist_id: parseInt(artistId),
+            created_by: this.globalLibraryCurrentUser.id
+        });
+    });
+
+    if (errors.length > 0) {
+        this.showGlobalLibraryMessage('Import errors: ' + errors.join(', '), 'error');
+        return;
+    }
+
+    const { error } = await this.globalLibrarySupabase
+        .from('songs')
+        .insert(songsToImport);
+
+    if (error) {
+        this.showGlobalLibraryMessage('Error importing songs: ' + error.message, 'error');
+    } else {
+        this.showGlobalLibraryMessage(`Successfully imported ${songsToImport.length} songs!`, 'success');
+        document.getElementById('globalLibraryMassImportText').value = '';
+        document.getElementById('globalLibraryMassImportSelect').value = '';
+        this.loadGlobalLibraryData();
+    }
+}
 async globalLibraryCreatePlaylist() {
     const name = document.getElementById('globalLibraryNewPlaylistName').value.trim();
     
