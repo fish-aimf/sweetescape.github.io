@@ -8385,8 +8385,14 @@ async getSongTitlesFromGemini(author, quantity) {
     const requiredSongs = this.elements.aiRequiredSongs.value.trim();
     const requiredSongsList = requiredSongs ? requiredSongs.split(',').map(s => s.trim()).filter(s => s) : [];
     
+    // Initialize usage tracking if not exists
+    if (!this.geminiUsage) {
+        this.geminiUsage = JSON.parse(localStorage.getItem('gemini_usage') || '{"requests": 0, "tokens": 0, "dailyRequests": {}, "dailyTokens": {}}');
+    }
+    
     // Get current date for context
     const currentDate = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0];
     
     // First, ask AI to classify the query type
     const classificationPrompt = `SEARCH THE INTERNET NOW to analyze this current music query and determine if it's asking for:
@@ -8399,7 +8405,7 @@ Current date: ${currentDate}
 Use live internet search to verify if this is a real artist or a category request.
 Respond with only "SPECIFIC_ARTIST" or "BROAD_REQUEST"`;
 
-    const classificationResponse = await fetch(`${this.GEMINI_API_URL}?key=${this.GEMINI_API_KEY}`, {
+    const classificationResponse = await this.trackGeminiRequest(`${this.GEMINI_API_URL}?key=${this.GEMINI_API_KEY}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -8413,13 +8419,9 @@ Respond with only "SPECIFIC_ARTIST" or "BROAD_REQUEST"`;
                 maxOutputTokens: 50
             }
         })
-    });
+    }, classificationPrompt);
 
-    if (!classificationResponse.ok) {
-        throw new Error(`Classification API error: ${classificationResponse.status}`);
-    }
-
-    const classificationData = await classificationResponse.json();
+    const classificationData = classificationResponse;
     const classification = classificationData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "BROAD_REQUEST";
     
     console.log(`AI Classification for "${author}": ${classification}`);
@@ -8486,7 +8488,7 @@ Then search the internet for more matching songs to reach exactly ${quantity} to
 SEARCH THE INTERNET NOW for real songs matching "${author}":`;
     }
 
-    const response = await fetch(`${this.GEMINI_API_URL}?key=${this.GEMINI_API_KEY}`, {
+    const response = await this.trackGeminiRequest(`${this.GEMINI_API_URL}?key=${this.GEMINI_API_KEY}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -8502,13 +8504,9 @@ SEARCH THE INTERNET NOW for real songs matching "${author}":`;
                 topK: 10
             }
         })
-    });
+    }, prompt);
 
-    if (!response.ok) {
-        throw new Error(`Gemini API error: ${response.status}`);
-    }
-
-    const data = await response.json();
+    const data = response;
     
     if (data.candidates && data.candidates[0] && data.candidates[0].content) {
         const result = data.candidates[0].content.parts[0].text;
@@ -8549,6 +8547,65 @@ SEARCH THE INTERNET NOW for real songs matching "${author}":`;
         }
     } else {
         throw new Error('No valid response from Gemini API');
+    }
+}
+  async trackGeminiRequest(url, options, prompt) {
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Initialize daily counters if not exists
+    if (!this.geminiUsage.dailyRequests[today]) {
+        this.geminiUsage.dailyRequests[today] = 0;
+        this.geminiUsage.dailyTokens[today] = 0;
+    }
+    
+    try {
+        const response = await fetch(url, options);
+        
+        if (response.status === 429) {
+            const errorData = await response.json();
+            console.error('Gemini API quota exceeded:', errorData);
+            throw new Error('API quota exceeded. Please try again later.');
+        }
+        
+        if (!response.ok) {
+            throw new Error(`Gemini API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Track usage
+        const estimatedInputTokens = Math.ceil(prompt.length / 4);
+        const estimatedOutputTokens = data.candidates?.[0]?.content?.parts?.[0]?.text ? 
+            Math.ceil(data.candidates[0].content.parts[0].text.length / 4) : 0;
+        const totalTokens = estimatedInputTokens + estimatedOutputTokens;
+        
+        // Update counters
+        this.geminiUsage.requests++;
+        this.geminiUsage.tokens += totalTokens;
+        this.geminiUsage.dailyRequests[today]++;
+        this.geminiUsage.dailyTokens[today] += totalTokens;
+        
+        // Save to localStorage
+        localStorage.setItem('gemini_usage', JSON.stringify(this.geminiUsage));
+        
+        // Log usage stats
+        const dailyRequestLimit = 1500;
+        const dailyTokenLimit = 50000;
+        const remainingRequests = dailyRequestLimit - this.geminiUsage.dailyRequests[today];
+        const remainingTokens = dailyTokenLimit - this.geminiUsage.dailyTokens[today];
+        const requestPercent = ((this.geminiUsage.dailyRequests[today] / dailyRequestLimit) * 100).toFixed(1);
+        const tokenPercent = ((this.geminiUsage.dailyTokens[today] / dailyTokenLimit) * 100).toFixed(1);
+        
+        console.log('GEMINI API USAGE:');
+        console.log(`Today: ${this.geminiUsage.dailyRequests[today]}/${dailyRequestLimit} requests (${requestPercent}%), ${this.geminiUsage.dailyTokens[today]}/${dailyTokenLimit} tokens (${tokenPercent}%)`);
+        console.log(`Remaining: ${remainingRequests} requests, ${remainingTokens} tokens`);
+        console.log(`Total lifetime: ${this.geminiUsage.requests} requests, ${this.geminiUsage.tokens} tokens`);
+        
+        return data;
+        
+    } catch (error) {
+        console.error('Gemini API call failed:', error);
+        throw error;
     }
 }
 async searchYouTubeForSongs(songData, authorQuery) {
