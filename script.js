@@ -40,13 +40,6 @@ class AdvancedMusicPlayer {
     this.suggestedSongsDisplayLimit = 2;
     this.yourPicksDisplayLimit = 2;
     this.recentlyPlayedPlaylistsDisplayLimit = 1;
-    this.hearingProtectionEnabled = false;
-    this.hearingProtectionTriggerVolume = 35;
-    this.hearingProtectionTargetVolume = 15;
-    this.mappedDevices = new Map(); // deviceId -> 'earphones' | 'speakers' | 'other'
-    this.currentAudioDevices = [];
-    this.deviceChangeListener = null;
-    this.lastVolumeBeforeProtection = null;
     this.visualizerEnabled = true;
     this.globalLibrarySupabase = null;
     this.globalLibraryCurrentUser = null;
@@ -148,10 +141,8 @@ this.globalLibrarySearchFilter = '';
           this.loadDiscoverMoreSettingsOnStartup(),
           this.loadVisualizerSettings(),
           
-          
           this.loadLibrarySortSetting(),
-          this.loadLibraryReverseSetting(),
-          this.loadHearingSettings()
+          this.loadLibraryReverseSetting()
         ]);
       })
       .then(() => {
@@ -302,13 +293,7 @@ findSongsDiv: document.getElementById("findSongsDiv"),
 findSongsSearch: document.getElementById("findSongsSearch"),
 findSongsResults: document.getElementById("findSongsResults"),
       librarySortToggle: document.getElementById("librarySortToggle"),
-      libraryReverseToggle: document.getElementById("libraryReverseToggle"),
-      hearingProtectionToggle: document.getElementById("hearingProtectionToggle"),
-        hearingProtectionSettings: document.getElementById("hearingProtectionSettings"),
-        hearingProtectionTriggerVolume: document.getElementById("hearingProtectionTriggerVolume"),
-        hearingProtectionTargetVolume: document.getElementById("hearingProtectionTargetVolume"),
-        refreshDevicesBtn: document.getElementById("refreshDevicesBtn"),
-        audioDevicesList: document.getElementById("audioDevicesList")
+      libraryReverseToggle: document.getElementById("libraryReverseToggle")
     };
     this.elements.aiGeneratorDiv = document.getElementById("aiGeneratorDiv");
     this.elements.closeAiGenerator = document.getElementById("closeAiGenerator");
@@ -542,20 +527,6 @@ settingsEventBindings.forEach(([element, event, handler], index) => {
         console.warn(`Settings element not found for event binding at index ${index}`);
     }
 });
-
-
-    const hearingEventBindings = [
-        [this.elements.hearingProtectionToggle, "change", this.handleHearingProtectionToggle],
-        [this.elements.hearingProtectionTriggerVolume, "input", this.handleTriggerVolumeChange],
-        [this.elements.hearingProtectionTargetVolume, "input", this.handleTargetVolumeChange],
-        [this.elements.refreshDevicesBtn, "click", this.handleRefreshDevices]
-    ];
-
-    hearingEventBindings.forEach(([element, event, handler]) => {
-        if (element) {
-            element.addEventListener(event, handler.bind(this));
-        }
-    });
   }
   setupKeyboardControls() {
     document.addEventListener("keydown", (e) => {
@@ -2225,23 +2196,7 @@ clearNonEssentialIntervals() {
   }
   setVolume(volume) {
     if (this.ytPlayer) {
-        this.ytPlayer.setVolume(volume);
-        
-        // Check for hearing protection when volume changes manually
-        if (this.hearingProtectionEnabled && !this.lastVolumeBeforeProtection) {
-            const connectedEarphones = this.getEarphonesFromDevices(this.currentAudioDevices);
-            
-            if (connectedEarphones.length > 0 && volume > this.hearingProtectionTriggerVolume) {
-                this.lastVolumeBeforeProtection = volume;
-                setTimeout(() => {
-                    this.ytPlayer.setVolume(this.hearingProtectionTargetVolume);
-                    this.showNotification(
-                        `Volume reduced to ${this.hearingProtectionTargetVolume}% for hearing protection`, 
-                        "success"
-                    );
-                }, 100);
-            }
-        }
+      this.ytPlayer.setVolume(volume);
     }
   }
    // Fixed autoplay toggle
@@ -2387,7 +2342,34 @@ initializeAutoplay() {
       }
     });
   }
-  
+  renderInitialState() {
+    this.renderPlaylists();
+    this.renderSongLibrary();
+    this.updatePlaylistSelection();
+    this.updateListeningTimeDisplay();
+    this.renderAdditionalDetails();
+    document.title = "Music";
+    this.elements.speedBtn.textContent = this.currentSpeed + "x";
+    const controlBarVisible = localStorage.getItem("controlBarVisible");
+    if (controlBarVisible === "false") {
+      setTimeout(() => {
+        const controlBar =
+          document
+            .querySelector(".player-controls")
+            .closest(".player-container") ||
+          document.querySelector(".player-controls").parentElement;
+        if (controlBar) {
+          controlBar.style.visibility = "hidden";
+          controlBar.style.position = "absolute";
+          controlBar.style.pointerEvents = "none";
+        }
+        const toggleBtn = document.getElementById("toggleControlBarBtn");
+      }, 100);
+    }
+    setTimeout(() => {
+      this.showWelcomeModal();
+    }, 1000);
+  }
   extractYouTubeId(url) {
     if (!url) return null;
     const patterns = [
@@ -6661,7 +6643,6 @@ initializeSettingsContent() {
     this.loadDiscoverMoreSettings();
   this.loadLibrarySortSetting();
   this.loadLibraryReverseSetting();
-  this.loadHearingSettings();
     console.log("Settings modal opened - all settings loaded");
 }
 
@@ -7342,7 +7323,37 @@ handleSectionToggle(event) {
     console.log(`Section ${sectionType} ${isExpanded ? 'collapsed' : 'expanded'}`);
 }
 
+// Optional: Method to expand a specific section programmatically
+expandSection(sectionType) {
+    const content = document.getElementById(`${sectionType}Content`);
+    const header = document.querySelector(`[data-section="${sectionType}"]`);
+    const arrow = header?.querySelector('.section-arrow');
+    
+    if (content && arrow) {
+        content.classList.add('expanded');
+        arrow.classList.add('rotated');
+    }
+}
 
+// Optional: Method to collapse a specific section programmatically
+collapseSection(sectionType) {
+    const content = document.getElementById(`${sectionType}Content`);
+    const header = document.querySelector(`[data-section="${sectionType}"]`);
+    const arrow = header?.querySelector('.section-arrow');
+    
+    if (content && arrow) {
+        content.classList.remove('expanded');
+        arrow.classList.remove('rotated');
+    }
+}
+
+// Optional: Method to collapse all sections
+collapseAllSections() {
+    const sectionTypes = ['feedback', 'advertisement', 'theme'];
+    sectionTypes.forEach(sectionType => {
+        this.collapseSection(sectionType);
+    });
+}
   async loadDiscoverMoreSettings() {
     try {
         // The values are already loaded on startup, just sync with DOM elements
@@ -8109,7 +8120,6 @@ setupGlobalLibraryEventListeners() {
     document.getElementById('globalLibraryMassImportBtn').addEventListener('click', () => this.globalLibraryMassImport());
     document.getElementById('globalLibrarySearchBar').addEventListener('input', (e) => this.globalLibrarySearch(e.target.value));
     document.getElementById('globalLibraryPlaylistSearch').addEventListener('input', (e) => this.filterPlaylistSelect(e.target.value));
-    document.getElementById('globalLibrarySelectedPlaylist').addEventListener('change', (e) => this.updateSelectedPlaylist(e.target.value));
 }
 openGlobalLibraryModal() {
     document.getElementById('globalLibraryModal').style.display = 'block';
@@ -8136,17 +8146,21 @@ showGlobalLibraryMainSection() {
     this.loadGlobalLibraryData();
 }
   filterPlaylistSelect(searchQuery) {
-    const select = document.getElementById('globalLibrarySelectedPlaylist');
+    const select = document.getElementById('globalLibrarySongPlaylistSelect');
+    const massImportSelect = document.getElementById('globalLibraryMassImportSelect');
     
     const filteredOptions = this.globalLibraryArtists.filter(artist => 
         artist.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
     
-    const optionsHTML = '<option value="">Choose a playlist...</option>' + 
-        filteredOptions.map(artist => `<option value="${artist.id}"> ${artist.name} (${artist.songs.length} songs)</option>`).join('');
+    const optionsHTML = '<option value="">Select Playlist</option>' + 
+        filteredOptions.map(artist => `<option value="${artist.id}">🎵 ${artist.name}</option>`).join('');
     
     select.innerHTML = optionsHTML;
+    massImportSelect.innerHTML = '<option value="">Select Playlist for Import</option>' + 
+        filteredOptions.map(artist => `<option value="${artist.id}">🎵 ${artist.name}</option>`).join('');
 }
+
 
 async globalLibraryLogin() {
     const email = document.getElementById('globalLibraryEmail').value;
@@ -8213,7 +8227,7 @@ displayGlobalLibraryArtists() {
     container.innerHTML = filteredArtists.map(artist => `
         <div class="global-library-artist-card">
             <div class="global-library-artist-header">
-                <div class="global-library-artist-name"> ${artist.name || 'Unnamed Playlist'}</div>
+                <div class="global-library-artist-name">🎵 ${artist.name || 'Unnamed Playlist'}</div>
                 <button onclick="musicPlayer.deleteGlobalLibraryPlaylist(${artist.id})" class="global-library-btn-small global-library-btn-danger">Delete</button>
             </div>
             <div>
@@ -8236,36 +8250,24 @@ displayGlobalLibraryArtists() {
         </div>
     `).join('');
 }
-updateSelectedPlaylist(playlistId) {
-    const playlistInfo = document.getElementById('selectedPlaylistName');
-    const infoContainer = document.querySelector('.selected-playlist-info');
-    
-    if (playlistId) {
-        const selectedPlaylist = this.globalLibraryArtists.find(artist => artist.id == playlistId);
-        if (selectedPlaylist) {
-            playlistInfo.textContent = `Selected: ${selectedPlaylist.name} (${selectedPlaylist.songs.length} songs)`;
-            infoContainer.classList.remove('no-selection');
-        }
-    } else {
-        playlistInfo.textContent = 'No playlist selected';
-        infoContainer.classList.add('no-selection');
-    }
-}
-
 
 updateGlobalLibraryPlaylistSelects() {
-    const select = document.getElementById('globalLibrarySelectedPlaylist');
+    const select = document.getElementById('globalLibrarySongPlaylistSelect');
+    const massImportSelect = document.getElementById('globalLibraryMassImportSelect');
     
-    select.innerHTML = '<option value="">Choose a playlist...</option>' + 
-        this.globalLibraryArtists.map(artist => `<option value="${artist.id}"> ${artist.name} (${artist.songs.length} songs)</option>`).join('');
+    select.innerHTML = '<option value="">Select Playlist</option>' + 
+        this.globalLibraryArtists.map(artist => `<option value="${artist.id}">🎵 ${artist.name}</option>`).join('');
+    
+    massImportSelect.innerHTML = '<option value="">Select Playlist for Import</option>' + 
+        this.globalLibraryArtists.map(artist => `<option value="${artist.id}">🎵 ${artist.name}</option>`).join('');
 }
 
 async globalLibraryMassImport() {
-    const artistId = document.getElementById('globalLibrarySelectedPlaylist').value;
+    const artistId = document.getElementById('globalLibraryMassImportSelect').value;
     const importText = document.getElementById('globalLibraryMassImportText').value.trim();
 
     if (!artistId) {
-        this.showGlobalLibraryMessage('Please select a playlist first', 'error');
+        this.showGlobalLibraryMessage('Please select a playlist', 'error');
         return;
     }
 
@@ -8317,7 +8319,7 @@ async globalLibraryMassImport() {
     } else {
         this.showGlobalLibraryMessage(`Successfully imported ${songsToImport.length} songs!`, 'success');
         document.getElementById('globalLibraryMassImportText').value = '';
-        // Keep playlist selected for convenience
+        document.getElementById('globalLibraryMassImportSelect').value = '';
         this.loadGlobalLibraryData();
     }
 }
@@ -8343,18 +8345,13 @@ async globalLibraryCreatePlaylist() {
 }
 
 async globalLibraryAddSong() {
-    const artistId = document.getElementById('globalLibrarySelectedPlaylist').value;
+    const artistId = document.getElementById('globalLibrarySongPlaylistSelect').value;
     const name = document.getElementById('globalLibraryNewSongName').value.trim();
     const author = document.getElementById('globalLibraryNewSongAuthor').value.trim();
     const youtubeUrl = document.getElementById('globalLibraryNewSongUrl').value.trim();
 
-    if (!artistId) {
-        this.showGlobalLibraryMessage('Please select a playlist first', 'error');
-        return;
-    }
-
-    if (!name || !author || !youtubeUrl) {
-        this.showGlobalLibraryMessage('Please fill in all song fields', 'error');
+    if (!artistId || !name || !author || !youtubeUrl) {
+        this.showGlobalLibraryMessage('Please fill in all fields', 'error');
         return;
     }
 
@@ -8371,7 +8368,7 @@ async globalLibraryAddSong() {
         this.showGlobalLibraryMessage('Error adding song: ' + error.message, 'error');
     } else {
         this.showGlobalLibraryMessage('Song added successfully!', 'success');
-        // Clear form but keep playlist selected
+        document.getElementById('globalLibrarySongPlaylistSelect').value = '';
         document.getElementById('globalLibraryNewSongName').value = '';
         document.getElementById('globalLibraryNewSongAuthor').value = '';
         document.getElementById('globalLibraryNewSongUrl').value = '';
@@ -9167,253 +9164,6 @@ showAiSuccess(message) {
 removeAiMessages() {
     const messages = this.elements.aiGeneratorDiv.querySelectorAll('.ai-error, .ai-success');
     messages.forEach(msg => msg.remove());
-}
-
-
-async loadHearingSettings() {
-    if (!this.db) return;
-    
-    try {
-        const transaction = this.db.transaction(["userSettings"], "readonly");
-        const store = transaction.objectStore("userSettings");
-        const request = store.get("hearingProtection");
-        
-        request.onsuccess = () => {
-            const settings = request.result?.settings || {};
-            
-            this.hearingProtectionEnabled = settings.enabled || false;
-            this.hearingProtectionTriggerVolume = settings.triggerVolume || 35;
-            this.hearingProtectionTargetVolume = settings.targetVolume || 15;
-            this.mappedDevices = new Map(settings.mappedDevices || []);
-            
-            // Update UI
-            if (this.elements.hearingProtectionToggle) {
-                this.elements.hearingProtectionToggle.checked = this.hearingProtectionEnabled;
-                this.elements.hearingProtectionSettings.style.display = 
-                    this.hearingProtectionEnabled ? "block" : "none";
-            }
-            
-            if (this.elements.hearingProtectionTriggerVolume) {
-                this.elements.hearingProtectionTriggerVolume.value = this.hearingProtectionTriggerVolume;
-                this.elements.hearingProtectionTriggerVolume.nextElementSibling.textContent = 
-                    this.hearingProtectionTriggerVolume + "%";
-            }
-            
-            if (this.elements.hearingProtectionTargetVolume) {
-                this.elements.hearingProtectionTargetVolume.value = this.hearingProtectionTargetVolume;
-                this.elements.hearingProtectionTargetVolume.nextElementSibling.textContent = 
-                    this.hearingProtectionTargetVolume + "%";
-            }
-            
-            // Initialize device monitoring if enabled
-            if (this.hearingProtectionEnabled) {
-                this.initializeDeviceMonitoring();
-            }
-            
-            // Load device list
-            this.loadAudioDevices();
-        };
-    } catch (error) {
-        console.error("Error loading hearing settings:", error);
-    }
-}
-
-async saveHearingSettings() {
-    if (!this.db) return;
-    
-    try {
-        const transaction = this.db.transaction(["userSettings"], "readwrite");
-        const store = transaction.objectStore("userSettings");
-        
-        const settings = {
-            category: "hearingProtection",
-            settings: {
-                enabled: this.hearingProtectionEnabled,
-                triggerVolume: this.hearingProtectionTriggerVolume,
-                targetVolume: this.hearingProtectionTargetVolume,
-                mappedDevices: Array.from(this.mappedDevices.entries())
-            }
-        };
-        
-        store.put(settings);
-    } catch (error) {
-        console.error("Error saving hearing settings:", error);
-    }
-}
-
-// HEARING PROTECTION METHODS - GROUP 2: EVENT HANDLERS
-handleHearingProtectionToggle(event) {
-    this.hearingProtectionEnabled = event.target.checked;
-    this.elements.hearingProtectionSettings.style.display = 
-        this.hearingProtectionEnabled ? "block" : "none";
-    
-    if (this.hearingProtectionEnabled) {
-        this.initializeDeviceMonitoring();
-        this.loadAudioDevices();
-    } else {
-        this.stopDeviceMonitoring();
-    }
-    
-    this.saveHearingSettings();
-}
-
-handleTriggerVolumeChange(event) {
-    this.hearingProtectionTriggerVolume = parseInt(event.target.value);
-    event.target.nextElementSibling.textContent = this.hearingProtectionTriggerVolume + "%";
-    this.saveHearingSettings();
-}
-
-handleTargetVolumeChange(event) {
-    this.hearingProtectionTargetVolume = parseInt(event.target.value);
-    event.target.nextElementSibling.textContent = this.hearingProtectionTargetVolume + "%";
-    this.saveHearingSettings();
-}
-
-handleRefreshDevices() {
-    this.loadAudioDevices();
-}
-
-handleDeviceMapping(deviceId, event) {
-    const deviceType = event.target.value;
-    if (deviceType === "remove") {
-        this.mappedDevices.delete(deviceId);
-    } else {
-        this.mappedDevices.set(deviceId, deviceType);
-    }
-    this.saveHearingSettings();
-}
-
-// HEARING PROTECTION METHODS - GROUP 3: DEVICE MANAGEMENT
-async loadAudioDevices() {
-    try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        this.currentAudioDevices = devices.filter(device => device.kind === "audiooutput");
-        this.renderAudioDevices();
-    } catch (error) {
-        console.error("Error loading audio devices:", error);
-        this.showNotification("Error loading audio devices", "error");
-    }
-}
-
-renderAudioDevices() {
-    if (!this.elements.audioDevicesList) return;
-    
-    this.elements.audioDevicesList.innerHTML = "";
-    
-    this.currentAudioDevices.forEach(device => {
-        const deviceItem = document.createElement("div");
-        deviceItem.className = "device-item";
-        
-        const deviceLabel = document.createElement("span");
-        deviceLabel.className = "device-label";
-        deviceLabel.textContent = device.label || `Device ${device.deviceId.slice(0, 8)}...`;
-        
-        const deviceSelector = document.createElement("select");
-        deviceSelector.className = "device-type-selector";
-        deviceSelector.innerHTML = `
-            <option value="">Select Type</option>
-            <option value="earphones">Earphones/Headphones</option>
-            <option value="speakers">Speakers</option>
-            <option value="other">Other</option>
-            <option value="remove">Remove Mapping</option>
-        `;
-        
-        // Set current mapping
-        const currentMapping = this.mappedDevices.get(device.deviceId);
-        if (currentMapping) {
-            deviceSelector.value = currentMapping;
-        }
-        
-        deviceSelector.addEventListener("change", (e) => 
-            this.handleDeviceMapping(device.deviceId, e));
-        
-        deviceItem.appendChild(deviceLabel);
-        deviceItem.appendChild(deviceSelector);
-        this.elements.audioDevicesList.appendChild(deviceItem);
-    });
-}
-
-// HEARING PROTECTION METHODS - GROUP 4: MONITORING & PROTECTION
-initializeDeviceMonitoring() {
-    if (this.deviceChangeListener) return; // Already initialized
-    
-    this.deviceChangeListener = async () => {
-        if (!this.hearingProtectionEnabled) return;
-        
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const newAudioDevices = devices.filter(d => d.kind === "audiooutput");
-        
-        // Check for earphone connection changes
-        this.checkEarphoneStatusChange(this.currentAudioDevices, newAudioDevices);
-        
-        this.currentAudioDevices = newAudioDevices;
-    };
-    
-    navigator.mediaDevices.addEventListener("devicechange", this.deviceChangeListener);
-}
-
-stopDeviceMonitoring() {
-    if (this.deviceChangeListener) {
-        navigator.mediaDevices.removeEventListener("devicechange", this.deviceChangeListener);
-        this.deviceChangeListener = null;
-    }
-}
-
-checkEarphoneStatusChange(oldDevices, newDevices) {
-    const oldEarphones = this.getEarphonesFromDevices(oldDevices);
-    const newEarphones = this.getEarphonesFromDevices(newDevices);
-    
-    // Check if earphones were plugged in
-    const pluggedIn = newEarphones.find(device => 
-        !oldEarphones.some(oldDevice => oldDevice.deviceId === device.deviceId)
-    );
-    
-    // Check if earphones were unplugged
-    const unplugged = oldEarphones.find(device => 
-        !newEarphones.some(newDevice => newDevice.deviceId === device.deviceId)
-    );
-    
-    if (pluggedIn) {
-        this.onEarphonesConnected(pluggedIn);
-    }
-    
-    if (unplugged) {
-        this.onEarphonesDisconnected(unplugged);
-    }
-}
-
-getEarphonesFromDevices(devices) {
-    return devices.filter(device => 
-        this.mappedDevices.get(device.deviceId) === "earphones"
-    );
-}
-
-onEarphonesConnected(device) {
-    this.showNotification(`Earphones detected: ${device.label}. Volume protection activated.`, "info");
-    
-    // Apply volume protection if current volume is above trigger
-    if (this.ytPlayer) {
-        const currentVolume = this.ytPlayer.getVolume();
-        if (currentVolume > this.hearingProtectionTriggerVolume) {
-            this.lastVolumeBeforeProtection = currentVolume;
-            this.setVolume(this.hearingProtectionTargetVolume);
-            this.showNotification(
-                `Volume reduced to ${this.hearingProtectionTargetVolume}% for hearing protection`, 
-                "success"
-            );
-        }
-    }
-}
-
-onEarphonesDisconnected(device) {
-    this.showNotification(`Earphones disconnected: ${device.label}`, "info");
-    
-    // Restore previous volume if it was reduced for protection
-    if (this.lastVolumeBeforeProtection && this.ytPlayer) {
-        this.setVolume(this.lastVolumeBeforeProtection);
-        this.showNotification(`Volume restored to ${this.lastVolumeBeforeProtection}%`, "info");
-        this.lastVolumeBeforeProtection = null;
-    }
 }
 
 
