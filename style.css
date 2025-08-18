@@ -4637,3 +4637,67 @@ body:has(#ytPlayer.fullscreen-video) {
 .selected-playlist-info.no-selection {
     background: var(--text-secondary);
 }
+
+
+.devices-list {
+    margin-top: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 10px;
+}
+
+.device-item {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.device-item:last-child {
+    border-bottom: none;
+}
+
+.device-label {
+    flex: 1;
+    font-size: 14px;
+    word-break: break-word;
+}
+
+.device-type-selector {
+    margin-left: 10px;
+    padding: 4px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--background-color);
+    color: var(--text-color);
+    font-size: 12px;
+}
+
+.btn-secondary {
+    background: var(--secondary-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-secondary:hover {
+    background: var(--hover-color);
+}
+
+.range-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.range-value {
+    min-width: 40px;
+    font-weight: bold;
+    color: var(--accent-color);
+}
