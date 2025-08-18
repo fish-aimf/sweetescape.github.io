@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+s<!DOCTYPE html>
 <html lang="en">
 <head>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -434,6 +434,10 @@
                     <i class="fas fa-music"></i>
                     Recommendation
                 </button>
+                <button class="settings-tab-btn" data-tab="hearing">
+                    <i class="fas fa-volume-up"></i>
+                    Hearing
+                </button>
                 <button class="settings-tab-btn" data-tab="feedback">
                     <i class="fas fa-comment"></i>
                     Feedback
@@ -597,6 +601,52 @@
                         <button id="saveDiscoverMoreSettings" class="save-settings-btn">Save Recommendation Settings</button>
                     </div>
                 </div>
+
+                <div id="hearingPanel" class="tab-panel">
+    <h3>Hearing Protection</h3>
+    <div class="setting-item">
+        <label class="setting-label">
+            <span class="setting-title">Automatic Volume Protection</span>
+            <span class="setting-description">Automatically lower volume when earphones are detected</span>
+        </label>
+        <label class="toggle-switch">
+            <input type="checkbox" id="hearingProtectionToggle">
+            <span class="toggle-slider"></span>
+        </label>
+    </div>
+
+    <div id="hearingProtectionSettings" style="display: none;">
+        <div class="setting-item">
+            <label class="setting-label">
+                <span class="setting-title">Protection Trigger Volume</span>
+                <span class="setting-description">Lower volume when above this threshold (%)</span>
+            </label>
+            <div class="range-container">
+                <input type="range" id="hearingProtectionTriggerVolume" min="20" max="80" value="35" class="range-slider">
+                <span class="range-value">35%</span>
+            </div>
+        </div>
+
+        <div class="setting-item">
+            <label class="setting-label">
+                <span class="setting-title">Protection Target Volume</span>
+                <span class="setting-description">Reduce volume to this level (%)</span>
+            </label>
+            <div class="range-container">
+                <input type="range" id="hearingProtectionTargetVolume" min="5" max="30" value="15" class="range-slider">
+                <span class="range-value">15%</span>
+            </div>
+        </div>
+
+        <div class="setting-item">
+            <h4>Audio Device Mapping</h4>
+            <p class="setting-description">Map your audio devices for proper protection</p>
+            <button id="refreshDevicesBtn" class="btn-secondary">Refresh Devices</button>
+            <div id="audioDevicesList" class="devices-list"></div>
+        </div>
+    </div>
+</div>
+                
 
                 <!-- Feedback Tab -->
                 <div class="tab-panel" id="feedbackPanel">
