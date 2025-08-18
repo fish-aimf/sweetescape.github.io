@@ -1,4 +1,4 @@
-s<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -59,7 +59,7 @@ s<!DOCTYPE html>
             <i class="fas fa-headphones"></i>
             <span id="listeningTime">0m</span>
             <div class="visitor-counter" title="total website visits"> 
-                     <div align="center"><a href="https://www.amazingcounters.com"><img border="0" src="https://cc.amazingcounters.com/counter.php?i=3303898&c=9912007" alt="AmazingCounters.com"></a></div>
+                     <div align="center"><a href="http://www.amazingcounters.com"><img border="0" src="http://cc.amazingcounters.com/counter.php?i=3303898&c=9912007" alt="AmazingCounters.com"></a></div>
 
             </div>
              
@@ -142,7 +142,7 @@ s<!DOCTYPE html>
                     <div class="tab-pane active" id="library">
                         <div class="library-manager">
                             <div class="search-section" title="find some premade playlists from famous artists">
-                                <input type="text" id="librarySearch" placeholder="Search songs..." autocomplete="off">
+                                <input type="text" id="librarySearch" placeholder="Search songs...">
                                 <button id="findSongsBtn" class="action-button find-songs-btn">
                                     <i class="fas fa-search"></i> Global library
                                 </button>
@@ -434,10 +434,6 @@ s<!DOCTYPE html>
                     <i class="fas fa-music"></i>
                     Recommendation
                 </button>
-                <button class="settings-tab-btn" data-tab="hearing">
-                    <i class="fas fa-volume-up"></i>
-                    Hearing
-                </button>
                 <button class="settings-tab-btn" data-tab="feedback">
                     <i class="fas fa-comment"></i>
                     Feedback
@@ -602,52 +598,6 @@ s<!DOCTYPE html>
                     </div>
                 </div>
 
-                <div id="hearingPanel" class="tab-panel">
-    <h3>Hearing Protection</h3>
-    <div class="setting-item">
-        <label class="setting-label">
-            <span class="setting-title">Automatic Volume Protection</span>
-            <span class="setting-description">Automatically lower volume when earphones are detected</span>
-        </label>
-        <label class="toggle-switch">
-            <input type="checkbox" id="hearingProtectionToggle">
-            <span class="toggle-slider"></span>
-        </label>
-    </div>
-
-    <div id="hearingProtectionSettings" style="display: none;">
-        <div class="setting-item">
-            <label class="setting-label">
-                <span class="setting-title">Protection Trigger Volume</span>
-                <span class="setting-description">Lower volume when above this threshold (%)</span>
-            </label>
-            <div class="range-container">
-                <input type="range" id="hearingProtectionTriggerVolume" min="20" max="80" value="35" class="range-slider">
-                <span class="range-value">35%</span>
-            </div>
-        </div>
-
-        <div class="setting-item">
-            <label class="setting-label">
-                <span class="setting-title">Protection Target Volume</span>
-                <span class="setting-description">Reduce volume to this level (%)</span>
-            </label>
-            <div class="range-container">
-                <input type="range" id="hearingProtectionTargetVolume" min="5" max="30" value="15" class="range-slider">
-                <span class="range-value">15%</span>
-            </div>
-        </div>
-
-        <div class="setting-item">
-            <h4>Audio Device Mapping</h4>
-            <p class="setting-description">Map your audio devices for proper protection</p>
-            <button id="refreshDevicesBtn" class="btn-secondary">Refresh Devices</button>
-            <div id="audioDevicesList" class="devices-list"></div>
-        </div>
-    </div>
-</div>
-                
-
                 <!-- Feedback Tab -->
                 <div class="tab-panel" id="feedbackPanel">
                     <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd_TCuV0fb6j0Psu2-QowYAlK440IOd4f1XxhzswTfWOkLHyw/viewform?embedded=true" width="100%" height="600" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
@@ -811,17 +761,15 @@ s<!DOCTYPE html>
 <div id="globalLibraryModal" class="global-library-modal" style="display: none;">
     <div class="global-library-content">
         <div class="global-library-header">
-            <h2>Global Library Management</h2>
+            <h2>🎵 Global Library Management</h2>
             <button id="globalLibraryCloseBtn" class="close-btn">&times;</button>
         </div>
         
         <!-- Login Form -->
         <div id="globalLibraryLoginSection">
             <h3>Login to Global Library</h3>
-            <input type="email" id="globalLibraryEmail" placeholder="Email" class="global-library-input" autocomplete="username">
-
-            <input type="password" id="globalLibraryPassword" placeholder="Password" class="global-library-input" autocomplete="current-password">
-
+            <input type="email" id="globalLibraryEmail" placeholder="Email" class="global-library-input">
+            <input type="password" id="globalLibraryPassword" placeholder="Password" class="global-library-input">
             <button id="globalLibraryLoginBtn" class="global-library-btn">Login</button>
             <div id="globalLibraryAuthError" class="error-message"></div>
         </div>
@@ -834,43 +782,41 @@ s<!DOCTYPE html>
             </div>
             
             <div class="global-library-controls">
-                    <div class="control-group">
-                        <h4>Create Playlist</h4>
-                        <input type="text" id="globalLibraryNewPlaylistName" placeholder="Playlist name" class="global-library-input">
-                        <button id="globalLibraryCreateBtn" class="global-library-btn">Create</button>
-                    </div>
-                    
-                    <!-- Shared Playlist Selector -->
-                    <div class="control-group">
-                        <h4>Select Playlist</h4>
-                        <div class="playlist-select-container">
-                            <input type="text" id="globalLibraryPlaylistSearch" placeholder="Search playlists..." class="global-library-input playlist-search">
-                            <select id="globalLibrarySelectedPlaylist" class="global-library-select">
-                                <option value="">Choose a playlist first...</option>
-                            </select>
-                        </div>
-                        <div class="selected-playlist-info">
-                            <span id="selectedPlaylistName">No playlist selected</span>
-                        </div>
-                    </div>
-                    
-                    <div class="control-group">
-                        <h4>Add Song</h4>
-                        <input type="text" id="globalLibraryNewSongName" placeholder="Song name" class="global-library-input">
-                        <input type="text" id="globalLibraryNewSongAuthor" placeholder="Author" class="global-library-input">
-                        <input type="url" id="globalLibraryNewSongUrl" placeholder="YouTube URL" class="global-library-input">
-                        <button id="globalLibraryAddSongBtn" class="global-library-btn">Add Song</button>
-                    </div>
-                
-                    <div class="control-group">
-                        <h4>Mass Import</h4>
-                        <textarea id="globalLibraryMassImportText" placeholder="Format: Song Name, YouTube URL, Author
-                Example:
-                Shape of You, https://youtube.com/watch?v=abc123, Ed Sheeran
-                Blinding Lights, https://youtube.com/watch?v=def456, The Weeknd" class="global-library-textarea"></textarea>
-                        <button id="globalLibraryMassImportBtn" class="global-library-btn">Import Songs</button>
-                    </div>
+                <div class="control-group">
+                    <h4>Create Playlist</h4>
+                    <input type="text" id="globalLibraryNewPlaylistName" placeholder="Playlist name" class="global-library-input">
+                    <button id="globalLibraryCreateBtn" class="global-library-btn">Create</button>
                 </div>
+                
+                <div class="control-group">
+                    <h4>Add Song</h4>
+                    <div class="playlist-select-container">
+                        <input type="text" id="globalLibraryPlaylistSearch" placeholder="Search playlists..." class="global-library-input playlist-search">
+                        <select id="globalLibrarySongPlaylistSelect" class="global-library-select">
+                            <option value="">Select Playlist</option>
+                        </select>
+                    </div>
+                    <input type="text" id="globalLibraryNewSongName" placeholder="Song name" class="global-library-input">
+                    <input type="text" id="globalLibraryNewSongAuthor" placeholder="Author" class="global-library-input">
+                    <input type="url" id="globalLibraryNewSongUrl" placeholder="YouTube URL" class="global-library-input">
+                    <button id="globalLibraryAddSongBtn" class="global-library-btn">Add Song</button>
+                </div>
+
+                <div class="control-group">
+                    <h4>Mass Import</h4>
+                    <div class="playlist-select-container">
+                        <select id="globalLibraryMassImportSelect" class="global-library-select">
+                            <option value="">Select Playlist for Import</option>
+                        </select>
+                    </div>
+                    <textarea id="globalLibraryMassImportText" placeholder="Format: Song Name, YouTube URL, Author
+Example:
+Shape of You, https://youtube.com/watch?v=abc123, Ed Sheeran
+Blinding Lights, https://youtube.com/watch?v=def456, The Weeknd" class="global-library-textarea"></textarea>
+                    <button id="globalLibraryMassImportBtn" class="global-library-btn">Import Songs</button>
+                </div>
+            </div>
+
             <input type="text" id="globalLibrarySearchBar" class="global-library-search-bar" placeholder="Search playlists and songs...">
             
             <div id="globalLibraryArtistsContainer"></div>
