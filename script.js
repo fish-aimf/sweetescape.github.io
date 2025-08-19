@@ -7792,6 +7792,7 @@ convertTranscriptToLyrics(transcript) {
     return null;
   }
 }
+// New method to auto-fetch transcript using Supadata API
 async autoFetchTranscript() {
   if (!this.currentSongForImport) return;
   
@@ -7805,9 +7806,9 @@ async autoFetchTranscript() {
     autoFetchBtn.disabled = true;
     autoFetchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching...';
     
-    // Construct the API URL
+    // Construct the API URL - use text=false to get timestamps
     const videoUrl = `https://www.youtube.com/watch?v=${this.currentSongForImport.videoId}`;
-    const apiUrl = `https://api.supadata.ai/v1/youtube/transcript?url=${encodeURIComponent(videoUrl)}&text=true`;
+    const apiUrl = `https://api.supadata.ai/v1/youtube/transcript?url=${encodeURIComponent(videoUrl)}&text=false`;
     
     // Make API request
     const response = await fetch(apiUrl, {
@@ -7824,9 +7825,12 @@ async autoFetchTranscript() {
     
     const data = await response.json();
     
-    if (data.content) {
+    if (data.content && Array.isArray(data.content)) {
+      // Convert structured data to YouTube-like transcript format
+      const transcriptText = this.formatSupadataTranscriptForConversion(data.content);
+      
       // Populate the transcript input
-      transcriptInput.value = data.content;
+      transcriptInput.value = transcriptText;
       
       // Show success message
       this.showNotification('Transcript fetched successfully!', 'success');
@@ -7861,6 +7865,36 @@ async autoFetchTranscript() {
     loadingIndicator.style.display = 'none';
     autoFetchBtn.disabled = false;
     autoFetchBtn.innerHTML = '<i class="fas fa-magic"></i> Auto-Fetch Transcript';
+  }
+}
+  
+// New method to format Supadata transcript data for conversion
+formatSupadataTranscriptForConversion(transcriptArray) {
+  try {
+    const formattedLines = [];
+    
+    for (const segment of transcriptArray) {
+      if (segment.start !== undefined && segment.text) {
+        // Convert start time (in seconds) to minutes:seconds format
+        const totalSeconds = Math.floor(segment.start);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        
+        // Add timestamp line
+        formattedLines.push(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+        
+        // Add text content
+        formattedLines.push(segment.text.trim());
+        
+        // Add empty line for spacing (like YouTube format)
+        formattedLines.push('');
+      }
+    }
+    
+    return formattedLines.join('\n');
+  } catch (error) {
+    console.error('Error formatting Supadata transcript:', error);
+    return '';
   }
 }
 
