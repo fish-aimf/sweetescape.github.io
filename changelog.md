@@ -261,3 +261,4 @@
 - changed styles a bit v35.3.1
 - easily upgraded counter to https so mixed content warning will not show in console v35.3.2
 - made cors policy more straightforward and stops fetching ads instead of blocking them on browser level v35.3.3
+- added html elements for import subtitles and automatic subtitle extraction with supadata youtube subtitle import. it currently has 100 requests / month v35.4.0
