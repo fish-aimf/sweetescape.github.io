@@ -7656,7 +7656,7 @@ closeSubtitlesImportModal() {
   document.getElementById('lyricsPreviewSection').style.display = 'none';
   document.getElementById('loadingIndicator').style.display = 'none';
 }
-  convertTranscriptToLyricsHandler() {
+ convertTranscriptToLyricsHandler() {
   const transcriptInput = document.getElementById('transcriptInput');
   const lyricsPreview = document.getElementById('lyricsPreview');
   const previewSection = document.getElementById('lyricsPreviewSection');
@@ -7680,6 +7680,44 @@ closeSubtitlesImportModal() {
     this.showNotification('Transcript converted successfully!', 'success');
   } else {
     this.showNotification('Could not convert transcript. Please check the format.', 'error');
+  }
+}
+
+// Handler for saving lyrics
+async saveLyricsFromModal() {
+  const lyricsPreview = document.getElementById('lyricsPreview');
+  const lyricsText = lyricsPreview.value.trim();
+  
+  if (!lyricsText) {
+    this.showNotification('No lyrics to save', 'error');
+    return;
+  }
+  
+  if (!this.currentSongForImport) {
+    this.showNotification('No song selected', 'error');
+    return;
+  }
+  
+  try {
+    await this.updateSongDetails(
+      this.currentSongForImport.id, 
+      this.currentSongForImport.name, 
+      this.currentSongForImport.author, 
+      this.currentSongForImport.videoId, 
+      lyricsText
+    );
+    
+    this.showNotification('Lyrics saved successfully!', 'success');
+    this.closeSubtitlesImportModal();
+    
+    // Refresh lyrics tab if it's currently active
+    if (document.getElementById('lyrics')?.classList.contains('active')) {
+      this.renderLyricsTab();
+    }
+    
+  } catch (error) {
+    console.error('Error saving lyrics:', error);
+    this.showNotification('Failed to save lyrics. Please try again.', 'error');
   }
 }
 // Handler for saving lyrics
