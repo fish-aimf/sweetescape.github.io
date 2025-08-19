@@ -7807,8 +7807,6 @@ async saveLyricsFromModal() {
 }
 
 
-
-
 convertTranscriptToLyrics(transcript) {
   try {
     const lines = transcript.split('\n');
@@ -7826,8 +7824,8 @@ convertTranscriptToLyrics(transcript) {
         const minutes = parseInt(timestampMatch[2] || timestampMatch[1]);
         const seconds = parseInt(timestampMatch[3] || timestampMatch[2]);
         
-        // Look for lyric content in the next line(s)
-        let lyricContent = '';
+        // Collect all lyric content until the next timestamp
+        const lyricLines = [];
         let j = i + 1;
         
         while (j < lines.length) {
@@ -7845,6 +7843,7 @@ convertTranscriptToLyrics(transcript) {
           }
           
           // Extract lyric content
+          let lyricContent = '';
           if (nextLine.startsWith('♪') && nextLine.endsWith('♪')) {
             lyricContent = nextLine.slice(1, -1).trim();
           } else if (nextLine.match(/^\([^)]+\)$/) || nextLine.match(/^\*\*[^*]+\*\*$/)) {
@@ -7861,11 +7860,16 @@ convertTranscriptToLyrics(transcript) {
           if (lyricContent) {
             // Apply formatting
             lyricContent = this.formatLyricText(lyricContent);
-            lyrics.push(`${lyricContent} [${minutes}:${seconds.toString().padStart(2, '0')}]`);
+            lyricLines.push(lyricContent);
           }
           
           j++;
-          break; // Only take the first lyric line after timestamp
+        }
+        
+        // Join all lyrics for this timestamp and add to output
+        if (lyricLines.length > 0) {
+          const combinedLyrics = lyricLines.join(' ');
+          lyrics.push(`${combinedLyrics} [${minutes}:${seconds.toString().padStart(2, '0')}]`);
         }
         
         i = j - 1; // Skip processed lines
