@@ -413,6 +413,73 @@
     </div>
 </div>
 
+<!-- Add this to your index.html body, preferably near the end -->
+<div id="subtitlesImportModal" class="subtitles-import-modal-overlay" style="display: none;">
+  <div class="subtitles-import-modal-content">
+    <div class="subtitles-import-modal-header">
+      <h2 id="subtitlesImportModalTitle">Import Subtitles</h2>
+      <span class="subtitles-import-modal-close">&times;</span>
+    </div>
+
+    <div class="subtitles-import-instructions-container">
+      <div class="subtitles-import-instructions">
+        <p class="subtitles-import-instructions-title">Instructions:</p>
+        <p>1. Click "Auto-Fetch Transcript" to automatically get subtitles, OR</p>
+        <p>2. Click "Open YouTube Video" → "..." menu → "Show transcript"</p>
+        <p>3. Copy the entire transcript and paste it below</p>
+        <p>4. Click "Convert to Lyrics" to format it properly</p>
+      </div>
+      
+      <div class="subtitles-import-button-group">
+        <button id="autoFetchTranscriptBtn" class="subtitles-import-auto-fetch-btn">
+          <i class="fas fa-magic"></i> Auto-Fetch Transcript
+        </button>
+        <button id="openYouTubeBtn" class="subtitles-import-youtube-btn">
+          <i class="fab fa-youtube"></i> Open YouTube Video
+        </button>
+      </div>
+    </div>
+
+    <div class="subtitles-import-input-section">
+      <label for="transcriptInput" class="subtitles-import-input-label">
+        Paste YouTube transcript here:
+      </label>
+      <textarea 
+        id="transcriptInput" 
+        class="subtitles-import-transcript-textarea"
+        placeholder="Transcript will appear here automatically, or paste manually..."
+      ></textarea>
+      
+      <button id="convertBtn" class="subtitles-import-convert-btn">
+        <i class="fas fa-sync-alt"></i> Convert to Lyrics
+      </button>
+    </div>
+
+    <div id="lyricsPreviewSection" class="subtitles-import-preview-section" style="display: none;">
+      <label for="lyricsPreview" class="subtitles-import-preview-label">
+        Converted Lyrics (Edit if needed):
+      </label>
+      <textarea 
+        id="lyricsPreview" 
+        class="subtitles-import-lyrics-textarea"
+      ></textarea>
+      
+      <div class="subtitles-import-action-buttons">
+        <button id="saveLyricsBtn" class="subtitles-import-save-btn">
+          <i class="fas fa-save"></i> Save Lyrics
+        </button>
+        <button id="cancelImportBtn" class="subtitles-import-cancel-btn">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+      </div>
+    </div>
+
+    <div id="loadingIndicator" class="subtitles-import-loading" style="display: none;">
+      <i class="fas fa-spinner fa-spin"></i> Fetching transcript...
+    </div>
+  </div>
+</div>
+
 
     <!-- Settings Modal -->
 <!-- Settings Modal -->
