@@ -7997,6 +7997,9 @@ formatLyricText(text) {
   // Remove music symbols and extra characters
   text = text.replace(/♪/g, '').trim();
   
+  // Remove newlines and replace with spaces
+  text = text.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+  
   // Convert to lowercase first
   text = text.toLowerCase();
   
@@ -8013,7 +8016,6 @@ formatLyricText(text) {
   
   return text;
 }
-
 
 
  initializeVisualizer() {
