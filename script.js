@@ -7962,22 +7962,23 @@ addTimestampsToPlainText(plainText) {
   }
 }
   
-// New method to format Supadata transcript data for conversion
+// Fixed method to format Supadata transcript data for conversion
 formatSupadataTranscriptForConversion(transcriptArray) {
   try {
     const formattedLines = [];
     
     for (const segment of transcriptArray) {
-      if (segment.start !== undefined && segment.text) {
-        // Convert start time (in seconds) to minutes:seconds format
-        const totalSeconds = Math.floor(segment.start);
+      // Fix: Use 'offset' instead of 'start' and convert from milliseconds to seconds
+      if (segment.offset !== undefined && segment.text) {
+        // Convert offset time (in milliseconds) to seconds, then to minutes:seconds format
+        const totalSeconds = Math.floor(segment.offset / 1000); // Convert ms to seconds
         const minutes = Math.floor(totalSeconds / 60);
         const seconds = totalSeconds % 60;
         
         // Add timestamp line
         formattedLines.push(`${minutes}:${seconds.toString().padStart(2, '0')}`);
         
-        // Add text content
+        // Add text content (already has ♪ symbols which your converter handles)
         formattedLines.push(segment.text.trim());
         
         // Add empty line for spacing (like YouTube format)
