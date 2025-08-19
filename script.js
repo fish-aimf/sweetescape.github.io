@@ -330,10 +330,19 @@ findSongsResults: document.getElementById("findSongsResults"),
     this.handleAddSong = this.addSongToLibrary.bind(this);
     this.handleFilterLibrary = this.filterLibrarySongs.bind(this);
     this.handleLibrarySearchKeydown = (e) => {
-      if (e.key === "Enter" && this.elements.youtubeSearchSuggestion.style.display !== "none") {
-        this.searchYouTube(this.elements.librarySearch.value.trim());
-      }
-    };
+    if (e.key === "Enter" && this.elements.youtubeSearchSuggestion.style.display !== "none") {
+        const searchTerm = this.elements.librarySearch.value.trim();
+        const videoId = this.extractYouTubeId(searchTerm);
+        
+        if (videoId) {
+            // It's a YouTube URL - autofill the library modal
+            this.autofillFromUrl(searchTerm);
+        } else {
+            // It's a regular search - open YouTube search
+            this.searchYouTube(searchTerm);
+        }
+    }
+};
     this.handleCreatePlaylist = this.createPlaylist.bind(this);
     this.handleClosePlaylistModal = this.closePlaylistModal.bind(this);
     this.handleSearchSongsToAdd = this.searchSongsToAddToPlaylist.bind(this);
@@ -1007,28 +1016,67 @@ renderSongLibrary() {
     });
   }
   filterLibrarySongs() {
-    const searchTerm = this.elements.librarySearch.value.toLowerCase();
+    const searchTerm = this.elements.librarySearch.value.toLowerCase().trim();
     const songItems = this.elements.songLibrary.querySelectorAll(".song-item");
     let resultsFound = false;
-    songItems.forEach((item) => {
-      const songElement = item.querySelector("span");
-      const songName = songElement.textContent.toLowerCase();
-      const songId = songElement.dataset.songId;
-      const song = this.songLibrary.find((s) => s.id == songId);
-      const authorMatch =
-        song && song.author && song.author.toLowerCase().includes(searchTerm);
-      const isVisible = songName.includes(searchTerm) || authorMatch;
-      item.style.display = isVisible ? "flex" : "none";
-      if (isVisible) {
-        resultsFound = true;
-      }
-    });
-    if (!resultsFound && searchTerm.trim() !== "") {
-      this.showYouTubeSearchSuggestion(searchTerm);
-    } else {
-      this.hideYouTubeSearchSuggestion();
+
+    // Check if it's a YouTube URL
+    const videoId = this.extractYouTubeId(searchTerm);
+    
+    if (videoId) {
+        // It's a YouTube URL - show "Add to Library" suggestion
+        this.showAddToLibrarySuggestion(searchTerm);
+        // Hide all song items since we're showing URL suggestion
+        songItems.forEach((item) => {
+            item.style.display = "none";
+        });
+        return;
     }
-  }
+
+    // Regular search functionality
+    songItems.forEach((item) => {
+        const songElement = item.querySelector("span");
+        const songName = songElement.textContent.toLowerCase();
+        const songId = songElement.dataset.songId;
+        const song = this.songLibrary.find((s) => s.id == songId);
+        const authorMatch =
+            song && song.author && song.author.toLowerCase().includes(searchTerm);
+        const isVisible = songName.includes(searchTerm) || authorMatch;
+        item.style.display = isVisible ? "flex" : "none";
+        if (isVisible) {
+            resultsFound = true;
+        }
+    });
+
+    if (!resultsFound && searchTerm !== "") {
+        this.showYouTubeSearchSuggestion(searchTerm);
+    } else {
+        this.hideYouTubeSearchSuggestion();
+    }
+}
+  showAddToLibrarySuggestion(youtubeUrl) {
+    const querySpan = this.elements.youtubeSearchSuggestion.querySelector(".search-query");
+    querySpan.textContent = `Add this song to library`;
+    this.elements.youtubeSearchSuggestion.style.display = "block";
+    this.elements.youtubeSearchSuggestion.onclick = null;
+    this.elements.youtubeSearchSuggestion.onclick = () => {
+        this.autofillFromUrl(youtubeUrl);
+    };
+}
+  autofillFromUrl(youtubeUrl) {
+    // Open the library modal
+    this.openLibraryModal();
+    
+    // Fill the URL field
+    this.elements.songUrlInput.value = youtubeUrl;
+    
+    // Trigger the URL paste handler to show thumbnail and autofill
+    this.handleUrlPaste();
+    
+    // Clear the search field
+    this.elements.librarySearch.value = "";
+    this.hideYouTubeSearchSuggestion();
+}
   showYouTubeSearchSuggestion(searchTerm) {
     const querySpan =
       this.elements.youtubeSearchSuggestion.querySelector(".search-query");
