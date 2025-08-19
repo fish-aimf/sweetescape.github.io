@@ -7831,6 +7831,7 @@ convertTranscriptToLyrics(transcript) {
   }
 }
 // New method to auto-fetch transcript using Supadata API
+// REPLACE your existing autoFetchTranscript method with this:
 async autoFetchTranscript() {
   if (!this.currentSongForImport) return;
   
@@ -7863,12 +7864,29 @@ async autoFetchTranscript() {
     
     const data = await response.json();
     
-    if (data.content && Array.isArray(data.content)) {
-      // Convert structured data to YouTube-like transcript format
-      const transcriptText = this.formatSupadataTranscriptForConversion(data.content);
+    console.log('Supadata API Response:', data); // Debug log
+    
+    let transcriptText = '';
+    
+    if (data.content) {
+      if (Array.isArray(data.content)) {
+        // Structured format with timestamps
+        transcriptText = this.formatSupadataTranscriptForConversion(data.content);
+      } else if (typeof data.content === 'string') {
+        // Plain text format - we need to add fake timestamps for conversion
+        transcriptText = this.addTimestampsToPlainText(data.content);
+      } else {
+        throw new Error('Unexpected transcript format');
+      }
+      
+      if (!transcriptText.trim()) {
+        throw new Error('Empty transcript received');
+      }
       
       // Populate the transcript input
       transcriptInput.value = transcriptText;
+      
+      console.log('Formatted transcript:', transcriptText.substring(0, 200) + '...'); // Debug log
       
       // Show success message
       this.showNotification('Transcript fetched successfully!', 'success');
@@ -7903,6 +7921,44 @@ async autoFetchTranscript() {
     loadingIndicator.style.display = 'none';
     autoFetchBtn.disabled = false;
     autoFetchBtn.innerHTML = '<i class="fas fa-magic"></i> Auto-Fetch Transcript';
+  }
+}
+
+
+  // ADD this new method to your AdvancedMusicPlayer class:
+addTimestampsToPlainText(plainText) {
+  try {
+    const lines = plainText.split('\n').filter(line => line.trim());
+    const formattedLines = [];
+    
+    // Estimate timing: assume each line takes about 3-4 seconds
+    let currentTime = 0;
+    const secondsPerLine = 3.5;
+    
+    for (const line of lines) {
+      if (line.trim()) {
+        const minutes = Math.floor(currentTime / 60);
+        const seconds = Math.floor(currentTime % 60);
+        
+        // Add timestamp
+        formattedLines.push(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+        
+        // Add text
+        formattedLines.push(line.trim());
+        
+        // Add spacing
+        formattedLines.push('');
+        
+        // Increment time based on line length (longer lines take more time)
+        const wordCount = line.split(' ').length;
+        currentTime += Math.max(secondsPerLine, wordCount * 0.5);
+      }
+    }
+    
+    return formattedLines.join('\n');
+  } catch (error) {
+    console.error('Error adding timestamps to plain text:', error);
+    return plainText; // Return original if formatting fails
   }
 }
   
