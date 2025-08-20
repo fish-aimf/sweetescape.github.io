@@ -4999,7 +4999,7 @@ body:has(#ytPlayer.fullscreen-video) {
 
 /* Current song section styles */
 .current-song-section {
-    margin-bottom: 20px;
+    margin-bottom: 4px;
     padding: 12px;
     background: var(--bg-secondary);
     border-radius: 8px;
