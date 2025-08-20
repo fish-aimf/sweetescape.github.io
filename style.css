@@ -5081,7 +5081,7 @@ body:has(#ytPlayer.fullscreen-video) {
 #additionalDetails::-webkit-scrollbar-track {
     background: var(--bg-secondary);
     border-radius: 3px;
-    margin: 8px 0; /* Creates shorter scrollbar with gaps at top/bottom */
+    margin: 1px 0; /* Creates shorter scrollbar with gaps at top/bottom */
 }
 
 #additionalDetails::-webkit-scrollbar-thumb {
