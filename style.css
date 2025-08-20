@@ -4972,3 +4972,161 @@ body:has(#ytPlayer.fullscreen-video) {
     flex: 1;
   }
 }
+/* Fix the main layout structure */
+.additional-details {
+    /* Ensure the additional details panel maintains its original structure */
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.additional-details-header {
+    /* Keep the header fixed at top */
+    flex-shrink: 0;
+    margin-bottom: 16px;
+}
+
+.additional-details-content {
+    /* Make the content area flexible and scrollable */
+    flex: 1;
+    max-height: calc(100vh - 160px); /* Adjusted for header space */
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+}
+
+/* Ensure existing detail sections maintain their styling */
+.additional-details-section {
+    margin-bottom: 20px;
+    /* Keep existing section styling intact */
+}
+
+.additional-details-section:not(.current-song-section) {
+    /* Apply original styling to non-current-song sections */
+    background: var(--bg-secondary);
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+/* Fix section titles */
+.section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Ensure details items list maintains original layout */
+.details-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Fix details item styling */
+.details-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    border-radius: 6px;
+    background: var(--bg-primary);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.details-item:hover {
+    background: var(--accent-color);
+    color: var(--button-text-color);
+    transform: translateX(2px);
+}
+
+/* Fix thumbnail styling */
+.details-item-thumbnail {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.details-item-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.details-item-thumbnail i {
+    color: var(--text-secondary);
+    font-size: 16px;
+}
+
+/* Fix item info styling */
+.details-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.details-item-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.details-item:hover .details-item-name {
+    color: var(--button-text-color);
+}
+
+/* Current song section specific styling (separate from other sections) */
+.current-song-section {
+    margin-bottom: 24px !important;
+    padding: 16px !important;
+    background: var(--bg-secondary) !important;
+    border-radius: 12px !important;
+    border: 2px solid var(--accent-color) !important;
+    box-shadow: 0 4px 12px var(--shadow-color) !important;
+}
+
+.current-song-title {
+    color: var(--accent-color) !important;
+    margin-bottom: 12px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+}
+
+/* Scrollbar styling (keep as is) */
+.additional-details-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.additional-details-content::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 3px;
+}
+
+.additional-details-content::-webkit-scrollbar-thumb {
+    background: var(--accent-color);
+    border-radius: 3px;
+}
+
+.additional-details-content::-webkit-scrollbar-thumb:hover {
+    background: var(--hover-color);
+}
+
+/* Responsive fixes */
+@media (max-width: 768px) {
+    .additional-details-content {
+        max-height: calc(100vh - 140px);
+    }
+}
