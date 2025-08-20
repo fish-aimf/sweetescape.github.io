@@ -267,3 +267,4 @@
 - changed css drastically v36.1.0
 - made it not write unknown artist but make song name bigger v36.1.1
 - forgot to make current song change when playing nextsong or play song from playlist so done that v36.1.2
+- fixed styles and made it a bit more compact v36.1.3
