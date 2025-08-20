@@ -1608,21 +1608,10 @@ renderSongLibrary() {
     
     this.currentPlaylist = null;
     this.currentSongIndex = this.songLibrary.findIndex((s) => s.id === songId);
-    this.currentSong = song; // Store current song reference
     
-    this.playSongById(song.videoId);
+    this.playSongById(song.videoId, song);
     this.hideSidebar();
     this.saveRecentlyPlayedSong(song);
-    
-    // Update current song display
-    this.updateCurrentSongDisplay();
-    
-    if (
-        document.getElementById("lyrics") &&
-        document.getElementById("lyrics").classList.contains("active")
-    ) {
-        this.renderLyricsTab();
-    }
 }
   handleSongNameRightClick(event) {
     event.preventDefault();
@@ -1645,7 +1634,7 @@ renderSongLibrary() {
         });
     }
 }
- playSongById(videoId) {
+ playSongById(videoId, song = null) {
   if (!this.ytPlayer) {
     console.error("YouTube player not initialized");
     return;
@@ -1673,8 +1662,23 @@ renderSongLibrary() {
       }
     }, 200);
     
+    // Update current song reference if provided
+    if (song) {
+      this.currentSong = song;
+    }
+    
     this.isPlaying = true;
     this.updatePlayerUI();
+    
+    // Update current song display
+    this.updateCurrentSongDisplay();
+    
+    if (
+        document.getElementById("lyrics") &&
+        document.getElementById("lyrics").classList.contains("active")
+    ) {
+        this.renderLyricsTab();
+    }
     
     // Reset progress bar
     if (this.elements.progressBar) {
