@@ -4977,7 +4977,7 @@ body:has(#ytPlayer.fullscreen-video) {
 /* Make the additional details container scrollable */
 #additionalDetails {
     width: 280px;
-    height: calc(100vh -0px); /* Adjust based on your layout */
+    height: calc(100vh -20px); /* Adjust based on your layout */
     background-color: var(--bg-primary);
     border-radius: 9px;
     padding: 13px;
