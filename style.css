@@ -5000,7 +5000,7 @@ body:has(#ytPlayer.fullscreen-video) {
 /* Current song section styles */
 .current-song-section {
     margin-bottom: 6px;
-    padding: 6px;
+    padding: 8px;
     background: var(--bg-secondary);
     border-radius: 8px;
     border: 1px solid var(--accent-color);
@@ -5010,7 +5010,7 @@ body:has(#ytPlayer.fullscreen-video) {
 
 .current-song-title {
     color: var(--accent-color);
-    margin-bottom: 10px;
+    margin-bottom: 6px;
     font-size: 1rem;
     font-weight: 600;
     display: flex;
