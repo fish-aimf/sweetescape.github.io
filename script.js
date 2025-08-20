@@ -1849,6 +1849,7 @@ playCurrentSong() {
     
     this.updateCurrentSongDisplay(); // Add this line
 }
+
 playSongFromPlaylist(index) {
   if (!this.currentPlaylist || index >= this.currentPlaylist.songs.length)
     return;
@@ -1858,10 +1859,13 @@ playSongFromPlaylist(index) {
     return;
   }
   this.currentSongIndex = index;
+  this.currentSong = song; // Store current song reference
   this.saveRecentlyPlayedSong(song); 
   this.playSongById(song.videoId);
+  this.updateCurrentSongDisplay(); // Add this line
 }
-  async saveSetting(key, value) {
+
+async saveSetting(key, value) {
   if (!this.db) return;
   
   return new Promise((resolve, reject) => {
