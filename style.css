@@ -4989,7 +4989,7 @@ body:has(#ytPlayer.fullscreen-video) {
 /* Keep header fixed */
 .additional-details-header {
     margin-top: 0;
-    margin-bottom: 15px;
+    margin-bottom: 6x;
     color: var(--text-primary);
     font-size: 1.2rem;
     padding-bottom: 6px;
@@ -4999,7 +4999,7 @@ body:has(#ytPlayer.fullscreen-video) {
 
 /* Current song section styles */
 .current-song-section {
-    margin-bottom: 4px;
+    margin-bottom: 6px;
     padding: 12px;
     background: var(--bg-secondary);
     border-radius: 8px;
