@@ -1608,10 +1608,21 @@ renderSongLibrary() {
     
     this.currentPlaylist = null;
     this.currentSongIndex = this.songLibrary.findIndex((s) => s.id === songId);
+    this.currentSong = song; // Store current song reference
     
-    this.playSongById(song.videoId, song);
+    this.playSongById(song.videoId);
     this.hideSidebar();
     this.saveRecentlyPlayedSong(song);
+    
+    // Update current song display
+    this.updateCurrentSongDisplay();
+    
+    if (
+        document.getElementById("lyrics") &&
+        document.getElementById("lyrics").classList.contains("active")
+    ) {
+        this.renderLyricsTab();
+    }
 }
   handleSongNameRightClick(event) {
     event.preventDefault();
@@ -1634,7 +1645,7 @@ renderSongLibrary() {
         });
     }
 }
- playSongById(videoId, song = null) {
+ playSongById(videoId) {
   if (!this.ytPlayer) {
     console.error("YouTube player not initialized");
     return;
@@ -1662,23 +1673,8 @@ renderSongLibrary() {
       }
     }, 200);
     
-    // Update current song reference if provided
-    if (song) {
-      this.currentSong = song;
-    }
-    
     this.isPlaying = true;
     this.updatePlayerUI();
-    
-    // Update current song display
-    this.updateCurrentSongDisplay();
-    
-    if (
-        document.getElementById("lyrics") &&
-        document.getElementById("lyrics").classList.contains("active")
-    ) {
-        this.renderLyricsTab();
-    }
     
     // Reset progress bar
     if (this.elements.progressBar) {
@@ -1742,7 +1738,8 @@ renderSongLibrary() {
       console.error("Error toggling play/pause:", error);
     }
   }
-  playNextSong() {
+  
+playNextSong() {
   // Handle queue first
   if (this.songQueue.length > 0) {
     const nextSong = this.songQueue.shift();
@@ -1755,9 +1752,11 @@ renderSongLibrary() {
       this.currentPlaylist = null;
     }
     
+    this.currentSong = nextSong; // Store current song reference
     this.saveRecentlyPlayedSong(nextSong);
     this.playSongById(nextSong.videoId);
     this.updatePlayerUI();
+    this.updateCurrentSongDisplay(); // Add this line
     return;
   }
   
@@ -1784,6 +1783,7 @@ renderSongLibrary() {
   this.currentSongIndex = (this.currentSongIndex + 1) % source.length;
   const currentSong = source[this.currentSongIndex];
   
+  this.currentSong = currentSong; // Store current song reference
   this.saveRecentlyPlayedSong(currentSong);
   
   if (this.currentPlaylist) {
@@ -1791,13 +1791,16 @@ renderSongLibrary() {
   } else {
     this.playCurrentSong();
   }
+  
+  this.updateCurrentSongDisplay(); // Add this line
 }
 
-  playPreviousSong() {
+playPreviousSong() {
   const source = this.currentPlaylist
     ? this.currentPlaylist.songs
     : this.songLibrary;
   if (!source.length) return;
+  
   if (this.currentPlaylist && this.temporarilySkippedSongs.size > 0) {
     const totalSongs = source.length;
     let prevIndex = (this.currentSongIndex - 1 + totalSongs) % totalSongs;
@@ -1809,30 +1812,43 @@ renderSongLibrary() {
       }
     }
     this.currentSongIndex = prevIndex;
+    this.currentSong = source[this.currentSongIndex]; // Store current song reference
     this.saveRecentlyPlayedSong(source[this.currentSongIndex]); 
     this.playSongById(source[this.currentSongIndex].videoId);
+    this.updateCurrentSongDisplay(); // Add this line
     return;
   }
+  
   this.currentSongIndex =
     (this.currentSongIndex - 1 + source.length) % source.length;
-  const currentSong = source[this.currentSongIndex]; 
+  const currentSong = source[this.currentSongIndex];
+  
+  this.currentSong = currentSong; // Store current song reference
   this.saveRecentlyPlayedSong(currentSong); 
+  
   if (this.currentPlaylist) {
     this.playSongById(source[this.currentSongIndex].videoId);
   } else {
     this.playCurrentSong();
   }
+  
+  this.updateCurrentSongDisplay(); // Add this line
 }
-  playCurrentSong() {
+
+playCurrentSong() {
     if (!this.songLibrary.length) return;
     const currentSong = this.songLibrary[this.currentSongIndex];
+    this.currentSong = currentSong; // Store current song reference
+    
     if (this.ytPlayer) {
       this.ytPlayer.loadVideoById(currentSong.videoId);
       this.ytPlayer.playVideo();
       this.isPlaying = true;
       this.updatePlayerUI();
     }
-  }
+    
+    this.updateCurrentSongDisplay(); // Add this line
+}
 playSongFromPlaylist(index) {
   if (!this.currentPlaylist || index >= this.currentPlaylist.songs.length)
     return;
