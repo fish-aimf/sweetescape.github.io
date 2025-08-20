@@ -4721,11 +4721,11 @@ removeGhostPreview() {
     }
     
     if (nameElement) {
-        nameElement.textContent = this.currentSong.name || 'Unknown Title';
+        nameElement.textContent = this.currentSong.name || '';
     }
     
     if (authorElement) {
-        authorElement.textContent = this.currentSong.author || 'Unknown Artist';
+        authorElement.textContent = this.currentSong.author || '';
     }
 }
 
