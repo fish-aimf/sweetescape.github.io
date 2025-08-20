@@ -4976,7 +4976,7 @@ body:has(#ytPlayer.fullscreen-video) {
 
 #additionalDetails {
     width: 280px;
-    height: calc(800px); /* hhere */
+    height: calc(650px); /* hhere */
     background-color: var(--bg-primary);
     border-radius: 9px;
     padding: 13px;
@@ -5115,5 +5115,11 @@ body:has(#ytPlayer.fullscreen-video) {
     }
     #additionalDetails {
         scrollbar-width: none;
+    }
+}
+
+@media (max-width: 1200px) {
+    #additionalDetails {
+        display: none;
     }
 }
