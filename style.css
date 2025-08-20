@@ -5024,7 +5024,7 @@ body:has(#ytPlayer.fullscreen-video) {
 .current-song-container {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .current-song-thumbnail {
@@ -5062,7 +5062,7 @@ body:has(#ytPlayer.fullscreen-video) {
 
 .current-song-author {
     color: var(--text-secondary);
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -5070,6 +5070,51 @@ body:has(#ytPlayer.fullscreen-video) {
 
 /* Keep all your existing styles for other sections */
 .additional-details-section {
-    margin-bottom: 15px; /* Increased spacing */
+    margin-bottom: 5px; /* Increased spacing */
     flex-shrink: 0;
+}
+
+/* Custom thin scrollbar for additional details */
+#additionalDetails::-webkit-scrollbar {
+    width: 6px; /* Very thin width */
+}
+
+#additionalDetails::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 3px;
+    margin: 8px 0; /* Creates shorter scrollbar with gaps at top/bottom */
+}
+
+#additionalDetails::-webkit-scrollbar-thumb {
+    background: var(--accent-color);
+    border-radius: 3px;
+    opacity: 0.7;
+    min-height: 20px; /* Minimum thumb size for usability */
+}
+
+#additionalDetails::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-color);
+    opacity: 1;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+}
+
+#additionalDetails::-webkit-scrollbar-thumb:active {
+    background: var(--accent-color);
+    opacity: 1;
+}
+
+/* Firefox scrollbar styling */
+#additionalDetails {
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-color) var(--bg-secondary);
+}
+
+/* Optional: Hide scrollbar on mobile/touch devices where it's not needed */
+@media (hover: none) and (pointer: coarse) {
+    #additionalDetails::-webkit-scrollbar {
+        width: 0;
+    }
+    #additionalDetails {
+        scrollbar-width: none;
+    }
 }
