@@ -263,3 +263,4 @@
 - made cors policy more straightforward and stops fetching ads instead of blocking them on browser level v35.3.3
 - added html elements for import subtitles and automatic subtitle extraction with supadata youtube subtitle import. it currently has 100 requests / month v35.4.0
 - made it such that pasting links into the library searchbar will shorttcut and autofill the modify library model. v35.5.0
+- added playing current song indicator and changed html structure of additional details. v36.0.0
