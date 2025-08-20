@@ -4631,22 +4631,44 @@ removeGhostPreview() {
   renderAdditionalDetails() {
     if (!this.elements.additionalDetails) return;
     
-    const contentContainer = this.elements.additionalDetails.querySelector('.additional-details-content');
-    if (!contentContainer) return;
+    // Clear all sections except the header
+    const header = this.elements.additionalDetails.querySelector('.additional-details-header');
+    const currentSongSection = this.elements.additionalDetails.querySelector('#currentSongSection');
     
-    // Clear only the dynamic content, preserve the current song section
-    const sectionsToPreserve = contentContainer.querySelector('#currentSongSection');
-    contentContainer.innerHTML = '';
+    this.elements.additionalDetails.innerHTML = '';
     
-    // Re-add the current song section if it existed
-    if (sectionsToPreserve) {
-        contentContainer.appendChild(sectionsToPreserve);
+    // Re-add header
+    if (header) {
+        this.elements.additionalDetails.appendChild(header);
+    }
+    
+    // Add/update current song section
+    if (!currentSongSection) {
+        const currentSongDiv = document.createElement('div');
+        currentSongDiv.id = 'currentSongSection';
+        currentSongDiv.className = 'current-song-section';
+        currentSongDiv.style.display = 'none';
+        currentSongDiv.innerHTML = `
+            <h4 class="current-song-title">Now Playing</h4>
+            <div class="current-song-container">
+                <div class="current-song-thumbnail">
+                    <img id="currentSongThumbnail" src="" alt="Current Song" />
+                </div>
+                <div class="current-song-info">
+                    <div class="current-song-name" id="currentSongName"></div>
+                    <div class="current-song-author" id="currentSongAuthor"></div>
+                </div>
+            </div>
+        `;
+        this.elements.additionalDetails.appendChild(currentSongDiv);
+    } else {
+        this.elements.additionalDetails.appendChild(currentSongSection);
     }
     
     // Update current song display
     this.updateCurrentSongDisplay();
     
-    // Continue with existing sections
+    // Add other sections
     if (this.recentlyPlayedSongs.length > 0) {
         this.createDetailsSection(
             "Recently Listened To",
@@ -4780,9 +4802,7 @@ getCurrentSongData() {
 createDetailsSection(title, items, type) {
     if (!items || items.length === 0) return;
     
-    const contentContainer = this.elements.additionalDetails.querySelector('.additional-details-content');
-    if (!contentContainer) return;
-    
+    // Append directly to additionalDetails (original behavior)
     const section = document.createElement("div");
     section.classList.add("additional-details-section");
     section.setAttribute("data-section-title", title);
@@ -4791,6 +4811,7 @@ createDetailsSection(title, items, type) {
     sectionTitle.textContent = title;
     sectionTitle.classList.add("section-title");
     
+    // Keep all your existing click handlers
     if (title === "Recently Listened To") {
         sectionTitle.style.cursor = "pointer";
         sectionTitle.addEventListener("click", () => {
@@ -4814,6 +4835,7 @@ createDetailsSection(title, items, type) {
     itemsList.classList.add("details-items-list");
     
     items.forEach((item) => {
+        // Keep all your existing item creation code
         const itemElement = document.createElement("div");
         itemElement.classList.add("details-item");
         
@@ -4873,7 +4895,7 @@ createDetailsSection(title, items, type) {
     });
     
     section.appendChild(itemsList);
-    contentContainer.appendChild(section); // Changed from this.elements.additionalDetails to contentContainer
+    this.elements.additionalDetails.appendChild(section); // Back to original
 }
 refreshSpecificSection(sectionTitle) {
     if (!this.elements.additionalDetails) return;
