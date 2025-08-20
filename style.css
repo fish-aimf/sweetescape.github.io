@@ -4976,7 +4976,7 @@ body:has(#ytPlayer.fullscreen-video) {
 
 #additionalDetails {
     width: 280px;
-    height: calc(0.6vh); /* hhere */
+    height: calc(1vh); /* hhere */
     background-color: var(--bg-primary);
     border-radius: 9px;
     padding: 13px;
