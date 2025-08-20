@@ -5123,10 +5123,3 @@ body:has(#ytPlayer.fullscreen-video) {
 .additional-details-content::-webkit-scrollbar-thumb:hover {
     background: var(--hover-color);
 }
-
-/* Responsive fixes */
-@media (max-width: 768px) {
-    .additional-details-content {
-        max-height: calc(100vh - 140px);
-    }
-}
