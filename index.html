@@ -70,33 +70,29 @@
         
         <!-- Main container for side-by-side layout -->
         <div class="main-container">
-            <!-- Additional Details Panel (Left Side) -->
             <div id="additionalDetails" class="additional-details">
-                <!-- Content will be rendered dynamically via JavaScript -->
-                <h3 class="additional-details-header">Music Explorer</h3>
-                
-                <div class="additional-details-section">
-                    <h4 class="section-title">Recommended</h4>
-                    <div class="details-items-list">
-                        <div class="details-item">
-                            <div class="details-item-thumbnail">
-                                <i class="fas fa-music"></i>
-                            </div>
-                            <div class="details-item-info">
-                                <div class="details-item-name">Recently Played</div>
-                            </div>
-                        </div>
-                        <div class="details-item">
-                            <div class="details-item-thumbnail">
-                                <i class="fas fa-heart"></i>
-                            </div>
-                            <div class="details-item-info">
-                                <div class="details-item-name">Favorites</div>
+                    <h3 class="additional-details-header">Music Explorer</h3>
+                    
+                    <!-- New scrollable container -->
+                    <div class="additional-details-content">
+                        <!-- Current Song Section (will be populated by JavaScript) -->
+                        <div id="currentSongSection" class="current-song-section" style="display: none;">
+                            <h4 class="section-title current-song-title">Now Playing</h4>
+                            <div class="current-song-container">
+                                <div class="current-song-thumbnail">
+                                    <img id="currentSongThumbnail" src="" alt="Current Song" />
+                                </div>
+                                <div class="current-song-info">
+                                    <div class="current-song-name" id="currentSongName"></div>
+                                    <div class="current-song-author" id="currentSongAuthor"></div>
+                                </div>
                             </div>
                         </div>
+                        
+                        <!-- Existing sections will be rendered here by JavaScript -->
                     </div>
                 </div>
-                
+                                
                 
                 
             </div>
