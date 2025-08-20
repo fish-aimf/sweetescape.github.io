@@ -5000,10 +5000,10 @@ body:has(#ytPlayer.fullscreen-video) {
 /* Current song section styles */
 .current-song-section {
     margin-bottom: 6px;
-    padding: 12px;
+    padding: 6px;
     background: var(--bg-secondary);
     border-radius: 8px;
-    border: 2px solid var(--accent-color);
+    border: 1px solid var(--accent-color);
     box-shadow: 0 2px 8px var(--shadow-color);
     flex-shrink: 0; /* Prevent shrinking */
 }
