@@ -4977,7 +4977,7 @@ body:has(#ytPlayer.fullscreen-video) {
 /* Make the additional details container scrollable */
 #additionalDetails {
     width: 280px;
-    height: calc(600px); /* Adjust based on your layout */
+    height: calc(0.6vh); /* 
     background-color: var(--bg-primary);
     border-radius: 9px;
     padding: 13px;
@@ -5076,7 +5076,7 @@ body:has(#ytPlayer.fullscreen-video) {
 
 /* Custom thin scrollbar for additional details */
 #additionalDetails::-webkit-scrollbar {
-    width: 6px; /* Very thin width */
+    width: 5px; /* Very thin width */
 }
 
 #additionalDetails::-webkit-scrollbar-track {
