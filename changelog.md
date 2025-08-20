@@ -264,3 +264,5 @@
 - added html elements for import subtitles and automatic subtitle extraction with supadata youtube subtitle import. it currently has 100 requests / month v35.4.0
 - made it such that pasting links into the library searchbar will shorttcut and autofill the modify library model. v35.5.0
 - added playing current song indicator and changed html structure of additional details. v36.0.0
+- changed css drastically v36.1.0
+- made it not write unknown artist but make song name bigger v36.1.1
