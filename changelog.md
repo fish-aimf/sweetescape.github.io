@@ -266,3 +266,4 @@
 - added playing current song indicator and changed html structure of additional details. v36.0.0
 - changed css drastically v36.1.0
 - made it not write unknown artist but make song name bigger v36.1.1
+- forgot to make current song change when playing nextsong or play song from playlist so done that v36.1.2
