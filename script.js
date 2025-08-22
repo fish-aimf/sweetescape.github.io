@@ -8386,7 +8386,6 @@ openGlobalLibraryModal() {
         this.showGlobalLibraryLoginSection();
     }
 }
-
 closeGlobalLibraryModal() {
     document.getElementById('globalLibraryModal').style.display = 'none';
 }
@@ -8401,7 +8400,11 @@ showGlobalLibraryMainSection() {
     document.getElementById('globalLibraryMainSection').style.display = 'block';
     document.getElementById('globalLibraryUserInfo').textContent = `Welcome, ${this.globalLibraryCurrentUser.email}`;
     this.loadGlobalLibraryData();
-    this.autofillGlobalLibraryData();
+    
+    // Only auto-fill if there's pending data from AI import
+    if (this.pendingGlobalLibraryData) {
+        this.autofillGlobalLibraryData();
+    }
 }
   filterPlaylistSelect(searchQuery) {
     const select = document.getElementById('globalLibrarySongPlaylistSelect');
@@ -8980,7 +8983,7 @@ async generateAiSongs() {
         this.autofillGlobalLibraryData();
     }
 }
-  autofillGlobalLibraryData() {
+autofillGlobalLibraryData() {
     if (!this.pendingGlobalLibraryData) return;
 
     document.getElementById('globalLibraryNewPlaylistName').value = this.pendingGlobalLibraryData.playlistName;
