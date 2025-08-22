@@ -8432,13 +8432,13 @@ showGlobalLibraryMainSection() {
         this.autofillGlobalLibraryImport();
     }
 }
-  autofillGlobalLibraryImport() {
+autofillGlobalLibraryImport() {
     if (!this.pendingGlobalImport) return;
     
     // Autofill playlist name
     document.getElementById('globalLibraryNewPlaylistName').value = this.pendingGlobalImport.playlistName;
     
-    // Autofill import text
+    // Autofill import text with the actual AI results content
     document.getElementById('globalLibraryMassImportText').value = this.pendingGlobalImport.importText;
     
     // Clear pending import
