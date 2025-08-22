@@ -295,7 +295,8 @@ findSongsDiv: document.getElementById("findSongsDiv"),
 findSongsSearch: document.getElementById("findSongsSearch"),
 findSongsResults: document.getElementById("findSongsResults"),
       librarySortToggle: document.getElementById("librarySortToggle"),
-      libraryReverseToggle: document.getElementById("libraryReverseToggle")
+      libraryReverseToggle: document.getElementById("libraryReverseToggle"),
+      aiImportGlobalBtn: document.getElementById("aiImportGlobalBtn")
     };
     this.elements.aiGeneratorDiv = document.getElementById("aiGeneratorDiv");
     this.elements.closeAiGenerator = document.getElementById("closeAiGenerator");
@@ -309,6 +310,7 @@ findSongsResults: document.getElementById("findSongsResults"),
     this.elements.aiOutput = document.getElementById("aiOutput");
     this.elements.openAiGeneratorBtn = document.getElementById("openAiGeneratorBtn");
     this.elements.notFindingSection = document.getElementById("notFindingSection");
+    
     if (this.elements.speedBtn) {
       this.elements.speedBtn.textContent = this.currentSpeed + "x";
     }
@@ -371,6 +373,7 @@ findSongsResults: document.getElementById("findSongsResults"),
     this.handleSongUrlInput = this.validateYouTubeUrl.bind(this);
     this.handleSongNameRightClick = this.handleSongNameRightClick.bind(this);
     this.handleAddSong = this.addSongToLibrary.bind(this);
+    this.elements.aiImportGlobalBtn.addEventListener('click', this.handleImportToGlobalLibrary.bind(this));
     const tabButtons = document.querySelectorAll('.settings-tab-btn');
     tabButtons.forEach(button => {
         button.addEventListener('click', (e) => this.handleTabSwitch(e));
@@ -8401,6 +8404,45 @@ showGlobalLibraryMainSection() {
     document.getElementById('globalLibraryMainSection').style.display = 'block';
     document.getElementById('globalLibraryUserInfo').textContent = `Welcome, ${this.globalLibraryCurrentUser.email}`;
     this.loadGlobalLibraryData();
+    // Auto-fill if there's pending import data
+    this.autofillGlobalLibraryImport();
+}
+  handleImportToGlobalLibrary() {
+    if (!this.currentAiResults) {
+        this.showAiError('No results to import');
+        return;
+    }
+    
+    const artistName = this.elements.aiArtistName.value.trim();
+    
+    // Open global library modal
+    this.openGlobalLibraryModal();
+    
+    // Close AI generator
+    this.closeAiGenerator();
+    
+    // Store data for autofill
+    this.pendingGlobalImport = {
+        playlistName: artistName,
+        importText: this.currentAiResults
+    };
+    
+    // If logged in, autofill immediately
+    if (this.globalLibraryCurrentUser) {
+        this.autofillGlobalLibraryImport();
+    }
+}
+  autofillGlobalLibraryImport() {
+    if (!this.pendingGlobalImport) return;
+    
+    // Autofill playlist name
+    document.getElementById('globalLibraryNewPlaylistName').value = this.pendingGlobalImport.playlistName;
+    
+    // Autofill import text
+    document.getElementById('globalLibraryMassImportText').value = this.pendingGlobalImport.importText;
+    
+    // Clear pending import
+    this.pendingGlobalImport = null;
 }
   filterPlaylistSelect(searchQuery) {
     const select = document.getElementById('globalLibrarySongPlaylistSelect');
@@ -8892,8 +8934,9 @@ closeAiGenerator() {
     this.elements.aiOutputSection.style.display = "none";
     this.elements.aiOutput.innerHTML = "";
     this.elements.aiCopyBtn.style.display = "none";
+    this.elements.aiImportGlobalBtn.style.display = "none";
     this.elements.aiImportBtn.style.display = "none";
-    this.elements.aiRequiredSongs.value = ""; // Add this line
+    this.elements.aiRequiredSongs.value = "";
     this.currentAiResults = '';
     this.removeAiMessages();
 }
@@ -8917,6 +8960,7 @@ async generateAiSongs() {
     generateBtn.disabled = true;
     generateBtn.textContent = 'Generating...';
     this.elements.aiCopyBtn.style.display = 'none';
+    this.elements.aiImportGlobalBtn.style.display = 'none';
     this.elements.aiImportBtn.style.display = 'none';
     this.elements.aiOutputSection.style.display = 'block';
     outputContainer.innerHTML = '<div class="ai-loading">Analyzing query type...</div>';
@@ -8942,6 +8986,7 @@ async generateAiSongs() {
         outputContainer.textContent = formattedOutput;
         this.currentAiResults = formattedOutput;
         this.elements.aiCopyBtn.style.display = 'inline-block';
+        this.elements.aiImportGlobalBtn.style.display = 'inline-block';
         this.elements.aiImportBtn.style.display = 'inline-block';
         
         const detectionInfo = queryType === 'SPECIFIC_ARTIST' ? 
