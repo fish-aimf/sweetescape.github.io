@@ -8435,11 +8435,16 @@ showGlobalLibraryMainSection() {
 autofillGlobalLibraryImport() {
     if (!this.pendingGlobalImport) return;
     
+    console.log('Pending import data:', this.pendingGlobalImport);
+    
     // Autofill playlist name
     document.getElementById('globalLibraryNewPlaylistName').value = this.pendingGlobalImport.playlistName;
     
-    // Autofill import text with the actual AI results content
-    document.getElementById('globalLibraryMassImportText').value = this.pendingGlobalImport.importText;
+    // Autofill mass import textarea
+    const textArea = document.getElementById('globalLibraryMassImportText');
+    textArea.value = this.pendingGlobalImport.importText;
+    
+    console.log('TextArea value set to:', textArea.value);
     
     // Clear pending import
     this.pendingGlobalImport = null;
