@@ -4187,8 +4187,7 @@ body:has(#ytPlayer.fullscreen-video) {
     margin-top: 20px;
     flex-wrap: wrap;
 }
-
-.ai-generate-btn, .ai-copy-btn, .ai-import-btn {
+.ai-generate-btn, .ai-copy-btn, .ai-import-global-btn, .ai-import-btn {
     flex: 1;
     min-width: 150px;
     padding: 15px 20px;
@@ -4220,27 +4219,45 @@ body:has(#ytPlayer.fullscreen-video) {
 }
 
 .ai-copy-btn {
-    background: var(--text-secondary);
+    background: var(--accent-color);
     color: var(--button-text-color);
+    opacity: 0.9;
 }
 
 .ai-copy-btn:hover {
-    background: var(--text-primary);
+    background: var(--hover-color);
+    opacity: 1;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+.ai-import-global-btn {
+    background: var(--accent-color);
+    color: var(--button-text-color);
+    opacity: 0.95;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.ai-import-global-btn:hover {
+    background: var(--hover-color);
+    opacity: 1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow-color);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .ai-import-btn {
-    background: var(--hover-color);
+    background: var(--accent-color);
     color: var(--button-text-color);
+    opacity: 0.85;
 }
 
 .ai-import-btn:hover {
-    background: var(--accent-color);
+    background: var(--hover-color);
+    opacity: 1;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px var(--shadow-color);
 }
-
 .ai-output-section {
     padding: 0 30px 30px;
     flex: 1;
