@@ -8386,6 +8386,7 @@ openGlobalLibraryModal() {
         this.showGlobalLibraryLoginSection();
     }
 }
+
 closeGlobalLibraryModal() {
     document.getElementById('globalLibraryModal').style.display = 'none';
 }
@@ -8400,11 +8401,6 @@ showGlobalLibraryMainSection() {
     document.getElementById('globalLibraryMainSection').style.display = 'block';
     document.getElementById('globalLibraryUserInfo').textContent = `Welcome, ${this.globalLibraryCurrentUser.email}`;
     this.loadGlobalLibraryData();
-    
-    // Only auto-fill if there's pending data from AI import
-    if (this.pendingGlobalLibraryData) {
-        this.autofillGlobalLibraryData();
-    }
 }
   filterPlaylistSelect(searchQuery) {
     const select = document.getElementById('globalLibrarySongPlaylistSelect');
@@ -8901,6 +8897,7 @@ closeAiGenerator() {
     this.currentAiResults = '';
     this.removeAiMessages();
 }
+
 async generateAiSongs() {
     const artist = this.elements.aiArtistName.value.trim();
     const quantity = this.elements.aiSongCount.value;
@@ -8921,7 +8918,6 @@ async generateAiSongs() {
     generateBtn.textContent = 'Generating...';
     this.elements.aiCopyBtn.style.display = 'none';
     this.elements.aiImportBtn.style.display = 'none';
-    this.elements.aiGlobalLibraryBtn.style.display = 'none';
     this.elements.aiOutputSection.style.display = 'block';
     outputContainer.innerHTML = '<div class="ai-loading">Analyzing query type...</div>';
 
@@ -8929,6 +8925,7 @@ async generateAiSongs() {
         outputContainer.innerHTML = '<div class="ai-loading">Getting song list from AI...</div>';
         const songData = await this.getSongTitlesFromGemini(artist, quantity);
         
+        // Show what type of query was detected
         const queryType = songData[0]?.queryType || 'UNKNOWN';
         const typeMessage = queryType === 'SPECIFIC_ARTIST' ? 
             `Detected: Songs by ${artist}` : 
@@ -8945,7 +8942,6 @@ async generateAiSongs() {
         outputContainer.textContent = formattedOutput;
         this.currentAiResults = formattedOutput;
         this.elements.aiCopyBtn.style.display = 'inline-block';
-        this.elements.aiGlobalLibraryBtn.style.display = 'inline-block';
         this.elements.aiImportBtn.style.display = 'inline-block';
         
         const detectionInfo = queryType === 'SPECIFIC_ARTIST' ? 
@@ -8963,33 +8959,6 @@ async generateAiSongs() {
         generateBtn.disabled = false;
         generateBtn.textContent = 'Regenerate Song List';
     }
-}
-
-  async addToGlobalLibrary() {
-    if (!this.currentAiResults) {
-        this.showAiError('No results to add to global library');
-        return;
-    }
-
-    const artistName = this.elements.aiArtistName.value.trim();
-    this.pendingGlobalLibraryData = {
-        playlistName: artistName,
-        songsData: this.currentAiResults
-    };
-
-    this.openGlobalLibraryModal();
-    
-    if (this.globalLibraryCurrentUser) {
-        this.autofillGlobalLibraryData();
-    }
-}
-autofillGlobalLibraryData() {
-    if (!this.pendingGlobalLibraryData) return;
-
-    document.getElementById('globalLibraryNewPlaylistName').value = this.pendingGlobalLibraryData.playlistName;
-    document.getElementById('globalLibraryMassImportText').value = this.pendingGlobalLibraryData.songsData;
-    
-    this.pendingGlobalLibraryData = null;
 }
 async getSongTitlesFromGemini(author, quantity) {
     const requiredSongs = this.elements.aiRequiredSongs.value.trim();
