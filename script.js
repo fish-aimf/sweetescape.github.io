@@ -8388,6 +8388,11 @@ openGlobalLibraryModal() {
     } else {
         this.showGlobalLibraryLoginSection();
     }
+    
+    // Try to autofill if user is already logged in
+    if (this.globalLibraryCurrentUser && this.pendingGlobalImport) {
+        setTimeout(() => this.autofillGlobalLibraryImport(), 100);
+    }
 }
 
 closeGlobalLibraryModal() {
@@ -8407,7 +8412,7 @@ showGlobalLibraryMainSection() {
     // Auto-fill if there's pending import data
     this.autofillGlobalLibraryImport();
 }
-  handleImportToGlobalLibrary() {
+ handleImportToGlobalLibrary() {
     if (!this.currentAiResults) {
         this.showAiError('No results to import');
         return;
@@ -8415,22 +8420,19 @@ showGlobalLibraryMainSection() {
     
     const artistName = this.elements.aiArtistName.value.trim();
     
-    // Open global library modal
-    this.openGlobalLibraryModal();
-    
-    // Close AI generator
-    this.closeAiGenerator();
-    
-    // Store data for autofill
+    // Store data for autofill BEFORE opening modal
     this.pendingGlobalImport = {
         playlistName: artistName,
         importText: this.currentAiResults
     };
     
-    // If logged in, autofill immediately
-    if (this.globalLibraryCurrentUser) {
-        this.autofillGlobalLibraryImport();
-    }
+    console.log('Storing pending import:', this.pendingGlobalImport);
+    
+    // Close AI generator
+    this.closeAiGenerator();
+    
+    // Open global library modal
+    this.openGlobalLibraryModal();
 }
 autofillGlobalLibraryImport() {
     if (!this.pendingGlobalImport) return;
