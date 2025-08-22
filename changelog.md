@@ -268,3 +268,5 @@
 - made it not write unknown artist but make song name bigger v36.1.1
 - forgot to make current song change when playing nextsong or play song from playlist so done that v36.1.2
 - fixed styles and made it a bit more compact v36.1.3
+- added autofill to global library import to ai generated playlists v36.2.0
+- added styles for the new buttons. v36.3.0
