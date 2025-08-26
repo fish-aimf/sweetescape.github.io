@@ -8749,56 +8749,100 @@ async openFindSongs() {
     this.elements.findSongsSearch.focus();
   
     await this.loadAllArtists();
-    this.displaySearchResults(this.allArtists);
+    this.displaySearchResults(this.allArtists, [], 'playlists'); // Show playlists by default
 }
-  
+
 
 closeFindSongs() {
     this.elements.findSongsDiv.style.display = "none";
     this.elements.findSongsResults.innerHTML = "";
     this.elements.findSongsSearch.value = "";
+    this.currentViewMode = 'playlists'; // Reset to default
 }
 
 
-displaySearchResults(artists) {
-    if (!artists || artists.length === 0) {
-        this.elements.findSongsResults.innerHTML = '<div class="loading-spinner">No results found</div>';
-        this.elements.notFindingSection.style.display = "block";
-        return;
-    }
-
-    this.elements.findSongsResults.innerHTML = artists.map(artist => {
-        const songsPreview = artist.songs.slice(0, 5);
-        const remainingSongs = artist.songs.length - 5;
-        
-        return `
-            <div class="playlist-result">
-                <div class="playlist-header">
-                    <div class="playlist-name">${artist.name}</div>
-                    <div class="song-count">${artist.songs.length} songs</div>
+displaySearchResults(artists, individualSongs = [], mode = 'mixed') {
+    let resultsHTML = '';
+    
+    // Display individual songs first if any
+    if (individualSongs && individualSongs.length > 0) {
+        resultsHTML += `
+            <div class="search-section">
+                <div class="search-section-header">
+                    <h3>Individual Songs (${individualSongs.length})</h3>
                 </div>
-                <div class="playlist-songs">
-                    ${songsPreview.map(song => `
-                        <div class="song-preview">${song.name} ${song.author ? `- ${song.author}` : ''}</div>
+                <div class="individual-songs-results">
+                    ${individualSongs.map(song => `
+                        <div class="individual-song-result">
+                            <div class="song-info">
+                                <div class="song-name">${song.name}</div>
+                                <div class="song-author">by ${song.author || 'Unknown Artist'}</div>
+                                <div class="song-playlist">from playlist: ${song.playlist_name}</div>
+                            </div>
+                            <div class="song-actions">
+                                <button class="preview-btn" onclick="window.open('${song.youtube_url}', '_blank')" title="Open in YouTube">
+                                    ▶️
+                                </button>
+                                <button class="add-single-song-btn" onclick="musicPlayer.addSingleSongToLibrary('${song.name}', '${song.author || ''}', '${song.youtube_url}')">
+                                    Add Song
+                                </button>
+                            </div>
+                        </div>
                     `).join('')}
-                    ${remainingSongs > 0 ? `<div class="song-preview">... and ${remainingSongs} more songs</div>` : ''}
-                </div>
-                <div class="playlist-actions">
-                    <button class="view-all-btn" onclick="musicPlayer.viewAllSongs(${artist.id}, '${artist.name}')">
-                        View All
-                    </button>
-                    <button class="add-to-library-btn" onclick="musicPlayer.addPlaylistToLibrary(${artist.id}, '${artist.name}')">
-                        Add to Library
-                    </button>
                 </div>
             </div>
         `;
-    }).join('');
+    }
+
+    // Display playlists
+    if (artists && artists.length > 0) {
+        resultsHTML += `
+            <div class="search-section">
+                <div class="search-section-header">
+                    <h3>Playlists (${artists.length})</h3>
+                </div>
+                <div class="playlist-results">
+                    ${artists.map(artist => {
+                        const songsPreview = artist.songs.slice(0, 3); // Show fewer in preview
+                        const remainingSongs = artist.songs.length - 3;
+                        
+                        return `
+                            <div class="playlist-result">
+                                <div class="playlist-header">
+                                    <div class="playlist-name">${artist.name}</div>
+                                    <div class="song-count">${artist.songs.length} songs</div>
+                                </div>
+                                <div class="playlist-songs">
+                                    ${songsPreview.map(song => `
+                                        <div class="song-preview">${song.name} ${song.author ? `- ${song.author}` : ''}</div>
+                                    `).join('')}
+                                    ${remainingSongs > 0 ? `<div class="song-preview">... and ${remainingSongs} more songs</div>` : ''}
+                                </div>
+                                <div class="playlist-actions">
+                                    <button class="view-all-btn" onclick="musicPlayer.openDetailedPlaylistView(${artist.id}, '${artist.name.replace(/'/g, "\\'")}')">
+                                        View All
+                                    </button>
+                                    <button class="add-to-library-btn" onclick="musicPlayer.addPlaylistToLibrary(${artist.id}, '${artist.name.replace(/'/g, "\\'")}')">
+                                        Add to Library
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    if (resultsHTML === '') {
+        this.elements.findSongsResults.innerHTML = '<div class="loading-spinner">No results found</div>';
+    } else {
+        this.elements.findSongsResults.innerHTML = resultsHTML;
+    }
     
     // Show the "not finding" section at the bottom
     this.elements.notFindingSection.style.display = "block";
 }
-
 
 async viewAllSongs(artistId, artistName) {
     try {
@@ -8858,20 +8902,35 @@ async addPlaylistToLibrary(artistId, artistName) {
 
         if (error) throw error;
         this.allArtists = artists || [];
+        
+        // Create flat list of all songs for individual song search
+        this.allSongs = [];
+        artists.forEach(artist => {
+            artist.songs.forEach(song => {
+                this.allSongs.push({
+                    ...song,
+                    playlist_name: artist.name,
+                    playlist_id: artist.id
+                });
+            });
+        });
+        
     } catch (error) {
         console.error('Error loading artists:', error);
         this.elements.findSongsResults.innerHTML = '<div class="loading-spinner">Error loading playlists</div>';
     }
 }
 
+// Modified filterResults method
 filterResults() {
     const searchTerm = this.elements.findSongsSearch.value.trim().toLowerCase();
     
     if (!searchTerm) {
-        this.displaySearchResults(this.allArtists);
+        this.displaySearchResults(this.allArtists, [], 'playlists');
         return;
     }
     
+    // Filter playlists
     const filteredArtists = this.allArtists.filter(artist => 
         artist.name.toLowerCase().includes(searchTerm) ||
         artist.songs.some(song => 
@@ -8880,7 +8939,119 @@ filterResults() {
         )
     );
     
-    this.displaySearchResults(filteredArtists);
+    // Filter individual songs
+    const filteredSongs = this.allSongs.filter(song =>
+        song.name.toLowerCase().includes(searchTerm) ||
+        (song.author && song.author.toLowerCase().includes(searchTerm)) ||
+        song.playlist_name.toLowerCase().includes(searchTerm)
+    );
+    
+    // Limit individual songs to avoid overwhelming results
+    const limitedSongs = filteredSongs.slice(0, 20);
+    
+    this.displaySearchResults(filteredArtists, limitedSongs, 'mixed');
+}
+// New method: openDetailedPlaylistView
+async openDetailedPlaylistView(artistId, artistName) {
+    try {
+        const { data: songs, error } = await this.supabase
+            .from('songs')
+            .select('*')
+            .eq('artist_id', artistId)
+            .order('name');
+
+        if (error) throw error;
+
+        const detailModal = document.createElement('div');
+        detailModal.className = 'detailed-playlist-modal';
+        detailModal.innerHTML = `
+            <div class="detailed-playlist-content">
+                <div class="detailed-playlist-header">
+                    <h2>${artistName}</h2>
+                    <div class="detailed-playlist-stats">${songs.length} songs total</div>
+                    <button class="close-detailed-view" onclick="this.closest('.detailed-playlist-modal').remove()">×</button>
+                </div>
+                <div class="detailed-playlist-actions">
+                    <button class="add-all-songs-btn" onclick="musicPlayer.addPlaylistToLibrary(${artistId}, '${artistName.replace(/'/g, "\\'")}'); this.closest('.detailed-playlist-modal').remove();">
+                        Add All to Library
+                    </button>
+                </div>
+                <div class="detailed-songs-list">
+                    ${songs.map((song, index) => `
+                        <div class="detailed-song-item">
+                            <div class="song-index">${index + 1}</div>
+                            <div class="detailed-song-info">
+                                <div class="detailed-song-name">${song.name}</div>
+                                <div class="detailed-song-author">by ${song.author || 'Unknown Artist'}</div>
+                            </div>
+                            <div class="detailed-song-actions">
+                                <button class="preview-btn" onclick="window.open('${song.youtube_url}', '_blank')" title="Open in YouTube">
+                                    ▶️
+                                </button>
+                                <button class="add-single-song-btn" onclick="musicPlayer.addSingleSongToLibrary('${song.name.replace(/'/g, "\\'")}', '${(song.author || '').replace(/'/g, "\\'")}', '${song.youtube_url}')">
+                                    Add Song
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(detailModal);
+        
+        detailModal.addEventListener('click', (e) => {
+            if (e.target === detailModal) {
+                detailModal.remove();
+            }
+        });
+
+    } catch (error) {
+        console.error('Error fetching detailed playlist:', error);
+        alert('Error loading playlist details');
+    }
+}
+
+// New method: addSingleSongToLibrary
+async addSingleSongToLibrary(songName, songAuthor, youtubeUrl) {
+    const videoId = this.extractYouTubeId(youtubeUrl);
+    if (!videoId) {
+        alert("Invalid YouTube URL");
+        return;
+    }
+    
+    if (this.songLibrary.some((song) => song.videoId === videoId)) {
+        alert("This song is already in your library");
+        return;
+    }
+
+    const newSong = {
+        id: Date.now(),
+        name: songName,
+        author: songAuthor,
+        videoId: videoId,
+        favorite: false,
+    };
+
+    this.songLibrary.push(newSong);
+    
+    try {
+        await this.saveSongLibrary();
+        this.renderSongLibrary();
+        this.updatePlaylistSelection();
+        
+        // Show success message
+        const successMsg = document.createElement('div');
+        successMsg.className = 'success-toast';
+        successMsg.textContent = `Added "${songName}" to library!`;
+        document.body.appendChild(successMsg);
+        
+        setTimeout(() => successMsg.remove(), 3000);
+        
+    } catch (error) {
+        console.error("Error adding song to library:", error);
+        alert("Failed to save song. Please try again.");
+    }
 }
  handleLibrarySortToggle(event) {
     this.librarySortAlphabetically = event.target.checked;
