@@ -5140,7 +5140,6 @@ body:has(#ytPlayer.fullscreen-video) {
         display: none;
     }
 }
-
 /* Search Sections */
 .search-section {
     margin-bottom: 20px;
@@ -5151,6 +5150,7 @@ body:has(#ytPlayer.fullscreen-video) {
     padding: 10px 15px;
     border-bottom: 1px solid var(--accent-color);
     border-radius: 6px 6px 0 0;
+    margin-bottom: 0; /* Ensure no gap */
 }
 
 .search-section-header h3 {
@@ -5163,6 +5163,7 @@ body:has(#ytPlayer.fullscreen-video) {
 .individual-songs-results {
     background: var(--bg-secondary);
     border-radius: 0 0 6px 6px;
+    margin-top: 0; /* Remove any top margin */
 }
 
 .individual-song-result {
@@ -5171,10 +5172,15 @@ body:has(#ytPlayer.fullscreen-video) {
     align-items: center;
     padding: 12px 15px;
     border-bottom: 1px solid var(--border-color);
+    margin: 0; /* Remove any margin */
 }
 
 .individual-song-result:hover {
     background: var(--bg-primary);
+}
+
+.individual-song-result:last-child {
+    border-bottom: none; /* Remove border from last item */
 }
 
 .song-info {
@@ -5218,6 +5224,7 @@ body:has(#ytPlayer.fullscreen-video) {
 .playlist-results {
     background: var(--bg-secondary);
     border-radius: 0 0 6px 6px;
+    margin-top: 0; /* Remove any top margin */
 }
 
 /* Detailed Modal */
@@ -5290,10 +5297,15 @@ body:has(#ytPlayer.fullscreen-video) {
     gap: 10px;
     padding: 10px 15px;
     border-bottom: 1px solid var(--border-color);
+    margin: 0; /* Remove any margin */
 }
 
 .detailed-song-item:hover {
     background: var(--bg-primary);
+}
+
+.detailed-song-item:last-child {
+    border-bottom: none; /* Remove border from last item */
 }
 
 .detailed-song-info {
