@@ -5142,7 +5142,7 @@ body:has(#ytPlayer.fullscreen-video) {
 }
 /* Search Sections */
 .search-section {
-    margin-bottom: 20px;
+    margin-bottom: 8px;
 }
 
 .search-section-header {
