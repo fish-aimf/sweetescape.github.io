@@ -333,16 +333,19 @@ findSongsResults: document.getElementById("findSongsResults"),
     this.handleAddSong = this.addSongToLibrary.bind(this);
     this.handleFilterLibrary = this.filterLibrarySongs.bind(this);
     this.handleLibrarySearchKeydown = (e) => {
-    if (e.key === "Enter" && this.elements.youtubeSearchSuggestion.style.display !== "none") {
+    if (e.key === "Enter") {
         const searchTerm = this.elements.librarySearch.value.trim();
         const videoId = this.extractYouTubeId(searchTerm);
         
-        if (videoId) {
+        if (videoId && this.elements.youtubeSearchSuggestion.style.display !== "none") {
             // It's a YouTube URL - autofill the library modal
             this.autofillFromUrl(searchTerm);
-        } else {
-            // It's a regular search - open YouTube search
+        } else if (this.elements.youtubeSearchSuggestion.style.display !== "none") {
+            // It's a regular search with no results - open YouTube search
             this.searchYouTube(searchTerm);
+        } else {
+            // There are search results - play the first visible song
+            this.playFirstVisibleSong();
         }
     }
 };
@@ -1111,6 +1114,20 @@ renderSongLibrary() {
     window.open(searchUrl, "_blank");
     this.openLibraryModal();
   }
+  playFirstVisibleSong() {
+    const visibleSongItems = Array.from(this.elements.songLibrary.querySelectorAll(".song-item"))
+        .filter(item => item.style.display !== "none");
+    
+    if (visibleSongItems.length > 0) {
+        const firstSongElement = visibleSongItems[0].querySelector(".song-name");
+        const songId = firstSongElement.dataset.songId;
+        
+        if (songId) {
+            this.playSong(parseInt(songId));
+            
+        }
+    }
+}
   removeSong(songId) {
     const song = this.songLibrary.find((song) => song.id === songId);
     if (!song) return Promise.resolve();
