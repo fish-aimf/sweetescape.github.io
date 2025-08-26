@@ -310,6 +310,11 @@ findSongsResults: document.getElementById("findSongsResults"),
     this.elements.aiOutput = document.getElementById("aiOutput");
     this.elements.openAiGeneratorBtn = document.getElementById("openAiGeneratorBtn");
     this.elements.notFindingSection = document.getElementById("notFindingSection");
+    // Add to your initializeElements method
+this.elements.findSongsDiv = document.getElementById("findSongsDiv");
+this.elements.findSongsSearch = document.getElementById("findSongsSearch");
+this.elements.findSongsResults = document.getElementById("findSongsResults");
+this.elements.notFindingSection = document.getElementById("notFindingSection");
     
     if (this.elements.speedBtn) {
       this.elements.speedBtn.textContent = this.currentSpeed + "x";
