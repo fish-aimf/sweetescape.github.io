@@ -274,3 +274,4 @@
 - fixed styles v36.5.0
 - fixed html display error v36.6.0
 - displays individual songs as well v37.0.0
+- made convert transcript to lyrics remove useless transcripts like \[music] or \[applause] v37.1.0
