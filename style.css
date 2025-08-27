@@ -5144,6 +5144,7 @@ body:has(#ytPlayer.fullscreen-video) {
 
 
 /* Individual Song Results */
+/* Individual Song Results */
 .individual-songs-results {
     background: var(--bg-secondary);
     border-radius: 0 0 6px 6px;
