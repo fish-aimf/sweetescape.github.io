@@ -876,18 +876,19 @@ Blinding Lights, https://youtube.com/watch?v=def456, The Weeknd" class="global-l
                     <button id="globalLibraryMassImportBtn" class="global-library-btn">Import Songs</button>
                 </div>
             </div>
-            <div class="control-group" id="adminTopSongsSection" style="display: none;">
-    <h4>Admin: Update Top Songs of the Week</h4>
-    <div class="top-songs-admin-list" id="topSongsAdminList">
-        <!-- Admin top songs list will be loaded here -->
-    </div>
-    <div class="top-songs-admin-form">
-        <input type="text" id="adminTopSongName" placeholder="Song name" class="global-library-input">
-        <input type="text" id="adminTopSongArtist" placeholder="Artist" class="global-library-input">
-        <input type="url" id="adminTopSongUrl" placeholder="YouTube URL" class="global-library-input">
-        <button id="adminAddTopSongBtn" class="global-library-btn">Add Top Song</button>
-    </div>
-</div>
+            <!-- Add this after the Mass Import control-group -->
+                <div class="control-group" id="adminTopSongsSection" style="display: none;">
+                    <h4>Admin: Update Top Songs of the Week</h4>
+                    <div class="top-songs-admin-list" id="topSongsAdminList">
+                        <!-- Admin top songs list will be loaded here -->
+                    </div>
+                    <div class="top-songs-admin-form">
+                        <input type="text" id="adminTopSongName" placeholder="Song name" class="global-library-input">
+                        <input type="text" id="adminTopSongArtist" placeholder="Artist" class="global-library-input">
+                        <input type="url" id="adminTopSongUrl" placeholder="YouTube URL" class="global-library-input">
+                        <button id="adminAddTopSongBtn" class="global-library-btn">Add Top Song</button>
+                    </div>
+                </div>
 
             <input type="text" id="globalLibrarySearchBar" class="global-library-search-bar" placeholder="Search playlists and songs...">
             
