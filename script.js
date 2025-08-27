@@ -8020,6 +8020,12 @@ convertTranscriptToLyrics(transcript) {
             continue;
           }
           
+          // Skip bracketed non-lyric content like [music], [applause], [instrumental], etc.
+          if (nextLine.match(/^\[[^\]]+\]$/)) {
+            j++;
+            continue;
+          }
+          
           // Extract lyric content
           let lyricContent = '';
           if (nextLine.startsWith('♪') && nextLine.endsWith('♪')) {
@@ -8035,10 +8041,16 @@ convertTranscriptToLyrics(transcript) {
             lyricContent = nextLine;
           }
           
+          // Filter out any remaining bracketed content within the lyric line
           if (lyricContent) {
-            // Apply formatting
-            lyricContent = this.formatLyricText(lyricContent);
-            lyricLines.push(lyricContent);
+            lyricContent = lyricContent.replace(/\[[^\]]+\]/g, '').trim();
+            
+            // Only add if there's actual content left after filtering
+            if (lyricContent) {
+              // Apply formatting
+              lyricContent = this.formatLyricText(lyricContent);
+              lyricLines.push(lyricContent);
+            }
           }
           
           j++;
