@@ -271,3 +271,5 @@
 - added autofill to global library import to ai generated playlists v36.2.0
 - added styles for the new buttons. v36.3.0
 - pressing enter after library search will result in playing of top search result. v36.4.0
+- fixed styles v36.5.0
+- fixed html display error v36.6.0
