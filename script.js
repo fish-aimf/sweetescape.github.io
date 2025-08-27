@@ -8433,6 +8433,7 @@ showGlobalLibraryMainSection() {
     document.getElementById('globalLibraryMainSection').style.display = 'block';
     document.getElementById('globalLibraryUserInfo').textContent = `Welcome, ${this.globalLibraryCurrentUser.email}`;
     this.loadGlobalLibraryData();
+    this.checkIfAdmin();
     // Auto-fill if there's pending import data
     this.autofillGlobalLibraryImport();
 }
@@ -8756,7 +8757,8 @@ async openFindSongs() {
     this.elements.findSongsSearch.focus();
   
     await this.loadAllArtists();
-    this.displaySearchResults(this.allArtists, [], 'playlists'); // Show playlists by default
+    await this.loadTopSongsOfWeek(); // Add this line
+    this.displaySearchResults(this.allArtists, [], 'playlists');
 }
 
 
@@ -9665,9 +9667,23 @@ removeAiMessages() {
     const messages = this.elements.aiGeneratorDiv.querySelectorAll('.ai-error, .ai-success');
     messages.forEach(msg => msg.remove());
 }
+checkIfAdmin() {
+    // Simple admin check - customize these emails
+    const adminEmails = ['admin@example.com', 'your-email@domain.com'];
+    const isAdmin = adminEmails.includes(this.globalLibraryCurrentUser.email);
+    
+    const adminSection = document.getElementById('adminTopSongsSection');
+    if (adminSection) {
+        adminSection.style.display = isAdmin ? 'block' : 'none';
+    }
+    
+    if (isAdmin) {
+        this.displayAdminTopSongs();
+    }
+}
+
 async loadTopSongsOfWeek() {
     try {
-        // Use this.supabase instead of this.globalLibrarySupabase so non-logged-in users can see top songs
         const { data: topSongs, error } = await this.supabase
             .from('topsongsoftheweek')
             .select('*')
@@ -9675,14 +9691,8 @@ async loadTopSongsOfWeek() {
             .limit(5);
 
         if (error) throw error;
-        
         this.topSongsOfWeek = topSongs || [];
         this.displayTopSongs();
-        
-        // Only show admin controls if user is logged in and is admin
-        if (this.globalLibraryCurrentUser && this.isAdmin) {
-            this.displayAdminTopSongs();
-        }
     } catch (error) {
         console.error('Error loading top songs:', error);
         const container = document.getElementById('topSongsContainer');
@@ -9724,27 +9734,7 @@ getYouTubeThumbnail(url) {
     return 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="36" viewBox="0 0 48 36"><rect width="48" height="36" fill="%23ddd"/><text x="24" y="20" text-anchor="middle" font-size="12" fill="%23999">♪</text></svg>';
 }
 
-checkAdminStatus() {
-    if (!this.globalLibraryCurrentUser) return;
-    
-    // Check if user is admin - customize these emails as needed
-    const adminEmails = ['admin@example.com', 'your-admin-email@domain.com'];
-    this.isAdmin = adminEmails.includes(this.globalLibraryCurrentUser.email);
-    
-    const adminSection = document.getElementById('adminTopSongsSection');
-    if (adminSection) {
-        adminSection.style.display = this.isAdmin ? 'block' : 'none';
-    }
-    
-    // If admin, load and display the admin top songs list
-    if (this.isAdmin) {
-        this.displayAdminTopSongs();
-    }
-}
-
 displayAdminTopSongs() {
-    if (!this.isAdmin) return;
-    
     const adminList = document.getElementById('topSongsAdminList');
     if (!adminList) return;
 
@@ -9785,7 +9775,6 @@ async adminAddTopSong() {
     }
 
     try {
-        // Use this.supabase instead of this.globalLibrarySupabase
         const { error } = await this.supabase
             .from('topsongsoftheweek')
             .insert([{ name, artist, url }]);
@@ -9801,11 +9790,11 @@ async adminAddTopSong() {
         this.showGlobalLibraryMessage('Error adding top song: ' + error.message, 'error');
     }
 }
+
 async adminDeleteTopSong(songId) {
     if (!confirm('Delete this top song?')) return;
 
     try {
-        // Use this.supabase instead of this.globalLibrarySupabase
         const { error } = await this.supabase
             .from('topsongsoftheweek')
             .delete()
@@ -9819,19 +9808,6 @@ async adminDeleteTopSong(songId) {
         this.showGlobalLibraryMessage('Error deleting top song: ' + error.message, 'error');
     }
 }
-  
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
