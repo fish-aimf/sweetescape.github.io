@@ -8773,9 +8773,7 @@ displaySearchResults(artists, individualSongs = [], mode = 'mixed') {
     if (individualSongs && individualSongs.length > 0) {
         resultsHTML += `
             <div class="search-section">
-                <div class="search-section-header">
-                    <h3>Individual Songs (${individualSongs.length})</h3>
-                </div>
+                
                 <div class="individual-songs-results">
                     ${individualSongs.map(song => `
                         <div class="individual-song-result">
@@ -8803,9 +8801,7 @@ displaySearchResults(artists, individualSongs = [], mode = 'mixed') {
     if (artists && artists.length > 0) {
         resultsHTML += `
             <div class="search-section">
-                <div class="search-section-header">
-                    <h3>Playlists (${artists.length})</h3>
-                </div>
+                
                 <div class="playlist-results">
                     ${artists.map(artist => {
                         const songsPreview = artist.songs.slice(0, 3); // Show fewer in preview
