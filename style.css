@@ -5140,24 +5140,10 @@ body:has(#ytPlayer.fullscreen-video) {
         display: none;
     }
 }
-/* Search Sections */
-.search-section {
-    margin-bottom: 8px;
-}
 
-.search-section-header {
-    background: var(--bg-secondary);
-    padding: 10px 15px;
-    border-bottom: 1px solid var(--accent-color);
-    border-radius: 6px 6px 0 0;
-    margin-bottom: 0; /* Ensure no gap */
-}
 
-.search-section-header h3 {
-    margin: 0;
-    color: var(--accent-color);
-    font-size: 16px;
-}
+
+
 
 /* Individual Song Results */
 .individual-songs-results {
