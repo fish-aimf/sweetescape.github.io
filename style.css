@@ -5143,13 +5143,12 @@ body:has(#ytPlayer.fullscreen-video) {
 
 
 
-
-
 /* Individual Song Results */
 .individual-songs-results {
     background: var(--bg-secondary);
     border-radius: 0 0 6px 6px;
     margin-top: 0; /* Remove any top margin */
+    width: 100%; /* Match parent width */
 }
 
 .individual-song-result {
@@ -5159,6 +5158,8 @@ body:has(#ytPlayer.fullscreen-video) {
     padding: 12px 15px;
     border-bottom: 1px solid var(--border-color);
     margin: 0; /* Remove any margin */
+    width: 100%; /* Full width of container */
+    box-sizing: border-box; /* Include padding in width calculation */
 }
 
 .individual-song-result:hover {
@@ -5172,11 +5173,13 @@ body:has(#ytPlayer.fullscreen-video) {
 .song-info {
     flex: 1;
     min-width: 0;
+    margin-right: 10px; /* Add some spacing before actions */
 }
 
 .song-actions {
     display: flex;
     gap: 8px;
+    flex-shrink: 0; /* Prevent actions from shrinking */
 }
 
 .add-single-song-btn {
@@ -5187,6 +5190,7 @@ body:has(#ytPlayer.fullscreen-video) {
     border-radius: 4px;
     cursor: pointer;
     font-size: 12px;
+    white-space: nowrap; /* Prevent text wrapping */
 }
 
 .add-single-song-btn:hover {
@@ -5200,6 +5204,7 @@ body:has(#ytPlayer.fullscreen-video) {
     padding: 4px 8px;
     border-radius: 4px;
     cursor: pointer;
+    white-space: nowrap; /* Prevent text wrapping */
 }
 
 .preview-btn:hover {
@@ -5211,6 +5216,38 @@ body:has(#ytPlayer.fullscreen-video) {
     background: var(--bg-secondary);
     border-radius: 0 0 6px 6px;
     margin-top: 0; /* Remove any top margin */
+    width: 100%; /* Match parent width */
+}
+
+.playlist-result {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--border-color);
+    margin: 0;
+    width: 100%; /* Full width of container */
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+
+.playlist-result:hover {
+    background: var(--bg-primary);
+}
+
+.playlist-result:last-child {
+    border-bottom: none;
+}
+
+.playlist-info {
+    flex: 1;
+    min-width: 0;
+    margin-right: 10px; /* Add some spacing before actions */
+}
+
+.playlist-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0; /* Prevent actions from shrinking */
 }
 
 /* Detailed Modal */
@@ -5284,6 +5321,8 @@ body:has(#ytPlayer.fullscreen-video) {
     padding: 10px 15px;
     border-bottom: 1px solid var(--border-color);
     margin: 0; /* Remove any margin */
+    width: 100%; /* Full width of container */
+    box-sizing: border-box; /* Include padding in width calculation */
 }
 
 .detailed-song-item:hover {
@@ -5296,11 +5335,13 @@ body:has(#ytPlayer.fullscreen-video) {
 
 .detailed-song-info {
     flex: 1;
+    margin-right: 10px; /* Add some spacing before actions */
 }
 
 .detailed-song-actions {
     display: flex;
     gap: 6px;
+    flex-shrink: 0; /* Prevent actions from shrinking */
 }
 
 /* Success Toast */
