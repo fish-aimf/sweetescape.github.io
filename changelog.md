@@ -273,3 +273,4 @@
 - pressing enter after library search will result in playing of top search result. v36.4.0
 - fixed styles v36.5.0
 - fixed html display error v36.6.0
+- displays individual songs as well v37.0.0
