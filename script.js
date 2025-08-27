@@ -44,6 +44,7 @@ class AdvancedMusicPlayer {
     this.visualizerEnabled = true;
     this.globalLibrarySupabase = null;
     this.globalLibraryCurrentUser = null;
+    this.topSongsOfWeek = [];
     this.globalLibraryArtists = [];
     //these keys are restricted and only allowed use for sweetescape.vercel.app so dont even think of stealing
     this.GEMINI_API_KEY = 'AIzaSyAGa1IpwVMUmNo-YH9JyWStpWprkpkhGWk';
@@ -8402,6 +8403,7 @@ setupGlobalLibraryEventListeners() {
     document.getElementById('globalLibraryMassImportBtn').addEventListener('click', () => this.globalLibraryMassImport());
     document.getElementById('globalLibrarySearchBar').addEventListener('input', (e) => this.globalLibrarySearch(e.target.value));
     document.getElementById('globalLibraryPlaylistSearch').addEventListener('input', (e) => this.filterPlaylistSelect(e.target.value));
+  document.getElementById('adminAddTopSongBtn').addEventListener('click', () => this.adminAddTopSong());
 }
 openGlobalLibraryModal() {
     document.getElementById('globalLibraryModal').style.display = 'block';
@@ -9663,7 +9665,161 @@ removeAiMessages() {
     const messages = this.elements.aiGeneratorDiv.querySelectorAll('.ai-error, .ai-success');
     messages.forEach(msg => msg.remove());
 }
+async loadTopSongsOfWeek() {
+    try {
+        // Use this.supabase instead of this.globalLibrarySupabase so non-logged-in users can see top songs
+        const { data: topSongs, error } = await this.supabase
+            .from('topsongsoftheweek')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(5);
 
+        if (error) throw error;
+        
+        this.topSongsOfWeek = topSongs || [];
+        this.displayTopSongs();
+        
+        // Only show admin controls if user is logged in and is admin
+        if (this.globalLibraryCurrentUser && this.isAdmin) {
+            this.displayAdminTopSongs();
+        }
+    } catch (error) {
+        console.error('Error loading top songs:', error);
+        const container = document.getElementById('topSongsContainer');
+        if (container) {
+            container.innerHTML = '<div class="top-songs-empty">Unable to load top songs</div>';
+        }
+    }
+}
+
+displayTopSongs() {
+    const container = document.getElementById('topSongsContainer');
+    if (!container) return;
+    
+    if (!this.topSongsOfWeek || this.topSongsOfWeek.length === 0) {
+        container.innerHTML = '<div class="top-songs-empty">No top songs this week</div>';
+        return;
+    }
+
+    container.innerHTML = this.topSongsOfWeek.map(song => {
+        const thumbnailUrl = this.getYouTubeThumbnail(song.url);
+        return `
+            <div class="top-song-item">
+                <img src="${thumbnailUrl}" alt="${song.name}" class="top-song-thumbnail" 
+                     onerror="this.src='data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\" width=\\"48\\" height=\\"36\\" viewBox=\\"0 0 48 36\\"><rect width=\\"48\\" height=\\"36\\" fill=\\"%23ddd\\"/><text x=\\"24\\" y=\\"20\\" text-anchor=\\"middle\\" font-size=\\"12\\" fill=\\"%23999\\">♪</text></svg>'">
+                <div class="top-song-info">
+                    <div class="top-song-name">${song.name}</div>
+                    <div class="top-song-artist">${song.artist}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+getYouTubeThumbnail(url) {
+    const videoId = this.extractYouTubeId(url);
+    if (videoId) {
+        return `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+    }
+    return 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="36" viewBox="0 0 48 36"><rect width="48" height="36" fill="%23ddd"/><text x="24" y="20" text-anchor="middle" font-size="12" fill="%23999">♪</text></svg>';
+}
+
+checkAdminStatus() {
+    if (!this.globalLibraryCurrentUser) return;
+    
+    // Check if user is admin - customize these emails as needed
+    const adminEmails = ['admin@example.com', 'your-admin-email@domain.com'];
+    this.isAdmin = adminEmails.includes(this.globalLibraryCurrentUser.email);
+    
+    const adminSection = document.getElementById('adminTopSongsSection');
+    if (adminSection) {
+        adminSection.style.display = this.isAdmin ? 'block' : 'none';
+    }
+    
+    // If admin, load and display the admin top songs list
+    if (this.isAdmin) {
+        this.displayAdminTopSongs();
+    }
+}
+
+displayAdminTopSongs() {
+    if (!this.isAdmin) return;
+    
+    const adminList = document.getElementById('topSongsAdminList');
+    if (!adminList) return;
+
+    if (!this.topSongsOfWeek || this.topSongsOfWeek.length === 0) {
+        adminList.innerHTML = '<div class="top-songs-empty">No top songs configured</div>';
+        return;
+    }
+
+    adminList.innerHTML = this.topSongsOfWeek.map(song => `
+        <div class="admin-top-song-item">
+            <div class="admin-song-info">
+                <div class="admin-song-name">${song.name}</div>
+                <div class="admin-song-artist">${song.artist}</div>
+            </div>
+            <button onclick="musicPlayer.adminDeleteTopSong(${song.id})" class="admin-delete-btn">Delete</button>
+        </div>
+    `).join('');
+}
+
+async adminAddTopSong() {
+    const name = document.getElementById('adminTopSongName').value.trim();
+    const artist = document.getElementById('adminTopSongArtist').value.trim();
+    const url = document.getElementById('adminTopSongUrl').value.trim();
+
+    if (!name || !artist || !url) {
+        this.showGlobalLibraryMessage('Please fill in all fields', 'error');
+        return;
+    }
+
+    if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
+        this.showGlobalLibraryMessage('Please enter a valid YouTube URL', 'error');
+        return;
+    }
+
+    if (this.topSongsOfWeek.length >= 5) {
+        this.showGlobalLibraryMessage('Maximum 5 top songs allowed. Delete one first.', 'error');
+        return;
+    }
+
+    try {
+        // Use this.supabase instead of this.globalLibrarySupabase
+        const { error } = await this.supabase
+            .from('topsongsoftheweek')
+            .insert([{ name, artist, url }]);
+
+        if (error) throw error;
+
+        this.showGlobalLibraryMessage('Top song added successfully!', 'success');
+        document.getElementById('adminTopSongName').value = '';
+        document.getElementById('adminTopSongArtist').value = '';
+        document.getElementById('adminTopSongUrl').value = '';
+        this.loadTopSongsOfWeek();
+    } catch (error) {
+        this.showGlobalLibraryMessage('Error adding top song: ' + error.message, 'error');
+    }
+}
+async adminDeleteTopSong(songId) {
+    if (!confirm('Delete this top song?')) return;
+
+    try {
+        // Use this.supabase instead of this.globalLibrarySupabase
+        const { error } = await this.supabase
+            .from('topsongsoftheweek')
+            .delete()
+            .eq('id', songId);
+
+        if (error) throw error;
+
+        this.showGlobalLibraryMessage('Top song deleted successfully!', 'success');
+        this.loadTopSongsOfWeek();
+    } catch (error) {
+        this.showGlobalLibraryMessage('Error deleting top song: ' + error.message, 'error');
+    }
+}
+  
 
 
 
