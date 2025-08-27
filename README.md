@@ -36,9 +36,9 @@ deployed at sweetescape.glitch.me now sweetescape.vercel.app
 
 This is currently supabase enabled
 
-Version 100?
+Ai enabled
 
-Will I put ads I don't actually know
+
 
 
 
