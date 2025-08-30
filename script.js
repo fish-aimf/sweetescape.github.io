@@ -8787,13 +8787,16 @@ closeFindSongs() {
 displaySearchResults(artists, individualSongs = [], mode = 'mixed') {
     let resultsHTML = '';
     
+    // Limit individual songs to 10
+    const limitedSongs = individualSongs.slice(0, 10);
+    
     // Display individual songs first if any
-    if (individualSongs && individualSongs.length > 0) {
+    if (limitedSongs && limitedSongs.length > 0) {
         resultsHTML += `
             <div class="search-section">
                 
                 <div class="individual-songs-results">
-                    ${individualSongs.map(song => `
+                    ${limitedSongs.map(song => `
                         <div class="individual-song-result">
                             <div class="song-info">
                                 <div class="song-name">${song.name}</div>
@@ -8811,17 +8814,21 @@ displaySearchResults(artists, individualSongs = [], mode = 'mixed') {
                         </div>
                     `).join('')}
                 </div>
+                ${individualSongs.length > 10 ? `<div class="results-limit-notice">Showing first 10 of ${individualSongs.length} song results</div>` : ''}
             </div>
         `;
     }
 
+    // Limit playlists to 10
+    const limitedArtists = artists.slice(0, 10);
+
     // Display playlists
-    if (artists && artists.length > 0) {
+    if (limitedArtists && limitedArtists.length > 0) {
         resultsHTML += `
             <div class="search-section">
                 
                 <div class="playlist-results">
-                    ${artists.map(artist => {
+                    ${limitedArtists.map(artist => {
                         const songsPreview = artist.songs.slice(0, 3); // Show fewer in preview
                         const remainingSongs = artist.songs.length - 3;
                         
@@ -8849,6 +8856,7 @@ displaySearchResults(artists, individualSongs = [], mode = 'mixed') {
                         `;
                     }).join('')}
                 </div>
+                ${artists.length > 10 ? `<div class="results-limit-notice">Showing first 10 of ${artists.length} playlist results</div>` : ''}
             </div>
         `;
     }
@@ -8899,12 +8907,14 @@ async addPlaylistToLibrary(artistId, artistName) {
         alert('Error adding playlist to library');
     }
 }
-  async loadAllArtists() {
+  
+async loadAllArtists() {
     if (this.allArtists.length > 0) return; 
     
     this.elements.findSongsResults.innerHTML = '<div class="loading-spinner">Loading playlists...</div>';
     
     try {
+        // Add limit to reduce initial load
         const { data: artists, error } = await this.supabase
             .from('artists')
             .select(`
@@ -8917,15 +8927,18 @@ async addPlaylistToLibrary(artistId, artistName) {
                     youtube_url
                 )
             `)
-            .order('id', { ascending: true });
+            .order('id', { ascending: true })
+            .limit(50); // Limit initial load to 50 playlists
 
         if (error) throw error;
         this.allArtists = artists || [];
         
-        // Create flat list of all songs for individual song search
+        // Create flat list of all songs for individual song search - limit songs
         this.allSongs = [];
         artists.forEach(artist => {
-            artist.songs.forEach(song => {
+            // Only take first 20 songs per artist to limit memory usage
+            const limitedSongs = artist.songs.slice(0, 20);
+            limitedSongs.forEach(song => {
                 this.allSongs.push({
                     ...song,
                     playlist_name: artist.name,
@@ -8940,35 +8953,32 @@ async addPlaylistToLibrary(artistId, artistName) {
     }
 }
 
-// Modified filterResults method
 filterResults() {
     const searchTerm = this.elements.findSongsSearch.value.trim().toLowerCase();
     
     if (!searchTerm) {
-        this.displaySearchResults(this.allArtists, [], 'playlists');
+        // Limit initial display to 10 playlists
+        this.displaySearchResults(this.allArtists.slice(0, 10), [], 'playlists');
         return;
     }
     
-    // Filter playlists
+    // Filter playlists - limit to 10
     const filteredArtists = this.allArtists.filter(artist => 
         artist.name.toLowerCase().includes(searchTerm) ||
         artist.songs.some(song => 
             song.name.toLowerCase().includes(searchTerm) ||
             (song.author && song.author.toLowerCase().includes(searchTerm))
         )
-    );
+    ).slice(0, 10);
     
-    // Filter individual songs
+    // Filter individual songs - limit to 10
     const filteredSongs = this.allSongs.filter(song =>
         song.name.toLowerCase().includes(searchTerm) ||
         (song.author && song.author.toLowerCase().includes(searchTerm)) ||
         song.playlist_name.toLowerCase().includes(searchTerm)
-    );
+    ).slice(0, 10);
     
-    // Limit individual songs to avoid overwhelming results
-    const limitedSongs = filteredSongs.slice(0, 20);
-    
-    this.displaySearchResults(filteredArtists, limitedSongs, 'mixed');
+    this.displaySearchResults(filteredArtists, filteredSongs, 'mixed');
 }
 // New method: openDetailedPlaylistView
 async openDetailedPlaylistView(artistId, artistName) {
