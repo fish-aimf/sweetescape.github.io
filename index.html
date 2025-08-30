@@ -779,49 +779,50 @@
     <!-- Find Songs Feature - Outside app-container -->
 <div id="findSongsDiv" class="find-songs-container" style="display: none;">
     <div class="find-songs-content">
+        <!-- Top Header for Find Songs -->
         <div class="find-songs-header">
-            <h2>Find Songs from the Global Library</h2>
-            <button id="globalLibraryEditBtn" class="global-library-edit-btn" title="Edit Global Library">✏️</button>
-            <button id="closeFindSongs" class="close-btn">&times;</button>
+            <h2>🎵 Find Songs from Global Library</h2>
+            <button id="findSongsCloseBtn" class="close-btn">&times;</button>
         </div>
-        <!-- Recommendations Panel - Add this before find-songs-search -->
-<div class="recommendations-panel" id="recommendationsPanel">
-    <!-- Top Songs of the Week Section -->
-    <div class="recommendation-section">
-        <h3 class="recommendation-title">🏆 Top Songs This Week</h3>
-        <div id="topSongsContainer" class="top-songs-container">
-            <!-- Will be populated by JavaScript -->
+        
+        <!-- Content Area with Recommendations Left and Main Right -->
+        <div class="find-songs-body">
+            <!-- Recommendations Panel on Left -->
+            <div class="recommendations-panel" id="recommendationsPanel">
+                <!-- Top Songs of the Week Section -->
+                <div class="recommendation-section">
+                    <h3 class="recommendation-title">🏆 Top Songs This Week</h3>
+                    <div id="topSongsContainer" class="top-songs-container">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Random Recommendations Section -->
+                <div class="recommendation-section">
+                    <h3 class="recommendation-title">🎲 Discover Something New</h3>
+                    <div id="randomSongsContainer" class="random-songs-container">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                    <button id="refreshRandomBtn" class="refresh-random-btn">🔄 Refresh</button>
+                </div>
+            </div>
+            
+            <!-- Main Content on Right -->
+            <div class="find-songs-main-content">
+                <div class="find-songs-search">
+                    <input type="text" id="findSongsSearch" placeholder="Search for artists, songs, or playlists...">
+                </div>
+                <div id="findSongsResults" class="find-songs-results">
+                    <!-- Results will be populated here by JavaScript -->
+                </div>
+                <div class="not-finding-section" id="notFindingSection" style="display: none;">
+                    <p>Not finding what you're looking for?</p>
+                    <button class="generate-playlist-btn" id="openAiGeneratorBtn">Generate your wanted playlist with AI</button>
+                </div>
+            </div>
         </div>
-    </div>
-    
-    <!-- Random Recommendations Section -->
-    <div class="recommendation-section">
-        <h3 class="recommendation-title">🎲 Discover Something New</h3>
-        <div id="randomSongsContainer" class="random-songs-container">
-            <!-- Will be populated by JavaScript -->
-        </div>
-        <button id="refreshRandomBtn" class="refresh-random-btn">🔄 Refresh</button>
     </div>
 </div>
-        <div class="find-songs-main-content">
-            <div class="find-songs-header">
-                <h2>Find Songs</h2>
-                <button id="findSongsCloseBtn" class="close-btn">&times;</button>
-            </div>
-            <div class="find-songs-search">
-                <input type="text" id="findSongsSearch" placeholder="Search for artists, songs, or playlists...">
-            </div>
-            <div id="findSongsResults" class="find-songs-results">
-                <!-- Results will be populated here by JavaScript -->
-            </div>
-            <div class="not-finding-section" id="notFindingSection" style="display: none;">
-                <p>Not finding what you're looking for?</p>
-                <button class="generate-playlist-btn" id="openAiGeneratorBtn">Generate your wanted playlist with AI</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <div id="globalLibraryModal" class="global-library-modal" style="display: none;">
     <div class="global-library-content">
         <div class="global-library-header">
