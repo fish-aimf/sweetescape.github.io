@@ -8814,7 +8814,7 @@ displaySearchResults(artists, individualSongs = [], mode = 'mixed') {
                         </div>
                     `).join('')}
                 </div>
-                ${individualSongs.length > 10 ? `<div class="results-limit-notice">Showing first 10 of ${individualSongs.length} song results</div>` : ''}
+
             </div>
         `;
     }
@@ -8856,7 +8856,7 @@ displaySearchResults(artists, individualSongs = [], mode = 'mixed') {
                         `;
                     }).join('')}
                 </div>
-                ${artists.length > 10 ? `<div class="results-limit-notice">Showing first 10 of ${artists.length} playlist results</div>` : ''}
+
             </div>
         `;
     }
@@ -8870,7 +8870,6 @@ displaySearchResults(artists, individualSongs = [], mode = 'mixed') {
     // Show the "not finding" section at the bottom
     this.elements.notFindingSection.style.display = "block";
 }
-
 async viewAllSongs(artistId, artistName) {
     try {
         const { data: songs, error } = await this.supabase
