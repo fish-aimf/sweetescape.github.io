@@ -166,6 +166,8 @@ this.globalLibrarySearchFilter = '';
         this.initializeVisualizer(); 
         this.loadVisualizerSettings();
         this.initializeGlobalLibrary();
+        // In your constructor, add this after this.initializeGlobalLibrary();
+this.setupRecommendationEventListeners();
       })
       .catch((error) => {
         console.error("Error initializing music player:", error);
@@ -561,6 +563,11 @@ settingsEventBindings.forEach(([element, event, handler], index) => {
         console.warn(`Settings element not found for event binding at index ${index}`);
     }
 });
+
+    // Add this to your existing setupEventListeners method, after your existing event listeners
+if (document.getElementById('refreshRandomRecommendationsBtn')) {
+    document.getElementById('refreshRandomRecommendationsBtn').addEventListener('click', () => this.refreshRandomRecommendationsDisplay());
+}
   }
   setupKeyboardControls() {
     document.addEventListener("keydown", (e) => {
