@@ -382,6 +382,8 @@ this.elements.notFindingSection = document.getElementById("notFindingSection");
     this.handleSongNameRightClick = this.handleSongNameRightClick.bind(this);
     this.handleAddSong = this.addSongToLibrary.bind(this);
     this.elements.aiImportGlobalBtn.addEventListener('click', this.handleImportToGlobalLibrary.bind(this));
+    // Add this to your existing setupEventListeners method
+document.getElementById('refreshRandomBtn').addEventListener('click', () => this.refreshRandomRecommendations());
     const tabButtons = document.querySelectorAll('.settings-tab-btn');
     tabButtons.forEach(button => {
         button.addEventListener('click', (e) => this.handleTabSwitch(e));
@@ -451,6 +453,7 @@ this.elements.closeFindSongs?.addEventListener("click", this.closeFindSongs.bind
         this.filterResults();
     }, 300);
 });
+    
 
     const currentSongName = document.getElementById('currentSongName');
     if (currentSongName) {
@@ -8443,7 +8446,7 @@ showGlobalLibraryMainSection() {
     document.getElementById('globalLibraryMainSection').style.display = 'block';
     document.getElementById('globalLibraryUserInfo').textContent = `Welcome, ${this.globalLibraryCurrentUser.email}`;
     this.loadGlobalLibraryData();
-    // Auto-fill if there's pending import data
+    this.loadTopSongsManagement(); // Add this line
     this.autofillGlobalLibraryImport();
 }
  handleImportToGlobalLibrary() {
@@ -8766,7 +8769,10 @@ async openFindSongs() {
     this.elements.findSongsSearch.focus();
   
     await this.loadAllArtists();
-    this.displaySearchResults(this.allArtists, [], 'playlists'); // Show playlists by default
+    this.displaySearchResults(this.allArtists, [], 'playlists');
+    
+    // Load recommendations
+    await this.loadRecommendations();
 }
 
 
@@ -9674,6 +9680,224 @@ showAiSuccess(message) {
 removeAiMessages() {
     const messages = this.elements.aiGeneratorDiv.querySelectorAll('.ai-error, .ai-success');
     messages.forEach(msg => msg.remove());
+}
+
+  async loadRecommendations() {
+    await this.loadTopSongs();
+    await this.loadRandomRecommendations();
+}
+
+async loadTopSongs() {
+    try {
+        const { data: topSongs, error } = await this.supabase
+            .from('top_songs_of_week')
+            .select(`
+                position,
+                songs (
+                    id,
+                    name,
+                    author,
+                    youtube_url
+                )
+            `)
+            .order('position');
+
+        if (error) throw error;
+        
+        this.displayTopSongs(topSongs || []);
+    } catch (error) {
+        console.error('Error loading top songs:', error);
+        document.getElementById('topSongsContainer').innerHTML = '<div style="color: var(--text-secondary); font-size: 12px;">Unable to load top songs</div>';
+    }
+}
+
+async loadRandomRecommendations() {
+    try {
+        // Get 3 random songs from the database
+        const { data: randomSongs, error } = await this.supabase
+            .from('songs')
+            .select('id, name, author, youtube_url')
+            .limit(100); // Get more to randomize from
+
+        if (error) throw error;
+        
+        // Shuffle and take 3
+        const shuffled = randomSongs.sort(() => 0.5 - Math.random());
+        const selectedSongs = shuffled.slice(0, 3);
+        
+        this.displayRandomRecommendations(selectedSongs);
+    } catch (error) {
+        console.error('Error loading random recommendations:', error);
+        document.getElementById('randomSongsContainer').innerHTML = '<div style="color: var(--text-secondary); font-size: 12px;">Unable to load recommendations</div>';
+    }
+}
+
+displayTopSongs(topSongs) {
+    const container = document.getElementById('topSongsContainer');
+    
+    if (!topSongs || topSongs.length === 0) {
+        container.innerHTML = '<div style="color: var(--text-secondary); font-size: 12px;">No top songs set for this week</div>';
+        return;
+    }
+    
+    container.innerHTML = topSongs.map(item => {
+        const song = item.songs;
+        const thumbnailUrl = this.getYouTubeThumbnail(song.youtube_url);
+        
+        return `
+            <div class="recommendation-song-item">
+                <img src="${thumbnailUrl}" alt="Thumbnail" class="song-thumbnail" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'40\\' height=\\'30\\' viewBox=\\'0 0 40 30\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'40\\' height=\\'30\\'/%3E%3Ctext x=\\'20\\' y=\\'18\\' text-anchor=\\'middle\\' font-size=\\'8\\' fill=\\'%23666\\'%3E♪%3C/text%3E%3C/svg%3E'">
+                <div class="recommendation-song-info">
+                    <div class="recommendation-song-name">${song.name}</div>
+                    <div class="recommendation-song-author">by ${song.author || 'Unknown'}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+displayRandomRecommendations(songs) {
+    const container = document.getElementById('randomSongsContainer');
+    
+    if (!songs || songs.length === 0) {
+        container.innerHTML = '<div style="color: var(--text-secondary); font-size: 12px;">No recommendations available</div>';
+        return;
+    }
+    
+    container.innerHTML = songs.map(song => {
+        const thumbnailUrl = this.getYouTubeThumbnail(song.youtube_url);
+        
+        return `
+            <div class="recommendation-song-item">
+                <img src="${thumbnailUrl}" alt="Thumbnail" class="song-thumbnail" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'40\\' height=\\'30\\' viewBox=\\'0 0 40 30\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'40\\' height=\\'30\\'/%3E%3Ctext x=\\'20\\' y=\\'18\\' text-anchor=\\'middle\\' font-size=\\'8\\' fill=\\'%23666\\'%3E♪%3C/text%3E%3C/svg%3E'">
+                <div class="recommendation-song-info">
+                    <div class="recommendation-song-name">${song.name}</div>
+                    <div class="recommendation-song-author">by ${song.author || 'Unknown'}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+getYouTubeThumbnail(youtubeUrl) {
+    const videoId = this.extractYouTubeId(youtubeUrl);
+    return videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : '';
+}
+
+async loadTopSongsManagement() {
+    if (!this.globalLibraryCurrentUser) return;
+    
+    try {
+        // Load current top songs
+        const { data: currentTopSongs, error: topError } = await this.globalLibrarySupabase
+            .from('top_songs_of_week')
+            .select(`
+                position,
+                song_id,
+                songs (
+                    id,
+                    name,
+                    author
+                )
+            `)
+            .order('position');
+
+        if (topError) throw topError;
+
+        // Load all songs for selection
+        const { data: allSongs, error: songsError } = await this.globalLibrarySupabase
+            .from('songs')
+            .select('id, name, author')
+            .order('name');
+
+        if (songsError) throw songsError;
+
+        this.displayTopSongsManagement(currentTopSongs || [], allSongs || []);
+    } catch (error) {
+        console.error('Error loading top songs management:', error);
+    }
+}
+
+displayTopSongsManagement(currentTopSongs, allSongs) {
+    const container = document.getElementById('topSongsManagement');
+    
+    const songsOptionsHTML = allSongs.map(song => 
+        `<option value="${song.id}">${song.name} - ${song.author || 'Unknown'}</option>`
+    ).join('');
+    
+    const managementHTML = [1, 2, 3].map(position => {
+        const currentSong = currentTopSongs.find(item => item.position === position);
+        const selectedSongId = currentSong ? currentSong.song_id : '';
+        
+        return `
+            <div class="top-song-management-item">
+                <div class="top-song-position">#${position}</div>
+                <select class="top-song-select" data-position="${position}">
+                    <option value="">Select a song...</option>
+                    ${songsOptionsHTML}
+                </select>
+            </div>
+        `;
+    }).join('');
+    
+    container.innerHTML = managementHTML + `
+        <button class="update-top-songs-btn" onclick="musicPlayer.updateTopSongs()">
+            Update Top Songs
+        </button>
+    `;
+    
+    // Set selected values
+    currentTopSongs.forEach(item => {
+        const select = container.querySelector(`[data-position="${item.position}"]`);
+        if (select) {
+            select.value = item.song_id;
+        }
+    });
+}
+
+async updateTopSongs() {
+    const selects = document.querySelectorAll('.top-song-select');
+    const updates = [];
+    
+    selects.forEach(select => {
+        const position = parseInt(select.dataset.position);
+        const songId = select.value;
+        
+        if (songId) {
+            updates.push({
+                position: position,
+                song_id: parseInt(songId),
+                created_by: this.globalLibraryCurrentUser.id
+            });
+        }
+    });
+    
+    try {
+        // Delete existing top songs
+        await this.globalLibrarySupabase
+            .from('top_songs_of_week')
+            .delete()
+            .neq('id', 0); // Delete all
+        
+        // Insert new top songs
+        if (updates.length > 0) {
+            const { error } = await this.globalLibrarySupabase
+                .from('top_songs_of_week')
+                .insert(updates);
+            
+            if (error) throw error;
+        }
+        
+        this.showGlobalLibraryMessage('Top songs updated successfully!', 'success');
+        this.loadTopSongsManagement(); // Refresh the management interface
+        
+    } catch (error) {
+        this.showGlobalLibraryMessage('Error updating top songs: ' + error.message, 'error');
+    }
+}
+
+async refreshRandomRecommendations() {
+    await this.loadRandomRecommendations();
 }
 
 
