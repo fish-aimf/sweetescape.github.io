@@ -785,24 +785,25 @@
             <button id="closeFindSongs" class="close-btn">&times;</button>
         </div>
         <!-- Recommendations Panel - Add this before find-songs-search -->
-<div class="recommendations-panel" id="recommendationsPanel">
-    <!-- Top Songs of the Week Section -->
-    <div class="recommendation-section">
-        <h3 class="recommendation-title">🏆 Top Songs This Week</h3>
-        <div id="topSongsContainer" class="top-songs-container">
-            <!-- Will be populated by JavaScript -->
+        <!-- Recommendations Panel - Replace existing recommendations HTML -->
+        <div class="recommendations-panel" id="recommendationsPanel">
+            <!-- Top Songs of the Week Section -->
+            <div class="recommendation-section">
+                <h3 class="recommendation-title">🏆 Top Songs This Week</h3>
+                <div id="topSongsOfWeekContainer" class="top-songs-container">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Random Recommendations Section -->
+            <div class="recommendation-section">
+                <h3 class="recommendation-title">🎲 Discover Something New</h3>
+                <div id="randomRecommendationsContainer" class="random-songs-container">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+                <button id="refreshRandomRecommendationsBtn" class="refresh-random-btn">🔄 Refresh</button>
+            </div>
         </div>
-    </div>
-    
-    <!-- Random Recommendations Section -->
-    <div class="recommendation-section">
-        <h3 class="recommendation-title">🎲 Discover Something New</h3>
-        <div id="randomSongsContainer" class="random-songs-container">
-            <!-- Will be populated by JavaScript -->
-        </div>
-        <button id="refreshRandomBtn" class="refresh-random-btn">🔄 Refresh</button>
-    </div>
-</div>
         <div class="find-songs-search">
             <input type="text" id="findSongsSearch" placeholder="Search for artists, songs, or playlists...">
         </div>
@@ -877,12 +878,36 @@ Blinding Lights, https://youtube.com/watch?v=def456, The Weeknd" class="global-l
                 </div>
             </div>
             <!-- Add this as a new control-group in the global-library-controls -->
-<div class="control-group">
-    <h4>Manage Top Songs of the Week</h4>
-    <div id="topSongsManagement">
-        <!-- Will be populated by JavaScript -->
-    </div>
-</div>
+            <!-- Replace the top songs management section in global-library-controls -->
+            <div class="control-group">
+                <h4>Manage Top Songs of the Week</h4>
+                <div id="weeklyTopSongsManagementContainer">
+                    <div class="top-song-autocomplete-item">
+                        <div class="top-song-position">#1</div>
+                        <div class="autocomplete-wrapper">
+                            <input type="text" id="topSongInput1" class="top-song-autocomplete-input" placeholder="Search for song..." data-position="1">
+                            <div id="topSongDropdown1" class="autocomplete-dropdown" style="display: none;"></div>
+                        </div>
+                    </div>
+                    <div class="top-song-autocomplete-item">
+                        <div class="top-song-position">#2</div>
+                        <div class="autocomplete-wrapper">
+                            <input type="text" id="topSongInput2" class="top-song-autocomplete-input" placeholder="Search for song..." data-position="2">
+                            <div id="topSongDropdown2" class="autocomplete-dropdown" style="display: none;"></div>
+                        </div>
+                    </div>
+                    <div class="top-song-autocomplete-item">
+                        <div class="top-song-position">#3</div>
+                        <div class="autocomplete-wrapper">
+                            <input type="text" id="topSongInput3" class="top-song-autocomplete-input" placeholder="Search for song..." data-position="3">
+                            <div id="topSongDropdown3" class="autocomplete-dropdown" style="display: none;"></div>
+                        </div>
+                    </div>
+                    <button class="update-weekly-top-songs-btn" onclick="musicPlayer.updateWeeklyTopSongsInDatabase()">
+                        Update Top Songs
+                    </button>
+                </div>
+            </div>
 
             <input type="text" id="globalLibrarySearchBar" class="global-library-search-bar" placeholder="Search playlists and songs...">
             
