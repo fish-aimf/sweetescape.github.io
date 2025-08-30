@@ -277,3 +277,4 @@
 - made convert transcript to lyrics remove useless transcripts like music or applause v37.1.0
 - added random recommendation songs. v38.0.0
 - added top song of the week. supabase, section and html. css a bit bugged. and very resource intensive v38.1.0
+- css fixed took 3 hours v38.2.0
