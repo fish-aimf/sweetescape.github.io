@@ -279,3 +279,4 @@
 - added top song of the week. supabase, section and html. css a bit bugged. and very resource intensive v38.1.0
 - css fixed took 3 hours v38.2.0
 - added limit to 10 results to save supabase resources. v38.3.0
+- fixed ai generation yapping. v38.3.1
