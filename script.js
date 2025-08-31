@@ -9236,15 +9236,12 @@ async getSongTitlesFromGemini(author, quantity) {
     const currentDate = new Date().toISOString().split('T')[0];
     
     // First, ask AI to classify the query type
-    const classificationPrompt = `SEARCH THE INTERNET NOW to analyze this current music query and determine if it's asking for:
-A) Songs by a specific artist/band (e.g., "Drake", "Taylor Swift", "The Beatles", "ogryzek")
-B) A broader music category/request (e.g., "top 2024 spotify songs", "trending phonk", "best rap songs", "popular rock hits")
+    const classificationPrompt = `Analyze this music query and respond with only "SPECIFIC_ARTIST" or "BROAD_REQUEST":
 
 Query: "${author}"
-Current date: ${currentDate}
 
-Use live internet search to verify if this is a real artist or a category request.
-Respond with only "SPECIFIC_ARTIST" or "BROAD_REQUEST"`;
+SPECIFIC_ARTIST = songs by one artist/band
+BROAD_REQUEST = category/genre/trend request`;
 
     const classificationResponse = await fetch(`${this.GEMINI_API_URL}?key=${this.GEMINI_API_KEY}`, {
         method: 'POST',
@@ -9257,7 +9254,7 @@ Respond with only "SPECIFIC_ARTIST" or "BROAD_REQUEST"`;
             }],
             generationConfig: {
                 temperature: 0.1,
-                maxOutputTokens: 50
+                maxOutputTokens: 20
             }
         })
     });
@@ -9276,61 +9273,21 @@ Respond with only "SPECIFIC_ARTIST" or "BROAD_REQUEST"`;
     let prompt;
     
     if (isSpecificArtist) {
-        // For specific artists - all songs by that artist
-        prompt = `SEARCH THE INTERNET RIGHT NOW for the most current and complete discography of "${author}".
+        // For specific artists
+        prompt = `Return exactly ${quantity} real song titles by ${author}. 
+${requiredSongsList.length > 0 ? `Include these required songs if they exist:\n${requiredSongsList.join('\n')}\n\n` : ''}Format: One song title per line, no numbers, no bullets, no extra text.
+Only song titles, nothing else.
+Include recent 2024-2025 releases and popular tracks.
 
-Current date: ${currentDate}
-
-MANDATORY: Use live internet search to find real, existing songs by ${author}. Check music streaming platforms, official discographies, and recent releases.
-
-${requiredSongsList.length > 0 ? `First, VERIFY these songs exist by searching online, and include them if they are real songs by ${author}:
-${requiredSongsList.map(song => `- ${song}`).join('\n')}
-
-Then search the internet for more songs to reach exactly ${quantity} total songs.
-
-` : ''}SEARCH REQUIREMENTS:
-- SEARCH music databases, Spotify, Apple Music, YouTube Music, and official artist pages
-- Include the LATEST releases from 2024 and 2025
-- VERIFY each song exists through internet search
-- NO made-up or fictional song titles
-- Each song title on a separate line
-- No numbering, bullets, or extra formatting
-- No commas in song titles
-- Exactly ${quantity} songs total
-- Include featured artists in parentheses if applicable (e.g., "Song Title (ft. Artist Name)")
-- Prioritize recent releases and popular tracks found through current internet search
-
-SEARCH THE INTERNET NOW and list real songs by ${author}:`;
+Song titles:`;
     } else {
-        // For broader requests - different songs by different artists
-        prompt = `SEARCH THE INTERNET RIGHT NOW for current music matching "${author}".
+        // For broader requests
+        prompt = `Return exactly ${quantity} real songs matching "${author}".
+${requiredSongsList.length > 0 ? `Include these required songs if they match:\n${requiredSongsList.join('\n')}\n\n` : ''}Format: "Song Title by Artist Name" (one per line)
+No numbers, no bullets, no extra text.
+Include current trending songs from 2024-2025.
 
-Current date: ${currentDate}
-
-MANDATORY: Use live internet search to find songs that match this category/trend/criteria. Check current charts, streaming platforms, and music databases.
-
-${requiredSongsList.length > 0 ? `First, SEARCH ONLINE to verify these songs match the request:
-${requiredSongsList.map(song => `- ${song}`).join('\n')}
-
-Then search the internet for more matching songs to reach exactly ${quantity} total songs.
-
-` : ''}INTERNET SEARCH REQUIREMENTS:
-- SEARCH current music charts, Spotify playlists, trending lists, and streaming platforms
-- Find songs that are CURRENTLY popular or trending that match "${author}"
-- Include 2024 and 2025 releases when relevant
-- VERIFY each song exists through internet search
-- NO made-up or fictional song titles
-- Format: "Song Title by Artist Name"
-- Include all featured artists (e.g., "Song Title by Artist Name ft. Featured Artist")
-- Each song on a separate line
-- No numbering, bullets, or extra formatting
-- No commas in song titles
-- Exactly ${quantity} songs total
-- Songs should match the theme/genre/trend/criteria of "${author}"
-- Use different artists for variety unless the request specifically asks for one artist
-- Prioritize currently popular and recently released songs found through internet search
-
-SEARCH THE INTERNET NOW for real songs matching "${author}":`;
+Song list:`;
     }
 
     const response = await fetch(`${this.GEMINI_API_URL}?key=${this.GEMINI_API_KEY}`, {
@@ -9344,9 +9301,10 @@ SEARCH THE INTERNET NOW for real songs matching "${author}":`;
             }],
             generationConfig: {
                 temperature: 0.1,
-                maxOutputTokens: 1000,
+                maxOutputTokens: 800,
                 topP: 0.8,
-                topK: 10
+                topK: 10,
+                stopSequences: ["Here is", "Here are", "I found", "Based on", "According to"]
             }
         })
     });
@@ -9359,35 +9317,54 @@ SEARCH THE INTERNET NOW for real songs matching "${author}":`;
     
     if (data.candidates && data.candidates[0] && data.candidates[0].content) {
         const result = data.candidates[0].content.parts[0].text;
+        
+        // Clean the response more aggressively
         const lines = result.split('\n')
             .map(line => line.trim())
-            .filter(line => line.length > 0 && !line.match(/^\d+\./) && !line.startsWith('-') && !line.startsWith('*'))
+            .filter(line => {
+                // Remove empty lines, numbers, bullets, and explanatory text
+                if (!line) return false;
+                if (line.match(/^\d+\.?\s*/)) return false; // numbered lists
+                if (line.startsWith('-') || line.startsWith('*')) return false; // bullets
+                if (line.toLowerCase().includes('here is') || 
+                    line.toLowerCase().includes('here are') ||
+                    line.toLowerCase().includes('i found') ||
+                    line.toLowerCase().includes('based on') ||
+                    line.toLowerCase().includes('according to') ||
+                    line.toLowerCase().includes('verified') ||
+                    line.toLowerCase().includes('discography') ||
+                    line.toLowerCase().includes('internet search')) return false;
+                return true;
+            })
             .slice(0, quantity);
         
         if (isSpecificArtist) {
             // For specific artists, all songs are by that artist
             return lines.map(title => ({ 
-                title, 
+                title: title.replace(/^[\d\.\-\*\s]+/, '').trim(), // Remove any remaining formatting
                 artist: author,
                 queryType: 'SPECIFIC_ARTIST'
             }));
         } else {
             // For broader requests, parse "Song by Artist" format
             return lines.map(line => {
+                // Clean any remaining formatting
+                const cleanLine = line.replace(/^[\d\.\-\*\s]+/, '').trim();
+                
                 // Try to match "Song by Artist" or "Song by Artist ft. Featured Artist"
-                const byMatch = line.match(/^(.+?)\s+by\s+(.+)$/i);
+                const byMatch = cleanLine.match(/^(.+?)\s+by\s+(.+)$/i);
                 if (byMatch) {
                     const songTitle = byMatch[1].trim();
-                    const artistInfo = byMatch[2].trim(); // This includes ft. artists
+                    const artistInfo = byMatch[2].trim();
                     return {
                         title: songTitle,
                         artist: artistInfo,
                         queryType: 'BROAD_REQUEST'
                     };
                 } else {
-                    // Fallback: treat the whole line as title with unknown artist
+                    // Fallback: treat the whole line as title
                     return {
-                        title: line,
+                        title: cleanLine,
                         artist: 'Unknown',
                         queryType: 'BROAD_REQUEST'
                     };
