@@ -4141,7 +4141,7 @@ removeGhostPreview() {
     const isVisible = targetElement.style.visibility !== "hidden";
     const leftBanner = document.querySelector('.left-banner');
     const rightBanner = document.querySelector('.right-banner');
-    const newControlBar = document.getElementById("newControlBar");
+    const spacerDiv = document.getElementById("controlBarSpacer");
     
     if (isVisible) {
       targetElement.style.visibility = "hidden";
@@ -4155,8 +4155,8 @@ removeGhostPreview() {
         layoutToggleBtn.style.position = "";
         layoutToggleBtn.style.pointerEvents = "auto";
       }
-      // Hide new control bar
-      if (newControlBar) newControlBar.classList.remove("visible");
+      // Hide spacer when control bar is hidden
+      if (spacerDiv) spacerDiv.style.display = "none";
     } else {
       targetElement.style.visibility = "visible";
       targetElement.style.position = "";
@@ -4164,8 +4164,8 @@ removeGhostPreview() {
       localStorage.setItem("controlBarVisible", "true");
       if (leftBanner) leftBanner.classList.remove('expanded');
       if (rightBanner) rightBanner.classList.remove('expanded');
-      // Show new control bar
-      if (newControlBar) newControlBar.classList.add("visible");
+      // Show spacer when control bar is visible
+      if (spacerDiv) spacerDiv.style.display = "block";
     }
 }
   togglePlaylistLoop() {
