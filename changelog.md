@@ -280,3 +280,4 @@
 - css fixed took 3 hours v38.2.0
 - added limit to 10 results to save supabase resources. v38.3.0
 - fixed ai generation yapping. v38.3.1
+- when control bar is visible you can scroll more down. v38.4.0
