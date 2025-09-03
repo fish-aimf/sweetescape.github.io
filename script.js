@@ -46,6 +46,7 @@ class AdvancedMusicPlayer {
     this.globalLibraryCurrentUser = null;
     this.globalLibraryArtists = [];
     //these keys are restricted and only allowed use for sweetescape.vercel.app so dont even think of stealing
+    
     this.GEMINI_API_KEY = 'AIzaSyAGa1IpwVMUmNo-YH9JyWStpWprkpkhGWk';
     this.YOUTUBE_API_KEYS = [
         'AIzaSyDPT2lmIab9DPC-ltZh4sWrlhapwp0mgTA', // your current key
@@ -4140,6 +4141,8 @@ removeGhostPreview() {
     const isVisible = targetElement.style.visibility !== "hidden";
     const leftBanner = document.querySelector('.left-banner');
     const rightBanner = document.querySelector('.right-banner');
+    const newControlBar = document.getElementById("newControlBar");
+    
     if (isVisible) {
       targetElement.style.visibility = "hidden";
       targetElement.style.position = "absolute";
@@ -4152,6 +4155,8 @@ removeGhostPreview() {
         layoutToggleBtn.style.position = "";
         layoutToggleBtn.style.pointerEvents = "auto";
       }
+      // Hide new control bar
+      if (newControlBar) newControlBar.classList.remove("visible");
     } else {
       targetElement.style.visibility = "visible";
       targetElement.style.position = "";
@@ -4159,6 +4164,8 @@ removeGhostPreview() {
       localStorage.setItem("controlBarVisible", "true");
       if (leftBanner) leftBanner.classList.remove('expanded');
       if (rightBanner) rightBanner.classList.remove('expanded');
+      // Show new control bar
+      if (newControlBar) newControlBar.classList.add("visible");
     }
 }
   togglePlaylistLoop() {
@@ -7790,6 +7797,12 @@ async handleSaveDiscoverMoreSettings() {
         this.setDefaultDiscoverMoreValuesOnStartup();
     }
 }
+
+
+
+
+
+  
 
 
 
