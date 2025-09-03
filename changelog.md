@@ -281,3 +281,4 @@
 - added limit to 10 results to save supabase resources. v38.3.0
 - fixed ai generation yapping. v38.3.1
 - when control bar is visible you can scroll more down. v38.4.0
+- optimized code v38.4.1
