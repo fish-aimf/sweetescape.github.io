@@ -42,6 +42,7 @@ class AdvancedMusicPlayer {
     this.yourPicksDisplayLimit = 2;
     this.recentlyPlayedPlaylistsDisplayLimit = 1;
     this.visualizerEnabled = true;
+    this.timerAction = 'stopMusic';
     this.globalLibrarySupabase = null;
     this.globalLibraryCurrentUser = null;
     this.globalLibraryArtists = [];
@@ -6172,48 +6173,77 @@ setAppTimer(minutes, specificEndTime = null) {
   } else {
     this.timerEndTime = new Date(Date.now() + milliseconds);
   }
+  
   const timerStatus = document.getElementById("timerStatus");
+  const actionText = this.timerAction === 'stopMusic' ? 'Music will stop' : 'App will close';
+  
   if (specificEndTime) {
     const formattedTime = this.timerEndTime.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
     });
-    timerStatus.textContent = `App will close at ${formattedTime} (in ${minutes.toFixed(
-      2
-    )} minutes)`;
+    timerStatus.textContent = `${actionText} at ${formattedTime} (in ${minutes.toFixed(2)} minutes)`;
     const timerDisplay = document.getElementById("timerDisplay");
     timerDisplay.textContent = formattedTime;
     timerDisplay.style.display = "inline";
   } else {
-    timerStatus.textContent = `App will close in ${minutes.toFixed(2)} minutes`;
+    timerStatus.textContent = `${actionText} in ${minutes.toFixed(2)} minutes`;
     const timerDisplay = document.getElementById("timerDisplay");
     timerDisplay.textContent = `${Math.floor(minutes)}m`;
     timerDisplay.style.display = "inline";
   }
+  
   document.getElementById("cancelTimer").style.display = "inline-block";
+  
   this.appTimer = setTimeout(() => {
-    try {
-      window.close();
-      window.open("", "_self").close();
-    } catch (e) {
-      console.log("Standard window close failed:", e);
-    }
-    try {
-      window.location.replace("about:blank");
-    } catch (e) {
-      console.log("Navigation redirect failed:", e);
-    }
-    document.body.innerHTML =
-      '<div style="text-align: center; padding: 50px; background: #1a1a1a; color: #fff; position: fixed; top: 0; left: 0; right: 0; bottom: 0;"><h1>Session Ended</h1><p>Your music session has ended. The app has been closed.</p><button onclick="window.location.reload()" style="padding: 10px 20px; margin-top: 20px; background: #3498db; border: none; color: white; border-radius: 4px; cursor: pointer;">Restart App</button></div>';
-    const scripts = document.getElementsByTagName("script");
-    for (let i = scripts.length - 1; i >= 0; i--) {
-      if (scripts[i].parentNode) {
-        scripts[i].parentNode.removeChild(scripts[i]);
-      }
+    if (this.timerAction === 'stopMusic') {
+      this.stopMusic();
+    } else {
+      this.closeApp();
     }
   }, milliseconds);
+  
   document.getElementById("timerModal").style.display = "none";
   this.updateTimerCountdown();
+}
+  stopMusic() {
+  if (this.ytPlayer) {
+    try {
+      this.ytPlayer.pauseVideo();
+      this.isPlaying = false;
+      this.updatePlayerUI();
+      if (this.titleScrollInterval) {
+        clearInterval(this.titleScrollInterval);
+        this.titleScrollInterval = null;
+        document.title = "Music Player";
+      }
+    } catch (error) {
+      console.error("Error stopping music:", error);
+    }
+  }
+  this.clearAppTimer();
+}
+
+closeApp() {
+  try {
+    window.close();
+    window.open("", "_self").close();
+  } catch (e) {
+    console.log("Standard window close failed:", e);
+  }
+  try {
+    window.location.replace("about:blank");
+  } catch (e) {
+    console.log("Navigation redirect failed:", e);
+  }
+  document.body.innerHTML =
+    '<div style="text-align: center; padding: 50px; background: #1a1a1a; color: #fff; position: fixed; top: 0; left: 0; right: 0; bottom: 0;"><h1>Session Ended</h1><p>Your music session has ended. The app has been closed.</p><button onclick="window.location.reload()" style="padding: 10px 20px; margin-top: 20px; background: #3498db; border: none; color: white; border-radius: 4px; cursor: pointer;">Restart App</button></div>';
+  const scripts = document.getElementsByTagName("script");
+  for (let i = scripts.length - 1; i >= 0; i--) {
+    if (scripts[i].parentNode) {
+      scripts[i].parentNode.removeChild(scripts[i]);
+    }
+  }
 }
 clearAppTimer() {
   if (this.appTimer) {
@@ -6236,7 +6266,8 @@ updateTimerCountdown() {
       const minutes = Math.floor(timeLeft / 60000);
       const seconds = Math.floor((timeLeft % 60000) / 1000);
       const timerStatus = document.getElementById("timerStatus");
-      timerStatus.textContent = `App will close in ${minutes}m ${seconds}s`;
+      const actionText = this.timerAction === 'stopMusic' ? 'Music will stop' : 'App will close';
+      timerStatus.textContent = `${actionText} in ${minutes}m ${seconds}s`;
       const timerDisplay = document.getElementById("timerDisplay");
       if (minutes > 0) {
         timerDisplay.textContent = `${minutes}m ${seconds}s`;
@@ -6297,6 +6328,18 @@ setupTimerEventListeners() {
       document.getElementById("timerModal").style.display = "none";
     }
   });
+  // Add after existing event listeners
+document.getElementById("stopMusicAction").addEventListener("click", () => {
+  this.timerAction = 'stopMusic';
+  document.querySelectorAll('.action-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById("stopMusicAction").classList.add('active');
+});
+
+document.getElementById("closeAppAction").addEventListener("click", () => {
+  this.timerAction = 'closeApp';
+  document.querySelectorAll('.action-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById("closeAppAction").classList.add('active');
+});
 }
 setupLayoutEventListeners() {
   const layoutToggleBtn = document.getElementById("layoutToggleBtn");
