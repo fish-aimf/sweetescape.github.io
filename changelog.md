@@ -283,3 +283,4 @@
 - when control bar is visible you can scroll more down. v38.4.0
 - optimized code v38.4.1
 - changed styles a bit, glass mode coming v38.4.2
+- changed colour of now playing section header. v38.4.3
