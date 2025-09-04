@@ -5612,6 +5612,6 @@ body:has(#ytPlayer.fullscreen-video) {
     padding: 0 20px 20px 20px;
 }
 .control-bar-spacer {
-    height: 80px; /* Adjust height to match your control bar height */
+    height: 100px; /* Adjust height to match your control bar height */
     display: none; /* Initially hidden */
 }
