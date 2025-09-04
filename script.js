@@ -4857,91 +4857,162 @@ refreshSpecificSection(sectionTitle) {
     return result;
   }
   showRecentlyPlayedModal() {
-    const modalBg = document.createElement("div");
-    modalBg.classList.add("recently-played-modal-bg");
-    const modalContent = document.createElement("div");
-    modalContent.classList.add("recently-played-modal");
-    const header = document.createElement("div");
-    header.classList.add("recently-played-header");
-    const title = document.createElement("h2");
-    title.textContent = "Recently Listened To";
-    const settingsSection = document.createElement("div");
-    settingsSection.classList.add("recently-played-settings");
-    const settingsLabel = document.createElement("label");
-    settingsLabel.textContent = "Store last ";
-    settingsLabel.classList.add("recently-played-settings-label");
-    const settingsInput = document.createElement("input");
-    settingsInput.type = "number";
-    settingsInput.min = "1";
-    settingsInput.max = "100";
-    settingsInput.value = this.recentlyPlayedLimit || 20;
-    settingsInput.classList.add("recently-played-settings-input");
-    const settingsLabelEnd = document.createElement("span");
-    settingsLabelEnd.textContent = " songs";
-    settingsLabelEnd.classList.add("recently-played-settings-label");
-    settingsSection.appendChild(settingsLabel);
-    settingsSection.appendChild(settingsInput);
-    settingsSection.appendChild(settingsLabelEnd);
-    settingsInput.addEventListener("change", () => {
-      const newLimit = parseInt(settingsInput.value) || 20;
-      if (newLimit >= 1 && newLimit <= 100) {
-        this.updateRecentlyPlayedLimit(newLimit);
-      } else {
-        settingsInput.value = this.recentlyPlayedLimit || 20;
-      }
-    });
-    const closeBtn = document.createElement("button");
-    closeBtn.innerHTML = "×";
-    closeBtn.classList.add("recently-played-close");
-    closeBtn.addEventListener("click", () => {
-      document.body.removeChild(modalBg);
-    });
-    header.appendChild(title);
-    header.appendChild(settingsSection);
-    header.appendChild(closeBtn);
-    const content = document.createElement("div");
-    content.classList.add("recently-played-content");
-    this.recentlyPlayedSongs.forEach((song, index) => {
-      const songItem = document.createElement("div");
-      songItem.classList.add("recently-played-item");
-      const thumbnail = document.createElement("img");
-      thumbnail.src =
-        song.thumbnailUrl ||
-        `https://img.youtube.com/vi/${song.videoId}/default.jpg`;
-      thumbnail.alt = song.name;
-      thumbnail.classList.add("recently-played-thumbnail");
-      thumbnail.onerror = function () {
-        this.src = "https://placehold.it/120x90/333/fff?text=No+Image";
-      };
-      const info = document.createElement("div");
-      info.classList.add("recently-played-info");
-      const name = document.createElement("div");
-      name.classList.add("recently-played-name");
-      name.textContent = song.name;
-      const time = document.createElement("div");
-      time.classList.add("recently-played-time");
-      const timeAgo = this.getTimeAgo(song.timestamp);
-      time.textContent = timeAgo;
-      info.appendChild(name);
-      info.appendChild(time);
-      songItem.appendChild(thumbnail);
-      songItem.appendChild(info);
-      songItem.addEventListener("click", () => {
-        this.playSong(song.id);
-        document.body.removeChild(modalBg);
-      });
-      content.appendChild(songItem);
-    });
-    modalContent.appendChild(header);
-    modalContent.appendChild(content);
-    modalBg.appendChild(modalContent);
-    modalBg.addEventListener("click", (e) => {
-      if (e.target === modalBg) {
-        document.body.removeChild(modalBg);
-      }
-    });
-    document.body.appendChild(modalBg);
+  const modal = document.getElementById("recentlyPlayedModal");
+  const limitInput = document.getElementById("recentlyPlayedLimitInput");
+  
+  // Set the current limit value
+  limitInput.value = this.recentlyPlayedLimit || 20;
+  
+  // Show the modal
+  modal.style.display = "flex";
+  
+  // Populate the content
+  this.renderRecentlyPlayedContent();
+  
+  // Setup event listeners if not already done
+  this.setupRecentlyPlayedModalListeners();
+}
+
+  setupRecentlyPlayedModalListeners() {
+  // Prevent multiple event listeners
+  if (this.recentlyPlayedListenersSetup) return;
+  this.recentlyPlayedListenersSetup = true;
+  
+  const modal = document.getElementById("recentlyPlayedModal");
+  const closeBtn = document.getElementById("closeRecentlyPlayedModal");
+  const limitInput = document.getElementById("recentlyPlayedLimitInput");
+  
+  // Close button
+  closeBtn.addEventListener("click", () => {
+    this.hideRecentlyPlayedModal();
+  });
+  
+  // Click outside modal to close
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      this.hideRecentlyPlayedModal();
+    }
+  });
+  
+  // Limit input change
+  limitInput.addEventListener("change", () => {
+    const newLimit = parseInt(limitInput.value) || 20;
+    if (newLimit >= 1 && newLimit <= 100) {
+      this.updateRecentlyPlayedLimit(newLimit);
+    } else {
+      limitInput.value = this.recentlyPlayedLimit || 20;
+    }
+  });
+  
+  // Escape key to close
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.style.display === "flex") {
+      this.hideRecentlyPlayedModal();
+    }
+  });
+}
+renderRecentlyPlayedContent() {
+  const content = document.getElementById("recentlyPlayedContent");
+  content.innerHTML = "";
+  
+  if (this.recentlyPlayedSongs.length === 0) {
+    const emptyMessage = document.createElement("div");
+    emptyMessage.style.cssText = `
+      text-align: center;
+      color: var(--text-secondary);
+      padding: 40px 20px;
+      font-style: italic;
+    `;
+    emptyMessage.textContent = "No recently played songs";
+    content.appendChild(emptyMessage);
+    return;
   }
+  
+  this.recentlyPlayedSongs.forEach((song, index) => {
+    const songItem = document.createElement("div");
+    songItem.classList.add("recently-played-item");
+    
+    const thumbnail = document.createElement("img");
+    thumbnail.src = song.thumbnailUrl || `https://img.youtube.com/vi/${song.videoId}/default.jpg`;
+    thumbnail.alt = song.name;
+    thumbnail.classList.add("recently-played-thumbnail");
+    thumbnail.onerror = function() {
+      this.src = "https://placehold.it/120x90/333/fff?text=No+Image";
+    };
+    
+    const info = document.createElement("div");
+    info.classList.add("recently-played-info");
+    
+    const name = document.createElement("div");
+    name.classList.add("recently-played-name");
+    name.textContent = song.name;
+    
+    const time = document.createElement("div");
+    time.classList.add("recently-played-time");
+    const timeAgo = this.getTimeAgo(song.timestamp);
+    time.textContent = timeAgo;
+    
+    const removeBtn = document.createElement("button");
+    removeBtn.classList.add("recently-played-remove");
+    removeBtn.innerHTML = "×";
+    removeBtn.title = "Remove from recently played";
+    
+    // Remove button click handler
+    removeBtn.addEventListener("click", (e) => {
+      e.stopPropagation(); // Prevent song from playing
+      this.removeFromRecentlyPlayed(song.id, index);
+    });
+    
+    info.appendChild(name);
+    info.appendChild(time);
+    songItem.appendChild(thumbnail);
+    songItem.appendChild(info);
+    songItem.appendChild(removeBtn);
+    
+    // Song item click handler (play song)
+    songItem.addEventListener("click", () => {
+      this.playSong(song.id);
+      this.hideRecentlyPlayedModal();
+    });
+    
+    content.appendChild(songItem);
+  });
+}
+hideRecentlyPlayedModal() {
+  const modal = document.getElementById("recentlyPlayedModal");
+  modal.style.display = "none";
+}
+  removeFromRecentlyPlayed(songId, index) {
+  // Remove from array
+  this.recentlyPlayedSongs.splice(index, 1);
+  
+  // Update database
+  if (this.db) {
+    try {
+      const transaction = this.db.transaction(["recentlyPlayed"], "readwrite");
+      const store = transaction.objectStore("recentlyPlayed");
+      
+      store.put({
+        type: "songs",
+        items: this.recentlyPlayedSongs,
+      });
+      
+      transaction.onsuccess = () => {
+        // Re-render the content
+        this.renderRecentlyPlayedContent();
+        // Update additional details if needed
+        this.renderAdditionalDetails();
+      };
+      
+      transaction.onerror = (event) => {
+        console.error("Error removing from recently played:", event.target.error);
+      };
+    } catch (error) {
+      console.error("Error updating recently played in database:", error);
+    }
+  }
+}
+
   getTimeAgo(timestamp) {
     const now = Date.now();
     const diff = now - timestamp;
@@ -4954,33 +5025,30 @@ refreshSpecificSection(sectionTitle) {
     return `${days}d ago`;
   }
   updateRecentlyPlayedLimit(newLimit) {
-    this.recentlyPlayedLimit = newLimit;
-    this.saveSetting("recentlyPlayedLimit", newLimit)
-      .then(() => {
-        if (this.recentlyPlayedSongs.length > newLimit) {
-          this.recentlyPlayedSongs = this.recentlyPlayedSongs.slice(
-            0,
-            newLimit
-          );
-          if (this.db) {
-            const transaction = this.db.transaction(
-              ["recentlyPlayed"],
-              "readwrite"
-            );
-            const store = transaction.objectStore("recentlyPlayed");
-            store.put({
-              type: "songs",
-              items: this.recentlyPlayedSongs,
-            });
-            this.renderAdditionalDetails();
-          }
+  this.recentlyPlayedLimit = newLimit;
+  this.saveSetting("recentlyPlayedLimit", newLimit)
+    .then(() => {
+      if (this.recentlyPlayedSongs.length > newLimit) {
+        this.recentlyPlayedSongs = this.recentlyPlayedSongs.slice(0, newLimit);
+        if (this.db) {
+          const transaction = this.db.transaction(["recentlyPlayed"], "readwrite");
+          const store = transaction.objectStore("recentlyPlayed");
+          store.put({
+            type: "songs",
+            items: this.recentlyPlayedSongs,
+          });
+          
+          // Re-render content after limit change
+          this.renderRecentlyPlayedContent();
+          this.renderAdditionalDetails();
         }
-      })
-      .catch((error) => {
-        console.error("Error saving recently played limit:", error);
-        this.recentlyPlayedLimit = this.recentlyPlayedLimit || 20;
-      });
-  }
+      }
+    })
+    .catch((error) => {
+      console.error("Error saving recently played limit:", error);
+      this.recentlyPlayedLimit = this.recentlyPlayedLimit || 20;
+    });
+}
   renderLyricsTab() {
     if (!this.elements.lyricsPane) return;
     this.elements.lyricsPane.innerHTML = "";
