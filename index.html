@@ -710,6 +710,24 @@
         </div>
     </div>
 </div>
+
+
+<div id="recentlyPlayedModal" class="recently-played-modal-bg" style="display: none;">
+  <div class="recently-played-modal">
+    <div class="recently-played-header">
+      <h2>Recently Listened To</h2>
+      <div class="recently-played-settings">
+        <label class="recently-played-settings-label">Store last </label>
+        <input type="number" min="1" max="100" value="20" class="recently-played-settings-input" id="recentlyPlayedLimitInput">
+        <span class="recently-played-settings-label"> songs</span>
+      </div>
+      <button class="recently-played-close" id="closeRecentlyPlayedModal">×</button>
+    </div>
+    <div class="recently-played-content" id="recentlyPlayedContent">
+      <!-- Songs will be populated here by JavaScript -->
+    </div>
+  </div>
+</div>
 <!-- Lyrics Maker Modal -->
 <div id="lyricsModal" class="lyrics-maker-modal hidden">
   <div class="lyrics-maker-content">
