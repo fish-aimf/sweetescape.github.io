@@ -200,36 +200,45 @@
                 </div>
             </div>
         </div>
-
-        <div id="timerModal" class="modal">
-            <div class="modal-content timer-modal-content">
-                <span id="closeTimerModal" class="close-btn">&times;</span>
-                <h2>Set Timer to Close App</h2>
-                <div class="timer-options">
-                    <button data-time="0.5">30 sec</button>
-                    <button data-time="1">1 min</button>
-                    <button data-time="2.5">2.5 min</button>
-                    <button data-time="5">5 min</button>
-                    <button data-time="10">10 min</button>
-                    <button data-time="15">15 min</button>
-                </div>
-                <div class="custom-timer">
-                    <input type="number" id="customTimerInput" placeholder="Custom minutes" step="0.1" min="0.1">
-                    <button id="setCustomTimer">Set</button>
-                </div>
-                <div class="specific-time-section" id="specificTimeSection">
-                    <h3>Set Specific Stop Time</h3>
-                    <div class="specific-time-input">
-                        <input type="time" id="specificTimeInput">
-                        <button id="setSpecificTime">Set</button>
-                    </div>
-                </div>
-                <div class="timer-status">
-                    <span id="timerStatus">No timer set</span>
-                    <button id="cancelTimer" style="display: none">Cancel Timer</button>
-                </div>
+<div id="timerModal" class="modal">
+    <div class="modal-content timer-modal-content">
+        <span id="closeTimerModal" class="close-btn">&times;</span>
+        <h2>Set Timer</h2>
+        
+        <!-- Add timer action selection -->
+        <div class="timer-action-selection">
+            <h3>Timer Action</h3>
+            <div class="action-buttons">
+                <button id="stopMusicAction" class="action-btn active">Stop Music</button>
+                <button id="closeAppAction" class="action-btn">Close App</button>
             </div>
         </div>
+        
+        <div class="timer-options">
+            <button data-time="0.5">30 sec</button>
+            <button data-time="1">1 min</button>
+            <button data-time="2.5">2.5 min</button>
+            <button data-time="5">5 min</button>
+            <button data-time="10">10 min</button>
+            <button data-time="15">15 min</button>
+        </div>
+        <div class="custom-timer">
+            <input type="number" id="customTimerInput" placeholder="Custom minutes" step="0.1" min="0.1">
+            <button id="setCustomTimer">Set</button>
+        </div>
+        <div class="specific-time-section" id="specificTimeSection">
+            <h3>Set Specific Stop Time</h3>
+            <div class="specific-time-input">
+                <input type="time" id="specificTimeInput">
+                <button id="setSpecificTime">Set</button>
+            </div>
+        </div>
+        <div class="timer-status">
+            <span id="timerStatus">No timer set</span>
+            <button id="cancelTimer" style="display: none">Cancel Timer</button>
+        </div>
+    </div>
+</div>
 
         <!-- Current Playlist Sidebar -->
         <div id="currentPlaylistSidebar" class="playlist-sidebar">
