@@ -284,3 +284,6 @@
 - optimized code v38.4.1
 - changed styles a bit, glass mode coming v38.4.2
 - changed colour of now playing section header. v38.4.3
+- updated difficult code from the recently played modal such that it is in the html as well. v38.4.4
+- added remove functionality from the recently played v38.5.0
+- fixed but where ui is not updating after clicking remove button v38.5.1
