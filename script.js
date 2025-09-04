@@ -6297,15 +6297,31 @@ setupTimerEventListeners() {
   document.getElementById("timerButton").addEventListener("click", () => {
     this.openTimerModal();
   });
+  
   document.getElementById("closeTimerModal").addEventListener("click", () => {
     document.getElementById("timerModal").style.display = "none";
   });
+  
+  // Timer action selection
+  document.getElementById("stopMusicAction").addEventListener("click", () => {
+    this.timerAction = 'stopMusic';
+    document.querySelectorAll('.action-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById("stopMusicAction").classList.add('active');
+  });
+
+  document.getElementById("closeAppAction").addEventListener("click", () => {
+    this.timerAction = 'closeApp';
+    document.querySelectorAll('.action-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById("closeAppAction").classList.add('active');
+  });
+  
   document.querySelectorAll(".timer-options button").forEach((button) => {
     button.addEventListener("click", () => {
       const minutes = parseFloat(button.getAttribute("data-time"));
       this.setAppTimer(minutes);
     });
   });
+  
   document.getElementById("setCustomTimer").addEventListener("click", () => {
     const customMinutes = parseFloat(
       document.getElementById("customTimerInput").value
@@ -6314,32 +6330,23 @@ setupTimerEventListeners() {
       this.setAppTimer(customMinutes);
     }
   });
+  
   document.getElementById("cancelTimer").addEventListener("click", () => {
     this.clearAppTimer();
   });
+  
   document.getElementById("setSpecificTime").addEventListener("click", () => {
     const timeInput = document.getElementById("specificTimeInput").value;
     if (timeInput) {
       this.setSpecificTimeTimer(timeInput);
     }
   });
+  
   window.addEventListener("click", (event) => {
     if (event.target === document.getElementById("timerModal")) {
       document.getElementById("timerModal").style.display = "none";
     }
   });
-  // Add after existing event listeners
-document.getElementById("stopMusicAction").addEventListener("click", () => {
-  this.timerAction = 'stopMusic';
-  document.querySelectorAll('.action-btn').forEach(btn => btn.classList.remove('active'));
-  document.getElementById("stopMusicAction").classList.add('active');
-});
-
-document.getElementById("closeAppAction").addEventListener("click", () => {
-  this.timerAction = 'closeApp';
-  document.querySelectorAll('.action-btn').forEach(btn => btn.classList.remove('active'));
-  document.getElementById("closeAppAction").classList.add('active');
-});
 }
 setupLayoutEventListeners() {
   const layoutToggleBtn = document.getElementById("layoutToggleBtn");
