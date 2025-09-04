@@ -4982,9 +4982,14 @@ hideRecentlyPlayedModal() {
   const modal = document.getElementById("recentlyPlayedModal");
   modal.style.display = "none";
 }
-  removeFromRecentlyPlayed(songId, index) {
+  
+removeFromRecentlyPlayed(songId, index) {
   // Remove from array
   this.recentlyPlayedSongs.splice(index, 1);
+  
+  // Immediately update UI
+  this.renderRecentlyPlayedContent();
+  this.renderAdditionalDetails();
   
   // Update database
   if (this.db) {
@@ -4997,13 +5002,6 @@ hideRecentlyPlayedModal() {
         items: this.recentlyPlayedSongs,
       });
       
-      transaction.onsuccess = () => {
-        // Re-render the content
-        this.renderRecentlyPlayedContent();
-        // Update additional details if needed
-        this.renderAdditionalDetails();
-      };
-      
       transaction.onerror = (event) => {
         console.error("Error removing from recently played:", event.target.error);
       };
@@ -5012,6 +5010,7 @@ hideRecentlyPlayedModal() {
     }
   }
 }
+
 
   getTimeAgo(timestamp) {
     const now = Date.now();
