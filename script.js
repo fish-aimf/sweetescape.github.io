@@ -7649,7 +7649,7 @@ async autoFetchTranscript() {
     } else if (error.message.includes('429')) {
       errorMessage += 'Rate limit exceeded. Please try again later.';
     } else {
-      errorMessage += 'Please try manual import instead.';
+      errorMessage += 'This probably means this song does not have transcripts.';
     }
     this.showNotification(errorMessage, 'error');
   } finally {
