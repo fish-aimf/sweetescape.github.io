@@ -5821,3 +5821,43 @@ body:has(#ytPlayer.fullscreen-video) {
     right: 15px;
   }
 }
+
+
+.timer-action-selection {
+    margin-bottom: 20px;
+}
+
+.timer-action-selection h3 {
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.action-btn {
+    padding: 8px 16px;
+    border: 2px solid var(--accent-color);
+    background: transparent;
+    color: var(--accent-color);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.action-btn.active,
+.action-btn:hover {
+    background: var(--accent-color);
+    color: var(--button-text-color);
+    border-color: var(--hover-color);
+}
+
+.action-btn.active:hover {
+    background: var(--hover-color);
+    border-color: var(--hover-color);
+}
