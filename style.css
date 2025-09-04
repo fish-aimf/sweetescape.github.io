@@ -5025,9 +5025,8 @@ body:has(#ytPlayer.fullscreen-video) {
     box-shadow: 0 2px 8px var(--shadow-color);
     flex-shrink: 0; /* Prevent shrinking */
 }
-
 .current-song-title {
-    color: var(--accent-color);
+    color: var(--text-primary);
     margin-bottom: 6px;
     font-size: 1rem;
     font-weight: 600;
@@ -5035,7 +5034,6 @@ body:has(#ytPlayer.fullscreen-video) {
     align-items: center;
     gap: 6px;
 }
-
 
 
 .current-song-container {
