@@ -282,3 +282,4 @@
 - fixed ai generation yapping. v38.3.1
 - when control bar is visible you can scroll more down. v38.4.0
 - optimized code v38.4.1
+- changed styles a bit, glass mode coming v38.4.2
