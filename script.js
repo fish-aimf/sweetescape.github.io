@@ -6573,28 +6573,40 @@ loadThemeMode() {
   };
 }
 initializeTheme() {
-  if (!this.db) {
-    document.documentElement.setAttribute("data-theme", "dark");
-    this.updateThemeIcon("dark");
-    return;
-  }
-  const transaction = this.db.transaction(["settings"], "readonly");
-  const store = transaction.objectStore("settings");
-  const request = store.get("themeMode"); 
-  request.onsuccess = () => {
-    const savedTheme = request.result ? request.result.value : "dark";
-    if (savedTheme === "custom") {
-      this.loadCustomTheme();
-    } else {
-      document.documentElement.setAttribute("data-theme", savedTheme);
-      this.updateThemeIcon(savedTheme);
+    if (!this.db) {
+        document.documentElement.setAttribute("data-theme", "dark");
+        this.updateThemeIcon("dark");
+        // Update favicon for default theme - ADD THIS
+        setTimeout(() => {
+            this.updateFaviconTheme();
+        }, 100);
+        return;
     }
-  };
-  request.onerror = (event) => {
-    console.error("Error loading theme setting:", event.target.error);
-    document.documentElement.setAttribute("data-theme", "dark");
-    this.updateThemeIcon("dark");
-  };
+    const transaction = this.db.transaction(["settings"], "readonly");
+    const store = transaction.objectStore("settings");
+    const request = store.get("themeMode"); 
+    request.onsuccess = () => {
+        const savedTheme = request.result ? request.result.value : "dark";
+        if (savedTheme === "custom") {
+            this.loadCustomTheme();
+        } else {
+            document.documentElement.setAttribute("data-theme", savedTheme);
+            this.updateThemeIcon(savedTheme);
+            // Update favicon for preset themes on load - ADD THIS
+            setTimeout(() => {
+                this.updateFaviconTheme();
+            }, 100);
+        }
+    };
+    request.onerror = (event) => {
+        console.error("Error loading theme setting:", event.target.error);
+        document.documentElement.setAttribute("data-theme", "dark");
+        this.updateThemeIcon("dark");
+        // Update favicon for fallback theme - ADD THIS
+        setTimeout(() => {
+            this.updateFaviconTheme();
+        }, 100);
+    };
 }
 handleSaveCustomTheme() {
     const shadowColor = this.elements.shadowColorPicker.value;
@@ -6636,6 +6648,11 @@ handleSaveCustomTheme() {
     Promise.all(savePromises).then(() => {
         console.log("Custom theme saved successfully");
         this.showNotification("Custom theme saved!", "success");
+        
+        // Update favicon after saving - ADD THIS LINE
+        setTimeout(() => {
+            this.updateFaviconTheme();
+        }, 100);
     }).catch((error) => {
         console.error("Error saving custom theme:", error);
         this.showNotification("Error saving theme", "error");
@@ -6657,53 +6674,59 @@ applyCustomColors(colors) {
     document.documentElement.style.setProperty('--custom-youtube-red', colors.youtubeRed);
 }
 loadCustomTheme() {
-  const transaction = this.db.transaction(["settings"], "readonly");
-  const store = transaction.objectStore("settings");
-  const colorKeys = [
-    'customPrimary', 'customBackground', 'customSecondary',
-    'customTextPrimary', 'customTextSecondary', 'customHover',
-    'customBorder', 'customAccent', 'customButtonText',
-    'customShadow', 'customError', 'customErrorHover', 'customYoutubeRed'
-];
-  const requests = colorKeys.map(key => {
-    const request = store.get(key);
-    return new Promise(resolve => {
-      request.onsuccess = () => resolve({
-        key: key,
-        value: request.result?.value
-      });
+    const transaction = this.db.transaction(["settings"], "readonly");
+    const store = transaction.objectStore("settings");
+    const colorKeys = [
+        'customPrimary', 'customBackground', 'customSecondary',
+        'customTextPrimary', 'customTextSecondary', 'customHover',
+        'customBorder', 'customAccent', 'customButtonText',
+        'customShadow', 'customError', 'customErrorHover', 'customYoutubeRed'
+    ];
+    const requests = colorKeys.map(key => {
+        const request = store.get(key);
+        return new Promise(resolve => {
+            request.onsuccess = () => resolve({
+                key: key,
+                value: request.result?.value
+            });
+        });
     });
-  });
-  Promise.all(requests).then((results) => {
-    const colors = {};
-    const defaults = {
-      customPrimary: '#3b82f6',
-      customBackground: '#1e293b',
-      customSecondary: '#334155',
-      customTextPrimary: '#e2e8f0',
-      customTextSecondary: '#94a3b8',
-      customHover: '#2563eb',
-      customBorder: '#475569',
-      customAccent: '#3b82f6'
-    };
-    results.forEach(result => {
-      colors[result.key] = result.value || defaults[result.key];
+    Promise.all(requests).then((results) => {
+        const colors = {};
+        const defaults = {
+            customPrimary: '#3b82f6',
+            customBackground: '#1e293b',
+            customSecondary: '#334155',
+            customTextPrimary: '#e2e8f0',
+            customTextSecondary: '#94a3b8',
+            customHover: '#2563eb',
+            customBorder: '#475569',
+            customAccent: '#3b82f6'
+        };
+        results.forEach(result => {
+            colors[result.key] = result.value || defaults[result.key];
+        });
+        this.applyCustomColors({
+            primary: colors.customPrimary,
+            background: colors.customBackground,
+            secondary: colors.customSecondary,
+            textPrimary: colors.customTextPrimary,
+            textSecondary: colors.customTextSecondary,
+            hover: colors.customHover,
+            border: colors.customBorder,
+            accent: colors.customAccent
+        });
+        this.updateColorPickerValues(colors);
+        document.documentElement.setAttribute("data-theme", "custom");
+        this.updateThemeIcon("custom");
+        
+        // Update favicon after loading custom theme - ADD THIS
+        setTimeout(() => {
+            this.updateFaviconTheme();
+        }, 100);
     });
-    this.applyCustomColors({
-      primary: colors.customPrimary,
-      background: colors.customBackground,
-      secondary: colors.customSecondary,
-      textPrimary: colors.customTextPrimary,
-      textSecondary: colors.customTextSecondary,
-      hover: colors.customHover,
-      border: colors.customBorder,
-      accent: colors.customAccent
-    });
-    this.updateColorPickerValues(colors);
-    document.documentElement.setAttribute("data-theme", "custom");
-    this.updateThemeIcon("custom");
-  });
 }
+
 loadCustomThemeColors() {
   if (!this.db) return;
   const transaction = this.db.transaction(["settings"], "readonly");
@@ -6795,47 +6818,131 @@ resetCustomTheme() {
   });
 }
 handleThemeModeChange(event) {
-  const mode = event.target.value;
-  this.elements.customThemeSection.style.display = mode === "custom" ? "block" : "none";
-  if (mode !== "custom") {
-    document.documentElement.setAttribute("data-theme", mode);
-    this.updateThemeIcon(mode);
-    this.saveSetting("themeMode", mode);
-  } else {
-    this.loadCustomTheme();
-  }
+    const mode = event.target.value;
+    this.elements.customThemeSection.style.display = mode === "custom" ? "block" : "none";
+    if (mode !== "custom") {
+        document.documentElement.setAttribute("data-theme", mode);
+        this.updateThemeIcon(mode);
+        this.saveSetting("themeMode", mode);
+        
+        // Update favicon for preset themes - ADD THIS
+        setTimeout(() => {
+            this.updateFaviconTheme();
+        }, 100);
+    } else {
+        this.loadCustomTheme();
+    }
 }
 toggleTheme() {
-  const currentTheme = document.documentElement.getAttribute("data-theme");
-  let newTheme;
-  switch (currentTheme) {
-    case "light":
-      newTheme = "dark";
-      break;
-    case "dark":
-      newTheme = "custom";
-      break;
-    case "custom":
-    default:
-      newTheme = "light";
-      break;
-  }
-  if (newTheme === "custom") {
-    this.loadCustomTheme();
-  } else {
-    document.documentElement.setAttribute("data-theme", newTheme);
-    this.updateThemeIcon(newTheme);
-  }
-  this.saveSetting("themeMode", newTheme).catch((error) => {
-    console.error("Error saving theme:", error);
-    document.documentElement.setAttribute("data-theme", currentTheme);
-    this.updateThemeIcon(currentTheme);
-  });
-  if (this.elements.themeMode) {
-    this.elements.themeMode.value = newTheme;
-    this.elements.customThemeSection.style.display = newTheme === "custom" ? "block" : "none";
-  }
+    const currentTheme = document.documentElement.getAttribute("data-theme");
+    let newTheme;
+    switch (currentTheme) {
+        case "light":
+            newTheme = "dark";
+            break;
+        case "dark":
+            newTheme = "custom";
+            break;
+        case "custom":
+        default:
+            newTheme = "light";
+            break;
+    }
+    if (newTheme === "custom") {
+        this.loadCustomTheme();
+    } else {
+        document.documentElement.setAttribute("data-theme", newTheme);
+        this.updateThemeIcon(newTheme);
+        
+        // Update favicon for preset themes - ADD THIS
+        setTimeout(() => {
+            this.updateFaviconTheme();
+        }, 100);
+    }
+    this.saveSetting("themeMode", newTheme).catch((error) => {
+        console.error("Error saving theme:", error);
+        document.documentElement.setAttribute("data-theme", currentTheme);
+        this.updateThemeIcon(currentTheme);
+    });
+    if (this.elements.themeMode) {
+        this.elements.themeMode.value = newTheme;
+        this.elements.customThemeSection.style.display = newTheme === "custom" ? "block" : "none";
+    }
 }
+
+
+  updateFaviconTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    let accentColor;
+    
+    if (currentTheme === 'custom') {
+        // For custom theme, get from the applied custom property
+        accentColor = getComputedStyle(document.documentElement)
+            .getPropertyValue('--custom-accent')
+            .trim()
+            .replace(/`/g, '');
+        
+        // If that's empty, try getting from --accent-color (fallback)
+        if (!accentColor || accentColor === '') {
+            accentColor = getComputedStyle(document.documentElement)
+                .getPropertyValue('--accent-color')
+                .trim()
+                .replace(/`/g, '');
+        }
+    } else {
+        // For light/dark themes, use --accent-color
+        accentColor = getComputedStyle(document.documentElement)
+            .getPropertyValue('--accent-color')
+            .trim()
+            .replace(/`/g, '');
+    }
+    
+    if (!accentColor) {
+        console.log('No accent color found');
+        return;
+    }
+    
+    // Lighten dark colors for better visibility
+    const finalColor = this.lightenDarkColor(accentColor);
+    
+    fetch('favicon.svg')
+        .then(response => response.text())
+        .then(svgText => {
+            const coloredSvg = svgText.replace(/fill="#000000"/g, `fill="${finalColor}"`);
+            const blob = new Blob([coloredSvg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            
+            const favicon = document.querySelector('link[rel="icon"]');
+            if (favicon) {
+                favicon.href = url;
+            }
+        })
+        .catch(error => console.log('Favicon update failed:', error));
+}
+
+lightenDarkColor(color) {
+    // Convert hex to RGB
+    const hex = color.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    
+    // Calculate brightness (0-255)
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    
+    // If color is too dark (brightness < 100), lighten it
+    if (brightness < 100) {
+        const factor = 1.5; // Lighten by 50%
+        const newR = Math.min(255, Math.floor(r * factor));
+        const newG = Math.min(255, Math.floor(g * factor));
+        const newB = Math.min(255, Math.floor(b * factor));
+        
+        return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
+    }
+    
+    return color; // Return original if bright enough
+}
+
 updateThemeIcon(theme) {
   const icon = this.elements.themeToggle.querySelector("i");
   icon.classList.remove("fa-moon", "fa-sun", "fa-palette");
