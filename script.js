@@ -6672,6 +6672,11 @@ applyCustomColors(colors) {
     document.documentElement.style.setProperty('--custom-error', colors.error);
     document.documentElement.style.setProperty('--custom-error-hover', colors.errorHover);
     document.documentElement.style.setProperty('--custom-youtube-red', colors.youtubeRed);
+    
+    // ADD THIS - Update favicon after CSS properties are set
+    setTimeout(() => {
+        this.updateFaviconTheme();
+    }, 50); // Shorter delay since we're directly after setting properties
 }
 loadCustomTheme() {
     const transaction = this.db.transaction(["settings"], "readonly");
@@ -6720,12 +6725,13 @@ loadCustomTheme() {
         document.documentElement.setAttribute("data-theme", "custom");
         this.updateThemeIcon("custom");
         
-        // Update favicon after loading custom theme - ADD THIS
-        setTimeout(() => {
-            this.updateFaviconTheme();
-        }, 100);
+        // REMOVE THIS - favicon update moved to applyCustomColors
+        // setTimeout(() => {
+        //     this.updateFaviconTheme();
+        // }, 100);
     });
 }
+
 
 loadCustomThemeColors() {
   if (!this.db) return;
