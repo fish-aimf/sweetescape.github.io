@@ -6578,7 +6578,7 @@ initializeTheme() {
         this.updateThemeIcon("dark");
         // Update favicon for default theme - ADD THIS
         setTimeout(() => {
-            this.updateFaviconTheme();
+            this.updateFaviconThemeFromDB();
         }, 100);
         return;
     }
@@ -6594,7 +6594,7 @@ initializeTheme() {
             this.updateThemeIcon(savedTheme);
             // Update favicon for preset themes on load - ADD THIS
             setTimeout(() => {
-                this.updateFaviconTheme();
+                this.updateFaviconThemeFromDB();
             }, 100);
         }
     };
@@ -6604,7 +6604,7 @@ initializeTheme() {
         this.updateThemeIcon("dark");
         // Update favicon for fallback theme - ADD THIS
         setTimeout(() => {
-            this.updateFaviconTheme();
+            this.updateFaviconThemeFromDB();
         }, 100);
     };
 }
@@ -6654,70 +6654,7 @@ handleSaveCustomTheme() {
         this.showNotification("Error saving theme", "error");
     });
 }
-  updateFaviconThemeFromDB() {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    
-    if (currentTheme === 'custom') {
-        // Load accent color directly from IndexedDB
-        if (!this.db) {
-            console.log('Database not available');
-            return;
-        }
-        
-        const transaction = this.db.transaction(["settings"], "readonly");
-        const store = transaction.objectStore("settings");
-        const request = store.get("customAccent");
-        
-        request.onsuccess = () => {
-            const accentColor = request.result?.value || '#3b82f6'; // fallback
-            console.log('Using accent color from DB:', accentColor);
-            
-            const finalColor = this.lightenDarkColor(accentColor);
-            
-            fetch('favicon.svg')
-                .then(response => response.text())
-                .then(svgText => {
-                    const coloredSvg = svgText.replace(/fill="#000000"/g, `fill="${finalColor}"`);
-                    const blob = new Blob([coloredSvg], { type: 'image/svg+xml' });
-                    const url = URL.createObjectURL(blob);
-                    
-                    const favicon = document.querySelector('link[rel="icon"]');
-                    if (favicon) {
-                        favicon.href = url;
-                    }
-                })
-                .catch(error => console.log('Favicon update failed:', error));
-        };
-        
-        request.onerror = () => {
-            console.log('Failed to load accent color from DB');
-        };
-    } else {
-        // For light/dark themes, use CSS variables
-        const accentColor = getComputedStyle(document.documentElement)
-            .getPropertyValue('--accent-color')
-            .trim()
-            .replace(/`/g, '');
-        
-        if (!accentColor) return;
-        
-        const finalColor = this.lightenDarkColor(accentColor);
-        
-        fetch('favicon.svg')
-            .then(response => response.text())
-            .then(svgText => {
-                const coloredSvg = svgText.replace(/fill="#000000"/g, `fill="${finalColor}"`);
-                const blob = new Blob([coloredSvg], { type: 'image/svg+xml' });
-                const url = URL.createObjectURL(blob);
-                
-                const favicon = document.querySelector('link[rel="icon"]');
-                if (favicon) {
-                    favicon.href = url;
-                }
-            })
-            .catch(error => console.log('Favicon update failed:', error));
-    }
-}
+ 
 applyCustomColors(colors) {
     document.documentElement.style.setProperty('--custom-primary', colors.primary);
     document.documentElement.style.setProperty('--custom-background', colors.background);
@@ -6785,10 +6722,7 @@ loadCustomTheme() {
         document.documentElement.setAttribute("data-theme", "custom");
         this.updateThemeIcon("custom");
         
-        // REMOVE THIS - favicon update moved to applyCustomColors
-        // setTimeout(() => {
-        //     this.updateFaviconTheme();
-        // }, 100);
+        
     });
 }
 
@@ -6893,7 +6827,7 @@ handleThemeModeChange(event) {
         
         // Update favicon for preset themes - ADD THIS
         setTimeout(() => {
-            this.updateFaviconTheme();
+            this.updateFaviconThemeFromDB();
         }, 100);
     } else {
         this.loadCustomTheme();
@@ -6922,7 +6856,7 @@ toggleTheme() {
         
         // Update favicon for preset themes - ADD THIS
         setTimeout(() => {
-            this.updateFaviconTheme();
+            this.updateFaviconThemeFromDB();
         }, 100);
     }
     this.saveSetting("themeMode", newTheme).catch((error) => {
@@ -6937,55 +6871,70 @@ toggleTheme() {
 }
 
 
-  updateFaviconTheme() {
+   updateFaviconThemeFromDB() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
-    let accentColor;
     
     if (currentTheme === 'custom') {
-        // For custom theme, get from the applied custom property
-        accentColor = getComputedStyle(document.documentElement)
-            .getPropertyValue('--custom-accent')
-            .trim()
-            .replace(/`/g, '');
-        
-        // If that's empty, try getting from --accent-color (fallback)
-        if (!accentColor || accentColor === '') {
-            accentColor = getComputedStyle(document.documentElement)
-                .getPropertyValue('--accent-color')
-                .trim()
-                .replace(/`/g, '');
+        // Load accent color directly from IndexedDB
+        if (!this.db) {
+            console.log('Database not available');
+            return;
         }
+        
+        const transaction = this.db.transaction(["settings"], "readonly");
+        const store = transaction.objectStore("settings");
+        const request = store.get("customAccent");
+        
+        request.onsuccess = () => {
+            const accentColor = request.result?.value || '#3b82f6'; // fallback
+            console.log('Using accent color from DB:', accentColor);
+            
+            const finalColor = this.lightenDarkColor(accentColor);
+            
+            fetch('favicon.svg')
+                .then(response => response.text())
+                .then(svgText => {
+                    const coloredSvg = svgText.replace(/fill="#000000"/g, `fill="${finalColor}"`);
+                    const blob = new Blob([coloredSvg], { type: 'image/svg+xml' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const favicon = document.querySelector('link[rel="icon"]');
+                    if (favicon) {
+                        favicon.href = url;
+                    }
+                })
+                .catch(error => console.log('Favicon update failed:', error));
+        };
+        
+        request.onerror = () => {
+            console.log('Failed to load accent color from DB');
+        };
     } else {
-        // For light/dark themes, use --accent-color
-        accentColor = getComputedStyle(document.documentElement)
+        // For light/dark themes, use CSS variables
+        const accentColor = getComputedStyle(document.documentElement)
             .getPropertyValue('--accent-color')
             .trim()
             .replace(/`/g, '');
+        
+        if (!accentColor) return;
+        
+        const finalColor = this.lightenDarkColor(accentColor);
+        
+        fetch('favicon.svg')
+            .then(response => response.text())
+            .then(svgText => {
+                const coloredSvg = svgText.replace(/fill="#000000"/g, `fill="${finalColor}"`);
+                const blob = new Blob([coloredSvg], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                
+                const favicon = document.querySelector('link[rel="icon"]');
+                if (favicon) {
+                    favicon.href = url;
+                }
+            })
+            .catch(error => console.log('Favicon update failed:', error));
     }
-    
-    if (!accentColor) {
-        console.log('No accent color found');
-        return;
-    }
-    
-    // Lighten dark colors for better visibility
-    const finalColor = this.lightenDarkColor(accentColor);
-    
-    fetch('favicon.svg')
-        .then(response => response.text())
-        .then(svgText => {
-            const coloredSvg = svgText.replace(/fill="#000000"/g, `fill="${finalColor}"`);
-            const blob = new Blob([coloredSvg], { type: 'image/svg+xml' });
-            const url = URL.createObjectURL(blob);
-            
-            const favicon = document.querySelector('link[rel="icon"]');
-            if (favicon) {
-                favicon.href = url;
-            }
-        })
-        .catch(error => console.log('Favicon update failed:', error));
 }
-
 lightenDarkColor(color) {
     // Convert hex to RGB
     const hex = color.replace('#', '');
