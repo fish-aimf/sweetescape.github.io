@@ -65,6 +65,11 @@ class AdvancedMusicPlayer {
 this.globalLibrarySearchFilter = '';
     this.allArtists = [];
     this.searchTimeout = null;
+
+    this.importModal = null;
+    this.closeImportModalBtn = null;
+    this.importSongsBtn = null;
+    this.importSongsTextarea = null;
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
       'https://i2.res.24o.it/pdf2010/Editrice/ILSOLE24ORE/ILSOLE24ORE/Online/_Oggetti_Embedded/Documenti/2025/07/12/Preliminary%20Report%20VT.pdf' ,
@@ -290,7 +295,11 @@ findSongsSearch: document.getElementById("findSongsSearch"),
 findSongsResults: document.getElementById("findSongsResults"),
       librarySortToggle: document.getElementById("librarySortToggle"),
       libraryReverseToggle: document.getElementById("libraryReverseToggle"),
-      aiImportGlobalBtn: document.getElementById("aiImportGlobalBtn")
+      aiImportGlobalBtn: document.getElementById("aiImportGlobalBtn"),
+      importModal: document.getElementById("importModal"),
+        closeImportModalBtn: document.getElementById("closeImportModal"),
+        importSongsBtn: document.getElementById("importSongsBtn"),
+        importSongsTextarea: document.getElementById("importSongsTextarea"),
     };
     this.elements.aiGeneratorDiv = document.getElementById("aiGeneratorDiv");
     this.elements.closeAiGenerator = document.getElementById("closeAiGenerator");
@@ -369,6 +378,12 @@ this.elements.notFindingSection = document.getElementById("notFindingSection");
     this.handleSongUrlInput = this.validateYouTubeUrl.bind(this);
     this.handleSongNameRightClick = this.handleSongNameRightClick.bind(this);
     this.handleAddSong = this.addSongToLibrary.bind(this);
+
+    this.handleCloseImportModal = this.closeImportModal.bind(this);
+    this.handleImportSongs = () => {
+        this.importLibrary(this.elements.importSongsTextarea.value);
+        this.closeImportModal();
+    };
     this.elements.aiImportGlobalBtn.addEventListener('click', this.handleImportToGlobalLibrary.bind(this));
 document.getElementById('refreshRandomBtn').addEventListener('click', () => this.refreshRandomRecommendations());
     const tabButtons = document.querySelectorAll('.settings-tab-btn');
@@ -511,7 +526,9 @@ this.elements.closeFindSongs?.addEventListener("click", this.closeFindSongs.bind
       [this.elements.toggleControlBarBtn, "click", this.handleToggleControlBar],
       [this.elements.discordButton, "click", this.handleDiscordClick],
       [this.elements.librarySortToggle, "change", this.handleLibrarySortToggle.bind(this)],
-      [this.elements.libraryReverseToggle, "change", this.handleLibraryReverseToggle.bind(this)]
+      [this.elements.libraryReverseToggle, "change", this.handleLibraryReverseToggle.bind(this)],
+      [this.elements.closeImportModalBtn, "click", this.handleCloseImportModal],
+        [this.elements.importSongsBtn, "click", this.handleImportSongs]
     ];
     eventBindings.forEach(([element, event, handler]) => {
       if (element) {
@@ -2666,44 +2683,7 @@ saveListeningTime() {
       "Export Songs with All Playlists"
     );
   }
-  createPlaylistSubmenu(type) {
-    const submenu = document.createElement("div");
-    submenu.className = "playlist-submenu";
-    submenu.style.cssText = `
-            position: absolute;
-            left: 100%;
-            top: 0;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            min-width: 200px;
-            z-index: 1001;
-            display: none;
-        `;
-    if (this.playlists.length === 0) {
-      const emptyItem = document.createElement("div");
-      emptyItem.className = "dropdown-item disabled";
-      emptyItem.textContent = "No playlists available";
-      emptyItem.style.color = "#999";
-      submenu.appendChild(emptyItem);
-    } else {
-      const sortedPlaylists = [...this.playlists].sort((a, b) =>
-        a.name.localeCompare(b.name)
-      );
-      sortedPlaylists.forEach((playlist) => {
-        const playlistItem = document.createElement("button");
-        playlistItem.className = "dropdown-item";
-        playlistItem.textContent = `${playlist.name} (${playlist.songs.length} songs)`;
-        playlistItem.onclick = () => {
-          this.exportPlaylist(playlist.id);
-          this.hideExportDropdown();
-        };
-        submenu.appendChild(playlistItem);
-      });
-    }
-    return submenu;
-  }
+  
   importLibrary(importText) {
     if (!importText.trim()) {
       alert("Please enter songs to import.");
@@ -3136,89 +3116,16 @@ saveListeningTime() {
     });
   }
   showImportModal() {
-    const modal = document.createElement("div");
-    modal.classList.add("modal");
+    const modal = document.getElementById("importModal");
     modal.style.display = "block";
-    const modalContent = document.createElement("div");
-    modalContent.classList.add("modal-content");
-    const closeBtn = document.createElement("span");
-    closeBtn.classList.add("close-btn");
-    closeBtn.innerHTML = "&times;";
-    closeBtn.onclick = () => modal.remove();
-    const heading = document.createElement("h2");
-    heading.textContent = "Import Songs";
-    const selectContainer = document.createElement("div");
-    selectContainer.classList.add("select-container");
-    const selectLabel = document.createElement("label");
-    selectLabel.textContent = "Select playlist: ";
-    selectLabel.htmlFor = "preloadedLists";
-    const preloadedSelect = document.createElement("select");
-    preloadedSelect.id = "preloadedLists";
-    preloadedSelect.classList.add("playlist-select");
-    const customOption = document.createElement("option");
-    customOption.value = "custom";
-    customOption.textContent = "Custom";
-    preloadedSelect.appendChild(customOption);
-    selectContainer.appendChild(selectLabel);
-    selectContainer.appendChild(preloadedSelect);
-    const instructions = document.createElement("div");
-    instructions.innerHTML = `
-            <h3>Import Format Options:</h3>
-            <p><strong>Simple format (one song per line):</strong></p>
-            <ul>
-                <li>Song Name, YouTube URL</li>
-                <li>Song Name, YouTube URL, Author Name</li>
-            </ul>
-            <p><strong>Playlist format:</strong></p>
-            <pre>Playlist Name{
-        Song Name, YouTube URL
-        Another Song, YouTube URL, Author Name
-    }
-    Another Playlist{
-        Song Name, YouTube URL
-    }</pre>
-            <p><strong>Notes:</strong></p>
-            <ul>
-                <li>Author/Artist name is optional</li>
-                <li>Duplicate songs (same YouTube video) are automatically skipped</li>
-                <li>Songs with commas in the title are supported</li>
-            </ul>
-        `;
-    instructions.style.fontSize = "14px";
-    instructions.style.marginBottom = "15px";
-    const textarea = document.createElement("textarea");
-    textarea.id = "importSongsTextarea";
-    textarea.placeholder = `Example formats:
-    Song Name, https:
-    Another Song, https:
-    Song, with, commas, https:
-    Or playlist format:
-    My Playlist{
-        Song Name, https:
-        Another Song, https:
-    }`;
-    textarea.style.width = "100%";
-    textarea.style.height = "200px";
-    textarea.style.fontFamily = "monospace";
-    const importBtn = document.createElement("button");
-    importBtn.textContent = "Import Songs";
-    importBtn.classList.add("import-btn");
-    importBtn.onclick = () => {
-      this.importLibrary(textarea.value);
-      modal.remove();
-    };
-    modalContent.appendChild(closeBtn);
-    modalContent.appendChild(heading);
-    modalContent.appendChild(selectContainer);
-    modalContent.appendChild(instructions);
-    modalContent.appendChild(textarea);
-    modalContent.appendChild(importBtn);
-    modal.appendChild(modalContent);
-    document.body.appendChild(modal);
-    if (typeof this.loadFileList === "function") {
-      this.loadFileList(preloadedSelect, textarea);
-    }
-  }
+}
+
+  closeImportModal() {
+    const modal = document.getElementById("importModal");
+    modal.style.display = "none";
+    this.elements.importSongsTextarea.value = "";
+}
+
   handleDragStart(e) {
     e.currentTarget.classList.add("dragging");
     e.dataTransfer.setData("text/plain", e.currentTarget.dataset.index);
@@ -3900,58 +3807,7 @@ removeGhostPreview() {
   closeLibraryModal() {
     this.elements.libraryModificationModal.style.display = "none";
   }
-  loadFileList(selectElement, textareaElement) {
-    fetch("filelist.txt")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to load file list");
-        }
-        return response.text();
-      })
-      .then((fileList) => {
-        const files = fileList.split("\n").filter((file) => file.trim() !== "");
-        files.forEach((file) => {
-          const option = document.createElement("option");
-          option.value = file.trim();
-          option.textContent = file.trim();
-          selectElement.appendChild(option);
-        });
-        selectElement.addEventListener("change", () => {
-          const selectedValue = selectElement.value;
-          if (selectedValue === "custom") {
-            textareaElement.value = "";
-          } else {
-            this.loadSongFile(selectedValue, textareaElement);
-          }
-        });
-      })
-      .catch((error) => {
-        console.error("Error loading file list:", error);
-        const errorMessage = document.createElement("p");
-        errorMessage.textContent =
-          "Could not load predefined song lists. You can still paste your songs manually.";
-        errorMessage.style.color = "red";
-        selectElement.parentNode.appendChild(errorMessage);
-      });
-  }
-  loadSongFile(fileName, textareaElement) {
-    textareaElement.value = "Loading...";
-    fetch(`${fileName}.txt`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Failed to load ${fileName}.txt`);
-        }
-        return response.text();
-      })
-      .then((content) => {
-        textareaElement.value = content;
-      })
-      .catch((error) => {
-        console.error(`Error loading song file ${fileName}:`, error);
-        textareaElement.value = "";
-        alert(`Could not load the song list: ${fileName}`);
-      });
-  }
+  
   adjustVolume(change) {
     if (!this.ytPlayer || !this.elements.volumeSlider) return;
     const currentVolume = parseFloat(this.elements.volumeSlider.value);
