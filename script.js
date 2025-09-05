@@ -6887,27 +6887,17 @@ toggleTheme() {
         
         request.onsuccess = () => {
             const accentColor = request.result?.value || '#3b82f6'; // fallback
-            console.log('Using accent color from DB:', accentColor);
+            console.log('Using accent color from DB for favicon:', accentColor);
             
             const finalColor = this.lightenDarkColor(accentColor);
+            console.log('Final favicon color:', finalColor);
             
-            fetch('favicon.svg')
-                .then(response => response.text())
-                .then(svgText => {
-                    const coloredSvg = svgText.replace(/fill="#000000"/g, `fill="${finalColor}"`);
-                    const blob = new Blob([coloredSvg], { type: 'image/svg+xml' });
-                    const url = URL.createObjectURL(blob);
-                    
-                    const favicon = document.querySelector('link[rel="icon"]');
-                    if (favicon) {
-                        favicon.href = url;
-                    }
-                })
-                .catch(error => console.log('Favicon update failed:', error));
+            this.updateFaviconColor(finalColor);
         };
         
         request.onerror = () => {
-            console.log('Failed to load accent color from DB');
+            console.log('Failed to load accent color from DB, using fallback');
+            this.updateFaviconColor('#3b82f6');
         };
     } else {
         // For light/dark themes, use CSS variables
@@ -6916,48 +6906,81 @@ toggleTheme() {
             .trim()
             .replace(/`/g, '');
         
-        if (!accentColor) return;
+        if (!accentColor) {
+            console.log('No accent color found for preset theme');
+            return;
+        }
         
         const finalColor = this.lightenDarkColor(accentColor);
-        
-        fetch('favicon.svg')
-            .then(response => response.text())
-            .then(svgText => {
-                const coloredSvg = svgText.replace(/fill="#000000"/g, `fill="${finalColor}"`);
-                const blob = new Blob([coloredSvg], { type: 'image/svg+xml' });
-                const url = URL.createObjectURL(blob);
-                
-                const favicon = document.querySelector('link[rel="icon"]');
-                if (favicon) {
-                    favicon.href = url;
-                }
-            })
-            .catch(error => console.log('Favicon update failed:', error));
+        console.log('Using preset theme color for favicon:', finalColor);
+        this.updateFaviconColor(finalColor);
     }
 }
+  updateFaviconColor(color) {
+    fetch('favicon.svg')
+        .then(response => response.text())
+        .then(svgText => {
+            const coloredSvg = svgText.replace(/fill="#000000"/g, `fill="${color}"`);
+            const blob = new Blob([coloredSvg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            
+            const favicon = document.querySelector('link[rel="icon"]');
+            if (favicon) {
+                // Clean up previous blob URL to prevent memory leaks
+                if (favicon.href.startsWith('blob:')) {
+                    URL.revokeObjectURL(favicon.href);
+                }
+                favicon.href = url;
+                console.log('Favicon updated successfully with color:', color);
+            }
+        })
+        .catch(error => console.error('Favicon update failed:', error));
+}
 lightenDarkColor(color) {
-    // Convert hex to RGB
-    const hex = color.replace('#', '');
-    const r = parseInt(hex.substr(0, 2), 16);
-    const g = parseInt(hex.substr(2, 2), 16);
-    const b = parseInt(hex.substr(4, 2), 16);
+    // Handle both hex formats (#RGB and #RRGGBB)
+    let hex = color.replace('#', '');
+    
+    // Convert 3-digit hex to 6-digit
+    if (hex.length === 3) {
+        hex = hex.split('').map(char => char + char).join('');
+    }
+    
+    // Ensure we have a valid 6-character hex
+    if (hex.length !== 6) {
+        console.warn('Invalid hex color:', color, 'using fallback');
+        return '#3b82f6';
+    }
+    
+    // Convert hex to RGB using substring instead of substr
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    
+    // Validate RGB values
+    if (isNaN(r) || isNaN(g) || isNaN(b)) {
+        console.warn('Invalid RGB values from hex:', color, 'using fallback');
+        return '#3b82f6';
+    }
     
     // Calculate brightness (0-255)
     const brightness = (r * 299 + g * 587 + b * 114) / 1000;
     
+    console.log(`Color ${color} has brightness: ${brightness}`);
+    
     // If color is too dark (brightness < 100), lighten it
     if (brightness < 100) {
-        const factor = 1.5; // Lighten by 50%
+        const factor = 2.0; // Increased factor for better visibility
         const newR = Math.min(255, Math.floor(r * factor));
         const newG = Math.min(255, Math.floor(g * factor));
         const newB = Math.min(255, Math.floor(b * factor));
         
-        return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
+        const newColor = `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
+        console.log(`Lightened ${color} to ${newColor}`);
+        return newColor;
     }
     
     return color; // Return original if bright enough
 }
-
 updateThemeIcon(theme) {
   const icon = this.elements.themeToggle.querySelector("i");
   icon.classList.remove("fa-moon", "fa-sun", "fa-palette");
