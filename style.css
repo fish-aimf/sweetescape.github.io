@@ -5861,3 +5861,135 @@ body:has(#ytPlayer.fullscreen-video) {
     background: var(--hover-color);
     border-color: var(--hover-color);
 }
+
+/* Import Modal Styles */
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    width: 80%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+.close-btn {
+    color: var(--text-secondary);
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.modal-content h2 {
+    color: var(--text-primary);
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.import-instructions {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.import-instructions h3 {
+    color: var(--text-primary);
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.import-instructions p {
+    color: var(--text-primary);
+    margin: 8px 0;
+}
+
+.import-instructions ul {
+    color: var(--text-primary);
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.import-instructions li {
+    color: var(--text-primary);
+    margin: 4px 0;
+}
+
+.import-instructions pre {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 10px;
+    margin: 10px 0;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    overflow-x: auto;
+}
+
+#importSongsTextarea {
+    width: 100%;
+    height: 200px;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+#importSongsTextarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+#importSongsTextarea::placeholder {
+    color: var(--text-secondary);
+}
+
+.import-btn {
+    background-color: var(--accent-color);
+    color: var(--button-text-color);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 15px;
+    transition: background-color 0.3s ease;
+}
+
+.import-btn:hover {
+    background-color: var(--hover-color);
+}
+
+.import-btn:active {
+    transform: translateY(1px);
+}
