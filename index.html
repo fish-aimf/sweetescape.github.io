@@ -183,6 +183,52 @@
                 </div>
             </div>
         </div>
+        <!-- Add this modal structure to your HTML body -->
+<div id="importModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close-btn" id="closeImportModal">&times;</span>
+        <h2>Import Songs</h2>
+        
+        <div class="import-instructions">
+            <h3>Import Format Options:</h3>
+            <p><strong>Simple format (one song per line):</strong></p>
+            <ul>
+                <li>Song Name, YouTube URL</li>
+                <li>Song Name, YouTube URL, Author Name</li>
+            </ul>
+            <p><strong>Playlist format:</strong></p>
+            <pre>Playlist Name{
+    Song Name, YouTube URL
+    Another Song, YouTube URL, Author Name
+}
+Another Playlist{
+    Song Name, YouTube URL
+}</pre>
+            <p><strong>Notes:</strong></p>
+            <ul>
+                <li>Author/Artist name is optional</li>
+                <li>Duplicate songs (same YouTube video) are automatically skipped</li>
+                <li>Songs with commas in the title are supported</li>
+            </ul>
+        </div>
+
+        <textarea 
+            id="importSongsTextarea" 
+            placeholder="Example formats:
+Song Name, https://youtube.com/...
+Another Song, https://youtube.com/...
+Song, with, commas, https://youtube.com/...
+
+Or playlist format:
+My Playlist{
+    Song Name, https://youtube.com/...
+    Another Song, https://youtube.com/...
+}">
+        </textarea>
+
+        <button id="importSongsBtn" class="import-btn">Import Songs</button>
+    </div>
+</div>
 
         <div id="playlistEditModal" class="modal">
             <div class="modal-content">
