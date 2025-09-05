@@ -6936,6 +6936,7 @@ toggleTheme() {
         })
         .catch(error => console.error('Favicon update failed:', error));
 }
+
 lightenDarkColor(color) {
     // Handle both hex formats (#RGB and #RRGGBB)
     let hex = color.replace('#', '');
@@ -6959,7 +6960,7 @@ lightenDarkColor(color) {
     // Validate RGB values
     if (isNaN(r) || isNaN(g) || isNaN(b)) {
         console.warn('Invalid RGB values from hex:', color, 'using fallback');
-        return '#3b82f6';
+        return '#699bba';
     }
     
     // Calculate brightness (0-255)
