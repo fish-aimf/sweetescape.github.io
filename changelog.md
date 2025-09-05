@@ -299,3 +299,4 @@
 - the favicons now change colours based on the themes you chose. v40.1.0
 - fixing a bug where the custom theme will use default values instead of what user selected v40.1.1
 - spent 2 hours fixing bug. favicon will now follow accent color. v40.2.0
+- if accent color is too dark it will be detected and brightness autoincreased in favicon only v40.3.0
