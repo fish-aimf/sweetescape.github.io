@@ -70,6 +70,8 @@ this.globalLibrarySearchFilter = '';
     this.closeImportModalBtn = null;
     this.importSongsBtn = null;
     this.importSongsTextarea = null;
+    this.filteredPlaylists = []; 
+    this.currentSearchTerm = "";
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
       'https://i2.res.24o.it/pdf2010/Editrice/ILSOLE24ORE/ILSOLE24ORE/Online/_Oggetti_Embedded/Documenti/2025/07/12/Preliminary%20Report%20VT.pdf' ,
@@ -300,6 +302,9 @@ findSongsResults: document.getElementById("findSongsResults"),
         closeImportModalBtn: document.getElementById("closeImportModal"),
         importSongsBtn: document.getElementById("importSongsBtn"),
         importSongsTextarea: document.getElementById("importSongsTextarea"),
+      playlistSearch: document.getElementById("playlistSearch"),
+        toggleCreatePlaylistBtn: document.getElementById("toggleCreatePlaylistBtn"),
+        createPlaylistDiv: document.getElementById("createPlaylistDiv"),
     };
     this.elements.aiGeneratorDiv = document.getElementById("aiGeneratorDiv");
     this.elements.closeAiGenerator = document.getElementById("closeAiGenerator");
@@ -378,6 +383,8 @@ this.elements.notFindingSection = document.getElementById("notFindingSection");
     this.handleSongUrlInput = this.validateYouTubeUrl.bind(this);
     this.handleSongNameRightClick = this.handleSongNameRightClick.bind(this);
     this.handleAddSong = this.addSongToLibrary.bind(this);
+    this.handlePlaylistSearch = this.filterPlaylists.bind(this);
+    this.handleToggleCreatePlaylist = this.toggleCreatePlaylistDiv.bind(this);
 
     this.handleCloseImportModal = this.closeImportModal.bind(this);
     this.handleImportSongs = () => {
@@ -528,7 +535,9 @@ this.elements.closeFindSongs?.addEventListener("click", this.closeFindSongs.bind
       [this.elements.librarySortToggle, "change", this.handleLibrarySortToggle.bind(this)],
       [this.elements.libraryReverseToggle, "change", this.handleLibraryReverseToggle.bind(this)],
       [this.elements.closeImportModalBtn, "click", this.handleCloseImportModal],
-        [this.elements.importSongsBtn, "click", this.handleImportSongs]
+        [this.elements.importSongsBtn, "click", this.handleImportSongs],
+      [this.elements.playlistSearch, "input", this.handlePlaylistSearch],
+        [this.elements.toggleCreatePlaylistBtn, "click", this.handleToggleCreatePlaylist],
     ];
     eventBindings.forEach(([element, event, handler]) => {
       if (element) {
@@ -687,28 +696,29 @@ settingsEventBindings.forEach(([element, event, handler], index) => {
   }
   loadPlaylists() {
     return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject("Database not initialized");
-        return;
-      }
-      const transaction = this.db.transaction(["playlists"], "readonly");
-      const store = transaction.objectStore("playlists");
-      const request = store.getAll();
-      request.onsuccess = () => {
-        this.playlists = request.result || [];
-        this.syncFavoritesOnLoad()
-          .then(() => resolve())
-          .catch((error) => {
-            console.error("Error syncing favorites playlist:", error);
-            resolve();
-          });
-      };
-      request.onerror = (event) => {
-        console.error("Error loading playlists:", event.target.error);
-        reject("Could not load playlists");
-      };
+        if (!this.db) {
+            reject("Database not initialized");
+            return;
+        }
+        const transaction = this.db.transaction(["playlists"], "readonly");
+        const store = transaction.objectStore("playlists");
+        const request = store.getAll();
+        request.onsuccess = () => {
+            this.playlists = request.result || [];
+            this.filteredPlaylists = [...this.playlists]; // Add this line
+            this.syncFavoritesOnLoad()
+                .then(() => resolve())
+                .catch((error) => {
+                    console.error("Error syncing favorites playlist:", error);
+                    resolve();
+                });
+        };
+        request.onerror = (event) => {
+            console.error("Error loading playlists:", event.target.error);
+            reject("Could not load playlists");
+        };
     });
-  }
+}
   cycleToNextTab() {
     if (!this.elements.tabs || this.elements.tabs.length === 0) {
       return;
@@ -1145,79 +1155,92 @@ renderSongLibrary() {
   createPlaylist() {
     const playlistName = this.elements.newPlaylistName.value.trim();
     if (!playlistName) {
-      alert("Please enter a playlist name");
-      return;
+        alert("Please enter a playlist name");
+        return;
     }
     if (
-      this.playlists.some(
-        (p) => p.name.toLowerCase() === playlistName.toLowerCase()
-      )
+        this.playlists.some(
+            (p) => p.name.toLowerCase() === playlistName.toLowerCase()
+        )
     ) {
-      alert("A playlist with this name already exists");
-      return;
+        alert("A playlist with this name already exists");
+        return;
     }
     const newPlaylist = {
-      id: Date.now(),
-      name: playlistName,
-      songs: [],
-      position: this.playlists.length,
+        id: Date.now(),
+        name: playlistName,
+        songs: [],
+        position: this.playlists.length,
     };
     this.playlists.push(newPlaylist);
     this.savePlaylists()
-      .then(() => {
-        this.renderPlaylists();
-        this.updatePlaylistSelection();
-        this.elements.newPlaylistName.value = "";
-      })
-      .catch((error) => {
-        console.error("Error creating playlist:", error);
-        alert("Failed to create playlist. Please try again.");
-      });
-  }
-  renderPlaylists() {
-    this.elements.playlistContainer.innerHTML = "";
-    const sortedPlaylists = [...this.playlists].sort((a, b) => {
-      if (a.position !== undefined && b.position !== undefined) {
-        return a.position - b.position;
-      }
-      return 0;
-    });
-    sortedPlaylists.forEach((playlist, index) => {
-      if (playlist.position === undefined) {
-        playlist.position = index;
-      }
-      const duration = this.getPlaylistDuration(playlist);
-      let durationText = "";
-      if (playlist.songs.length > 0) {
-        durationText = ` • ${duration}`;
-      }
-      const playlistElement = document.createElement("div");
-      playlistElement.classList.add("playlist-card");
-      playlistElement.dataset.playlistId = playlist.id;
-      playlistElement.dataset.position = playlist.position;
-      playlistElement.draggable = false;
-      playlistElement.innerHTML = `
-                <h3 class="playlist-name">${playlist.name}</h3>
-                <p>${playlist.songs.length} song${
-        playlist.songs.length !== 1 ? "s" : ""
-      }${durationText}</p>
-                <div class="playlist-actions">
-                    <button onclick="musicPlayer.openPlaylistEditModal(${
-                      playlist.id
-                    })">Edit</button>
-                    <button onclick="musicPlayer.deletePlaylist(${
-                      playlist.id
-                    })">Delete</button>
-                    <button onclick="musicPlayer.playPlaylist(${
-                      playlist.id
-                    })">Play</button>
-                </div>
-            `;
-      const playlistNameEl = playlistElement.querySelector(".playlist-name");
-      this.addHoldToDragHandler(playlistNameEl, playlistElement);
-      this.elements.playlistContainer.appendChild(playlistElement);
-    });
-  }
+        .then(() => {
+            this.renderPlaylists();
+            this.updatePlaylistSelection();
+            this.elements.newPlaylistName.value = "";
+            this.hideCreatePlaylistDiv();
+            this.filterPlaylists(); 
+        })
+        .catch((error) => {
+            console.error("Error creating playlist:", error);
+            alert("Failed to create playlist. Please try again.");
+        });
+}
+ renderPlaylists() {
+   this.elements.playlistContainer.innerHTML = "";
+   
+   const playlistsToRender = this.currentSearchTerm ? this.filteredPlaylists : this.playlists;
+   const sortedPlaylists = [...playlistsToRender].sort((a, b) => {
+       if (a.position !== undefined && b.position !== undefined) {
+           return a.position - b.position;
+       }
+       return 0;
+   });
+   
+   if (sortedPlaylists.length === 0 && this.currentSearchTerm) {
+       const noResultsElement = document.createElement("div");
+       noResultsElement.classList.add("no-results-message");
+       noResultsElement.innerHTML = `<p>No playlists found matching "${this.currentSearchTerm}"</p>`;
+       this.elements.playlistContainer.appendChild(noResultsElement);
+       return;
+   }
+   
+   sortedPlaylists.forEach((playlist, index) => {
+       if (playlist.position === undefined) {
+           playlist.position = index;
+       }
+       const duration = this.getPlaylistDuration(playlist);
+       let durationText = "";
+       if (playlist.songs.length > 0) {
+           durationText = ` • ${duration}`;
+       }
+       const playlistElement = document.createElement("div");
+       playlistElement.classList.add("playlist-card");
+       playlistElement.dataset.playlistId = playlist.id;
+       playlistElement.dataset.position = playlist.position;
+       playlistElement.draggable = false;
+       playlistElement.innerHTML = `
+           <h3 class="playlist-name">${playlist.name}</h3>
+           <p>${playlist.songs.length} song${
+               playlist.songs.length !== 1 ? "s" : ""
+           }${durationText}</p>
+           <div class="playlist-actions">
+               <button onclick="musicPlayer.openPlaylistEditModal(${
+                   playlist.id
+               })">Edit</button>
+               <button onclick="musicPlayer.deletePlaylist(${
+                   playlist.id
+               })">Delete</button>
+               <button onclick="musicPlayer.playPlaylist(${
+                   playlist.id
+               })">Play</button>
+           </div>
+       `;
+       const playlistNameEl = playlistElement.querySelector(".playlist-name");
+       this.addHoldToDragHandler(playlistNameEl, playlistElement);
+       this.elements.playlistContainer.appendChild(playlistElement);
+   });
+}
   openPlaylistEditModal(playlistId) {
     const playlist = this.playlists.find((p) => p.id === playlistId);
     if (!playlist) return;
