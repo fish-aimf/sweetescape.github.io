@@ -295,5 +295,6 @@
 - hidden create playlist field. v39.4.0
 - added + button to expand and show create playlist v39.5.0
 - stopped using image.bb as image hosting for favicon. Uploaded svg files. v40.0.0
+- svg files contribute to better loading speed and reliablity. v40.0.1
 - the favicons now change colours based on the themes you chose. v40.1.0
 - fixing a bug where the custom theme will use default values instead of what user selected v40.1.1
