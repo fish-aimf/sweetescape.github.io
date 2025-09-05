@@ -137,7 +137,11 @@
                     <!-- Playlists Tab -->
                     <div class="tab-pane" id="playlists">
                         <div class="playlist-manager">
-                            <div class="create-playlist">
+                            <div class="playlist-search-bar">
+                                <input type="text" id="playlistSearch" placeholder="Search playlists...">
+                                <button id="toggleCreatePlaylistBtn" class="add-playlist-btn">+</button>
+                            </div>
+                            <div class="create-playlist" id="createPlaylistDiv" style="display: none;">
                                 <input type="text" id="newPlaylistName" placeholder="New Playlist Name">
                                 <button id="createPlaylistBtn">Create Playlist</button>
                             </div>
