@@ -6938,46 +6938,23 @@ toggleTheme() {
 }
 
 lightenDarkColor(color) {
-    // Handle both hex formats (#RGB and #RRGGBB)
-    let hex = color.replace('#', '');
-    
-    // Convert 3-digit hex to 6-digit
-    if (hex.length === 3) {
-        hex = hex.split('').map(char => char + char).join('');
-    }
-    
-    // Ensure we have a valid 6-character hex
-    if (hex.length !== 6) {
-        console.warn('Invalid hex color:', color, 'using fallback');
-        return '#3b82f6';
-    }
-    
-    // Convert hex to RGB using substring instead of substr
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-    
-    // Validate RGB values
-    if (isNaN(r) || isNaN(g) || isNaN(b)) {
-        console.warn('Invalid RGB values from hex:', color, 'using fallback');
-        return '#699bba';
-    }
+    // Convert hex to RGB
+    const hex = color.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
     
     // Calculate brightness (0-255)
     const brightness = (r * 299 + g * 587 + b * 114) / 1000;
     
-    console.log(`Color ${color} has brightness: ${brightness}`);
-    
     // If color is too dark (brightness < 100), lighten it
     if (brightness < 100) {
-        const factor = 2.0; // Increased factor for better visibility
+        const factor = 1.5; // Lighten by 50%
         const newR = Math.min(255, Math.floor(r * factor));
         const newG = Math.min(255, Math.floor(g * factor));
         const newB = Math.min(255, Math.floor(b * factor));
         
-        const newColor = `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
-        console.log(`Lightened ${color} to ${newColor}`);
-        return newColor;
+        return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
     }
     
     return color; // Return original if bright enough
