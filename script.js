@@ -6576,7 +6576,6 @@ initializeTheme() {
   if (!this.db) {
     document.documentElement.setAttribute("data-theme", "dark");
     this.updateThemeIcon("dark");
-    updateFaviconTheme();
     return;
   }
   const transaction = this.db.transaction(["settings"], "readonly");
@@ -6589,14 +6588,12 @@ initializeTheme() {
     } else {
       document.documentElement.setAttribute("data-theme", savedTheme);
       this.updateThemeIcon(savedTheme);
-      updateFaviconTheme();
     }
   };
   request.onerror = (event) => {
     console.error("Error loading theme setting:", event.target.error);
     document.documentElement.setAttribute("data-theme", "dark");
     this.updateThemeIcon("dark");
-    updateFaviconTheme();
   };
 }
 handleSaveCustomTheme() {
@@ -6620,7 +6617,6 @@ handleSaveCustomTheme() {
     };
     this.applyCustomColors(customColors);
     document.documentElement.setAttribute("data-theme", "custom");
-    updateFaviconTheme();
     const savePromises = [
         this.saveSetting("customPrimary", customColors.primary),
         this.saveSetting("customBackground", customColors.background),
@@ -6706,7 +6702,6 @@ loadCustomTheme() {
     this.updateColorPickerValues(colors);
     document.documentElement.setAttribute("data-theme", "custom");
     this.updateThemeIcon("custom");
-    updateFaviconTheme();
   });
 }
 loadCustomThemeColors() {
@@ -6806,7 +6801,6 @@ handleThemeModeChange(event) {
     document.documentElement.setAttribute("data-theme", mode);
     this.updateThemeIcon(mode);
     this.saveSetting("themeMode", mode);
-    updateFaviconTheme();
   } else {
     this.loadCustomTheme();
   }
@@ -6831,15 +6825,12 @@ toggleTheme() {
   } else {
     document.documentElement.setAttribute("data-theme", newTheme);
     this.updateThemeIcon(newTheme);
-    updateFaviconTheme();
   }
   this.saveSetting("themeMode", newTheme).catch((error) => {
     console.error("Error saving theme:", error);
     document.documentElement.setAttribute("data-theme", currentTheme);
     this.updateThemeIcon(currentTheme);
-    updateFaviconTheme();
   });
-  
   if (this.elements.themeMode) {
     this.elements.themeMode.value = newTheme;
     this.elements.customThemeSection.style.display = newTheme === "custom" ? "block" : "none";
@@ -6854,52 +6845,6 @@ updateThemeIcon(theme) {
     icon.classList.add(theme === "light" ? "fa-moon" : "fa-sun");
   }
 }
-// Add this function anywhere in your JavaScript (outside any class)
-async function updateFaviconTheme() {
-    try {
-        // Get the current accent color from CSS custom properties
-        const accentColor = getComputedStyle(document.documentElement)
-            .getPropertyValue('--accent-color')
-            .trim()
-            .replace(/`/g, ''); // Remove backticks if present
-
-        // Only proceed if we have a valid color
-        if (!accentColor || accentColor === '') {
-            return;
-        }
-
-        // Fetch the SVG file
-        const response = await fetch('favicon.svg');
-        if (!response.ok) {
-            console.warn('Could not fetch favicon.svg');
-            return;
-        }
-        
-        const svgText = await response.text();
-        
-        // Replace the fill color with current theme color
-        const updatedSvg = svgText.replace(/fill="#000000"/g, `fill="${accentColor}"`);
-        
-        // Create a blob and object URL
-        const blob = new Blob([updatedSvg], { type: 'image/svg+xml' });
-        const url = URL.createObjectURL(blob);
-        
-        // Find existing favicon
-        let favicon = document.querySelector('link[rel="icon"]');
-        if (favicon) {
-            // Clean up previous object URL to prevent memory leaks
-            if (favicon.href && favicon.href.startsWith('blob:')) {
-                URL.revokeObjectURL(favicon.href);
-            }
-            favicon.href = url;
-        }
-        
-    } catch (error) {
-        // Silently fail to avoid breaking anything
-        console.warn('Could not update favicon:', error.message);
-    }
-}
-
 showNotification(message, type = "info") {
   console.log(`${type.toUpperCase()}: ${message}`);
   const notification = document.createElement('div');
