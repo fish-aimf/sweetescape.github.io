@@ -70,6 +70,8 @@ this.globalLibrarySearchFilter = '';
     this.closeImportModalBtn = null;
     this.importSongsBtn = null;
     this.importSongsTextarea = null;
+    this.filteredPlaylists = [];
+    this.currentSearchTerm = "";
     this.webEmbedSites = [
       'https://www.desmos.com/calculator',
       'https://i2.res.24o.it/pdf2010/Editrice/ILSOLE24ORE/ILSOLE24ORE/Online/_Oggetti_Embedded/Documenti/2025/07/12/Preliminary%20Report%20VT.pdf' ,
@@ -300,6 +302,9 @@ findSongsResults: document.getElementById("findSongsResults"),
         closeImportModalBtn: document.getElementById("closeImportModal"),
         importSongsBtn: document.getElementById("importSongsBtn"),
         importSongsTextarea: document.getElementById("importSongsTextarea"),
+      playlistSearch: document.getElementById("playlistSearch"),
+toggleCreatePlaylistBtn: document.getElementById("toggleCreatePlaylistBtn"),
+createPlaylistDiv: document.getElementById("createPlaylistDiv"),
     };
     this.elements.aiGeneratorDiv = document.getElementById("aiGeneratorDiv");
     this.elements.closeAiGenerator = document.getElementById("closeAiGenerator");
@@ -528,7 +533,9 @@ this.elements.closeFindSongs?.addEventListener("click", this.closeFindSongs.bind
       [this.elements.librarySortToggle, "change", this.handleLibrarySortToggle.bind(this)],
       [this.elements.libraryReverseToggle, "change", this.handleLibraryReverseToggle.bind(this)],
       [this.elements.closeImportModalBtn, "click", this.handleCloseImportModal],
-        [this.elements.importSongsBtn, "click", this.handleImportSongs]
+        [this.elements.importSongsBtn, "click", this.handleImportSongs],
+      [this.elements.playlistSearch, "input", this.filterPlaylists.bind(this)],
+[this.elements.toggleCreatePlaylistBtn, "click", this.toggleCreatePlaylistDiv.bind(this)],
     ];
     eventBindings.forEach(([element, event, handler]) => {
       if (element) {
@@ -696,6 +703,7 @@ settingsEventBindings.forEach(([element, event, handler], index) => {
       const request = store.getAll();
       request.onsuccess = () => {
         this.playlists = request.result || [];
+        this.filteredPlaylists = [...this.playlists];
         this.syncFavoritesOnLoad()
           .then(() => resolve())
           .catch((error) => {
@@ -1168,6 +1176,9 @@ renderSongLibrary() {
         this.renderPlaylists();
         this.updatePlaylistSelection();
         this.elements.newPlaylistName.value = "";
+        
+        this.hideCreatePlaylistDiv();
+        this.filterPlaylists();
       })
       .catch((error) => {
         console.error("Error creating playlist:", error);
@@ -1176,48 +1187,96 @@ renderSongLibrary() {
   }
   renderPlaylists() {
     this.elements.playlistContainer.innerHTML = "";
-    const sortedPlaylists = [...this.playlists].sort((a, b) => {
-      if (a.position !== undefined && b.position !== undefined) {
-        return a.position - b.position;
-      }
-      return 0;
+    
+    const playlistsToRender = this.currentSearchTerm ? this.filteredPlaylists : this.playlists;
+    const sortedPlaylists = [...playlistsToRender].sort((a, b) => {
+        if (a.position !== undefined && b.position !== undefined) {
+            return a.position - b.position;
+        }
+        return 0;
     });
+    
+    if (sortedPlaylists.length === 0 && this.currentSearchTerm) {
+        const noResultsElement = document.createElement("div");
+        noResultsElement.classList.add("no-results-message");
+        noResultsElement.innerHTML = `<p>No playlists found matching "${this.currentSearchTerm}"</p>`;
+        this.elements.playlistContainer.appendChild(noResultsElement);
+        return;
+    }
+    
     sortedPlaylists.forEach((playlist, index) => {
-      if (playlist.position === undefined) {
-        playlist.position = index;
-      }
-      const duration = this.getPlaylistDuration(playlist);
-      let durationText = "";
-      if (playlist.songs.length > 0) {
-        durationText = ` • ${duration}`;
-      }
-      const playlistElement = document.createElement("div");
-      playlistElement.classList.add("playlist-card");
-      playlistElement.dataset.playlistId = playlist.id;
-      playlistElement.dataset.position = playlist.position;
-      playlistElement.draggable = false;
-      playlistElement.innerHTML = `
-                <h3 class="playlist-name">${playlist.name}</h3>
-                <p>${playlist.songs.length} song${
-        playlist.songs.length !== 1 ? "s" : ""
-      }${durationText}</p>
-                <div class="playlist-actions">
-                    <button onclick="musicPlayer.openPlaylistEditModal(${
-                      playlist.id
-                    })">Edit</button>
-                    <button onclick="musicPlayer.deletePlaylist(${
-                      playlist.id
-                    })">Delete</button>
-                    <button onclick="musicPlayer.playPlaylist(${
-                      playlist.id
-                    })">Play</button>
-                </div>
-            `;
-      const playlistNameEl = playlistElement.querySelector(".playlist-name");
-      this.addHoldToDragHandler(playlistNameEl, playlistElement);
-      this.elements.playlistContainer.appendChild(playlistElement);
+        if (playlist.position === undefined) {
+            playlist.position = index;
+        }
+        const duration = this.getPlaylistDuration(playlist);
+        let durationText = "";
+        if (playlist.songs.length > 0) {
+            durationText = ` • ${duration}`;
+        }
+        const playlistElement = document.createElement("div");
+        playlistElement.classList.add("playlist-card");
+        playlistElement.dataset.playlistId = playlist.id;
+        playlistElement.dataset.position = playlist.position;
+        playlistElement.draggable = false;
+        playlistElement.innerHTML = `
+            <h3 class="playlist-name">${playlist.name}</h3>
+            <p>${playlist.songs.length} song${
+                playlist.songs.length !== 1 ? "s" : ""
+            }${durationText}</p>
+            <div class="playlist-actions">
+                <button onclick="musicPlayer.openPlaylistEditModal(${
+                    playlist.id
+                })">Edit</button>
+                <button onclick="musicPlayer.deletePlaylist(${
+                    playlist.id
+                })">Delete</button>
+                <button onclick="musicPlayer.playPlaylist(${
+                    playlist.id
+                })">Play</button>
+            </div>
+        `;
+        const playlistNameEl = playlistElement.querySelector(".playlist-name");
+        this.addHoldToDragHandler(playlistNameEl, playlistElement);
+        this.elements.playlistContainer.appendChild(playlistElement);
     });
-  }
+}
+  filterPlaylists() {
+    this.currentSearchTerm = this.elements.playlistSearch.value.toLowerCase().trim();
+    
+    if (this.currentSearchTerm === "") {
+        this.filteredPlaylists = [...this.playlists];
+    } else {
+        this.filteredPlaylists = this.playlists.filter(playlist => 
+            playlist.name.toLowerCase().includes(this.currentSearchTerm)
+        );
+    }
+    
+    this.renderPlaylists();
+}
+
+toggleCreatePlaylistDiv() {
+    const createDiv = this.elements.createPlaylistDiv;
+    const isVisible = createDiv.style.display !== "none";
+    
+    if (isVisible) {
+        createDiv.style.display = "none";
+        this.elements.toggleCreatePlaylistBtn.textContent = "+";
+        this.elements.toggleCreatePlaylistBtn.style.transform = "rotate(0deg)";
+    } else {
+        createDiv.style.display = "block";
+        this.elements.toggleCreatePlaylistBtn.textContent = "×";
+        this.elements.toggleCreatePlaylistBtn.style.transform = "rotate(45deg)";
+        setTimeout(() => {
+            this.elements.newPlaylistName.focus();
+        }, 100);
+    }
+}
+
+hideCreatePlaylistDiv() {
+    this.elements.createPlaylistDiv.style.display = "none";
+    this.elements.toggleCreatePlaylistBtn.textContent = "+";
+    this.elements.toggleCreatePlaylistBtn.style.transform = "rotate(0deg)";
+}
   openPlaylistEditModal(playlistId) {
     const playlist = this.playlists.find((p) => p.id === playlistId);
     if (!playlist) return;
