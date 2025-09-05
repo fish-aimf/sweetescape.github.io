@@ -300,3 +300,4 @@
 - fixing a bug where the custom theme will use default values instead of what user selected v40.1.1
 - spent 2 hours fixing bug. favicon will now follow accent color. v40.2.0
 - if accent color is too dark it will be detected and brightness autoincreased in favicon only v40.3.0
+- now added header and twitter tags so it will display info when link is pasted on those websites. v41.0.0
