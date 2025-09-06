@@ -6300,3 +6300,139 @@ body:has(#ytPlayer.fullscreen-video) {
         gap: 15px;
     }
 }
+
+
+/* ADD these additions/updates to your existing keybind CSS */
+
+/* Enhanced keybind items container for scrolling when there are many items */
+.keybind-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 350px; /* Add this to handle overflow */
+    overflow-y: auto;  /* Add this to handle overflow */
+    padding-right: 8px; /* Add this for scrollbar spacing */
+}
+
+/* Scrollbar styling for keybind items */
+.keybind-items::-webkit-scrollbar {
+    width: 6px;
+}
+
+.keybind-items::-webkit-scrollbar-track {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.keybind-items::-webkit-scrollbar-thumb {
+    background: var(--accent-color);
+    border-radius: 3px;
+}
+
+.keybind-items::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-hover);
+}
+
+/* Better styling for unbound keys to match your theme */
+.keybind-input.unbound {
+    color: var(--text-secondary);
+    font-style: italic;
+    opacity: 0.7;
+    background: var(--bg-secondary); /* Match your secondary background */
+}
+
+.keybind-input.unbound:hover {
+    opacity: 1;
+    background: var(--accent-color);
+    color: var(--button-text-color);
+    border-color: var(--accent-color);
+}
+
+/* Enhanced grid responsiveness */
+.keybinds-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); /* Slightly wider for more content */
+    gap: 25px;
+}
+
+/* Add visual separation for primary/secondary keybinds */
+.keybind-item label[for*="2"]:after,
+.keybind-item:has(input[data-action*="2"]) label:after {
+    content: " (Alt)";
+    color: var(--text-secondary);
+    font-size: 0.8em;
+    font-style: italic;
+}
+
+/* Conflict warning styling (for when keys conflict) */
+.keybind-input.conflict {
+    border-color: var(--error-color);
+    background: rgba(255, 107, 107, 0.1);
+}
+
+/* Success feedback when key is recorded */
+.keybind-input.success {
+    border-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.1);
+    animation: success-flash 0.5s ease;
+}
+
+@keyframes success-flash {
+    0% { 
+        background: rgba(76, 175, 80, 0.3);
+        transform: scale(1.02);
+    }
+    100% { 
+        background: rgba(76, 175, 80, 0.1);
+        transform: scale(1);
+    }
+}
+
+/* Better mobile responsiveness */
+@media (max-width: 768px) {
+    .keybinds-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .keybinds-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .keybind-item {
+        gap: 10px;
+    }
+    
+    .keybind-input {
+        min-width: 80px;
+        font-size: 0.85em;
+    }
+    
+    .keybind-items {
+        max-height: 300px; /* Smaller on mobile */
+    }
+}
+
+@media (max-width: 480px) {
+    .keybinds-content {
+        padding: 15px;
+    }
+    
+    .keybind-category {
+        padding: 15px;
+    }
+    
+    .keybind-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .keybind-input {
+        align-self: stretch;
+        min-width: auto;
+    }
+}
