@@ -6436,3 +6436,31 @@ body:has(#ytPlayer.fullscreen-video) {
         min-width: auto;
     }
 }
+
+.keybind-item label {
+    color: var(--text-color);
+    font-size: 0.95em;
+    flex: 1;
+}
+
+.keybind-input {
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text-color);
+    font-size: 0.9em;
+    font-family: monospace;
+    font-weight: 600;
+    min-width: 100px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.keybinds-header h3 {
+    margin: 0 0 5px 0;
+    color: var(--text-color);
+    font-size: 1.4em;
+    font-weight: 600;
+}
