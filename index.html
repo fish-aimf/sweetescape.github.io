@@ -725,7 +725,7 @@ My Playlist{
                         <div class="keybinds-header">
                             <div>
                                 <h3>Keyboard Shortcuts</h3>
-                                <p>Click any input and press a key to change it</p>
+                                <p>Click any input and press a key to change it. Multiple keys can do the same action.</p>
                             </div>
                             <button id="resetKeybindsBtn" class="reset-keybinds-btn">
                                 <i class="fas fa-undo"></i> Reset All
@@ -737,19 +737,31 @@ My Playlist{
                                 <h4><i class="fas fa-play"></i> Playback</h4>
                                 <div class="keybind-items">
                                     <div class="keybind-item">
-                                        <label>Play/Pause</label>
+                                        <label>Play/Pause (Primary)</label>
                                         <input type="text" class="keybind-input" data-action="togglePlayPause" readonly>
                                     </div>
                                     <div class="keybind-item">
-                                        <label>Previous</label>
+                                        <label>Play/Pause (Secondary)</label>
+                                        <input type="text" class="keybind-input" data-action="togglePlayPause2" readonly>
+                                    </div>
+                                    <div class="keybind-item">
+                                        <label>Previous Song (Primary)</label>
                                         <input type="text" class="keybind-input" data-action="previousSong" readonly>
                                     </div>
                                     <div class="keybind-item">
-                                        <label>Next</label>
+                                        <label>Previous Song (Secondary)</label>
+                                        <input type="text" class="keybind-input" data-action="previousSong2" readonly>
+                                    </div>
+                                    <div class="keybind-item">
+                                        <label>Next Song (Primary)</label>
                                         <input type="text" class="keybind-input" data-action="nextSong" readonly>
                                     </div>
                                     <div class="keybind-item">
-                                        <label>Restart</label>
+                                        <label>Next Song (Secondary)</label>
+                                        <input type="text" class="keybind-input" data-action="nextSong2" readonly>
+                                    </div>
+                                    <div class="keybind-item">
+                                        <label>Restart Song</label>
                                         <input type="text" class="keybind-input" data-action="restartSong" readonly>
                                     </div>
                                     <div class="keybind-item">
@@ -770,6 +782,14 @@ My Playlist{
                                         <label>Volume Down</label>
                                         <input type="text" class="keybind-input" data-action="volumeDown" readonly>
                                     </div>
+                                    <div class="keybind-item">
+                                        <label>Volume Up (Fine)</label>
+                                        <input type="text" class="keybind-input" data-action="volumeUpFine" readonly>
+                                    </div>
+                                    <div class="keybind-item">
+                                        <label>Volume Down (Fine)</label>
+                                        <input type="text" class="keybind-input" data-action="volumeDownFine" readonly>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -777,8 +797,24 @@ My Playlist{
                                 <h4><i class="fas fa-desktop"></i> Interface</h4>
                                 <div class="keybind-items">
                                     <div class="keybind-item">
-                                        <label>Toggle Sidebar</label>
+                                        <label>Toggle Control Bar</label>
+                                        <input type="text" class="keybind-input" data-action="toggleControlBar" readonly>
+                                    </div>
+                                    <div class="keybind-item">
+                                        <label>Toggle Sidebar (Primary)</label>
                                         <input type="text" class="keybind-input" data-action="togglePlaylistSidebar" readonly>
+                                    </div>
+                                    <div class="keybind-item">
+                                        <label>Toggle Sidebar (Secondary)</label>
+                                        <input type="text" class="keybind-input" data-action="togglePlaylistSidebar2" readonly>
+                                    </div>
+                                    <div class="keybind-item">
+                                        <label>Cycle Tab</label>
+                                        <input type="text" class="keybind-input" data-action="cycleTab" readonly>
+                                    </div>
+                                    <div class="keybind-item">
+                                        <label>Toggle Video Fullscreen</label>
+                                        <input type="text" class="keybind-input" data-action="toggleVideoFullscreen" readonly>
                                     </div>
                                     <div class="keybind-item">
                                         <label>Show Queue</label>
@@ -787,6 +823,18 @@ My Playlist{
                                     <div class="keybind-item">
                                         <label>Toggle Theme</label>
                                         <input type="text" class="keybind-input" data-action="toggleTheme" readonly>
+                                    </div>
+                                    <div class="keybind-item">
+                                        <label>Open Timer</label>
+                                        <input type="text" class="keybind-input" data-action="openTimer" readonly>
+                                    </div>
+                                    <div class="keybind-item">
+                                        <label>Cycle Favicon</label>
+                                        <input type="text" class="keybind-input" data-action="cycleFavicon" readonly>
+                                    </div>
+                                    <div class="keybind-item">
+                                        <label>Toggle Web Embed</label>
+                                        <input type="text" class="keybind-input" data-action="toggleWebEmbed" readonly>
                                     </div>
                                 </div>
                             </div>
