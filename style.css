@@ -189,7 +189,7 @@ body {
 .song-actions button, 
 .playlist-actions button {
     margin-left: 5px;
-    padding: 0px 0px;
+    padding: 6px 17px;
     background-color: var(--accent-color);
     color: white;
     border: none;
