@@ -308,3 +308,4 @@
 - working on right click to add to queue. v41.4.0
 - customizable hotkey mappings and its respective settings tab v42.0.0
 - spent a whole afternoon fixing bugs and transfering all keybinds v42.1.0
+- changed styles to look better v42.2.0
