@@ -6134,3 +6134,29 @@ body:has(#ytPlayer.fullscreen-video) {
 .playlist-search-bar input[type="text"] {
     flex: 1;
 }
+
+/* ADD THESE CSS STYLES for better visual feedback */
+.playlist-card {
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    user-select: none; /* Prevent text selection during click */
+}
+
+.playlist-card:hover {
+    background-color: var(--bg-primary);
+    transform: translateY(-1px);
+}
+
+.playlist-card:active {
+    transform: translateY(0);
+    background-color: var(--border-color);
+}
+
+/* Ensure buttons still have their own hover effects */
+.playlist-card .playlist-actions button {
+    cursor: pointer;
+}
+
+.playlist-card .playlist-actions button:hover {
+    /* Your existing button hover styles */
+}
