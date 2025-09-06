@@ -6094,3 +6094,43 @@ body:has(#ytPlayer.fullscreen-video) {
     background-color: var(--bg-primary);
     color: var(--text-primary);
 }
+
+.playlist-edit-mode-btn {
+    background: var(--accent-color);
+    color: var(--button-text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 0; /* Rectangle with right angles */
+    padding: 8px 16px;
+    margin-right: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.playlist-edit-mode-btn:hover {
+    background: var(--hover-color);
+    border-color: var(--hover-color);
+}
+
+.playlist-edit-mode-btn.playlist-edit-mode-active {
+    background: var(--error-color);
+    border-color: var(--error-color);
+    color: var(--button-text-color);
+}
+
+.playlist-edit-mode-btn.playlist-edit-mode-active:hover {
+    background: var(--error-hover);
+    border-color: var(--error-hover);
+}
+
+/* Ensure proper spacing in search bar */
+.playlist-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.playlist-search-bar input[type="text"] {
+    flex: 1;
+}
