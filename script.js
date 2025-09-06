@@ -80,6 +80,7 @@ this.globalLibrarySearchFilter = '';
       'https://www.desmos.com/3d'
     ];
     this.currentWebEmbedIndex = 0;
+    this.playlistEditModeActive = false;
     this.pageDisguises = [
       {
         favicon: "https://i.ibb.co/W4MfKV9X/image.png",
@@ -305,6 +306,7 @@ findSongsResults: document.getElementById("findSongsResults"),
       playlistSearch: document.getElementById("playlistSearch"),
 toggleCreatePlaylistBtn: document.getElementById("toggleCreatePlaylistBtn"),
 createPlaylistDiv: document.getElementById("createPlaylistDiv"),
+      togglePlaylistEditModeBtn: document.getElementById("togglePlaylistEditModeBtn")
     };
     this.elements.aiGeneratorDiv = document.getElementById("aiGeneratorDiv");
     this.elements.closeAiGenerator = document.getElementById("closeAiGenerator");
@@ -383,6 +385,7 @@ this.elements.notFindingSection = document.getElementById("notFindingSection");
     this.handleSongUrlInput = this.validateYouTubeUrl.bind(this);
     this.handleSongNameRightClick = this.handleSongNameRightClick.bind(this);
     this.handleAddSong = this.addSongToLibrary.bind(this);
+    this.handleTogglePlaylistEditMode = this.togglePlaylistEditMode.bind(this);
 
     this.handleCloseImportModal = this.closeImportModal.bind(this);
     this.handleImportSongs = () => {
@@ -536,6 +539,7 @@ this.elements.closeFindSongs?.addEventListener("click", this.closeFindSongs.bind
         [this.elements.importSongsBtn, "click", this.handleImportSongs],
       [this.elements.playlistSearch, "input", this.filterPlaylists.bind(this)],
 [this.elements.toggleCreatePlaylistBtn, "click", this.toggleCreatePlaylistDiv.bind(this)],
+      [this.elements.togglePlaylistEditModeBtn, "click", this.handleTogglePlaylistEditMode],
     ];
     eventBindings.forEach(([element, event, handler]) => {
       if (element) {
@@ -1185,6 +1189,23 @@ renderSongLibrary() {
         alert("Failed to create playlist. Please try again.");
       });
   }
+  togglePlaylistEditMode() {
+    this.playlistEditModeActive = !this.playlistEditModeActive;
+    this.updatePlaylistEditModeButton();
+    this.renderPlaylists();
+}
+
+// 5. NEW METHOD - Add this entire method
+updatePlaylistEditModeButton() {
+    const button = this.elements.togglePlaylistEditModeBtn;
+    if (this.playlistEditModeActive) {
+        button.textContent = "Done";
+        button.classList.add("playlist-edit-mode-active");
+    } else {
+        button.textContent = "Edit";
+        button.classList.remove("playlist-edit-mode-active");
+    }
+}
   renderPlaylists() {
     this.elements.playlistContainer.innerHTML = "";
     
@@ -1218,22 +1239,31 @@ renderSongLibrary() {
         playlistElement.dataset.playlistId = playlist.id;
         playlistElement.dataset.position = playlist.position;
         playlistElement.draggable = false;
+        
+        // REPLACE THIS PART - Generate actions based on edit mode
+        let playlistActionsHTML = '';
+        if (this.playlistEditModeActive) {
+            playlistActionsHTML = `
+                <div class="playlist-actions">
+                    <button onclick="musicPlayer.openPlaylistEditModal(${playlist.id})">Edit</button>
+                    <button onclick="musicPlayer.deletePlaylist(${playlist.id})">Delete</button>
+                    <button onclick="musicPlayer.playPlaylist(${playlist.id})">Play</button>
+                </div>
+            `;
+        } else {
+            playlistActionsHTML = `
+                <div class="playlist-actions">
+                    <button onclick="musicPlayer.playPlaylist(${playlist.id})">Play</button>
+                </div>
+            `;
+        }
+        
         playlistElement.innerHTML = `
             <h3 class="playlist-name">${playlist.name}</h3>
             <p>${playlist.songs.length} song${
                 playlist.songs.length !== 1 ? "s" : ""
             }${durationText}</p>
-            <div class="playlist-actions">
-                <button onclick="musicPlayer.openPlaylistEditModal(${
-                    playlist.id
-                })">Edit</button>
-                <button onclick="musicPlayer.deletePlaylist(${
-                    playlist.id
-                })">Delete</button>
-                <button onclick="musicPlayer.playPlaylist(${
-                    playlist.id
-                })">Play</button>
-            </div>
+            ${playlistActionsHTML}
         `;
         const playlistNameEl = playlistElement.querySelector(".playlist-name");
         this.addHoldToDragHandler(playlistNameEl, playlistElement);
