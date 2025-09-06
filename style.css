@@ -6073,3 +6073,18 @@ body:has(#ytPlayer.fullscreen-video) {
     background: var(--border-color);
     border-radius: 3px;
 }
+
+.create-playlist {
+    display: flex;
+    gap: 10px; /* Add this to the parent container */
+}
+
+.create-playlist input, 
+.search-section input {
+    flex-grow: 1;
+    padding: 10px;
+    /* Remove margin-right: 10px; */
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
