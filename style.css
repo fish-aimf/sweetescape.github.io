@@ -6160,3 +6160,143 @@ body:has(#ytPlayer.fullscreen-video) {
 .playlist-card .playlist-actions button:hover {
     /* Your existing button hover styles */
 }
+
+/* Keybinds Panel Styles */
+.keybinds-content {
+    padding: 20px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.keybinds-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.keybinds-header h3 {
+    margin: 0 0 5px 0;
+    color: var(--text-primary);
+    font-size: 1.4em;
+    font-weight: 600;
+}
+
+.keybinds-header p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9em;
+}
+
+.reset-keybinds-btn {
+    background: var(--error-color);
+    color: var(--button-text-color);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.reset-keybinds-btn:hover {
+    background: var(--error-hover);
+}
+
+.keybinds-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+.keybind-category {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.keybind-category h4 {
+    margin: 0 0 15px 0;
+    color: var(--accent-color);
+    font-size: 1.1em;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.keybind-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.keybind-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.keybind-item label {
+    color: var(--text-primary);
+    font-size: 0.95em;
+    flex: 1;
+}
+
+.keybind-input {
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text-primary);
+    font-size: 0.9em;
+    font-family: monospace;
+    font-weight: 600;
+    min-width: 100px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.keybind-input:hover {
+    border-color: var(--accent-color);
+}
+
+.keybind-input.recording {
+    border-color: var(--accent-color);
+    background: var(--accent-color);
+    color: var(--button-text-color);
+    animation: recording-pulse 1s infinite;
+}
+
+@keyframes recording-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+.keybind-input.unbound {
+    color: var(--text-secondary);
+    font-style: italic;
+    opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+    .keybinds-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .keybinds-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+}
