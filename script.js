@@ -46,7 +46,7 @@ class AdvancedMusicPlayer {
     this.globalLibrarySupabase = null;
     this.globalLibraryCurrentUser = null;
     this.globalLibraryArtists = [];
-    this.GEMINI_API_KEY = await fetch('/api/config').then(r => r.json()).then(d => d.key);
+    this.GEMINI_API_KEY = 'AIzaSyAGa1IpwVMUmNo-YH9JyWStpWprkpkhGWk';
     this.YOUTUBE_API_KEYS = [
         'AIzaSyDPT2lmIab9DPC-ltZh4sWrlhapwp0mgTA', 
         'AIzaSyAENxiCNCZPHgPt2-ip4-GUWcLTkxge8tc',
