@@ -552,6 +552,10 @@ My Playlist{
                     <i class="fas fa-music"></i>
                     Recommendation
                 </button>
+                <button class="settings-tab-btn" data-tab="keybinds">
+                    <i class="fas fa-keyboard"></i>
+                    Keybinds
+                </button>
                 <button class="settings-tab-btn" data-tab="feedback">
                     <i class="fas fa-comment"></i>
                     Feedback
@@ -713,6 +717,80 @@ My Playlist{
 
                     <div class="setting-group">
                         <button id="saveDiscoverMoreSettings" class="save-settings-btn">Save Recommendation Settings</button>
+                    </div>
+                </div>
+                
+                <div id="keybindsPanel" class="tab-panel">
+                    <div class="keybinds-content">
+                        <div class="keybinds-header">
+                            <div>
+                                <h3>Keyboard Shortcuts</h3>
+                                <p>Click any input and press a key to change it</p>
+                            </div>
+                            <button id="resetKeybindsBtn" class="reset-keybinds-btn">
+                                <i class="fas fa-undo"></i> Reset All
+                            </button>
+                        </div>
+                        
+                        <div class="keybinds-grid">
+                            <div class="keybind-category">
+                                <h4><i class="fas fa-play"></i> Playback</h4>
+                                <div class="keybind-items">
+                                    <div class="keybind-item">
+                                        <label>Play/Pause</label>
+                                        <input type="text" class="keybind-input" data-action="togglePlayPause" readonly>
+                                    </div>
+                                    <div class="keybind-item">
+                                        <label>Previous</label>
+                                        <input type="text" class="keybind-input" data-action="previousSong" readonly>
+                                    </div>
+                                    <div class="keybind-item">
+                                        <label>Next</label>
+                                        <input type="text" class="keybind-input" data-action="nextSong" readonly>
+                                    </div>
+                                    <div class="keybind-item">
+                                        <label>Restart</label>
+                                        <input type="text" class="keybind-input" data-action="restartSong" readonly>
+                                    </div>
+                                    <div class="keybind-item">
+                                        <label>Toggle Loop</label>
+                                        <input type="text" class="keybind-input" data-action="toggleLoop" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="keybind-category">
+                                <h4><i class="fas fa-volume-up"></i> Volume</h4>
+                                <div class="keybind-items">
+                                    <div class="keybind-item">
+                                        <label>Volume Up</label>
+                                        <input type="text" class="keybind-input" data-action="volumeUp" readonly>
+                                    </div>
+                                    <div class="keybind-item">
+                                        <label>Volume Down</label>
+                                        <input type="text" class="keybind-input" data-action="volumeDown" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="keybind-category">
+                                <h4><i class="fas fa-desktop"></i> Interface</h4>
+                                <div class="keybind-items">
+                                    <div class="keybind-item">
+                                        <label>Toggle Sidebar</label>
+                                        <input type="text" class="keybind-input" data-action="togglePlaylistSidebar" readonly>
+                                    </div>
+                                    <div class="keybind-item">
+                                        <label>Show Queue</label>
+                                        <input type="text" class="keybind-input" data-action="showQueue" readonly>
+                                    </div>
+                                    <div class="keybind-item">
+                                        <label>Toggle Theme</label>
+                                        <input type="text" class="keybind-input" data-action="toggleTheme" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
