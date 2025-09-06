@@ -302,3 +302,7 @@
 - if accent color is too dark it will be detected and brightness autoincreased in favicon only v40.3.0
 - now added header and twitter tags so it will display info when link is pasted on those websites. v41.0.0
 - fixed styles a bit in the create playlist tab. v41.1.0
+- removed cluttered look for playlists. updated styles as well v41.2.1
+- removed the edit and delete buttons in normal look. it will only show when edit mode is toggled on v41.3.0
+- every playlist card can now be clicked anywhere or held down to be reordered anywhere for better user experience. v41.4.0
+- working on right click to add to queue. v41.4.0
