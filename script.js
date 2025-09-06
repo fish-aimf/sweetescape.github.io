@@ -1206,7 +1206,10 @@ updatePlaylistEditModeButton() {
         button.classList.remove("playlist-edit-mode-active");
     }
 }
-  renderPlaylists() {
+ // MODIFY YOUR EXISTING renderPlaylists() method
+// Add these event handlers after creating the playlistElement
+
+renderPlaylists() {
     this.elements.playlistContainer.innerHTML = "";
     
     const playlistsToRender = this.currentSearchTerm ? this.filteredPlaylists : this.playlists;
@@ -1240,7 +1243,7 @@ updatePlaylistEditModeButton() {
         playlistElement.dataset.position = playlist.position;
         playlistElement.draggable = false;
         
-        // REPLACE THIS PART - Generate actions based on edit mode
+        // Generate actions based on edit mode
         let playlistActionsHTML = '';
         if (this.playlistEditModeActive) {
             playlistActionsHTML = `
@@ -1265,6 +1268,66 @@ updatePlaylistEditModeButton() {
             }${durationText}</p>
             ${playlistActionsHTML}
         `;
+        
+        // ADD THESE NEW EVENT HANDLERS FOR CLICK AND RELEASE
+        let isMouseDown = false;
+        let startTime = 0;
+        
+        playlistElement.addEventListener('mousedown', (e) => {
+            // Don't trigger on button clicks
+            if (e.target.tagName === 'BUTTON') return;
+            
+            isMouseDown = true;
+            startTime = Date.now();
+        });
+        
+        playlistElement.addEventListener('mouseup', (e) => {
+            // Don't trigger on button clicks
+            if (e.target.tagName === 'BUTTON') return;
+            
+            if (isMouseDown) {
+                const endTime = Date.now();
+                const clickDuration = endTime - startTime;
+                
+                // Only play if it was a quick click (less than 300ms) to avoid conflicts with drag
+                if (clickDuration < 300) {
+                    this.playPlaylist(playlist.id);
+                }
+            }
+            isMouseDown = false;
+        });
+        
+        playlistElement.addEventListener('mouseleave', () => {
+            // Reset if mouse leaves the element
+            isMouseDown = false;
+        });
+        
+        // ADD TOUCH SUPPORT FOR MOBILE
+        playlistElement.addEventListener('touchstart', (e) => {
+            // Don't trigger on button touches
+            if (e.target.tagName === 'BUTTON') return;
+            
+            isMouseDown = true;
+            startTime = Date.now();
+        });
+        
+        playlistElement.addEventListener('touchend', (e) => {
+            // Don't trigger on button touches
+            if (e.target.tagName === 'BUTTON') return;
+            
+            if (isMouseDown) {
+                const endTime = Date.now();
+                const clickDuration = endTime - startTime;
+                
+                // Only play if it was a quick touch (less than 300ms)
+                if (clickDuration < 300) {
+                    this.playPlaylist(playlist.id);
+                }
+            }
+            isMouseDown = false;
+            e.preventDefault(); // Prevent mouse events from also firing
+        });
+        
         const playlistNameEl = playlistElement.querySelector(".playlist-name");
         this.addHoldToDragHandler(playlistNameEl, playlistElement);
         this.elements.playlistContainer.appendChild(playlistElement);
