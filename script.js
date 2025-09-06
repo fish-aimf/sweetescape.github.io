@@ -139,17 +139,45 @@ this.globalLibrarySearchFilter = '';
         animationId: null,
         isActive: false
     };
+    this.defaultKeybinds = {
+        togglePlayPause: 'Space',
+        togglePlayPause2: 'KeyK',
+        previousSong: 'ArrowLeft',
+        previousSong2: 'KeyA',
+        nextSong: 'ArrowRight',
+        nextSong2: 'KeyD',
+        volumeUp: 'ArrowUp',
+        volumeDown: 'ArrowDown',
+        toggleLoop: 'KeyL',
+        restartSong: 'KeyR',
+        toggleTheme: 'KeyP',
+        openTimer: 'KeyT',
+        volumeUpFine: 'Equal',
+        volumeDownFine: 'Minus',
+        toggleControlBar: 'KeyH',
+        togglePlaylistSidebar: 'KeyM',
+        togglePlaylistSidebar2: 'Tab',
+        cycleTab: 'KeyQ',
+        toggleVideoFullscreen: 'KeyU',
+        showQueue: 'KeyY',
+        cycleFavicon: 'KeyB',
+        toggleWebEmbed: 'KeyN'
+    };
+    this.currentKeybinds = { ...this.defaultKeybinds };
+    this.isRecordingKeybind = false;
+    this.recordingAction = null;
     this.initDatabase()
       .then(() => {
         return Promise.all([
-          this.loadSongLibrary(),
-          this.loadPlaylists(),
-          this.loadSettings(),
-          this.loadRecentlyPlayed(),
-          this.loadDiscoverMoreSettingsOnStartup(),
-          this.loadVisualizerSettings(),
-          this.loadLibrarySortSetting(),
-          this.loadLibraryReverseSetting()
+            this.loadSongLibrary(),
+            this.loadPlaylists(),
+            this.loadSettings(),
+            this.loadRecentlyPlayed(),
+            this.loadDiscoverMoreSettingsOnStartup(),
+            this.loadVisualizerSettings(),
+            this.loadLibrarySortSetting(),
+            this.loadLibraryReverseSetting(),
+            this.loadKeybinds() 
         ]);
       })
       .then(() => {
@@ -392,6 +420,19 @@ this.elements.notFindingSection = document.getElementById("notFindingSection");
         this.importLibrary(this.elements.importSongsTextarea.value);
         this.closeImportModal();
     };
+
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('keybind-input')) {
+            const action = e.target.dataset.action;
+            this.startKeybindRecording(action, e.target);
+        }
+        if (e.target.id === 'resetKeybindsBtn') {
+            this.resetKeybindsToDefault();
+        }
+        if (e.target.closest('.settings-tab-btn')) {
+            this.handleTabSwitch(e);
+        }
+    });
     this.elements.aiImportGlobalBtn.addEventListener('click', this.handleImportToGlobalLibrary.bind(this));
 document.getElementById('refreshRandomBtn').addEventListener('click', () => this.refreshRandomRecommendations());
     const tabButtons = document.querySelectorAll('.settings-tab-btn');
@@ -570,93 +611,36 @@ settingsEventBindings.forEach(([element, event, handler], index) => {
   }
   setupKeyboardControls() {
     document.addEventListener("keydown", (e) => {
-      if (document.activeElement.tagName === "INPUT" ||
-          document.activeElement.tagName === "TEXTAREA" ||
-          document.activeElement.isContentEditable) {
-        return;
-      }
-      if (e.key.toLowerCase() === "b") {
-        this.cycleFaviconAndTitle();
-        return;
-      }
-      if (e.key.toLowerCase() === "n") {
-        if (e.shiftKey) {
-          this.cycleWebEmbedSite();
-        } else {
-          this.toggleWebEmbedOverlay();
+        if (document.activeElement.tagName === "INPUT" ||
+            document.activeElement.tagName === "TEXTAREA" ||
+            document.activeElement.isContentEditable) {
+            return;
         }
-        return;
-      }
-      if (e.key.toLowerCase() === "y") {
-        e.preventDefault();
-        this.showQueueOverlay();
-        return;
-      }
-      if ([
-        "Space", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "KeyK", "KeyA", "KeyD", "KeyL", "KeyR", "KeyP", "KeyT", "Equal", "Minus", "KeyM", "Tab", "KeyQ", "KeyH", "KeyU", "KeyY", "KeyN"
-      ].includes(e.code)) {
-        e.preventDefault();
-      }
-      switch (e.code) {
-        case "Space":
-        case "KeyK":
-          this.togglePlayPause();
-          break;
-        case "ArrowLeft":
-        case "KeyA":
-          this.playPreviousSong();
-          break;
-        case "ArrowRight":
-        case "KeyD":
-          this.playNextSong();
-          break;
-        case "ArrowUp":
-          this.adjustVolume(0.1);
-          break;
-        case "ArrowDown":
-          this.adjustVolume(-0.1);
-          break;
-        case "KeyL":
-          this.toggleLoop();
-          break;
-        case "KeyR":
-          if (this.ytPlayer) {
-            this.ytPlayer.seekTo(0, true);
-          }
-          break;
-        case "KeyP":
-          this.toggleTheme();
-          break;
-        case "KeyT":
-          this.openTimerModal();
-          break;
-        case "Equal":
-          this.adjustVolume(0.01);
-          break;
-        case "Minus":
-          this.adjustVolume(-0.01);
-          break;
-        case "KeyH":
-          this.toggleControlBar();
-          break;
-        case "KeyM":
-        case "Tab":
-          this.togglePlaylistSidebar();
-          break;
-        case "KeyQ":
-          this.cycleToNextTab();
-          break;
-        case "KeyU":
-          if (this.ytPlayer && this.elements.currentSongName.textContent !== "No Song Playing") {
-            this.toggleVideoFullscreen();
-          }
-          break;
-        case "KeyY":
-          this.showQueueOverlay();
-          break;
-      }
+        
+        // Handle special cases
+        if (e.key.toLowerCase() === "b" && this.currentKeybinds.cycleFavicon === 'KeyB') {
+            this.cycleFaviconAndTitle();
+            return;
+        }
+        if (e.key.toLowerCase() === "n" && this.currentKeybinds.toggleWebEmbed === 'KeyN') {
+            if (e.shiftKey) {
+                this.cycleWebEmbedSite();
+            } else {
+                this.toggleWebEmbedOverlay();
+            }
+            return;
+        }
+        
+        // Prevent default for bound keys
+        const preventDefaultCodes = Object.values(this.currentKeybinds);
+        if (preventDefaultCodes.includes(e.code)) {
+            e.preventDefault();
+        }
+        
+        // Handle keybinds
+        this.handleKeybind(e.code);
     });
-  }
+}
   loadSongLibrary() {
     return new Promise((resolve, reject) => {
       if (!this.db) {
@@ -6698,8 +6682,9 @@ initializeSettingsContent() {
     this.loadAdvertisementSettingsInModal(); 
     this.setupTabs();
     this.loadDiscoverMoreSettings();
-  this.loadLibrarySortSetting();
-  this.loadLibraryReverseSetting();
+    this.loadLibrarySortSetting();
+    this.loadLibraryReverseSetting();
+    this.loadKeybindsSettings();
     console.log("Settings modal opened - all settings loaded");
 }
 loadAdvertisementSettingsInModal() {
@@ -9217,6 +9202,227 @@ async updateTopSongs() {
 async refreshRandomRecommendations() {
     await this.loadRandomRecommendations();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+loadKeybinds() {
+    return new Promise((resolve) => {
+        if (!this.db) {
+            resolve();
+            return;
+        }
+        const transaction = this.db.transaction(["userSettings"], "readonly");
+        const store = transaction.objectStore("userSettings");
+        const request = store.get("keybinds");
+        
+        request.onsuccess = (event) => {
+            if (event.target.result && event.target.result.settings) {
+                this.currentKeybinds = { ...this.defaultKeybinds, ...event.target.result.settings };
+            }
+            resolve();
+        };
+        
+        request.onerror = () => resolve();
+    });
+}
+
+saveKeybinds() {
+    return new Promise((resolve, reject) => {
+        if (!this.db) {
+            reject("Database not initialized");
+            return;
+        }
+        const transaction = this.db.transaction(["userSettings"], "readwrite");
+        const store = transaction.objectStore("userSettings");
+        store.put({ category: "keybinds", settings: this.currentKeybinds });
+        
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = (event) => reject("Could not save keybinds");
+    });
+}
+
+handleKeybind(code) {
+    const k = this.currentKeybinds;
+    
+    if (code === k.togglePlayPause || code === k.togglePlayPause2) {
+        this.togglePlayPause();
+    } else if (code === k.previousSong || code === k.previousSong2) {
+        this.playPreviousSong();
+    } else if (code === k.nextSong || code === k.nextSong2) {
+        this.playNextSong();
+    } else if (code === k.volumeUp) {
+        this.adjustVolume(0.1);
+    } else if (code === k.volumeDown) {
+        this.adjustVolume(-0.1);
+    } else if (code === k.toggleLoop) {
+        this.toggleLoop();
+    } else if (code === k.restartSong) {
+        if (this.ytPlayer) this.ytPlayer.seekTo(0, true);
+    } else if (code === k.toggleTheme) {
+        this.toggleTheme();
+    } else if (code === k.openTimer) {
+        this.openTimerModal();
+    } else if (code === k.volumeUpFine) {
+        this.adjustVolume(0.01);
+    } else if (code === k.volumeDownFine) {
+        this.adjustVolume(-0.01);
+    } else if (code === k.toggleControlBar) {
+        this.toggleControlBar();
+    } else if (code === k.togglePlaylistSidebar || code === k.togglePlaylistSidebar2) {
+        this.togglePlaylistSidebar();
+    } else if (code === k.cycleTab) {
+        this.cycleToNextTab();
+    } else if (code === k.toggleVideoFullscreen) {
+        if (this.ytPlayer && this.elements.currentSongName.textContent !== "No Song Playing") {
+            this.toggleVideoFullscreen();
+        }
+    } else if (code === k.showQueue) {
+        this.showQueueOverlay();
+    }
+}
+
+// Add these methods for the keybind settings interface
+
+loadKeybindsSettings() {
+    const keybindInputs = document.querySelectorAll('.keybind-input');
+    keybindInputs.forEach(input => {
+        const action = input.dataset.action;
+        input.classList.remove('unbound');
+        
+        if (this.currentKeybinds[action]) {
+            input.value = this.getKeyDisplayName(this.currentKeybinds[action]);
+        } else {
+            input.value = 'Not Set';
+            input.classList.add('unbound');
+        }
+    });
+}
+
+getKeyDisplayName(code) {
+    if (!code) return 'Not Set';
+    
+    const keyNames = {
+        'Space': 'Space', 'Tab': 'Tab', 'Enter': 'Enter',
+        'ArrowLeft': '← Left', 'ArrowRight': '→ Right',
+        'ArrowUp': '↑ Up', 'ArrowDown': '↓ Down',
+        'Equal': '+ (Plus)', 'Minus': '- (Minus)'
+    };
+    
+    if (code.startsWith('Key')) return code.replace('Key', '');
+    if (code.startsWith('Digit')) return code.replace('Digit', '');
+    
+    return keyNames[code] || code;
+}
+
+startKeybindRecording(action, inputElement) {
+    if (this.isRecordingKeybind) this.stopKeybindRecording();
+    
+    this.isRecordingKeybind = true;
+    this.recordingAction = action;
+    this.recordingInput = inputElement;
+    
+    inputElement.value = 'Press a key...';
+    inputElement.classList.add('recording');
+    
+    this.keybindListener = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (e.code === 'Escape') {
+            this.cancelKeybindRecording();
+            return;
+        }
+        
+        this.recordKeybind(e.code);
+    };
+    
+    document.addEventListener('keydown', this.keybindListener, true);
+}
+
+recordKeybind(keyCode) {
+    if (!this.isRecordingKeybind) return;
+    
+    // Check conflicts
+    const conflictingAction = Object.keys(this.currentKeybinds).find(action => {
+        return this.currentKeybinds[action] === keyCode && action !== this.recordingAction;
+    });
+    
+    if (conflictingAction) {
+        alert(`Key "${this.getKeyDisplayName(keyCode)}" is already in use!`);
+        this.cancelKeybindRecording();
+        return;
+    }
+    
+    // Update keybind
+    this.currentKeybinds[this.recordingAction] = keyCode;
+    this.recordingInput.value = this.getKeyDisplayName(keyCode);
+    this.recordingInput.classList.remove('recording');
+    
+    this.saveKeybinds().catch(console.error);
+    this.stopKeybindRecording();
+}
+
+cancelKeybindRecording() {
+    if (this.recordingInput) {
+        this.recordingInput.value = this.getKeyDisplayName(this.currentKeybinds[this.recordingAction]);
+        this.recordingInput.classList.remove('recording');
+    }
+    this.stopKeybindRecording();
+}
+
+stopKeybindRecording() {
+    if (this.keybindListener) {
+        document.removeEventListener('keydown', this.keybindListener, true);
+        this.keybindListener = null;
+    }
+    this.isRecordingKeybind = false;
+    this.recordingAction = null;
+    this.recordingInput = null;
+}
+
+resetKeybindsToDefault() {
+    if (confirm('Reset all keybinds to default?')) {
+        this.currentKeybinds = { ...this.defaultKeybinds };
+        this.saveKeybinds().then(() => {
+            this.loadKeybindsSettings();
+        }).catch(console.error);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 cleanup() {
   console.log("Starting cleanup process");
   this.saveCurrentState();
