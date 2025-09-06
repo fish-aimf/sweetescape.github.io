@@ -306,3 +306,4 @@
 - removed the edit and delete buttons in normal look. it will only show when edit mode is toggled on v41.3.0
 - every playlist card can now be clicked anywhere or held down to be reordered anywhere for better user experience. v41.4.0
 - working on right click to add to queue. v41.4.0
+- customizable hotkey mappings and its respective settings tab v42.0.0
