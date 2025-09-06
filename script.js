@@ -9257,43 +9257,51 @@ saveKeybinds() {
 handleKeybind(code) {
     const k = this.currentKeybinds;
     
-    if (code === k.togglePlayPause || code === k.togglePlayPause2) {
+    // Handle the special cases for B and N keys that use e.key instead of e.code
+    if (code === k.cycleFavicon && k.cycleFavicon !== '') {
+        this.cycleFaviconAndTitle();
+    } else if (code === k.toggleWebEmbed && k.toggleWebEmbed !== '') {
+        // This will be handled in setupKeyboardControls with special logic
+    } else if ((code === k.togglePlayPause && k.togglePlayPause !== '') || 
+               (code === k.togglePlayPause2 && k.togglePlayPause2 !== '')) {
         this.togglePlayPause();
-    } else if (code === k.previousSong || code === k.previousSong2) {
+    } else if ((code === k.previousSong && k.previousSong !== '') || 
+               (code === k.previousSong2 && k.previousSong2 !== '')) {
         this.playPreviousSong();
-    } else if (code === k.nextSong || code === k.nextSong2) {
+    } else if ((code === k.nextSong && k.nextSong !== '') || 
+               (code === k.nextSong2 && k.nextSong2 !== '')) {
         this.playNextSong();
-    } else if (code === k.volumeUp) {
+    } else if (code === k.volumeUp && k.volumeUp !== '') {
         this.adjustVolume(0.1);
-    } else if (code === k.volumeDown) {
+    } else if (code === k.volumeDown && k.volumeDown !== '') {
         this.adjustVolume(-0.1);
-    } else if (code === k.toggleLoop) {
+    } else if (code === k.toggleLoop && k.toggleLoop !== '') {
         this.toggleLoop();
-    } else if (code === k.restartSong) {
+    } else if (code === k.restartSong && k.restartSong !== '') {
         if (this.ytPlayer) this.ytPlayer.seekTo(0, true);
-    } else if (code === k.toggleTheme) {
+    } else if (code === k.toggleTheme && k.toggleTheme !== '') {
         this.toggleTheme();
-    } else if (code === k.openTimer) {
+    } else if (code === k.openTimer && k.openTimer !== '') {
         this.openTimerModal();
-    } else if (code === k.volumeUpFine) {
+    } else if (code === k.volumeUpFine && k.volumeUpFine !== '') {
         this.adjustVolume(0.01);
-    } else if (code === k.volumeDownFine) {
+    } else if (code === k.volumeDownFine && k.volumeDownFine !== '') {
         this.adjustVolume(-0.01);
-    } else if (code === k.toggleControlBar) {
+    } else if (code === k.toggleControlBar && k.toggleControlBar !== '') {
         this.toggleControlBar();
-    } else if (code === k.togglePlaylistSidebar || code === k.togglePlaylistSidebar2) {
+    } else if ((code === k.togglePlaylistSidebar && k.togglePlaylistSidebar !== '') || 
+               (code === k.togglePlaylistSidebar2 && k.togglePlaylistSidebar2 !== '')) {
         this.togglePlaylistSidebar();
-    } else if (code === k.cycleTab) {
+    } else if (code === k.cycleTab && k.cycleTab !== '') {
         this.cycleToNextTab();
-    } else if (code === k.toggleVideoFullscreen) {
+    } else if (code === k.toggleVideoFullscreen && k.toggleVideoFullscreen !== '') {
         if (this.ytPlayer && this.elements.currentSongName.textContent !== "No Song Playing") {
             this.toggleVideoFullscreen();
         }
-    } else if (code === k.showQueue) {
+    } else if (code === k.showQueue && k.showQueue !== '') {
         this.showQueueOverlay();
     }
 }
-
 // Add these methods for the keybind settings interface
 
 loadKeybindsSettings() {
@@ -9302,27 +9310,30 @@ loadKeybindsSettings() {
         const action = input.dataset.action;
         input.classList.remove('unbound');
         
-        if (this.currentKeybinds[action]) {
-            input.value = this.getKeyDisplayName(this.currentKeybinds[action]);
+        const keyCode = this.currentKeybinds[action];
+        if (keyCode && keyCode !== '') {
+            input.value = this.getKeyDisplayName(keyCode);
         } else {
             input.value = 'Not Set';
             input.classList.add('unbound');
         }
     });
 }
-
 getKeyDisplayName(code) {
-    if (!code) return 'Not Set';
+    if (!code || code === '') return 'Not Set';
     
     const keyNames = {
         'Space': 'Space', 'Tab': 'Tab', 'Enter': 'Enter',
         'ArrowLeft': '← Left', 'ArrowRight': '→ Right',
         'ArrowUp': '↑ Up', 'ArrowDown': '↓ Down',
-        'Equal': '+ (Plus)', 'Minus': '- (Minus)'
+        'Equal': '+ (Plus)', 'Minus': '- (Minus)',
+        'Escape': 'Esc', 'Backspace': 'Backspace'
     };
     
     if (code.startsWith('Key')) return code.replace('Key', '');
     if (code.startsWith('Digit')) return code.replace('Digit', '');
+    if (code.startsWith('Numpad')) return 'Num ' + code.replace('Numpad', '');
+    if (code.startsWith('F') && code.length <= 3) return code; // F1-F12
     
     return keyNames[code] || code;
 }
@@ -9351,19 +9362,64 @@ startKeybindRecording(action, inputElement) {
     
     document.addEventListener('keydown', this.keybindListener, true);
 }
+  getActionDisplayName(action) {
+    const actionNames = {
+        togglePlayPause: 'Play/Pause',
+        togglePlayPause2: 'Play/Pause (Alt)',
+        previousSong: 'Previous Song',
+        previousSong2: 'Previous Song (Alt)',
+        nextSong: 'Next Song',
+        nextSong2: 'Next Song (Alt)',
+        volumeUp: 'Volume Up',
+        volumeDown: 'Volume Down',
+        toggleLoop: 'Toggle Loop',
+        restartSong: 'Restart Song',
+        toggleTheme: 'Toggle Theme',
+        openTimer: 'Open Timer',
+        volumeUpFine: 'Volume Up (Fine)',
+        volumeDownFine: 'Volume Down (Fine)',
+        toggleControlBar: 'Toggle Control Bar',
+        togglePlaylistSidebar: 'Toggle Sidebar',
+        togglePlaylistSidebar2: 'Toggle Sidebar (Alt)',
+        cycleTab: 'Cycle Tab',
+        toggleVideoFullscreen: 'Toggle Fullscreen',
+        showQueue: 'Show Queue',
+        cycleFavicon: 'Cycle Favicon',
+        toggleWebEmbed: 'Toggle Web Embed'
+    };
+    
+    return actionNames[action] || action;
+}
 
 recordKeybind(keyCode) {
     if (!this.isRecordingKeybind) return;
     
-    // Check conflicts
+    // Check conflicts - but allow multiple keys for same action group
     const conflictingAction = Object.keys(this.currentKeybinds).find(action => {
         return this.currentKeybinds[action] === keyCode && action !== this.recordingAction;
     });
     
     if (conflictingAction) {
-        alert(`Key "${this.getKeyDisplayName(keyCode)}" is already in use!`);
-        this.cancelKeybindRecording();
-        return;
+        // Check if it's the same action group (e.g., togglePlayPause and togglePlayPause2)
+        const currentActionBase = this.recordingAction.replace(/2$/, '');
+        const conflictActionBase = conflictingAction.replace(/2$/, '');
+        
+        if (currentActionBase !== conflictActionBase) {
+            alert(`Key "${this.getKeyDisplayName(keyCode)}" is already used for "${this.getActionDisplayName(conflictingAction)}"!`);
+            this.cancelKeybindRecording();
+            return;
+        }
+        
+        // Same action group - ask user if they want to swap or duplicate
+        const userChoice = confirm(
+            `Key "${this.getKeyDisplayName(keyCode)}" is already used for the same action. ` +
+            `Click OK to swap the keys, or Cancel to keep both.`
+        );
+        
+        if (userChoice) {
+            // Swap - clear the conflicting one
+            this.currentKeybinds[conflictingAction] = '';
+        }
     }
     
     // Update keybind
@@ -9371,10 +9427,13 @@ recordKeybind(keyCode) {
     this.recordingInput.value = this.getKeyDisplayName(keyCode);
     this.recordingInput.classList.remove('recording');
     
-    this.saveKeybinds().catch(console.error);
+    this.saveKeybinds().then(() => {
+        // Refresh all inputs to show the changes
+        this.loadKeybindsSettings();
+    }).catch(console.error);
+    
     this.stopKeybindRecording();
 }
-
 cancelKeybindRecording() {
     if (this.recordingInput) {
         this.recordingInput.value = this.getKeyDisplayName(this.currentKeybinds[this.recordingAction]);
