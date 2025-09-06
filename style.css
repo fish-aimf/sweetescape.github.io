@@ -127,17 +127,19 @@ body {
     flex-direction: column;
     margin-bottom: 15px;
 }
+.create-playlist {
+    display: flex;
+    gap: 10px;
+}
 
 .create-playlist input, 
 .search-section input {
     flex-grow: 1;
     padding: 10px;
-    margin-right: 10px;
     border: 1px solid var(--border-color);
     background-color: var(--bg-primary);
     color: var(--text-primary);
 }
-
 .add-song-section .input-group {
     display: flex;
     flex-direction: column;
@@ -6079,11 +6081,15 @@ body:has(#ytPlayer.fullscreen-video) {
     gap: 10px; /* Add this to the parent container */
 }
 
+.create-playlist {
+    display: flex;
+    gap: 10px;
+}
+
 .create-playlist input, 
 .search-section input {
     flex-grow: 1;
     padding: 10px;
-    /* Remove margin-right: 10px; */
     border: 1px solid var(--border-color);
     background-color: var(--bg-primary);
     color: var(--text-primary);
