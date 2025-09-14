@@ -4106,26 +4106,29 @@ removeGhostPreview() {
     }
   }
   playNextNonSkippedSong() {
-    if (!this.currentPlaylist || !this.currentPlaylist.songs.length) return;
-    const totalSongs = this.currentPlaylist.songs.length;
-    let nextIndex = (this.currentSongIndex + 1) % totalSongs;
-    const startIndex = nextIndex;
-    while (
-      this.isSongTemporarilySkipped(this.currentPlaylist.songs[nextIndex])
-    ) {
-      nextIndex = (nextIndex + 1) % totalSongs;
-      if (nextIndex === startIndex) {
-        return;
+      if (!this.currentPlaylist || !this.currentPlaylist.songs.length) return;
+      const totalSongs = this.currentPlaylist.songs.length;
+      let nextIndex = (this.currentSongIndex + 1) % totalSongs;
+      const startIndex = nextIndex;
+      while (
+        this.isSongTemporarilySkipped(this.currentPlaylist.songs[nextIndex])
+      ) {
+        nextIndex = (nextIndex + 1) % totalSongs;
+        if (nextIndex === startIndex) {
+          return;
+        }
+        if (nextIndex === 0 && !this.isPlaylistLooping) {
+          this.ytPlayer.stopVideo();
+          this.isPlaying = false;
+          this.updatePlayerUI();
+          return;
+        }
       }
-      if (nextIndex === 0 && !this.isPlaylistLooping) {
-        this.ytPlayer.stopVideo();
-        this.isPlaying = false;
-        this.updatePlayerUI();
-        return;
-      }
-    }
-    this.currentSongIndex = nextIndex;
-    this.playSongById(this.currentPlaylist.songs[nextIndex].videoId);
+      this.currentSongIndex = nextIndex;
+      this.currentSong = this.currentPlaylist.songs[this.currentSongIndex];
+      this.saveRecentlyPlayedSong(this.currentPlaylist.songs[this.currentSongIndex]); 
+      this.playSongById(this.currentPlaylist.songs[nextIndex].videoId);
+      this.updateCurrentSongDisplay(); 
   }
   isSongTemporarilySkipped(song) {
     const entryId = song.entryId || "id_" + song.videoId;
