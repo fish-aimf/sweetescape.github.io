@@ -7054,7 +7054,7 @@ toggleTheme() {
     fetch('favicon.svg')
         .then(response => response.text())
         .then(svgText => {
-            const coloredSvg = svgText.replace(/fill="#3A6B35"/g, `fill="${color}"`);
+            const coloredSvg = svgText.replace(/fill="#5D9C59"/g, `fill="${color}"`);
             const blob = new Blob([coloredSvg], { type: 'image/svg+xml' });
             const url = URL.createObjectURL(blob);
             
