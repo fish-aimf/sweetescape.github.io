@@ -6224,7 +6224,7 @@ body:has(#ytPlayer.fullscreen-video) {
 
 .keybind-category h4 {
     margin: 0 0 15px 0;
-    color: var(--accent-color);
+    color: var(--text-primary); 
     font-size: 1.1em;
     font-weight: 600;
     display: flex;
@@ -6233,7 +6233,6 @@ body:has(#ytPlayer.fullscreen-video) {
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border-color);
 }
-
 .keybind-items {
     display: flex;
     flex-direction: column;
