@@ -313,3 +313,4 @@
 - bugfix where playnextnonskipped song will not update the recently played song . v42.3.1
 - changed styles for keybind settings v42.3.2
 - various bugfixes. v42.3.3
+- fixed transcript lyrics not saving bug. v42.3.4
