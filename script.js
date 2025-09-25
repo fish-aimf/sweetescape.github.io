@@ -5781,7 +5781,7 @@ initLyricMaker(song) {
   document.getElementById('markLine').addEventListener('click', markCurrentLine);
   document.getElementById('finishRecording').addEventListener('click', finishRecording);
   document.getElementById('copyToClipboardBtn').addEventListener('click', copyToClipboard);
-  document.getElementById('saveLyricsBtn').addEventListener('click', saveLyrics);
+  document.getElementById('saveTranscriptLyricsBtn').addEventListener('click', saveLyrics);
   document.getElementById('azlyricsBtn').addEventListener('click', searchAZLyrics);
   document.getElementById('letrasBtn').addEventListener('click', searchLetras);
   document.getElementById('geniusBtn').addEventListener('click', searchGenius);
