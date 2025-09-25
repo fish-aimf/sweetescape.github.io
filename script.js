@@ -618,10 +618,7 @@ settingsEventBindings.forEach(([element, event, handler], index) => {
         }
         
         // Handle special cases
-        if (e.key.toLowerCase() === "b" && this.currentKeybinds.cycleFavicon === 'KeyB') {
-            this.cycleFaviconAndTitle();
-            return;
-        }
+        
         if (e.key.toLowerCase() === "n" && this.currentKeybinds.toggleWebEmbed === 'KeyN') {
             if (e.shiftKey) {
                 this.cycleWebEmbedSite();
