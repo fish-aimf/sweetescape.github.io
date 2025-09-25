@@ -312,3 +312,4 @@
 -changed timer action layout and styles. v42.3.0
 - bugfix where playnextnonskipped song will not update the recently played song . v42.3.1
 - changed styles for keybind settings v42.3.2
+- various bugfixes. v42.3.3
