@@ -7697,35 +7697,7 @@ closeSubtitlesImportModal() {
     this.showNotification('Could not convert transcript. Please check the format.', 'error');
   }
 }
-async saveLyricsFromModal() {
-  const lyricsPreview = document.getElementById('lyricsPreview');
-  const lyricsText = lyricsPreview.value.trim();
-  if (!lyricsText) {
-    this.showNotification('No lyrics to save', 'error');
-    return;
-  }
-  if (!this.currentSongForImport) {
-    this.showNotification('No song selected', 'error');
-    return;
-  }
-  try {
-    await this.updateSongDetails(
-      this.currentSongForImport.id, 
-      this.currentSongForImport.name, 
-      this.currentSongForImport.author, 
-      this.currentSongForImport.videoId, 
-      lyricsText
-    );
-    this.showNotification('Lyrics saved successfully!', 'success');
-    this.closeSubtitlesImportModal();
-    if (document.getElementById('lyrics')?.classList.contains('active')) {
-      this.renderLyricsTab();
-    }
-  } catch (error) {
-    console.error('Error saving lyrics:', error);
-    this.showNotification('Failed to save lyrics. Please try again.', 'error');
-  }
-}
+
 async saveLyricsFromModal() {
   const lyricsPreview = document.getElementById('lyricsPreview');
   const lyricsText = lyricsPreview.value.trim();
