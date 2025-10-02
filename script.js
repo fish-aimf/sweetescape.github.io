@@ -43,9 +43,12 @@ class AdvancedMusicPlayer {
     this.recentlyPlayedPlaylistsDisplayLimit = 1;
     this.visualizerEnabled = true;
     this.timerAction = 'stopMusic';
+    this.showDeleteButtons = true;  
+    this.showUnfavoriteButtons = true;
     this.globalLibrarySupabase = null;
     this.globalLibraryCurrentUser = null;
     this.globalLibraryArtists = [];
+    
     this.GEMINI_API_KEY = 'AIzaSyAGa1IpwVMUmNo-YH9JyWStpWprkpkhGWk';
     this.YOUTUBE_API_KEYS = [
         'AIzaSyDPT2lmIab9DPC-ltZh4sWrlhapwp0mgTA', 
@@ -177,7 +180,8 @@ this.globalLibrarySearchFilter = '';
             this.loadVisualizerSettings(),
             this.loadLibrarySortSetting(),
             this.loadLibraryReverseSetting(),
-            this.loadKeybinds() 
+            this.loadKeybinds() ,
+            this.loadLibraryDisplaySettings()
         ]);
       })
       .then(() => {
@@ -334,9 +338,24 @@ findSongsResults: document.getElementById("findSongsResults"),
       playlistSearch: document.getElementById("playlistSearch"),
 toggleCreatePlaylistBtn: document.getElementById("toggleCreatePlaylistBtn"),
 createPlaylistDiv: document.getElementById("createPlaylistDiv"),
-      togglePlaylistEditModeBtn: document.getElementById("togglePlaylistEditModeBtn")
+      togglePlaylistEditModeBtn: document.getElementById("togglePlaylistEditModeBtn"),
+      modifyLibraryBtn: document.getElementById("modifyLibraryBtn"),
+    libraryOptionsDropdown: document.getElementById("libraryOptionsDropdown"),
+    showDeleteBtn: document.getElementById("showDeleteBtn"),
+    showUnfavoriteBtn: document.getElementById("showUnfavoriteBtn")
     };
+    this.elements.modifyLibraryBtn.parentElement.addEventListener("mouseenter", 
+    this.handleShowLibraryDropdown.bind(this));
+this.elements.modifyLibraryBtn.parentElement.addEventListener("mouseleave", 
+    this.handleHideLibraryDropdown.bind(this));
+
+// Checkbox events
+this.elements.showDeleteBtn.addEventListener("change", 
+    this.handleToggleDeleteButtons.bind(this));
+this.elements.showUnfavoriteBtn.addEventListener("change", 
+    this.handleToggleUnfavoriteButtons.bind(this));
     this.elements.aiGeneratorDiv = document.getElementById("aiGeneratorDiv");
+    
     this.elements.closeAiGenerator = document.getElementById("closeAiGenerator");
     this.elements.aiArtistName = document.getElementById("aiArtistName");
     this.elements.aiSongCount = document.getElementById("aiSongCount");
@@ -969,32 +988,38 @@ renderSongLibrary() {
   createSongElement(song) {
     const songElement = document.createElement("div");
     songElement.classList.add("song-item");
+    
+    const favoriteBtn = song.favorite 
+        ? `<button class="favorite-btn" data-song-id="${song.id}">
+               <i class="fa fa-star"></i>
+           </button>`
+        : (this.showUnfavoriteButtons 
+            ? `<button class="favorite-btn" data-song-id="${song.id}">
+                   <i class="fa fa-star-o"></i>
+               </button>`
+            : '');
+    
+    const deleteBtn = this.showDeleteButtons 
+        ? `<button class="remove-btn" data-song-id="${song.id}">Remove</button>`
+        : '';
+    
     songElement.innerHTML = `
-            <span class="song-name" data-song-id="${song.id}">
-                ${this.escapeHtml(song.name)}
-                ${
-                  song.author
-                    ? `<small style="color: var(--text-secondary); display: block; font-size: 0.4em;">by ${this.escapeHtml(
-                        song.author
-                      )}</small>`
-                    : ""
-                }
-            </span>
-            <div class="song-actions">
-                <button class="favorite-btn" data-song-id="${song.id}">
-                    <i class="fa ${
-                      song.favorite ? "fa-star" : "fa-star-o"
-                    }"></i>
-                </button>
-                <button class="play-btn" data-song-id="${song.id}">Play</button>
-                <button class="remove-btn" data-song-id="${
-                  song.id
-                }">Remove</button>
-            </div>
-        `;
+        <span class="song-name" data-song-id="${song.id}">
+            ${this.escapeHtml(song.name)}
+            ${song.author
+                ? `<small style="color: var(--text-secondary); display: block; font-size: 0.4em;">by ${this.escapeHtml(song.author)}</small>`
+                : ""}
+        </span>
+        <div class="song-actions">
+            ${favoriteBtn}
+            <button class="play-btn" data-song-id="${song.id}">Play</button>
+            ${deleteBtn}
+        </div>
+    `;
+    
     this.attachSongElementListeners(songElement, song);
     return songElement;
-  }
+}
   escapeHtml(text) {
     const div = document.createElement("div");
     div.textContent = text;
@@ -1005,22 +1030,30 @@ renderSongLibrary() {
     const playBtn = songElement.querySelector(".play-btn");
     const removeBtn = songElement.querySelector(".remove-btn");
     const songNameSpan = songElement.querySelector(".song-name");
-    favoriteBtn.addEventListener("click", () => this.toggleFavorite(song.id));
+
+    if (favoriteBtn) {
+        favoriteBtn.addEventListener("click", () => this.toggleFavorite(song.id));
+    }
+    
     playBtn.addEventListener("click", () => this.playSong(song.id));
-    removeBtn.addEventListener("click", () => this.removeSong(song.id));
+    
+    if (removeBtn) {
+        removeBtn.addEventListener("click", () => this.removeSong(song.id));
+    }
+
     let clickTimeout;
     songNameSpan.addEventListener("click", () => {
-      if (clickTimeout) {
-        clearTimeout(clickTimeout);
-        clickTimeout = null;
-        this.openSongEditModal(song.id);
-      } else {
-        clickTimeout = setTimeout(() => {
-          clickTimeout = null;
-        }, 300);
-      }
+        if (clickTimeout) {
+            clearTimeout(clickTimeout);
+            clickTimeout = null;
+            this.openSongEditModal(song.id);
+        } else {
+            clickTimeout = setTimeout(() => {
+                clickTimeout = null;
+            }, 300);
+        }
     });
-  }
+}
   filterLibrarySongs() {
     const searchTerm = this.elements.librarySearch.value.toLowerCase().trim();
     const songItems = this.elements.songLibrary.querySelectorAll(".song-item");
@@ -1187,11 +1220,6 @@ updatePlaylistEditModeButton() {
         button.classList.remove("playlist-edit-mode-active");
     }
 }
- // MODIFY YOUR EXISTING renderPlaylists() method
-// Add these event handlers after creating the playlistElement
-
-// MODIFY YOUR EXISTING renderPlaylists() method
-// Replace the entire event handler section with this:
 
 renderPlaylists() {
     this.elements.playlistContainer.innerHTML = "";
@@ -1253,14 +1281,11 @@ renderPlaylists() {
             ${playlistActionsHTML}
         `;
         
-        // REPLACE ALL EVENT HANDLERS WITH THIS:
-        // Variables for interaction tracking
         let holdTimer;
         let isDragging = false;
         let isMouseDown = false;
         let startTime = 0;
         
-        // Mouse down - start hold timer and click tracking
         playlistElement.addEventListener("mousedown", (e) => {
             // Don't trigger on button clicks
             if (e.target.tagName === 'BUTTON') return;
@@ -1301,7 +1326,6 @@ renderPlaylists() {
             isMouseDown = false;
         });
         
-        // Mouse leave - cancel hold timer
         playlistElement.addEventListener("mouseleave", () => {
             clearTimeout(holdTimer);
             isMouseDown = false;
@@ -9431,6 +9455,61 @@ resetKeybindsToDefault() {
             this.loadKeybindsSettings();
         }).catch(console.error);
     }
+}
+
+handleShowLibraryDropdown() {
+    this.elements.libraryOptionsDropdown.classList.add("show");
+}
+
+handleHideLibraryDropdown() {
+    this.elements.libraryOptionsDropdown.classList.remove("show");
+}
+
+handleToggleDeleteButtons(e) {
+    this.showDeleteButtons = e.target.checked;
+    this.saveLibraryDisplaySettings();
+    this.renderSongLibrary();
+}
+
+handleToggleUnfavoriteButtons(e) {
+    this.showUnfavoriteButtons = e.target.checked;
+    this.saveLibraryDisplaySettings();
+    this.renderSongLibrary();
+}
+
+saveLibraryDisplaySettings() {
+    if (!this.db) return;
+    const transaction = this.db.transaction(["userSettings"], "readwrite");
+    const store = transaction.objectStore("userSettings");
+    store.put({
+        category: "libraryDisplay",
+        showDeleteButtons: this.showDeleteButtons,
+        showUnfavoriteButtons: this.showUnfavoriteButtons
+    });
+}
+
+loadLibraryDisplaySettings() {
+    return new Promise((resolve) => {
+        if (!this.db) {
+            resolve();
+            return;
+        }
+        const transaction = this.db.transaction(["userSettings"], "readonly");
+        const store = transaction.objectStore("userSettings");
+        const request = store.get("libraryDisplay");
+        
+        request.onsuccess = () => {
+            if (request.result) {
+                this.showDeleteButtons = request.result.showDeleteButtons ?? true;
+                this.showUnfavoriteButtons = request.result.showUnfavoriteButtons ?? true;
+                this.elements.showDeleteBtn.checked = this.showDeleteButtons;
+                this.elements.showUnfavoriteBtn.checked = this.showUnfavoriteButtons;
+            }
+            resolve();
+        };
+        
+        request.onerror = () => resolve();
+    });
 }
 
 
