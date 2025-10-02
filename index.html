@@ -137,9 +137,21 @@
                                 <button id="findSongsBtn" class="action-button find-songs-btn">
                                     <i class="fas fa-search"></i> Global library
                                 </button>
-                                <button id="modifyLibraryBtn" class="action-button" title="click here to add songs via youtube url or import and export">
-                                    <i class="fas fa-edit"></i> Modify Library
-                                </button>
+                                <div class="modify-library-container">
+                                    <button id="modifyLibraryBtn" class="action-button" title="click here to add songs via youtube url or import and export">
+                                        <i class="fas fa-edit"></i> Modify Library
+                                    </button>
+                                    <div id="libraryOptionsDropdown" class="library-options-dropdown">
+                                        <div class="library-option-item">
+                                            <input type="checkbox" id="showDeleteBtn" checked>
+                                            <label for="showDeleteBtn">Show delete button</label>
+                                        </div>
+                                        <div class="library-option-item">
+                                            <input type="checkbox" id="showUnfavoriteBtn" checked>
+                                            <label for="showUnfavoriteBtn">Show unfavorite button</label>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div id="songLibrary" class="song-list">
                             </div>
