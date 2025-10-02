@@ -6474,7 +6474,6 @@ body:has(#ytPlayer.fullscreen-video) {
     position: relative;
     display: inline-block;
 }
-
 .library-options-dropdown {
     position: absolute;
     top: 100%;
@@ -6491,7 +6490,6 @@ body:has(#ytPlayer.fullscreen-video) {
     display: none;
 }
 
-
 .library-options-dropdown.show {
     display: block;
 }
@@ -6502,11 +6500,21 @@ body:has(#ytPlayer.fullscreen-video) {
     padding: 8px 0;
     cursor: pointer;
     color: var(--text-primary);
-    border-bottom: 1px solid var(--border-color); 
+    border-bottom: 1px solid var(--border-color);
+    transition: color 0.2s ease;
+}
+
+.library-option-item:last-child {
+    border-bottom: none;  
 }
 
 .library-option-item:hover {
     color: var(--accent-color);
+}
+
+.library-option-item:hover input[type="checkbox"] {
+    /* Optional: add accent color to checkbox on hover */
+    accent-color: var(--accent-color);
 }
 
 .library-option-item input[type="checkbox"] {
@@ -6515,17 +6523,15 @@ body:has(#ytPlayer.fullscreen-video) {
     width: 18px;
     height: 18px;
     flex-shrink: 0;
-    vertical-align: middle;  /* ADD THIS */
 }
 
 .library-option-item label {
     cursor: pointer;
     user-select: none;
-    color: var(--text-primary);
+    color: inherit;  
     font-size: 0.9em;
-    line-height: 18px;  /* ADD THIS - matches checkbox height */
-    display: flex;       /* ADD THIS */
-    align-items: center; /* ADD THIS */
+    line-height: 1.4;
+    flex: 1;  
 }
 
 .details-item-subtitle {
