@@ -314,3 +314,7 @@
 - changed styles for keybind settings v42.3.2
 - various bugfixes. v42.3.3
 - fixed transcript lyrics not saving bug. v42.3.4
+- many changes, reduced clutter by adding a dropdown of modify library to remove the non essential. v43.0.0
+- made clicking on the song name also play it. v43.1.0
+- made playing a playlist show its name, last youtube thumbnail and the songname. v43.2.0
+- made it also appear in recently played sonsg. v43.3.0
