@@ -6512,14 +6512,18 @@ body:has(#ytPlayer.fullscreen-video) {
 .library-option-item input[type="checkbox"] {
     margin-right: 10px;
     cursor: pointer;
-    width: 18px;           
-    height: 18px;          
-    flex-shrink: 0;        
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    vertical-align: middle;  /* ADD THIS */
 }
 
 .library-option-item label {
     cursor: pointer;
     user-select: none;
     color: var(--text-primary);
-    font-size: 0.9em;  /* ADD THIS - makes text smaller */
+    font-size: 0.9em;
+    line-height: 18px;  /* ADD THIS - matches checkbox height */
+    display: flex;       /* ADD THIS */
+    align-items: center; /* ADD THIS */
 }
