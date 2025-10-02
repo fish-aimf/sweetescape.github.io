@@ -6467,3 +6467,50 @@ body:has(#ytPlayer.fullscreen-video) {
 .action-buttons {
     justify-content: flex-start;
 }
+
+.modify-library-container {
+    position: relative;
+    display: inline-block;
+}
+
+.library-options-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 12px;
+    margin-top: 5px;
+    box-shadow: 0 4px 6px var(--shadow-color);
+    z-index: 1000;
+    min-width: 200px;
+    display: none;
+}
+
+.library-options-dropdown.show {
+    display: block;
+}
+
+.library-option-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    cursor: pointer;
+    color: var(--text-primary);
+}
+
+.library-option-item:hover {
+    color: var(--accent-color);
+}
+
+.library-option-item input[type="checkbox"] {
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.library-option-item label {
+    cursor: pointer;
+    user-select: none;
+    color: var(--text-primary);
+}
