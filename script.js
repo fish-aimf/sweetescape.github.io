@@ -353,8 +353,6 @@ createPlaylistDiv: document.getElementById("createPlaylistDiv"),
 this.elements.modifyLibraryBtn.parentElement.addEventListener("mouseleave", 
     this.handleHideLibraryDropdown.bind(this));
     
-
-// Checkbox events
 this.elements.showDeleteBtn.addEventListener("change", 
     this.handleToggleDeleteButtons.bind(this));
 this.elements.showUnfavoriteBtn.addEventListener("change", 
@@ -643,7 +641,6 @@ settingsEventBindings.forEach(([element, event, handler], index) => {
             return;
         }
         
-        // Handle special cases
         
         if (e.key.toLowerCase() === "n" && this.currentKeybinds.toggleWebEmbed === 'KeyN') {
             if (e.shiftKey) {
@@ -654,13 +651,11 @@ settingsEventBindings.forEach(([element, event, handler], index) => {
             return;
         }
         
-        // Prevent default for bound keys
         const preventDefaultCodes = Object.values(this.currentKeybinds);
         if (preventDefaultCodes.includes(e.code)) {
             e.preventDefault();
         }
         
-        // Handle keybinds
         this.handleKeybind(e.code);
     });
 }
@@ -1058,7 +1053,6 @@ renderSongLibrary() {
         editBtn.addEventListener("click", () => this.openSongEditModal(song.id));
     }
 
-    // Single click on song name plays the song
     songNameSpan.addEventListener("click", () => {
         this.playSong(song.id);
     });
@@ -1217,8 +1211,6 @@ renderSongLibrary() {
     this.updatePlaylistEditModeButton();
     this.renderPlaylists();
 }
-
-// 5. NEW METHOD - Add this entire method
 updatePlaylistEditModeButton() {
     const button = this.elements.togglePlaylistEditModeBtn;
     if (this.playlistEditModeActive) {
@@ -1264,7 +1256,6 @@ renderPlaylists() {
         playlistElement.dataset.position = playlist.position;
         playlistElement.draggable = false;
         
-        // Generate actions based on edit mode
         let playlistActionsHTML = '';
         if (this.playlistEditModeActive) {
             playlistActionsHTML = `
@@ -1296,23 +1287,20 @@ renderPlaylists() {
         let startTime = 0;
         
         playlistElement.addEventListener("mousedown", (e) => {
-            // Don't trigger on button clicks
+         
             if (e.target.tagName === 'BUTTON') return;
             
             isMouseDown = true;
             startTime = Date.now();
-            
-            // Start hold timer for drag
+          
             holdTimer = setTimeout(() => {
                 playlistElement.draggable = true;
                 playlistElement.classList.add("draggable");
                 isDragging = true;
-            }, 500); // 500ms hold to start drag
+            }, 500); 
         });
         
-        // Mouse up - handle click to play
         playlistElement.addEventListener("mouseup", (e) => {
-            // Don't trigger on button clicks
             if (e.target.tagName === 'BUTTON') return;
             
             clearTimeout(holdTimer);
@@ -1320,8 +1308,6 @@ renderPlaylists() {
             if (isMouseDown && !isDragging) {
                 const endTime = Date.now();
                 const clickDuration = endTime - startTime;
-                
-                // Only play if it was a quick click (less than 300ms)
                 if (clickDuration < 300) {
                     this.playPlaylist(playlist.id);
                 }
@@ -1339,15 +1325,12 @@ renderPlaylists() {
             clearTimeout(holdTimer);
             isMouseDown = false;
         });
-        
-        // Prevent text selection during drag
+      
         playlistElement.addEventListener("selectstart", (e) => {
             if (isDragging) {
                 e.preventDefault();
             }
         });
-        
-        // Touch support for mobile
         playlistElement.addEventListener("touchstart", (e) => {
             if (e.target.tagName === 'BUTTON') return;
             
@@ -1383,8 +1366,7 @@ renderPlaylists() {
             isMouseDown = false;
             e.preventDefault();
         });
-        
-        // Drag event handlers (using your existing methods)
+      
         playlistElement.addEventListener("dragstart", this.handlePlaylistDragStart.bind(this));
         playlistElement.addEventListener("dragover", this.handlePlaylistDragOver.bind(this));
         playlistElement.addEventListener("drop", this.handlePlaylistDrop.bind(this));
@@ -4557,9 +4539,6 @@ removeGhostPreview() {
   saveRecentlyPlayedSong(song) {
     if (!this.db || !song) return;
     
-    // Check if currently playing from a playlist
-    if (this.currentPlaylist) {
-        // Save as playlist instead of individual song
         this.saveRecentlyPlayedPlaylist(this.currentPlaylist);
         return;
     }
@@ -4626,15 +4605,11 @@ removeGhostPreview() {
           recentlyPlayedPlaylists = request.result.items;
         }
         
-        // Remove existing entry for this playlist
         recentlyPlayedPlaylists = recentlyPlayedPlaylists.filter(
           (item) => item.id !== playlist.id
         );
-        
-        // Add to front
         recentlyPlayedPlaylists.unshift(playlistData);
         
-        // Limit to 20 playlists
         if (recentlyPlayedPlaylists.length > 20) {
           recentlyPlayedPlaylists = recentlyPlayedPlaylists.slice(0, 20);
         }
@@ -4686,7 +4661,6 @@ removeGhostPreview() {
         this.elements.additionalDetails.appendChild(currentSongSection);
     }
     this.updateCurrentSongDisplay();
-    // Combine songs and playlists for Recently Listened To
 const recentlyListenedItems = this.getCombinedRecentlyPlayed();
 if (recentlyListenedItems.length > 0) {
     this.createDetailsSection(
@@ -4719,26 +4693,19 @@ if (recentlyListenedItems.length > 0) {
     }
 }
   getCombinedRecentlyPlayed() {
-    // Combine songs and playlists, then sort by timestamp
     const combined = [];
-    
-    // Add songs with type marker
     this.recentlyPlayedSongs.forEach(song => {
         combined.push({
             ...song,
             itemType: 'song'
         });
     });
-    
-    // Add playlists with type marker
     this.recentlyPlayedPlaylists.forEach(playlist => {
         combined.push({
             ...playlist,
             itemType: 'playlist'
         });
     });
-    
-    // Sort by timestamp (most recent first)
     combined.sort((a, b) => b.timestamp - a.timestamp);
     
     return combined;
@@ -4858,8 +4825,6 @@ createDetailsSection(title, items, type) {
     items.forEach((item) => {
     const itemElement = document.createElement("div");
     itemElement.classList.add("details-item");
-    
-    // Determine actual item type
     const actualType = type === "mixed" ? item.itemType : type;
     
     if (actualType === "song") {
@@ -4879,7 +4844,6 @@ createDetailsSection(title, items, type) {
     };
     thumbnail.appendChild(thumbnailImg);
 } else {
-    // Playlist - show thumbnail if available
     if (item.thumbnailUrl) {
         const thumbnailImg = document.createElement("img");
         thumbnailImg.src = item.thumbnailUrl;
@@ -4900,9 +4864,6 @@ const itemName = document.createElement("div");
 itemName.classList.add("details-item-name");
 itemName.textContent = item.name;
 itemInfo.appendChild(itemName);
-
-// Add current song name for playlists
-// Add current song name for playlists
 if (actualType === "playlist" && item.currentSongName) {
     const currentSongDiv = document.createElement("div");
     currentSongDiv.classList.add("details-item-subtitle");
@@ -5036,42 +4997,27 @@ refreshSpecificSection(sectionTitle) {
   showRecentlyPlayedModal() {
   const modal = document.getElementById("recentlyPlayedModal");
   const limitInput = document.getElementById("recentlyPlayedLimitInput");
-  
-  // Set the current limit value
   limitInput.value = this.recentlyPlayedLimit || 20;
-  
-  // Show the modal
   modal.style.display = "flex";
-  
-  // Populate the content
   this.renderRecentlyPlayedContent();
-  
-  // Setup event listeners if not already done
   this.setupRecentlyPlayedModalListeners();
 }
 
   setupRecentlyPlayedModalListeners() {
-  // Prevent multiple event listeners
   if (this.recentlyPlayedListenersSetup) return;
   this.recentlyPlayedListenersSetup = true;
   
   const modal = document.getElementById("recentlyPlayedModal");
   const closeBtn = document.getElementById("closeRecentlyPlayedModal");
   const limitInput = document.getElementById("recentlyPlayedLimitInput");
-  
-  // Close button
   closeBtn.addEventListener("click", () => {
     this.hideRecentlyPlayedModal();
   });
-  
-  // Click outside modal to close
   modal.addEventListener("click", (e) => {
     if (e.target === modal) {
       this.hideRecentlyPlayedModal();
     }
   });
-  
-  // Limit input change
   limitInput.addEventListener("change", () => {
     const newLimit = parseInt(limitInput.value) || 20;
     if (newLimit >= 1 && newLimit <= 100) {
@@ -5080,8 +5026,6 @@ refreshSpecificSection(sectionTitle) {
       limitInput.value = this.recentlyPlayedLimit || 20;
     }
   });
-  
-  // Escape key to close
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && modal.style.display === "flex") {
       this.hideRecentlyPlayedModal();
@@ -5133,10 +5077,9 @@ renderRecentlyPlayedContent() {
     removeBtn.classList.add("recently-played-remove");
     removeBtn.innerHTML = "×";
     removeBtn.title = "Remove from recently played";
-    
-    // Remove button click handler
+  
     removeBtn.addEventListener("click", (e) => {
-      e.stopPropagation(); // Prevent song from playing
+      e.stopPropagation(); 
       this.removeFromRecentlyPlayed(song.id, index);
     });
     
@@ -5146,7 +5089,6 @@ renderRecentlyPlayedContent() {
     songItem.appendChild(info);
     songItem.appendChild(removeBtn);
     
-    // Song item click handler (play song)
     songItem.addEventListener("click", () => {
       this.playSong(song.id);
       this.hideRecentlyPlayedModal();
@@ -5161,14 +5103,9 @@ hideRecentlyPlayedModal() {
 }
   
 removeFromRecentlyPlayed(songId, index) {
-  // Remove from array
   this.recentlyPlayedSongs.splice(index, 1);
-  
-  // Immediately update UI
   this.renderRecentlyPlayedContent();
   this.renderAdditionalDetails();
-  
-  // Update database
   if (this.db) {
     try {
       const transaction = this.db.transaction(["recentlyPlayed"], "readwrite");
@@ -5213,8 +5150,7 @@ removeFromRecentlyPlayed(songId, index) {
             type: "songs",
             items: this.recentlyPlayedSongs,
           });
-          
-          // Re-render content after limit change
+        
           this.renderRecentlyPlayedContent();
           this.renderAdditionalDetails();
         }
@@ -6477,8 +6413,6 @@ setupTimerEventListeners() {
   document.getElementById("closeTimerModal").addEventListener("click", () => {
     document.getElementById("timerModal").style.display = "none";
   });
-  
-  // Timer action selection
   document.getElementById("stopMusicAction").addEventListener("click", () => {
     this.timerAction = 'stopMusic';
     document.querySelectorAll('.action-btn').forEach(btn => btn.classList.remove('active'));
@@ -6838,7 +6772,6 @@ initializeTheme() {
     if (!this.db) {
         document.documentElement.setAttribute("data-theme", "dark");
         this.updateThemeIcon("dark");
-        // Update favicon for default theme - ADD THIS
         setTimeout(() => {
             this.updateFaviconThemeFromDB();
         }, 100);
@@ -6854,7 +6787,6 @@ initializeTheme() {
         } else {
             document.documentElement.setAttribute("data-theme", savedTheme);
             this.updateThemeIcon(savedTheme);
-            // Update favicon for preset themes on load - ADD THIS
             setTimeout(() => {
                 this.updateFaviconThemeFromDB();
             }, 100);
@@ -6864,7 +6796,6 @@ initializeTheme() {
         console.error("Error loading theme setting:", event.target.error);
         document.documentElement.setAttribute("data-theme", "dark");
         this.updateThemeIcon("dark");
-        // Update favicon for fallback theme - ADD THIS
         setTimeout(() => {
             this.updateFaviconThemeFromDB();
         }, 100);
@@ -6932,10 +6863,9 @@ applyCustomColors(colors) {
     document.documentElement.style.setProperty('--custom-error-hover', colors.errorHover);
     document.documentElement.style.setProperty('--custom-youtube-red', colors.youtubeRed);
     
-    // Use the DB-based favicon update with longer delay
     setTimeout(() => {
         this.updateFaviconThemeFromDB();
-    }, 150); // Longer delay to ensure CSS is applied
+    }, 150); 
 }
 loadCustomTheme() {
     const transaction = this.db.transaction(["settings"], "readonly");
@@ -7087,7 +7017,6 @@ handleThemeModeChange(event) {
         this.updateThemeIcon(mode);
         this.saveSetting("themeMode", mode);
         
-        // Update favicon for preset themes - ADD THIS
         setTimeout(() => {
             this.updateFaviconThemeFromDB();
         }, 100);
@@ -7116,7 +7045,6 @@ toggleTheme() {
         document.documentElement.setAttribute("data-theme", newTheme);
         this.updateThemeIcon(newTheme);
         
-        // Update favicon for preset themes - ADD THIS
         setTimeout(() => {
             this.updateFaviconThemeFromDB();
         }, 100);
@@ -7137,7 +7065,6 @@ toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     
     if (currentTheme === 'custom') {
-        // Load accent color directly from IndexedDB
         if (!this.db) {
             console.log('Database not available');
             return;
@@ -7148,7 +7075,7 @@ toggleTheme() {
         const request = store.get("customAccent");
         
         request.onsuccess = () => {
-            const accentColor = request.result?.value || '#3b82f6'; // fallback
+            const accentColor = request.result?.value || '#3b82f6'; 
             console.log('Using accent color from DB for favicon:', accentColor);
             
             const finalColor = this.lightenDarkColor(accentColor);
@@ -7162,7 +7089,6 @@ toggleTheme() {
             this.updateFaviconColor('#3b82f6');
         };
     } else {
-        // For light/dark themes, use CSS variables
         const accentColor = getComputedStyle(document.documentElement)
             .getPropertyValue('--accent-color')
             .trim()
@@ -7188,7 +7114,6 @@ toggleTheme() {
             
             const favicon = document.querySelector('link[rel="icon"]');
             if (favicon) {
-                // Clean up previous blob URL to prevent memory leaks
                 if (favicon.href.startsWith('blob:')) {
                     URL.revokeObjectURL(favicon.href);
                 }
@@ -7200,18 +7125,15 @@ toggleTheme() {
 }
 
 lightenDarkColor(color) {
-    // Convert hex to RGB
     const hex = color.replace('#', '');
     const r = parseInt(hex.substr(0, 2), 16);
     const g = parseInt(hex.substr(2, 2), 16);
     const b = parseInt(hex.substr(4, 2), 16);
     
-    // Calculate brightness (0-255)
     const brightness = (r * 299 + g * 587 + b * 114) / 1000;
     
-    // If color is too dark (brightness < 100), lighten it
     if (brightness < 100) {
-        const factor = 1.5; // Lighten by 50%
+        const factor = 1.5;
         const newR = Math.min(255, Math.floor(r * factor));
         const newG = Math.min(255, Math.floor(g * factor));
         const newB = Math.min(255, Math.floor(b * factor));
@@ -7219,7 +7141,7 @@ lightenDarkColor(color) {
         return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
     }
     
-    return color; // Return original if bright enough
+    return color; 
 }
 updateThemeIcon(theme) {
   const icon = this.elements.themeToggle.querySelector("i");
@@ -9360,11 +9282,9 @@ saveKeybinds() {
 handleKeybind(code) {
     const k = this.currentKeybinds;
     
-    // Handle the special cases for B and N keys that use e.key instead of e.code
     if (code === k.cycleFavicon && k.cycleFavicon !== '') {
         this.cycleFaviconAndTitle();
     } else if (code === k.toggleWebEmbed && k.toggleWebEmbed !== '') {
-        // This will be handled in setupKeyboardControls with special logic
     } else if ((code === k.togglePlayPause && k.togglePlayPause !== '') || 
                (code === k.togglePlayPause2 && k.togglePlayPause2 !== '')) {
         this.togglePlayPause();
@@ -9405,7 +9325,6 @@ handleKeybind(code) {
         this.showQueueOverlay();
     }
 }
-// Add these methods for the keybind settings interface
 
 loadKeybindsSettings() {
     const keybindInputs = document.querySelectorAll('.keybind-input');
@@ -9436,7 +9355,7 @@ getKeyDisplayName(code) {
     if (code.startsWith('Key')) return code.replace('Key', '');
     if (code.startsWith('Digit')) return code.replace('Digit', '');
     if (code.startsWith('Numpad')) return 'Num ' + code.replace('Numpad', '');
-    if (code.startsWith('F') && code.length <= 3) return code; // F1-F12
+    if (code.startsWith('F') && code.length <= 3) return code;
     
     return keyNames[code] || code;
 }
@@ -9497,13 +9416,11 @@ startKeybindRecording(action, inputElement) {
 recordKeybind(keyCode) {
     if (!this.isRecordingKeybind) return;
     
-    // Check conflicts - but allow multiple keys for same action group
     const conflictingAction = Object.keys(this.currentKeybinds).find(action => {
         return this.currentKeybinds[action] === keyCode && action !== this.recordingAction;
     });
     
     if (conflictingAction) {
-        // Check if it's the same action group (e.g., togglePlayPause and togglePlayPause2)
         const currentActionBase = this.recordingAction.replace(/2$/, '');
         const conflictActionBase = conflictingAction.replace(/2$/, '');
         
@@ -9513,25 +9430,21 @@ recordKeybind(keyCode) {
             return;
         }
         
-        // Same action group - ask user if they want to swap or duplicate
         const userChoice = confirm(
             `Key "${this.getKeyDisplayName(keyCode)}" is already used for the same action. ` +
             `Click OK to swap the keys, or Cancel to keep both.`
         );
         
         if (userChoice) {
-            // Swap - clear the conflicting one
             this.currentKeybinds[conflictingAction] = '';
         }
     }
     
-    // Update keybind
     this.currentKeybinds[this.recordingAction] = keyCode;
     this.recordingInput.value = this.getKeyDisplayName(keyCode);
     this.recordingInput.classList.remove('recording');
     
     this.saveKeybinds().then(() => {
-        // Refresh all inputs to show the changes
         this.loadKeybindsSettings();
     }).catch(console.error);
     
@@ -9618,7 +9531,6 @@ loadLibraryDisplaySettings() {
                 this.showUnfavoriteButtons = request.result.showUnfavoriteButtons ?? true;
                 this.showEditButtons = request.result.showEditButtons ?? true;
             }
-            // Don't try to update UI elements here - they don't exist yet
             resolve();
         };
         
