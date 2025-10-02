@@ -6481,8 +6481,7 @@ body:has(#ytPlayer.fullscreen-video) {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: 4px;
-    padding: 12px;
-    padding-top: 17px;
+    padding: 8px;
     margin-top: -5px;
     box-shadow: 0 4px 6px var(--shadow-color);
     z-index: 1000;
@@ -6497,7 +6496,7 @@ body:has(#ytPlayer.fullscreen-video) {
 .library-option-item {
     display: flex;
     align-items: center;
-    padding: 8px 0;
+    padding: 6px 8px;
     cursor: pointer;
     color: var(--text-primary);
     border-bottom: 1px solid var(--border-color);
@@ -6505,7 +6504,7 @@ body:has(#ytPlayer.fullscreen-video) {
 }
 
 .library-option-item:last-child {
-    border-bottom: none;  
+    border-bottom: none;
 }
 
 .library-option-item:hover {
@@ -6513,25 +6512,24 @@ body:has(#ytPlayer.fullscreen-video) {
 }
 
 .library-option-item:hover input[type="checkbox"] {
-    /* Optional: add accent color to checkbox on hover */
     accent-color: var(--accent-color);
 }
 
 .library-option-item input[type="checkbox"] {
-    margin-right: 10px;
+    margin-right: 8px;
     cursor: pointer;
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     flex-shrink: 0;
 }
 
 .library-option-item label {
     cursor: pointer;
     user-select: none;
-    color: inherit;  
-    font-size: 0.9em;
-    line-height: 1.4;
-    flex: 1;  
+    color: inherit;
+    font-size: 0.95em;
+    line-height: 1.2;
+    flex: 1;
 }
 
 .details-item-subtitle {
