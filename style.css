@@ -1250,7 +1250,9 @@ body {
 .song-name {
     flex-grow: 1;
 }
-
+.song-name {
+    cursor: pointer;  /* ADD THIS */
+}
 
 ..favorite-btn {
     background: none;
@@ -6500,6 +6502,7 @@ body:has(#ytPlayer.fullscreen-video) {
     padding: 8px 0;
     cursor: pointer;
     color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color); 
 }
 
 .library-option-item:hover {
@@ -6518,4 +6521,5 @@ body:has(#ytPlayer.fullscreen-video) {
     cursor: pointer;
     user-select: none;
     color: var(--text-primary);
+    font-size: 0.9em;  /* ADD THIS - makes text smaller */
 }
