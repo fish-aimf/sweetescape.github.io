@@ -45,6 +45,7 @@ class AdvancedMusicPlayer {
     this.timerAction = 'stopMusic';
     this.showDeleteButtons = true;  
     this.showUnfavoriteButtons = true;
+    this.showEditButtons = true; 
     this.globalLibrarySupabase = null;
     this.globalLibraryCurrentUser = null;
     this.globalLibraryArtists = [];
@@ -342,18 +343,22 @@ createPlaylistDiv: document.getElementById("createPlaylistDiv"),
       modifyLibraryBtn: document.getElementById("modifyLibraryBtn"),
     libraryOptionsDropdown: document.getElementById("libraryOptionsDropdown"),
     showDeleteBtn: document.getElementById("showDeleteBtn"),
-    showUnfavoriteBtn: document.getElementById("showUnfavoriteBtn")
+    showUnfavoriteBtn: document.getElementById("showUnfavoriteBtn"),
+      showEditBtn: document.getElementById("showEditBtn")
     };
     this.elements.modifyLibraryBtn.parentElement.addEventListener("mouseenter", 
     this.handleShowLibraryDropdown.bind(this));
 this.elements.modifyLibraryBtn.parentElement.addEventListener("mouseleave", 
     this.handleHideLibraryDropdown.bind(this));
+    
 
 // Checkbox events
 this.elements.showDeleteBtn.addEventListener("change", 
     this.handleToggleDeleteButtons.bind(this));
 this.elements.showUnfavoriteBtn.addEventListener("change", 
     this.handleToggleUnfavoriteButtons.bind(this));
+    this.elements.showEditBtn.addEventListener("change", 
+    this.handleToggleEditButtons.bind(this));
     this.elements.aiGeneratorDiv = document.getElementById("aiGeneratorDiv");
     
     this.elements.closeAiGenerator = document.getElementById("closeAiGenerator");
@@ -1003,6 +1008,10 @@ renderSongLibrary() {
         ? `<button class="remove-btn" data-song-id="${song.id}">Remove</button>`
         : '';
     
+    const editBtn = this.showEditButtons 
+        ? `<button class="edit-btn" data-song-id="${song.id}">Edit</button>`
+        : '';
+    
     songElement.innerHTML = `
         <span class="song-name" data-song-id="${song.id}">
             ${this.escapeHtml(song.name)}
@@ -1014,6 +1023,7 @@ renderSongLibrary() {
             ${favoriteBtn}
             <button class="play-btn" data-song-id="${song.id}">Play</button>
             ${deleteBtn}
+            ${editBtn}
         </div>
     `;
     
@@ -1029,6 +1039,7 @@ renderSongLibrary() {
     const favoriteBtn = songElement.querySelector(".favorite-btn");
     const playBtn = songElement.querySelector(".play-btn");
     const removeBtn = songElement.querySelector(".remove-btn");
+    const editBtn = songElement.querySelector(".edit-btn");
     const songNameSpan = songElement.querySelector(".song-name");
 
     if (favoriteBtn) {
@@ -1040,18 +1051,14 @@ renderSongLibrary() {
     if (removeBtn) {
         removeBtn.addEventListener("click", () => this.removeSong(song.id));
     }
+    
+    if (editBtn) {
+        editBtn.addEventListener("click", () => this.openSongEditModal(song.id));
+    }
 
-    let clickTimeout;
+    // Single click on song name plays the song
     songNameSpan.addEventListener("click", () => {
-        if (clickTimeout) {
-            clearTimeout(clickTimeout);
-            clickTimeout = null;
-            this.openSongEditModal(song.id);
-        } else {
-            clickTimeout = setTimeout(() => {
-                clickTimeout = null;
-            }, 300);
-        }
+        this.playSong(song.id);
     });
 }
   filterLibrarySongs() {
@@ -9477,6 +9484,12 @@ handleToggleUnfavoriteButtons(e) {
     this.renderSongLibrary();
 }
 
+handleToggleEditButtons(e) {
+    this.showEditButtons = e.target.checked;
+    this.saveLibraryDisplaySettings();
+    this.renderSongLibrary();
+}
+
 saveLibraryDisplaySettings() {
     if (!this.db) return;
     const transaction = this.db.transaction(["userSettings"], "readwrite");
@@ -9484,7 +9497,8 @@ saveLibraryDisplaySettings() {
     store.put({
         category: "libraryDisplay",
         showDeleteButtons: this.showDeleteButtons,
-        showUnfavoriteButtons: this.showUnfavoriteButtons
+        showUnfavoriteButtons: this.showUnfavoriteButtons,
+        showEditButtons: this.showEditButtons
     });
 }
 
@@ -9499,14 +9513,16 @@ loadLibraryDisplaySettings() {
         const request = store.get("libraryDisplay");
         
         request.onsuccess = () => {
-            if (request.result) {
-                this.showDeleteButtons = request.result.showDeleteButtons ?? true;
-                this.showUnfavoriteButtons = request.result.showUnfavoriteButtons ?? true;
-                this.elements.showDeleteBtn.checked = this.showDeleteButtons;
-                this.elements.showUnfavoriteBtn.checked = this.showUnfavoriteButtons;
-            }
-            resolve();
-        };
+          if (request.result) {
+              this.showDeleteButtons = request.result.showDeleteButtons ?? true;
+              this.showUnfavoriteButtons = request.result.showUnfavoriteButtons ?? true;
+              this.showEditButtons = request.result.showEditButtons ?? true;  // ADD THIS
+              this.elements.showDeleteBtn.checked = this.showDeleteButtons;
+              this.elements.showUnfavoriteBtn.checked = this.showUnfavoriteButtons;
+              this.elements.showEditBtn.checked = this.showEditButtons;  // ADD THIS
+          }
+          resolve();
+      };
         
         request.onerror = () => resolve();
     });
