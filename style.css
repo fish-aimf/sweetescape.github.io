@@ -6528,3 +6528,11 @@ body:has(#ytPlayer.fullscreen-video) {
     align-items: center; /* ADD THIS */
 }
 
+.details-item-subtitle {
+    font-size: 0.85em;
+    color: var(--text-secondary, #888);
+    margin-top: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
