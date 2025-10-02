@@ -186,9 +186,11 @@ this.globalLibrarySearchFilter = '';
         ]);
       })
       .then(() => {
+        this.initializeElements();
+        this.syncLibraryDisplayUI(); 
         this.setupYouTubePlayer();
         this.loadQueue();
-        this.initializeElements();
+        
         this.setupEventListeners();
         this.initializeTheme();
         this.initializeAutoplay();
@@ -9513,19 +9515,26 @@ loadLibraryDisplaySettings() {
         const request = store.get("libraryDisplay");
         
         request.onsuccess = () => {
-          if (request.result) {
-              this.showDeleteButtons = request.result.showDeleteButtons ?? true;
-              this.showUnfavoriteButtons = request.result.showUnfavoriteButtons ?? true;
-              this.showEditButtons = request.result.showEditButtons ?? true;  // ADD THIS
-              this.elements.showDeleteBtn.checked = this.showDeleteButtons;
-              this.elements.showUnfavoriteBtn.checked = this.showUnfavoriteButtons;
-              this.elements.showEditBtn.checked = this.showEditButtons;  // ADD THIS
-          }
-          resolve();
-      };
+            if (request.result) {
+                this.showDeleteButtons = request.result.showDeleteButtons ?? true;
+                this.showUnfavoriteButtons = request.result.showUnfavoriteButtons ?? true;
+                this.showEditButtons = request.result.showEditButtons ?? true;
+            }
+            // Don't try to update UI elements here - they don't exist yet
+            resolve();
+        };
         
         request.onerror = () => resolve();
     });
+}
+
+
+syncLibraryDisplayUI() {
+    if (this.elements && this.elements.showDeleteBtn) {
+        this.elements.showDeleteBtn.checked = this.showDeleteButtons;
+        this.elements.showUnfavoriteBtn.checked = this.showUnfavoriteButtons;
+        this.elements.showEditBtn.checked = this.showEditButtons;
+    }
 }
 
 
