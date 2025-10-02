@@ -4539,10 +4539,14 @@ removeGhostPreview() {
   saveRecentlyPlayedSong(song) {
     if (!this.db || !song) return;
     
+    // Check if currently playing from a playlist
+    if (this.currentPlaylist) {
+        // Save as playlist instead of individual song
         this.saveRecentlyPlayedPlaylist(this.currentPlaylist);
         return;
     }
     
+    // Continue with regular song saving
     const songData = {
       id: song.id,
       name: song.name,
@@ -4552,9 +4556,11 @@ removeGhostPreview() {
         `https://img.youtube.com/vi/${song.videoId}/default.jpg`,
       timestamp: Date.now(),
     };
+    
     const transaction = this.db.transaction(["recentlyPlayed"], "readwrite");
     const store = transaction.objectStore("recentlyPlayed");
     const request = store.get("songs");
+    
     request.onsuccess = () => {
       let recentlyPlayedSongs = [];
       if (request.result && Array.isArray(request.result.items)) {
@@ -4575,10 +4581,11 @@ removeGhostPreview() {
       });
       this.renderAdditionalDetails();
     };
+    
     request.onerror = (event) => {
       console.warn("Error updating recently played songs:", event.target.error);
     };
-  }
+}
   saveRecentlyPlayedPlaylist(playlist) {
     if (!this.db || !playlist) return;
     
