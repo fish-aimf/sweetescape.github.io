@@ -317,5 +317,6 @@
 - many changes, reduced clutter by adding a dropdown of modify library to remove the non essential. v43.0.0
 - made clicking on the song name also play it. v43.1.0
 - made playing a playlist show its name, last youtube thumbnail and the songname. v43.2.0
-- made it also appear in recently played sonsg. v43.3.0
+- made it also appear in recently played song. v43.3.0
 - various bug fixes. v43.3.1
+- fixed unaligned styles of dropdown. v43.4.0
