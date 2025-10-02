@@ -6481,12 +6481,14 @@ body:has(#ytPlayer.fullscreen-video) {
     border: 1px solid var(--border-color);
     border-radius: 4px;
     padding: 12px;
-    margin-top: 5px;
+    padding-top: 17px;
+    margin-top: -5px;
     box-shadow: 0 4px 6px var(--shadow-color);
     z-index: 1000;
     min-width: 200px;
     display: none;
 }
+
 
 .library-options-dropdown.show {
     display: block;
@@ -6507,6 +6509,9 @@ body:has(#ytPlayer.fullscreen-video) {
 .library-option-item input[type="checkbox"] {
     margin-right: 10px;
     cursor: pointer;
+    width: 18px;           
+    height: 18px;          
+    flex-shrink: 0;        
 }
 
 .library-option-item label {
