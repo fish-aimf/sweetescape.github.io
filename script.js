@@ -4556,6 +4556,14 @@ removeGhostPreview() {
   }
   saveRecentlyPlayedSong(song) {
     if (!this.db || !song) return;
+    
+    // Check if currently playing from a playlist
+    if (this.currentPlaylist) {
+        // Save as playlist instead of individual song
+        this.saveRecentlyPlayedPlaylist(this.currentPlaylist);
+        return;
+    }
+    
     const songData = {
       id: song.id,
       name: song.name,
@@ -4594,24 +4602,59 @@ removeGhostPreview() {
   }
   saveRecentlyPlayedPlaylist(playlist) {
     if (!this.db || !playlist) return;
-    this.recentlyPlayedPlaylists = [];
+    
+    const currentSong = playlist.songs[this.currentSongIndex];
+    
     const playlistData = {
       id: playlist.id,
       name: playlist.name,
       timestamp: Date.now(),
+      currentSongName: currentSong ? currentSong.name : '',
+      thumbnailUrl: currentSong ? 
+        (currentSong.thumbnailUrl || `https://img.youtube.com/vi/${currentSong.videoId}/default.jpg`) : 
+        ''
     };
-    this.recentlyPlayedPlaylists.push(playlistData);
+    
     try {
       const transaction = this.db.transaction(["recentlyPlayed"], "readwrite");
       const store = transaction.objectStore("recentlyPlayed");
-      store.put({
-        type: "playlists",
-        items: this.recentlyPlayedPlaylists,
-      });
+      const request = store.get("playlists");
+      
+      request.onsuccess = () => {
+        let recentlyPlayedPlaylists = [];
+        if (request.result && Array.isArray(request.result.items)) {
+          recentlyPlayedPlaylists = request.result.items;
+        }
+        
+        // Remove existing entry for this playlist
+        recentlyPlayedPlaylists = recentlyPlayedPlaylists.filter(
+          (item) => item.id !== playlist.id
+        );
+        
+        // Add to front
+        recentlyPlayedPlaylists.unshift(playlistData);
+        
+        // Limit to 20 playlists
+        if (recentlyPlayedPlaylists.length > 20) {
+          recentlyPlayedPlaylists = recentlyPlayedPlaylists.slice(0, 20);
+        }
+        
+        this.recentlyPlayedPlaylists = recentlyPlayedPlaylists;
+        
+        store.put({
+          type: "playlists",
+          items: recentlyPlayedPlaylists,
+        });
+        
+        this.renderAdditionalDetails();
+      };
+      
+      request.onerror = (event) => {
+        console.warn("Error updating recently played playlists:", event.target.error);
+      };
     } catch (error) {
       console.warn("Error saving recently played playlist:", error);
     }
-    this.renderAdditionalDetails();
   }
   renderAdditionalDetails() {
     if (!this.elements.additionalDetails) return;
@@ -4795,13 +4838,23 @@ createDetailsSection(title, items, type) {
         const thumbnail = document.createElement("div");
         thumbnail.classList.add("details-item-thumbnail");
         if (type === "song") {
+    const thumbnailImg = document.createElement("img");
+    thumbnailImg.src =
+        item.thumbnailUrl ||
+        `https://img.youtube.com/vi/${item.videoId}/default.jpg`;
+    thumbnailImg.alt = item.name;
+    thumbnailImg.onerror = function () {
+        this.src = "https://placehold.it/120x90/333/fff?text=No+Image";
+    };
+    thumbnail.appendChild(thumbnailImg);
+    } else {
+        // Playlist - show thumbnail if available
+        if (item.thumbnailUrl) {
             const thumbnailImg = document.createElement("img");
-            thumbnailImg.src =
-                item.thumbnailUrl ||
-                `https://img.youtube.com/vi/${item.videoId}/default.jpg`;
+            thumbnailImg.src = item.thumbnailUrl;
             thumbnailImg.alt = item.name;
             thumbnailImg.onerror = function () {
-                this.src = "https://placehold.it/120x90/333/fff?text=No+Image";
+                this.src = "https://placehold.it/120x90/333/fff?text=Playlist";
             };
             thumbnail.appendChild(thumbnailImg);
         } else {
@@ -4809,12 +4862,24 @@ createDetailsSection(title, items, type) {
             playlistIcon.classList.add("fa", "fa-list");
             thumbnail.appendChild(playlistIcon);
         }
+    }
         const itemInfo = document.createElement("div");
-        itemInfo.classList.add("details-item-info");
-        const itemName = document.createElement("div");
-        itemName.classList.add("details-item-name");
-        itemName.textContent = item.name;
-        itemInfo.appendChild(itemName);
+itemInfo.classList.add("details-item-info");
+const itemName = document.createElement("div");
+itemName.classList.add("details-item-name");
+itemName.textContent = item.name;
+itemInfo.appendChild(itemName);
+
+// Add current song name for playlists
+if (type === "playlist" && item.currentSongName) {
+    const currentSongDiv = document.createElement("div");
+    currentSongDiv.classList.add("details-item-subtitle");
+    currentSongDiv.textContent = item.currentSongName;
+    currentSongDiv.style.fontSize = "0.85em";
+    currentSongDiv.style.color = "var(--text-secondary, #888)";
+    currentSongDiv.style.marginTop = "4px";
+    itemInfo.appendChild(currentSongDiv);
+}
         itemElement.addEventListener("click", (e) => {
             e.preventDefault();
             if (type === "song") {
