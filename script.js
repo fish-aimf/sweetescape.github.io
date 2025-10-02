@@ -4686,13 +4686,15 @@ removeGhostPreview() {
         this.elements.additionalDetails.appendChild(currentSongSection);
     }
     this.updateCurrentSongDisplay();
-    if (this.recentlyPlayedSongs.length > 0) {
-        this.createDetailsSection(
-            "Recently Listened To",
-            this.recentlyPlayedSongs.slice(0, this.recentlyPlayedDisplayLimit || 3),
-            "song"
-        );
-    }
+    // Combine songs and playlists for Recently Listened To
+const recentlyListenedItems = this.getCombinedRecentlyPlayed();
+if (recentlyListenedItems.length > 0) {
+    this.createDetailsSection(
+        "Recently Listened To",
+        recentlyListenedItems.slice(0, this.recentlyPlayedDisplayLimit || 3),
+        "mixed"
+    );
+}
     if (this.songLibrary.length > 0) {
         this.createDetailsSection(
             "Suggested",
@@ -4715,6 +4717,31 @@ removeGhostPreview() {
             "playlist"
         );
     }
+}
+  getCombinedRecentlyPlayed() {
+    // Combine songs and playlists, then sort by timestamp
+    const combined = [];
+    
+    // Add songs with type marker
+    this.recentlyPlayedSongs.forEach(song => {
+        combined.push({
+            ...song,
+            itemType: 'song'
+        });
+    });
+    
+    // Add playlists with type marker
+    this.recentlyPlayedPlaylists.forEach(playlist => {
+        combined.push({
+            ...playlist,
+            itemType: 'playlist'
+        });
+    });
+    
+    // Sort by timestamp (most recent first)
+    combined.sort((a, b) => b.timestamp - a.timestamp);
+    
+    return combined;
 }
   updateCurrentSongDisplay() {
     if (!this.currentSong) {
@@ -4829,15 +4856,19 @@ createDetailsSection(title, items, type) {
     const itemsList = document.createElement("div");
     itemsList.classList.add("details-items-list");
     items.forEach((item) => {
-        const itemElement = document.createElement("div");
-        itemElement.classList.add("details-item");
-        if (type === "song") {
-            itemElement.setAttribute("data-video-id", item.videoId);
-            itemElement.setAttribute("data-song-id", item.id);
-        }
+    const itemElement = document.createElement("div");
+    itemElement.classList.add("details-item");
+    
+    // Determine actual item type
+    const actualType = type === "mixed" ? item.itemType : type;
+    
+    if (actualType === "song") {
+        itemElement.setAttribute("data-video-id", item.videoId);
+        itemElement.setAttribute("data-song-id", item.id);
+    }
         const thumbnail = document.createElement("div");
         thumbnail.classList.add("details-item-thumbnail");
-        if (type === "song") {
+        if (actualType === "song") {
     const thumbnailImg = document.createElement("img");
     thumbnailImg.src =
         item.thumbnailUrl ||
@@ -4847,22 +4878,22 @@ createDetailsSection(title, items, type) {
         this.src = "https://placehold.it/120x90/333/fff?text=No+Image";
     };
     thumbnail.appendChild(thumbnailImg);
+} else {
+    // Playlist - show thumbnail if available
+    if (item.thumbnailUrl) {
+        const thumbnailImg = document.createElement("img");
+        thumbnailImg.src = item.thumbnailUrl;
+        thumbnailImg.alt = item.name;
+        thumbnailImg.onerror = function () {
+            this.src = "https://placehold.it/120x90/333/fff?text=Playlist";
+        };
+        thumbnail.appendChild(thumbnailImg);
     } else {
-        // Playlist - show thumbnail if available
-        if (item.thumbnailUrl) {
-            const thumbnailImg = document.createElement("img");
-            thumbnailImg.src = item.thumbnailUrl;
-            thumbnailImg.alt = item.name;
-            thumbnailImg.onerror = function () {
-                this.src = "https://placehold.it/120x90/333/fff?text=Playlist";
-            };
-            thumbnail.appendChild(thumbnailImg);
-        } else {
-            const playlistIcon = document.createElement("i");
-            playlistIcon.classList.add("fa", "fa-list");
-            thumbnail.appendChild(playlistIcon);
-        }
+        const playlistIcon = document.createElement("i");
+        playlistIcon.classList.add("fa", "fa-list");
+        thumbnail.appendChild(playlistIcon);
     }
+}
         const itemInfo = document.createElement("div");
 itemInfo.classList.add("details-item-info");
 const itemName = document.createElement("div");
@@ -4871,7 +4902,8 @@ itemName.textContent = item.name;
 itemInfo.appendChild(itemName);
 
 // Add current song name for playlists
-if (type === "playlist" && item.currentSongName) {
+// Add current song name for playlists
+if (actualType === "playlist" && item.currentSongName) {
     const currentSongDiv = document.createElement("div");
     currentSongDiv.classList.add("details-item-subtitle");
     currentSongDiv.textContent = item.currentSongName;
@@ -4881,21 +4913,22 @@ if (type === "playlist" && item.currentSongName) {
     itemInfo.appendChild(currentSongDiv);
 }
         itemElement.addEventListener("click", (e) => {
-            e.preventDefault();
-            if (type === "song") {
-                this.playSong(item.id);
-            } else {
-                this.playPlaylist(item.id);
-            }
-        });
-        if (type === "song") {
-            itemElement.addEventListener("contextmenu", (e) => {
-                e.preventDefault();
-                this.addToQueue(item);
-            });
-            itemElement.style.cursor = "pointer";
-            itemElement.title = "Left click to play, right click to add to queue";
-        }
+    e.preventDefault();
+    if (actualType === "song") {
+        this.playSong(item.id);
+    } else {
+        this.playPlaylist(item.id);
+    }
+});
+
+if (actualType === "song") {
+    itemElement.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        this.addToQueue(item);
+    });
+    itemElement.style.cursor = "pointer";
+    itemElement.title = "Left click to play, right click to add to queue";
+}
         itemElement.appendChild(thumbnail);
         itemElement.appendChild(itemInfo);
         itemsList.appendChild(itemElement);
