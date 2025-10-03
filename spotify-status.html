@@ -43,6 +43,7 @@
         .item h3 { font-size: 14px; margin-bottom: 5px; }
         .item p { font-size: 12px; color: #b3b3b3; }
         .loading { text-align: center; padding: 40px; font-size: 18px; }
+        .error { text-align: center; padding: 40px; color: #ff6b6b; }
         .rank { 
             background: #1DB954;
             width: 30px;
@@ -65,61 +66,77 @@
     <script>
         const CLIENT_ID = '0cef316d5f414b01acd24d4511a7b063';
         const CLIENT_SECRET = '14d9ef4bb5744aaeafdc690a8ac2f00f';
-        let token = '';
 
         async function getToken() {
-            const res = await fetch('https://accounts.spotify.com/api/token', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Authorization': 'Basic ' + btoa(CLIENT_ID + ':' + CLIENT_SECRET)
-                },
-                body: 'grant_type=client_credentials'
-            });
-            const data = await res.json();
-            return data.access_token;
-        }
-
-        async function fetchSpotify(endpoint) {
-            const res = await fetch(`https://api.spotify.com/v1/${endpoint}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            return res.json();
+            try {
+                const res = await fetch('https://accounts.spotify.com/api/token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': 'Basic ' + btoa(CLIENT_ID + ':' + CLIENT_SECRET)
+                    },
+                    body: 'grant_type=client_credentials'
+                });
+                const data = await res.json();
+                return data.access_token;
+            } catch (e) {
+                console.error('Token error:', e);
+                return null;
+            }
         }
 
         async function loadData() {
-            token = await getToken();
-            
-            // Global Top 50 playlist
-            const globalTop = await fetchSpotify('playlists/37i9dQZEVXbMDoHDwVN2tF');
-            const tracks = globalTop.tracks.items.slice(0, 20);
+            try {
+                const token = await getToken();
+                if (!token) throw new Error('Failed to get token');
 
-            // Featured playlists
-            const featured = await fetchSpotify('browse/featured-playlists?limit=10');
+                const headers = { 'Authorization': `Bearer ${token}` };
 
-            let html = '<div class="section"><h2>🌍 Global Top 20 Songs</h2><div class="grid">';
-            tracks.forEach((item, i) => {
-                const t = item.track;
-                html += `<div class="item">
-                    <div class="rank">${i + 1}</div>
-                    <img src="${t.album.images[0]?.url || ''}" alt="${t.name}">
-                    <h3>${t.name}</h3>
-                    <p>${t.artists.map(a => a.name).join(', ')}</p>
-                </div>`;
-            });
-            html += '</div></div>';
+                // Get new releases (albums)
+                const newReleases = await fetch('https://api.spotify.com/v1/browse/new-releases?limit=20', { headers }).then(r => r.json());
+                
+                // Get featured playlists
+                const featured = await fetch('https://api.spotify.com/v1/browse/featured-playlists?limit=12', { headers }).then(r => r.json());
 
-            html += '<div class="section"><h2>🔥 Featured Playlists</h2><div class="grid">';
-            featured.playlists.items.forEach(p => {
-                html += `<div class="item">
-                    <img src="${p.images[0]?.url || ''}" alt="${p.name}">
-                    <h3>${p.name}</h3>
-                    <p>${p.description || 'Spotify Playlist'}</p>
-                </div>`;
-            });
-            html += '</div></div>';
+                // Get categories
+                const categories = await fetch('https://api.spotify.com/v1/browse/categories?limit=12', { headers }).then(r => r.json());
 
-            document.getElementById('content').innerHTML = html;
+                let html = '<div class="section"><h2>🎵 New Releases</h2><div class="grid">';
+                newReleases.albums.items.forEach((album, i) => {
+                    html += `<div class="item">
+                        <div class="rank">${i + 1}</div>
+                        <img src="${album.images[0]?.url || ''}" alt="${album.name}">
+                        <h3>${album.name}</h3>
+                        <p>${album.artists.map(a => a.name).join(', ')}</p>
+                    </div>`;
+                });
+                html += '</div></div>';
+
+                html += '<div class="section"><h2>🔥 Featured Playlists</h2><div class="grid">';
+                featured.playlists.items.forEach(p => {
+                    html += `<div class="item">
+                        <img src="${p.images[0]?.url || ''}" alt="${p.name}">
+                        <h3>${p.name}</h3>
+                        <p>${p.description || 'Spotify Playlist'}</p>
+                    </div>`;
+                });
+                html += '</div></div>';
+
+                html += '<div class="section"><h2>🎼 Browse Categories</h2><div class="grid">';
+                categories.categories.items.forEach(c => {
+                    html += `<div class="item">
+                        <img src="${c.icons[0]?.url || ''}" alt="${c.name}">
+                        <h3>${c.name}</h3>
+                    </div>`;
+                });
+                html += '</div></div>';
+
+                document.getElementById('content').innerHTML = html;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('content').innerHTML = 
+                    `<div class="error">Error loading data. Please check console for details.<br>Error: ${error.message}</div>`;
+            }
         }
 
         loadData();
