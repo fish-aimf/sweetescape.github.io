@@ -320,3 +320,4 @@
 - made it also appear in recently played song. v43.3.0
 - various bug fixes. v43.3.1
 - fixed unaligned styles of dropdown. v43.4.0
+- fixed some tooltip displays so they display the right messages v43.5.0
