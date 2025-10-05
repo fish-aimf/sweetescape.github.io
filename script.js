@@ -2276,9 +2276,9 @@ onPlayerStateChange(event) {
         console.log("Song ended - taking immediate action");
         setTimeout(() => {
             if (this.isLooping) {
-                const currentVideoId = this.getCurrentVideoId();
-                if (currentVideoId) {
-                    this.playSongById(currentVideoId);
+                // Efficient loop - just restart the video
+                if (this.ytPlayer) {
+                    this.ytPlayer.seekTo(0, true);
                 }
             } else if (this.isAutoplayEnabled) {
                 this.playNextSong();
@@ -2329,37 +2329,7 @@ onPlayerStateChange(event) {
         this.visualizer.isActive = true;
     }
 }
-  handleSongEnd() {
-  this.clearAllIntervals();
-  if (this.elements.progressBar) {
-    this.elements.progressBar.value = 0;
-  }
-  if (this.elements.timeDisplay) {
-    this.elements.timeDisplay.textContent = "0:00/0:00";
-  }
-  if (this.isLooping) {
-    console.log("Looping current song");
-    const currentVideoId = this.getCurrentVideoId();
-    if (currentVideoId) {
-      this.playSongById(currentVideoId);
-    }
-  } else if (this.isAutoplayEnabled) {
-    console.log("Autoplay enabled - calling playNextSong()");
-    this.playNextSong();
-  } else {
-    console.log("Autoplay disabled - stopping playback");
-    this.isPlaying = false;
-    if (this.ytPlayer) {
-      try {
-        this.ytPlayer.stopVideo();
-      } catch (error) {
-        console.warn("Error stopping video:", error);
-      }
-    }
-    this.updatePlayerUI();
-    this.updatePageTitle();
-  }
-}
+ 
   getCurrentVideoId() {
   if (!this.ytPlayer || !this.ytPlayer.getVideoData) return null;
   try {
@@ -2390,19 +2360,7 @@ onPlayerStateChange(event) {
     }
   });
 }
-clearNonEssentialIntervals() {
-  const intervals = [
-    'titleScrollInterval',
-    'lyricsInterval', 
-    'fullscreenLyricsInterval'
-  ];
-  intervals.forEach(intervalName => {
-    if (this[intervalName]) {
-      clearInterval(this[intervalName]);
-      this[intervalName] = null;
-    }
-  });
-}
+
   toggleLoop() {
     this.isLooping = !this.isLooping;
     this.elements.loopBtn.classList.toggle("active", this.isLooping);
