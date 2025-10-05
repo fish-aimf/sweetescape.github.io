@@ -321,3 +321,4 @@
 - various bug fixes. v43.3.1
 - fixed unaligned styles of dropdown. v43.4.0
 - fixed some tooltip displays so they display the right messages v43.5.0
+- onplayerstate change loop no longer reloads the whole video, it just sets video time to 0 and continue. this saves significant resources v43.5.1
