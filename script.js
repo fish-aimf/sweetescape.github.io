@@ -4723,6 +4723,23 @@ if (recentlyListenedItems.length > 0) {
             "playlist"
         );
     }
+    
+    this.attachCurrentSongClickListener();
+}
+  attachCurrentSongClickListener() {
+    const currentSongSection = document.getElementById('currentSongSection');
+    if (currentSongSection) {
+        // Remove old listener if exists
+        const newSection = currentSongSection.cloneNode(true);
+        currentSongSection.parentNode.replaceChild(newSection, currentSongSection);
+        
+        // Add new listener
+        newSection.style.cursor = 'pointer';
+        newSection.addEventListener('click', () => {
+            console.log('Current Song Section clicked!');
+            this.openMusicCover();
+        });
+    }
 }
   getCombinedRecentlyPlayed() {
     const combined = [];
@@ -4762,6 +4779,7 @@ if (recentlyListenedItems.length > 0) {
     if (authorElement) {
         authorElement.textContent = this.currentSong.author || '';
     }
+    this.attachCurrentSongClickListener();
 }
 showCurrentSongSection() {
     const currentSongSection = document.getElementById('currentSongSection');
@@ -9627,6 +9645,15 @@ updateMusicCover() {
     // Update toggle buttons
     this.elements.coverLoopBtn.classList.toggle('active', this.isLooping);
     this.elements.coverAutoplayBtn.classList.toggle('active', this.isAutoplayEnabled);
+}
+
+
+  // Add this temporary debug method to your class
+debugMusicCover() {
+    console.log('Music Cover Element:', this.elements.musicCover);
+    console.log('Current Song:', this.currentSong);
+    console.log('Current Song Section:', document.getElementById('currentSongSection'));
+    console.log('isMusicCoverVisible:', this.isMusicCoverVisible);
 }
 
 
