@@ -323,3 +323,4 @@
 - fixed some tooltip displays so they display the right messages v43.5.0
 - onplayerstate change loop no longer reloads the whole video, it just sets video time to 0 and continue. this saves significant resources v43.5.1
 - plan some changes, like a music cover v43.5.1
+- reordered formatted code v43.5.2
