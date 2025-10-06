@@ -36,7 +36,6 @@ class AdvancedMusicPlayer {
     this.isLyricsFullscreen = false;
     this.fullscreenYtPlayer = null;
     this.fullscreenLyricsInterval = null;
-    this.isMusicCoverVisible = false;
     this.adsEnabled = false; 
     this.recentlyPlayedDisplayLimit = 3;
     this.suggestedSongsDisplayLimit = 2;
@@ -347,8 +346,7 @@ createPlaylistDiv: document.getElementById("createPlaylistDiv"),
     libraryOptionsDropdown: document.getElementById("libraryOptionsDropdown"),
     showDeleteBtn: document.getElementById("showDeleteBtn"),
     showUnfavoriteBtn: document.getElementById("showUnfavoriteBtn"),
-      showEditBtn: document.getElementById("showEditBtn"),
-      
+      showEditBtn: document.getElementById("showEditBtn")
     };
     this.elements.modifyLibraryBtn.parentElement.addEventListener("mouseenter", 
     this.handleShowLibraryDropdown.bind(this));
@@ -378,20 +376,6 @@ this.elements.findSongsDiv = document.getElementById("findSongsDiv");
 this.elements.findSongsSearch = document.getElementById("findSongsSearch");
 this.elements.findSongsResults = document.getElementById("findSongsResults");
 this.elements.notFindingSection = document.getElementById("notFindingSection");
-    this.elements.musicCover = document.getElementById('musicCover');
-    this.elements.coverArtwork = document.getElementById('coverArtwork');
-    this.elements.coverSongTitle = document.getElementById('coverSongTitle');
-    this.elements.coverSongAuthor = document.getElementById('coverSongAuthor');
-    this.elements.coverPlaylistName = document.getElementById('coverPlaylistName');
-    this.elements.coverPlayPauseBtn = document.getElementById('coverPlayPauseBtn');
-    this.elements.coverPrevBtn = document.getElementById('coverPrevBtn');
-    this.elements.coverNextBtn = document.getElementById('coverNextBtn');
-    this.elements.coverLoopBtn = document.getElementById('coverLoopBtn');
-    this.elements.coverAutoplayBtn = document.getElementById('coverAutoplayBtn');
-    this.elements.coverShowPlaylistBtn = document.getElementById('coverShowPlaylistBtn');
-    this.elements.coverProgressBar = document.getElementById('coverProgressBar');
-    this.elements.coverTimeDisplay = document.getElementById('coverTimeDisplay');
-    this.elements.closeMusicCover = document.getElementById('closeMusicCover');
     if (this.elements.speedBtn) {
       this.elements.speedBtn.textContent = this.currentSpeed + "x";
     }
@@ -584,42 +568,6 @@ this.elements.closeFindSongs?.addEventListener("click", this.closeFindSongs.bind
         }
       }
     });
-
-    if (this.elements.coverPlayPauseBtn) {
-        this.elements.coverPlayPauseBtn.addEventListener('click', this.handleTogglePlayPause);
-    }
-    if (this.elements.coverPrevBtn) {
-        this.elements.coverPrevBtn.addEventListener('click', this.handlePlayPrevious);
-    }
-    if (this.elements.coverNextBtn) {
-        this.elements.coverNextBtn.addEventListener('click', this.handlePlayNext);
-    }
-    if (this.elements.coverLoopBtn) {
-        this.elements.coverLoopBtn.addEventListener('click', this.handleToggleLoop);
-    }
-    if (this.elements.coverAutoplayBtn) {
-        this.elements.coverAutoplayBtn.addEventListener('click', () => this.toggleAutoplay());
-    }
-    if (this.elements.coverShowPlaylistBtn) {
-        this.elements.coverShowPlaylistBtn.addEventListener('click', this.handleToggleSidebar);
-    }
-    if (this.elements.coverProgressBar) {
-        this.elements.coverProgressBar.addEventListener('input', this.handleSeekMusic);
-        this.elements.coverProgressBar.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
-        this.elements.coverProgressBar.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
-        this.elements.coverProgressBar.addEventListener('touchend', this.handleTouchEnd.bind(this));
-    }
-    if (this.elements.closeMusicCover) {
-        this.elements.closeMusicCover.addEventListener('click', () => this.closeMusicCover());
-    }
-    
-    // Make "Now Playing" section clickable
-    const currentSongSection = document.getElementById('currentSongSection');
-    if (currentSongSection) {
-        currentSongSection.style.cursor = 'pointer';
-        currentSongSection.addEventListener('click', () => this.openMusicCover());
-    }
-
     const eventBindings = [
       [this.elements.toggleControlBarBtn, "click", this.handleToggleControlBar],
       [this.elements.modifyLibraryBtn, "click", this.handleOpenLibraryModal],
@@ -842,46 +790,34 @@ settingsEventBindings.forEach(([element, event, handler], index) => {
   this.elements.progressBar.addEventListener('touchend', this.handleTouchEnd.bind(this));
 }
 updateProgressBar() {
-    if (!this.ytPlayer || !this.elements.progressBar) return;
-    
-    if (this.progressInterval) {
-        clearInterval(this.progressInterval);
-        this.progressInterval = null;
-    }
-    
-    this.progressInterval = setInterval(() => {
-        try {
-            if (!this.ytPlayer || this.ytPlayer.getPlayerState() !== YT.PlayerState.PLAYING) {
-                return;
-            }
-            
-            const currentTime = this.ytPlayer.getCurrentTime() || 0;
-            const duration = this.ytPlayer.getDuration() || 0;
-            
-            if (duration > 0) {
-                const progressPercent = (currentTime / duration) * 100;
-                this.elements.progressBar.value = progressPercent;
-                
-                // Update cover progress bar too
-                if (this.elements.coverProgressBar && this.isMusicCoverVisible) {
-                    this.elements.coverProgressBar.value = progressPercent;
-                }
-                
-                if (this.elements.timeDisplay) {
-                    const formattedCurrentTime = this.formatTime(currentTime);
-                    const formattedDuration = this.formatTime(duration);
-                    this.elements.timeDisplay.textContent = `${formattedCurrentTime}/${formattedDuration}`;
-                    
-                    // Update cover time display too
-                    if (this.elements.coverTimeDisplay && this.isMusicCoverVisible) {
-                        this.elements.coverTimeDisplay.textContent = `${formattedCurrentTime}/${formattedDuration}`;
-                    }
-                }
-            }
-        } catch (error) {
-            console.error("Error updating progress bar:", error);
+  if (!this.ytPlayer || !this.elements.progressBar) return;
+  if (this.progressInterval) {
+    clearInterval(this.progressInterval);
+    this.progressInterval = null;
+  }
+  this.progressInterval = setInterval(() => {
+    try {
+      if (
+        !this.ytPlayer ||
+        this.ytPlayer.getPlayerState() !== YT.PlayerState.PLAYING
+      ) {
+        return;
+      }
+      const currentTime = this.ytPlayer.getCurrentTime() || 0;
+      const duration = this.ytPlayer.getDuration() || 0;
+      if (duration > 0) {
+        const progressPercent = (currentTime / duration) * 100;
+        this.elements.progressBar.value = progressPercent;
+        if (this.elements.timeDisplay) {
+          const formattedCurrentTime = this.formatTime(currentTime);
+          const formattedDuration = this.formatTime(duration);
+          this.elements.timeDisplay.textContent = `${formattedCurrentTime}/${formattedDuration}`;
         }
-    }, 500);
+      }
+    } catch (error) {
+      console.error("Error updating progress bar:", error);
+    }
+  }, 500);
 }
 seekMusic(e) {
   if (!this.ytPlayer) return;
@@ -2175,9 +2111,6 @@ updatePlayerUI() {
         this.renderPlaylistSidebar();
     }
     this.updatePageTitle();
-  if (this.isMusicCoverVisible) {
-        this.updateMusicCover();
-    }
 }
   escapeJsString(str) {
     if (!str) return "";
@@ -4723,23 +4656,6 @@ if (recentlyListenedItems.length > 0) {
             "playlist"
         );
     }
-    
-    this.attachCurrentSongClickListener();
-}
-  attachCurrentSongClickListener() {
-    const currentSongSection = document.getElementById('currentSongSection');
-    if (currentSongSection) {
-        // Remove old listener if exists
-        const newSection = currentSongSection.cloneNode(true);
-        currentSongSection.parentNode.replaceChild(newSection, currentSongSection);
-        
-        // Add new listener
-        newSection.style.cursor = 'pointer';
-        newSection.addEventListener('click', () => {
-            console.log('Current Song Section clicked!');
-            this.openMusicCover();
-        });
-    }
 }
   getCombinedRecentlyPlayed() {
     const combined = [];
@@ -4779,7 +4695,6 @@ if (recentlyListenedItems.length > 0) {
     if (authorElement) {
         authorElement.textContent = this.currentSong.author || '';
     }
-    this.attachCurrentSongClickListener();
 }
 showCurrentSongSection() {
     const currentSongSection = document.getElementById('currentSongSection');
@@ -9595,78 +9510,6 @@ syncLibraryDisplayUI() {
         this.elements.showUnfavoriteBtn.checked = this.showUnfavoriteButtons;
         this.elements.showEditBtn.checked = this.showEditButtons;
     }
-}
-
-    openMusicCover() {
-    console.log('openMusicCover called');
-    console.log('musicCover element:', this.elements.musicCover);
-    console.log('currentSong:', this.currentSong);
-    
-    if (!this.elements.musicCover) {
-        console.error('Music cover element not found!');
-        alert('Music cover element not initialized');
-        return;
-    }
-    
-    if (!this.currentSong) {
-        alert('No song is currently playing');
-        return;
-    }
-    
-    this.updateMusicCover();
-    this.elements.musicCover.classList.add('visible');
-    this.isMusicCoverVisible = true;
-    
-    console.log('Music cover should now be visible');
-    console.log('classList:', this.elements.musicCover.classList);
-}
-
-// New method: Close Music Cover
-closeMusicCover() {
-    this.elements.musicCover.classList.remove('visible');
-    this.isMusicCoverVisible = false;
-}
-
-// New method: Update Music Cover Display
-updateMusicCover() {
-    if (!this.currentSong) return;
-    
-    // Update artwork
-    const thumbnailUrl = this.currentSong.thumbnailUrl || 
-        `https://img.youtube.com/vi/${this.currentSong.videoId}/maxresdefault.jpg`;
-    this.elements.coverArtwork.src = thumbnailUrl;
-    
-    // Update song info
-    this.elements.coverSongTitle.textContent = this.currentSong.name || 'Unknown Title';
-    this.elements.coverSongAuthor.textContent = this.currentSong.author || 'Unknown Artist';
-    
-    // Update playlist name
-    if (this.currentPlaylist) {
-        this.elements.coverPlaylistName.textContent = `Playlist: ${this.currentPlaylist.name}`;
-        this.elements.coverPlaylistName.style.display = 'block';
-    } else {
-        this.elements.coverPlaylistName.style.display = 'none';
-    }
-    
-    // Update play/pause button
-    const coverPlayPauseIcon = this.elements.coverPlayPauseBtn.querySelector('i');
-    if (coverPlayPauseIcon) {
-        coverPlayPauseIcon.classList.remove('fa-play', 'fa-pause');
-        coverPlayPauseIcon.classList.add(this.isPlaying ? 'fa-pause' : 'fa-play');
-    }
-    
-    // Update toggle buttons
-    this.elements.coverLoopBtn.classList.toggle('active', this.isLooping);
-    this.elements.coverAutoplayBtn.classList.toggle('active', this.isAutoplayEnabled);
-}
-
-
-  // Add this temporary debug method to your class
-debugMusicCover() {
-    console.log('Music Cover Element:', this.elements.musicCover);
-    console.log('Current Song:', this.currentSong);
-    console.log('Current Song Section:', document.getElementById('currentSongSection'));
-    console.log('isMusicCoverVisible:', this.isMusicCoverVisible);
 }
 
 
