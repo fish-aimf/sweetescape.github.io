@@ -1,1209 +1,1052 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- start of google analytics -->
-    <!-- Google tag (gtag.js) -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-QKSKJE9HVN"></script>
-        <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-        
-          gtag('config', 'G-QKSKJE9HVN');
-        </script>
-    <!-- End of Google Analytics -->
-    <meta charset="UTF-8">
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-
-
-    <meta property="og:title" content="sweetescape - music player">
-    <meta property="og:description" content="seamless ad-free music streaming packed with features">
-    <meta property="og:image" content="https://sweetescape.vercel.app/websitecover.png">
-    <meta property="og:url" content="https://sweetescape.vercel.app">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="sweetescape">
-    
-    <!-- Twitter Card Tags -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="sweetescape - a music player">
-    <meta name="twitter:description" content="seamless ad-free music streaming packed with features">
-    <meta name="twitter:image" content="https://sweetescape.vercel.app/websitecover.png">
-    
-    <!-- Additional Meta Tags for Better SEO -->
-    <meta name="description" content="seamless advertisement less music streaming packed with features">
-    <meta name="keywords" content="music player, streaming, ad-free, music, player">
-
-</head>
-
-<body>
-    <div class="music-visualizer" id="musicVisualizer">
-        <canvas class="visualizer-canvas" id="visualizerCanvas"></canvas>
-        <div class="visualizer-bars" id="visualizerBars"></div>
-    </div>
-    
-    
-       <div class="left-banner">
-        <iframe data-aa='2404119' src='//acceptable.a-ads.com/2404119' style='border:0px; padding:0; width:100%; height:100%; overflow:hidden; background-color: transparent;'></iframe>
-    </div>
-    
-    <!-- Right sidebar banner -->
-    <div class="right-banner">
-        <iframe data-aa='2404119' src='//acceptable.a-ads.com/2404119' style='border:0px; padding:0; width:100%; height:100%; overflow:hidden; background-color: transparent;'></iframe>
-    </div>
-        
-    <div class="app-container">
-        <div class="theme-toggle">
-                <button id="themeToggle" title="[P]click to cycle through light, dark, custom themes.">
-                    <i class="fas fa-moon"></i>
-                </button>
-                <button id="timerButton" class="timer-button" title="[T]Set timer to close app">
-                    <i class="fas fa-clock"></i>
-                    <span id="timerDisplay" class="timer-display"></span>
-                </button>
-                    <button id="discordButton" class="timer-button" title="Join our Discord">
-                          <i class="fab fa-discord"></i>
-                        </button>
-
-                <button id="settingsButton" class="settings-button" title="Open Settings">
-                    <i class="fas fa-cog"></i>
-                </button>
-            </div>
-        
-        <div class="listening-stats" title="Your listening time">
+   <head>
+      <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+      <!-- start of google analytics -->
+      <!-- Google tag (gtag.js) -->
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-QKSKJE9HVN"></script>
+      <script>
+         window.dataLayer = window.dataLayer || [];
+         function gtag(){dataLayer.push(arguments);}
+         gtag('js', new Date());
+         
+         gtag('config', 'G-QKSKJE9HVN');
+      </script>
+      <!-- End of Google Analytics -->
+      <meta charset="UTF-8">
+      <link rel="icon" type="image/svg+xml" href="favicon.svg">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Music</title>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+      <link rel="stylesheet" href="style.css">
+      <meta property="og:title" content="sweetescape - music player">
+      <meta property="og:description" content="seamless ad-free music streaming packed with features">
+      <meta property="og:image" content="https://sweetescape.vercel.app/websitecover.png">
+      <meta property="og:url" content="https://sweetescape.vercel.app">
+      <meta property="og:type" content="website">
+      <meta property="og:site_name" content="sweetescape">
+      <!-- Twitter Card Tags -->
+      <meta name="twitter:card" content="summary_large_image">
+      <meta name="twitter:title" content="sweetescape - a music player">
+      <meta name="twitter:description" content="seamless ad-free music streaming packed with features">
+      <meta name="twitter:image" content="https://sweetescape.vercel.app/websitecover.png">
+      <!-- Additional Meta Tags for Better SEO -->
+      <meta name="description" content="seamless advertisement less music streaming packed with features">
+      <meta name="keywords" content="music player, streaming, ad-free, music, player">
+   </head>
+   <body>
+      <div class="music-visualizer" id="musicVisualizer">
+         <canvas class="visualizer-canvas" id="visualizerCanvas"></canvas>
+         <div class="visualizer-bars" id="visualizerBars"></div>
+      </div>
+      <div class="left-banner">
+         <iframe data-aa='2404119' src='//acceptable.a-ads.com/2404119' style='border:0px; padding:0; width:100%; height:100%; overflow:hidden; background-color: transparent;'></iframe>
+      </div>
+      <!-- Right sidebar banner -->
+      <div class="right-banner">
+         <iframe data-aa='2404119' src='//acceptable.a-ads.com/2404119' style='border:0px; padding:0; width:100%; height:100%; overflow:hidden; background-color: transparent;'></iframe>
+      </div>
+      <div class="app-container">
+         <div class="theme-toggle">
+            <button id="themeToggle" title="[P]click to cycle through light, dark, custom themes.">
+            <i class="fas fa-moon"></i>
+            </button>
+            <button id="timerButton" class="timer-button" title="[T]Set timer to close app">
+            <i class="fas fa-clock"></i>
+            <span id="timerDisplay" class="timer-display"></span>
+            </button>
+            <button id="discordButton" class="timer-button" title="Join our Discord">
+            <i class="fab fa-discord"></i>
+            </button>
+            <button id="settingsButton" class="settings-button" title="Open Settings">
+            <i class="fas fa-cog"></i>
+            </button>
+         </div>
+         <div class="listening-stats" title="Your listening time">
             <i class="fas fa-headphones"></i>
             <span id="listeningTime">0m</span>
-            <div class="visitor-counter" title="total website visits"> 
-                     <div align="center"><a href="https://www.amazingcounters.com"><img border="0" src="https://cc.amazingcounters.com/counter.php?i=3303898&c=9912007" alt="AmazingCounters.com"></a></div>
-
+            <div class="visitor-counter" title="total website visits">
+               <div align="center"><a href="https://www.amazingcounters.com"><img border="0" src="https://cc.amazingcounters.com/counter.php?i=3303898&c=9912007" alt="AmazingCounters.com"></a></div>
             </div>
-             
-        </div>
-        
-            
-    
-        
-        <!-- Main container for side-by-side layout -->
-        <div class="main-container">
+         </div>
+         <!-- Main container for side-by-side layout -->
+         <div class="main-container">
             <!-- Additional Details Panel (Left Side) -->
             <div id="additionalDetails" class="additional-details">
-                <!-- Content will be rendered dynamically via JavaScript -->
-                <h3 class="additional-details-header">Music Explorer</h3>
-                
-                <div class="additional-details-section">
-                    <h4 class="section-title">Recommended</h4>
-                    <div class="details-items-list">
-                        <div class="details-item">
-                            <div class="details-item-thumbnail">
-                                <i class="fas fa-music"></i>
-                            </div>
-                            <div class="details-item-info">
-                                <div class="details-item-name">Recently Played</div>
-                            </div>
+               <!-- Content will be rendered dynamically via JavaScript -->
+               <h3 class="additional-details-header">Music Explorer</h3>
+               <div class="additional-details-section">
+                  <h4 class="section-title">Recommended</h4>
+                  <div class="details-items-list">
+                     <div class="details-item">
+                        <div class="details-item-thumbnail">
+                           <i class="fas fa-music"></i>
                         </div>
-                        <div class="details-item">
-                            <div class="details-item-thumbnail">
-                                <i class="fas fa-heart"></i>
-                            </div>
-                            <div class="details-item-info">
-                                <div class="details-item-name">Favorites</div>
-                            </div>
+                        <div class="details-item-info">
+                           <div class="details-item-name">Recently Played</div>
                         </div>
-                    </div>
-                </div>
-                
-                
-                
+                     </div>
+                     <div class="details-item">
+                        <div class="details-item-thumbnail">
+                           <i class="fas fa-heart"></i>
+                        </div>
+                        <div class="details-item-info">
+                           <div class="details-item-name">Favorites</div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
             </div>
-            
             <!-- Player Area (Right Side) -->
             <div class="player-area">
-                <div class="tabs">
-                    <button class="tab active" data-tab="library">Library</button>
-                    <button class="tab" data-tab="playlists">Playlists</button>
-                    <button class="tab" data-tab="lyrics">Lyrics</button>
-                </div>
-                <div class="tab-content">
-                    <!-- Library Tab -->
-                    <div class="tab-pane active" id="library">
-                        <div class="library-manager">
-                            <div class="search-section" title="find some premade playlists from famous artists">
-                                <input type="text" id="librarySearch" placeholder="Search songs..." autocomplete="off">
-
-                                <button id="findSongsBtn" class="action-button find-songs-btn">
-                                    <i class="fas fa-search"></i> Global library
-                                </button>
-                                <div class="modify-library-container">
-                                
-                                      <button id="modifyLibraryBtn" class="action-button" 
-                                              title="Click here to add songs via YouTube URL or import/export">
-                                        <i class="fas fa-edit"></i> Modify Library
-                                      </button>
-                                    
-                                      <div id="libraryOptionsDropdown" class="library-options-dropdown">
-                                        <div class="library-option-item">
-                                          <input type="checkbox" id="showDeleteBtn" checked>
-                                          <label for="showDeleteBtn">Show delete button</label>
-                                        </div>
-                                        <div class="library-option-item">
-                                          <input type="checkbox" id="showUnfavoriteBtn" checked>
-                                          <label for="showUnfavoriteBtn">Show unfavorite button</label>
-                                        </div>
-                                        <div class="library-option-item">
-                                          <input type="checkbox" id="showEditBtn" checked>
-                                          <label for="showEditBtn">Allow editing</label>
-                                        </div>
-                                      </div>
-                                    </div>
-
-                            </div>
-                            <div id="songLibrary" class="song-list">
-                            </div>
-                            <div id="youtubeSearchSuggestion" class="youtube-search-suggestion" style="display: none;" title="open youtube and copy the URL">
-                                <div class="search-suggestion-content">
-                                    <i class="fab fa-youtube"></i>
-                                    <span>Not finding what you're looking for?</span>
-                                    <span class="search-query"></span>
-                                </div>
-                            </div>
+               <div class="tabs">
+                  <button class="tab active" data-tab="library">Library</button>
+                  <button class="tab" data-tab="playlists">Playlists</button>
+                  <button class="tab" data-tab="lyrics">Lyrics</button>
+               </div>
+               <div class="tab-content">
+                  <!-- Library Tab -->
+                  <div class="tab-pane active" id="library">
+                     <div class="library-manager">
+                        <div class="search-section" title="find some premade playlists from famous artists">
+                           <input type="text" id="librarySearch" placeholder="Search songs..." autocomplete="off">
+                           <button id="findSongsBtn" class="action-button find-songs-btn">
+                           <i class="fas fa-search"></i> Global library
+                           </button>
+                           <div class="modify-library-container">
+                              <button id="modifyLibraryBtn" class="action-button" 
+                                 title="Click here to add songs via YouTube URL or import/export">
+                              <i class="fas fa-edit"></i> Modify Library
+                              </button>
+                              <div id="libraryOptionsDropdown" class="library-options-dropdown">
+                                 <div class="library-option-item">
+                                    <input type="checkbox" id="showDeleteBtn" checked>
+                                    <label for="showDeleteBtn">Show delete button</label>
+                                 </div>
+                                 <div class="library-option-item">
+                                    <input type="checkbox" id="showUnfavoriteBtn" checked>
+                                    <label for="showUnfavoriteBtn">Show unfavorite button</label>
+                                 </div>
+                                 <div class="library-option-item">
+                                    <input type="checkbox" id="showEditBtn" checked>
+                                    <label for="showEditBtn">Allow editing</label>
+                                 </div>
+                              </div>
+                           </div>
                         </div>
-                    </div>
-                    
-                    <!-- Playlists Tab -->
-                    <div class="tab-pane" id="playlists">
-                        <div class="playlist-manager">
-                            <div class="playlist-search-bar">
-                                <input type="text" id="playlistSearch" placeholder="Search playlists...">
-                                <button id="togglePlaylistEditModeBtn" class="playlist-edit-mode-btn">Edit</button>
-                                <button id="toggleCreatePlaylistBtn" class="add-playlist-btn">+</button>
-                            </div>
-                            <div class="create-playlist" id="createPlaylistDiv" style="display: none;">
-                                <input type="text" id="newPlaylistName" placeholder="New Playlist Name">
-                                <button id="createPlaylistBtn">Create Playlist</button>
-                            </div>
-                            <div id="playlistContainer" class="playlist-container">
-                            </div>
+                        <div id="songLibrary" class="song-list">
                         </div>
-                    </div>
-                    <div class="tab-pane" id="lyrics">
-                      <div class="lyrics-container">
-                          <div class="lyrics-content" id="lyricsContent">
-                              <p class="no-lyrics-message">No song playing or no lyrics available</p>
-                          </div>
-                      </div>
+                        <div id="youtubeSearchSuggestion" class="youtube-search-suggestion" style="display: none;" title="open youtube and copy the URL">
+                           <div class="search-suggestion-content">
+                              <i class="fab fa-youtube"></i>
+                              <span>Not finding what you're looking for?</span>
+                              <span class="search-query"></span>
+                           </div>
+                        </div>
+                     </div>
                   </div>
-                </div>
-            </div>
-        </div>
-      
-        <div id="libraryModificationModal" class="modal">
-            <div class="modal-content">
-                <span id="closeLibraryModal" class="close-btn">&times;</span>
-                <h2>Modify Your Local Library</h2>
-                    <div class="add-song-section">
-                        <h3>Add Song</h3>
-                        <div class="input-group">
-                            <input type="text" id="songName" placeholder="Song Name">
-                            <input type="text" id="songAuthor" placeholder="Author Name (Optional)">
-                            <input type="text" id="songUrl" placeholder="YouTube URL">
-                            <button id="autofillBtn" disabled>Autofill Name & Author</button>
-                            <button id="addSongBtn">Add to Library</button>
+                  <!-- Playlists Tab -->
+                  <div class="tab-pane" id="playlists">
+                     <div class="playlist-manager">
+                        <div class="playlist-search-bar">
+                           <input type="text" id="playlistSearch" placeholder="Search playlists...">
+                           <button id="togglePlaylistEditModeBtn" class="playlist-edit-mode-btn">Edit</button>
+                           <button id="toggleCreatePlaylistBtn" class="add-playlist-btn">+</button>
                         </div>
-                    </div>
-                <div class="import-export-section">
-                    <h3>Import/Export</h3>
-                    <div class="bulk-actions">
-                        <button id="importLibraryBtn" title="Import songs from text">
-                            <i class="fas fa-file-import"></i> Import Songs
-                        </button>
-                        <button id="exportLibraryBtn" title="Export library to text">
-                            <i class="fas fa-file-export"></i> Export Songs
-                        </button>
-                    </div>
-                </div>
+                        <div class="create-playlist" id="createPlaylistDiv" style="display: none;">
+                           <input type="text" id="newPlaylistName" placeholder="New Playlist Name">
+                           <button id="createPlaylistBtn">Create Playlist</button>
+                        </div>
+                        <div id="playlistContainer" class="playlist-container">
+                        </div>
+                     </div>
+                  </div>
+                  <div class="tab-pane" id="lyrics">
+                     <div class="lyrics-container">
+                        <div class="lyrics-content" id="lyricsContent">
+                           <p class="no-lyrics-message">No song playing or no lyrics available</p>
+                        </div>
+                     </div>
+                  </div>
+               </div>
             </div>
-        </div>
-        <!-- Add this modal structure to your HTML body -->
-<!-- Add this modal structure to your HTML body -->
-<div id="importModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <span class="close-btn" id="closeImportModal">&times;</span>
-        <h2>Import Songs</h2>
-        
-        <div class="import-instructions">
-            <h3>Import Format Options:</h3>
-            <p><strong>Simple format (one song per line):</strong></p>
-            <ul>
-                <li>Song Name, YouTube URL</li>
-                <li>Song Name, YouTube URL, Author Name</li>
-            </ul>
-            <p><strong>Playlist format:</strong></p>
-            <pre>Playlist Name{
+         </div>
+         <div id="libraryModificationModal" class="modal">
+            <div class="modal-content">
+               <span id="closeLibraryModal" class="close-btn">&times;</span>
+               <h2>Modify Your Local Library</h2>
+               <div class="add-song-section">
+                  <h3>Add Song</h3>
+                  <div class="input-group">
+                     <input type="text" id="songName" placeholder="Song Name">
+                     <input type="text" id="songAuthor" placeholder="Author Name (Optional)">
+                     <input type="text" id="songUrl" placeholder="YouTube URL">
+                     <button id="autofillBtn" disabled>Autofill Name & Author</button>
+                     <button id="addSongBtn">Add to Library</button>
+                  </div>
+               </div>
+               <div class="import-export-section">
+                  <h3>Import/Export</h3>
+                  <div class="bulk-actions">
+                     <button id="importLibraryBtn" title="Import songs from text">
+                     <i class="fas fa-file-import"></i> Import Songs
+                     </button>
+                     <button id="exportLibraryBtn" title="Export library to text">
+                     <i class="fas fa-file-export"></i> Export Songs
+                     </button>
+                  </div>
+               </div>
+            </div>
+         </div>
+         <!-- Add this modal structure to your HTML body -->
+         <!-- Add this modal structure to your HTML body -->
+         <div id="importModal" class="modal" style="display: none;">
+            <div class="modal-content">
+               <span class="close-btn" id="closeImportModal">&times;</span>
+               <h2>Import Songs</h2>
+               <div class="import-instructions">
+                  <h3>Import Format Options:</h3>
+                  <p><strong>Simple format (one song per line):</strong></p>
+                  <ul>
+                     <li>Song Name, YouTube URL</li>
+                     <li>Song Name, YouTube URL, Author Name</li>
+                  </ul>
+                  <p><strong>Playlist format:</strong></p>
+                  <pre>Playlist Name{
     Song Name, YouTube URL
     Another Song, YouTube URL, Author Name
 }
 Another Playlist{
     Song Name, YouTube URL
 }</pre>
-            <p><strong>Notes:</strong></p>
-            <ul>
-                <li>Author/Artist name is optional</li>
-                <li>Duplicate songs (same YouTube video) are automatically skipped</li>
-                <li>Songs with commas in the title are supported</li>
-            </ul>
-        </div>
-
-        <textarea 
-            id="importSongsTextarea" 
-            placeholder="Example formats:
-Song Name, https://youtube.com/...
-Another Song, https://youtube.com/...
-Song, with, commas, https://youtube.com/...
-
-Or playlist format:
-My Playlist{
-    Song Name, https://youtube.com/...
-    Another Song, https://youtube.com/...
-}"></textarea>
-
-        <button id="importSongsBtn" class="import-btn">Import Songs</button>
-    </div>
-</div>
-        <div id="playlistEditModal" class="modal">
+                  <p><strong>Notes:</strong></p>
+                  <ul>
+                     <li>Author/Artist name is optional</li>
+                     <li>Duplicate songs (same YouTube video) are automatically skipped</li>
+                     <li>Songs with commas in the title are supported</li>
+                  </ul>
+               </div>
+               <textarea 
+                  id="importSongsTextarea" 
+                  placeholder="Example formats:
+                  Song Name, https://youtube.com/...
+                  Another Song, https://youtube.com/...
+                  Song, with, commas, https://youtube.com/...
+                  Or playlist format:
+                  My Playlist{
+                  Song Name, https://youtube.com/...
+                  Another Song, https://youtube.com/...
+                  }"></textarea>
+               <button id="importSongsBtn" class="import-btn">Import Songs</button>
+            </div>
+         </div>
+         <div id="playlistEditModal" class="modal">
             <div class="modal-content">
-                <span id="closePlaylistModal" class="close-btn">&times;</span>
-                <h2 id="currentPlaylistName">Playlist Name</h2>
-                <div class="playlist-edit-section">
-                    <div class="search-library-section">
-                        <input type="text" id="searchSongsToAdd" placeholder="Search songs to add...">
-                        <div id="librarySearchResults" class="search-results"></div>
-                    </div>
-                    <div class="current-playlist-songs">
-                        <h3>Playlist Songs</h3>
-                        <div id="currentPlaylistSongs"></div>
-                    </div>
-                </div>
+               <span id="closePlaylistModal" class="close-btn">&times;</span>
+               <h2 id="currentPlaylistName">Playlist Name</h2>
+               <div class="playlist-edit-section">
+                  <div class="search-library-section">
+                     <input type="text" id="searchSongsToAdd" placeholder="Search songs to add...">
+                     <div id="librarySearchResults" class="search-results"></div>
+                  </div>
+                  <div class="current-playlist-songs">
+                     <h3>Playlist Songs</h3>
+                     <div id="currentPlaylistSongs"></div>
+                  </div>
+               </div>
             </div>
-        </div>
-        <div id="timerModal" class="modal">
+         </div>
+         <div id="timerModal" class="modal">
             <div class="modal-content timer-modal-content">
-                <span id="closeTimerModal" class="close-btn">&times;</span>
-                <h2>App Timer</h2>
-                
-                <div class="timer-action-selection">
-                    <h3>Timer Action</h3>
-                    <hr class="section-divider">
-                    <div class="action-buttons">
-                        <button id="stopMusicAction" class="action-btn active">Stop Music</button>
-                        <button id="closeAppAction" class="action-btn">Close App</button>
-                    </div>
-                </div>
-                
-                <!-- Set Timer section -->
-                <div class="timer-section">
-                    <h3>Set Timer</h3>
-                    <div class="timer-options">
-                        <button data-time="0.5">30 sec</button>
-                        <button data-time="1">1 min</button>
-                        <button data-time="2.5">2.5 min</button>
-                        <button data-time="5">5 min</button>
-                        <button data-time="10">10 min</button>
-                        <button data-time="15">15 min</button>
-                    </div>
-                    <div class="custom-timer">
-                        <input type="number" id="customTimerInput" placeholder="Custom minutes" step="0.1" min="0.1">
-                        <button id="setCustomTimer">Set</button>
-                    </div>
-                </div>
-                
-                <!-- Set Specific Stop Time section -->
-                <div class="specific-time-section" id="specificTimeSection">
-                    <h3>Set Specific Stop Time</h3>
-                    <div class="specific-time-input">
-                        <input type="time" id="specificTimeInput">
-                        <button id="setSpecificTime">Set</button>
-                    </div>
-                </div>
-                
-                <div class="timer-status">
-                    <span id="timerStatus">No timer set</span>
-                    <button id="cancelTimer" style="display: none">Cancel Timer</button>
-                </div>
+               <span id="closeTimerModal" class="close-btn">&times;</span>
+               <h2>App Timer</h2>
+               <div class="timer-action-selection">
+                  <h3>Timer Action</h3>
+                  <hr class="section-divider">
+                  <div class="action-buttons">
+                     <button id="stopMusicAction" class="action-btn active">Stop Music</button>
+                     <button id="closeAppAction" class="action-btn">Close App</button>
+                  </div>
+               </div>
+               <!-- Set Timer section -->
+               <div class="timer-section">
+                  <h3>Set Timer</h3>
+                  <div class="timer-options">
+                     <button data-time="0.5">30 sec</button>
+                     <button data-time="1">1 min</button>
+                     <button data-time="2.5">2.5 min</button>
+                     <button data-time="5">5 min</button>
+                     <button data-time="10">10 min</button>
+                     <button data-time="15">15 min</button>
+                  </div>
+                  <div class="custom-timer">
+                     <input type="number" id="customTimerInput" placeholder="Custom minutes" step="0.1" min="0.1">
+                     <button id="setCustomTimer">Set</button>
+                  </div>
+               </div>
+               <!-- Set Specific Stop Time section -->
+               <div class="specific-time-section" id="specificTimeSection">
+                  <h3>Set Specific Stop Time</h3>
+                  <div class="specific-time-input">
+                     <input type="time" id="specificTimeInput">
+                     <button id="setSpecificTime">Set</button>
+                  </div>
+               </div>
+               <div class="timer-status">
+                  <span id="timerStatus">No timer set</span>
+                  <button id="cancelTimer" style="display: none">Cancel Timer</button>
+               </div>
             </div>
-        </div>
-
-        <!-- Current Playlist Sidebar -->
-        <div id="currentPlaylistSidebar" class="playlist-sidebar">
+         </div>
+         <!-- Current Playlist Sidebar -->
+         <div id="currentPlaylistSidebar" class="playlist-sidebar">
             <div class="sidebar-header">
-                <div class="sidebar-title-section">
-                    <h3 id="sidebarPlaylistName">Now Playing</h3>
-                    <span id="playlistTotalDuration" class="playlist-duration">0 songs</span>
-                </div>
-                <div class="sidebar-controls">
-                    <button id="loopPlaylistBtn" class="loop-playlist-btn" title="Loop Playlist">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
-                    <button id="closeSidebarBtn"><i class="fas fa-times"></i></button>
-                </div>
+               <div class="sidebar-title-section">
+                  <h3 id="sidebarPlaylistName">Now Playing</h3>
+                  <span id="playlistTotalDuration" class="playlist-duration">0 songs</span>
+               </div>
+               <div class="sidebar-controls">
+                  <button id="loopPlaylistBtn" class="loop-playlist-btn" title="Loop Playlist">
+                  <i class="fas fa-sync-alt"></i>
+                  </button>
+                  <button id="closeSidebarBtn"><i class="fas fa-times"></i></button>
+               </div>
             </div>
             <div id="sidebarPlaylistSongs" class="sidebar-songs-list">
             </div>
-        </div>
-
-        <!-- Now Playing Section -->
-        <div class="now-playing">
+         </div>
+         <!-- Now Playing Section -->
+         <div class="now-playing">
             <!-- Progress Bar Added -->
             <div class="music-progress">
-                <input 
-                    type="range" 
-                    id="musicProgressBar" 
-                    min="0" 
-                    max="100" 
-                    value="0" 
-                    step="0.1"
-                >
-                <div id="timeDisplay" class="time-display">0:00/0:00</div>
+               <input 
+                  type="range" 
+                  id="musicProgressBar" 
+                  min="0" 
+                  max="100" 
+                  value="0" 
+                  step="0.1"
+                  >
+               <div id="timeDisplay" class="time-display">0:00/0:00</div>
             </div>
             <div class="now-playing-info">
-                <div class="current-song">
-                    <span id="currentSongName">No Song Playing</span>
-                </div>
-                <div class="next-song">
-                    <span>Next: </span>
-                    <span id="nextSongName">-</span>
-                </div>
+               <div class="current-song">
+                  <span id="currentSongName">No Song Playing</span>
+               </div>
+               <div class="next-song">
+                  <span>Next: </span>
+                  <span id="nextSongName">-</span>
+               </div>
             </div>
             <div class="player-controls">
-                    <button id="prevBtn"><i class="fas fa-step-backward"></i></button>
-                    <button id="playPauseBtn"><i class="fas fa-play"></i></button>
-                    <button id="nextBtn"><i class="fas fa-step-forward"></i></button>
-                    <button id="loopBtn"><i class="fas fa-redo"></i></button>
-                    <button id="autoplayBtn"><i class="fas fa-forward"></i></button> 
-                    <button id="showPlaylistBtn"><i class="fas fa-list"></i></button>
-                    
-                <!-- playback speed control -->
-                <div class="speed-control">
-                    <button id="speedBtn">1x</button>
-                    <div class="speed-options" id="speedOptions">
-                        <div class="speed-option" data-speed="0.25">0.25x</div>
-                        <div class="speed-option" data-speed="0.5">0.5x</div>
-                        <div class="speed-option" data-speed="0.75">0.75x</div>
-                        <div class="speed-option" data-speed="1">1x</div>
-                        <div class="speed-option" data-speed="1.25">1.25x</div>
-                        <div class="speed-option" data-speed="1.5">1.5x</div>
-                        <div class="speed-option" data-speed="1.75">1.75x</div>
-                        <div class="speed-option" data-speed="2">2x</div>
-                    </div>
-                </div>
+               <button id="prevBtn"><i class="fas fa-step-backward"></i></button>
+               <button id="playPauseBtn"><i class="fas fa-play"></i></button>
+               <button id="nextBtn"><i class="fas fa-step-forward"></i></button>
+               <button id="loopBtn"><i class="fas fa-redo"></i></button>
+               <button id="autoplayBtn"><i class="fas fa-forward"></i></button> 
+               <button id="showPlaylistBtn"><i class="fas fa-list"></i></button>
+               <!-- playback speed control -->
+               <div class="speed-control">
+                  <button id="speedBtn">1x</button>
+                  <div class="speed-options" id="speedOptions">
+                     <div class="speed-option" data-speed="0.25">0.25x</div>
+                     <div class="speed-option" data-speed="0.5">0.5x</div>
+                     <div class="speed-option" data-speed="0.75">0.75x</div>
+                     <div class="speed-option" data-speed="1">1x</div>
+                     <div class="speed-option" data-speed="1.25">1.25x</div>
+                     <div class="speed-option" data-speed="1.5">1.5x</div>
+                     <div class="speed-option" data-speed="1.75">1.75x</div>
+                     <div class="speed-option" data-speed="2">2x</div>
+                  </div>
+               </div>
             </div>
             <div class="volume-control">
-                <i class="fas fa-volume-down"></i>
-                <input 
-                    type="range" 
-                    id="volumeSlider" 
-                    min="0" 
-                    max="100" 
-                    value="50"
-                >
-                <i class="fas fa-volume-up"></i>
+               <i class="fas fa-volume-down"></i>
+               <input 
+                  type="range" 
+                  id="volumeSlider" 
+                  min="0" 
+                  max="100" 
+                  value="50"
+                  >
+               <i class="fas fa-volume-up"></i>
             </div>
-        </div>
-        
-        <div class="control-bar-toggle">
+         </div>
+         <div class="control-bar-toggle">
             <button id="toggleControlBarBtn" title="Toggle Control Bar">
-                <i class="fas fa-eye-slash"></i>
+            <i class="fas fa-eye-slash"></i>
             </button>
-        </div>
-        
-        <!-- Layout Toggle Button -->
-        <div class="layout-toggle">
+         </div>
+         <!-- Layout Toggle Button -->
+         <div class="layout-toggle">
             <button id="layoutToggleBtn" title="Change controls layout">
-                <i class="fas fa-arrows-alt-h"></i>
+            <i class="fas fa-arrows-alt-h"></i>
             </button>
-        </div>
-        
-    </div>
-    
-    <a href="https://github.com/fish-aimf" class="watermark" target="_blank">Made by fish-aimf</a>
-
-
-
-
-    
-    <!-- Fullscreen Lyrics Modal -->
-<div id="lyricsFullscreenModal" class="lyrics-fullscreen-modal">
-    <div class="lyrics-fullscreen-container">
-        <div class="lyrics-fullscreen-header">
-            <div class="song-info">
-                <h2 id="fullscreenSongName">Song Name</h2>
-                <p id="fullscreenSongAuthor">Artist</p>
-            </div>
-            <div class="fullscreen-controls">
-                
-                <button id="exitFullscreenBtn" class="fullscreen-btn">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-        
-        <div class="lyrics-fullscreen-content">
-            
-            <div id="fullscreenLyricsDisplay" class="fullscreen-lyrics-display">
-                <!-- Lyrics will be populated here -->
-            </div>
-        </div>
-    </div>
-</div>
-    <div id="versionDisplay" class="version-display" title="">
-    <span id="versionText"></span>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-<div id="changelogModal" class="changelog-modal">
-    <div class="changelog-modal-content">
-        <div class="changelog-modal-header">
-            <h2>Changelog</h2>
-            <span class="changelog-close">&times;</span>
-        </div>
-        <div class="changelog-modal-body" id="changelogContent"></div>
-    </div>
-</div>
-<div id="controlBarSpacer" class="control-bar-spacer"></div>
-
-<!-- Add this to your index.html body, preferably near the end -->
-<div id="subtitlesImportModal" class="subtitles-import-modal-overlay" style="display: none;">
-  <div class="subtitles-import-modal-content">
-    <div class="subtitles-import-modal-header">
-      <h2 id="subtitlesImportModalTitle">Import Subtitles</h2>
-      <span class="subtitles-import-modal-close">&times;</span>
-    </div>
-
-    <div class="subtitles-import-instructions-container">
-      <div class="subtitles-import-instructions">
-        <p class="subtitles-import-instructions-title">Instructions:</p>
-        <p>1. Click "Auto-Fetch Transcript" to automatically get subtitles, OR</p>
-        <p>2. Click "Open YouTube Video" → "..." menu → "Show transcript"</p>
-        <p>3. Copy the entire transcript and paste it below</p>
-        <p>4. Click "Convert to Lyrics" to format it properly</p>
+         </div>
       </div>
-      
-      <div class="subtitles-import-button-group">
-        <button id="autoFetchTranscriptBtn" class="subtitles-import-auto-fetch-btn">
-          <i class="fas fa-magic"></i> Auto-Fetch Transcript
-        </button>
-        <button id="openYouTubeBtn" class="subtitles-import-youtube-btn">
-          <i class="fab fa-youtube"></i> Open YouTube Video
-        </button>
-      </div>
-    </div>
-
-    <div class="subtitles-import-input-section">
-      <label for="transcriptInput" class="subtitles-import-input-label">
-        Paste YouTube transcript here:
-      </label>
-      <textarea 
-        id="transcriptInput" 
-        class="subtitles-import-transcript-textarea"
-        placeholder="Transcript will appear here automatically, or paste manually..."
-      ></textarea>
-      
-      <button id="convertBtn" class="subtitles-import-convert-btn">
-        <i class="fas fa-sync-alt"></i> Convert to Lyrics
-      </button>
-    </div>
-
-    <div id="lyricsPreviewSection" class="subtitles-import-preview-section" style="display: none;">
-      <label for="lyricsPreview" class="subtitles-import-preview-label">
-        Converted Lyrics (Edit if needed):
-      </label>
-      <textarea 
-        id="lyricsPreview" 
-        class="subtitles-import-lyrics-textarea"
-      ></textarea>
-      
-      <div class="subtitles-import-action-buttons">
-        <button id="saveLyricsBtn">Save Lyrics</button>
-          <i class="fas fa-save"></i> Save Lyrics
-        </button>
-        <button id="cancelImportBtn" class="subtitles-import-cancel-btn">
-          <i class="fas fa-times"></i> Cancel
-        </button>
-      </div>
-    </div>
-
-    <div id="loadingIndicator" class="subtitles-import-loading" style="display: none;">
-      <i class="fas fa-spinner fa-spin"></i> Fetching transcript...
-    </div>
-  </div>
-</div>
-
-
-    <!-- Settings Modal -->
-<!-- Settings Modal -->
-<div id="settingsModal" class="settings-modal">
-    <div class="settings-modal-content">
-        <div class="settings-modal-header">
-            <h2>Settings</h2>
-            <button id="settingsCloseBtn" class="settings-close-btn">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="settings-modal-body">
-            <!-- Settings Tabs -->
-            <div class="settings-tabs">
-                <button class="settings-tab-btn active" data-tab="theme">
-                    <i class="fas fa-palette"></i>
-                    Theme
-                </button>
-                <button class="settings-tab-btn" data-tab="recommendation">
-                    <i class="fas fa-music"></i>
-                    Recommendation
-                </button>
-                <button class="settings-tab-btn" data-tab="keybinds">
-                    <i class="fas fa-keyboard"></i>
-                    Keybinds
-                </button>
-                <button class="settings-tab-btn" data-tab="feedback">
-                    <i class="fas fa-comment"></i>
-                    Feedback
-                </button>
-                <button class="settings-tab-btn" data-tab="additional">
-                    <i class="fas fa-cog"></i>
-                    Additional
-                </button>
+      <a href="https://github.com/fish-aimf" class="watermark" target="_blank">Made by fish-aimf</a>
+      <!-- Fullscreen Lyrics Modal -->
+      <div id="lyricsFullscreenModal" class="lyrics-fullscreen-modal">
+         <div class="lyrics-fullscreen-container">
+            <div class="lyrics-fullscreen-header">
+               <div class="song-info">
+                  <h2 id="fullscreenSongName">Song Name</h2>
+                  <p id="fullscreenSongAuthor">Artist</p>
+               </div>
+               <div class="fullscreen-controls">
+                  <button id="exitFullscreenBtn" class="fullscreen-btn">
+                  <i class="fas fa-times"></i>
+                  </button>
+               </div>
             </div>
-
-            <!-- Tab Contents -->
-            <div class="settings-tab-content">
-                
-                <!-- Theme Tab -->
-                <div class="tab-panel active" id="themePanel">
-                    <div class="setting-group">
+            <div class="lyrics-fullscreen-content">
+               <div id="fullscreenLyricsDisplay" class="fullscreen-lyrics-display">
+                  <!-- Lyrics will be populated here -->
+               </div>
+            </div>
+         </div>
+      </div>
+      <div id="versionDisplay" class="version-display" title="">
+         <span id="versionText"></span>
+      </div>
+      <div id="changelogModal" class="changelog-modal">
+         <div class="changelog-modal-content">
+            <div class="changelog-modal-header">
+               <h2>Changelog</h2>
+               <span class="changelog-close">&times;</span>
+            </div>
+            <div class="changelog-modal-body" id="changelogContent"></div>
+         </div>
+      </div>
+      <div id="controlBarSpacer" class="control-bar-spacer"></div>
+      <!-- Add this to your index.html body, preferably near the end -->
+      <div id="subtitlesImportModal" class="subtitles-import-modal-overlay" style="display: none;">
+         <div class="subtitles-import-modal-content">
+            <div class="subtitles-import-modal-header">
+               <h2 id="subtitlesImportModalTitle">Import Subtitles</h2>
+               <span class="subtitles-import-modal-close">&times;</span>
+            </div>
+            <div class="subtitles-import-instructions-container">
+               <div class="subtitles-import-instructions">
+                  <p class="subtitles-import-instructions-title">Instructions:</p>
+                  <p>1. Click "Auto-Fetch Transcript" to automatically get subtitles, OR</p>
+                  <p>2. Click "Open YouTube Video" → "..." menu → "Show transcript"</p>
+                  <p>3. Copy the entire transcript and paste it below</p>
+                  <p>4. Click "Convert to Lyrics" to format it properly</p>
+               </div>
+               <div class="subtitles-import-button-group">
+                  <button id="autoFetchTranscriptBtn" class="subtitles-import-auto-fetch-btn">
+                  <i class="fas fa-magic"></i> Auto-Fetch Transcript
+                  </button>
+                  <button id="openYouTubeBtn" class="subtitles-import-youtube-btn">
+                  <i class="fab fa-youtube"></i> Open YouTube Video
+                  </button>
+               </div>
+            </div>
+            <div class="subtitles-import-input-section">
+               <label for="transcriptInput" class="subtitles-import-input-label">
+               Paste YouTube transcript here:
+               </label>
+               <textarea 
+                  id="transcriptInput" 
+                  class="subtitles-import-transcript-textarea"
+                  placeholder="Transcript will appear here automatically, or paste manually..."
+                  ></textarea>
+               <button id="convertBtn" class="subtitles-import-convert-btn">
+               <i class="fas fa-sync-alt"></i> Convert to Lyrics
+               </button>
+            </div>
+            <div id="lyricsPreviewSection" class="subtitles-import-preview-section" style="display: none;">
+               <label for="lyricsPreview" class="subtitles-import-preview-label">
+               Converted Lyrics (Edit if needed):
+               </label>
+               <textarea 
+                  id="lyricsPreview" 
+                  class="subtitles-import-lyrics-textarea"
+                  ></textarea>
+               <div class="subtitles-import-action-buttons">
+                  <button id="saveLyricsBtn">Save Lyrics</button>
+                  <i class="fas fa-save"></i> Save Lyrics
+                  </button>
+                  <button id="cancelImportBtn" class="subtitles-import-cancel-btn">
+                  <i class="fas fa-times"></i> Cancel
+                  </button>
+               </div>
+            </div>
+            <div id="loadingIndicator" class="subtitles-import-loading" style="display: none;">
+               <i class="fas fa-spinner fa-spin"></i> Fetching transcript...
+            </div>
+         </div>
+      </div>
+      <!-- Settings Modal -->
+      <!-- Settings Modal -->
+      <div id="settingsModal" class="settings-modal">
+         <div class="settings-modal-content">
+            <div class="settings-modal-header">
+               <h2>Settings</h2>
+               <button id="settingsCloseBtn" class="settings-close-btn">
+               <i class="fas fa-times"></i>
+               </button>
+            </div>
+            <div class="settings-modal-body">
+               <!-- Settings Tabs -->
+               <div class="settings-tabs">
+                  <button class="settings-tab-btn active" data-tab="theme">
+                  <i class="fas fa-palette"></i>
+                  Theme
+                  </button>
+                  <button class="settings-tab-btn" data-tab="recommendation">
+                  <i class="fas fa-music"></i>
+                  Recommendation
+                  </button>
+                  <button class="settings-tab-btn" data-tab="keybinds">
+                  <i class="fas fa-keyboard"></i>
+                  Keybinds
+                  </button>
+                  <button class="settings-tab-btn" data-tab="feedback">
+                  <i class="fas fa-comment"></i>
+                  Feedback
+                  </button>
+                  <button class="settings-tab-btn" data-tab="additional">
+                  <i class="fas fa-cog"></i>
+                  Additional
+                  </button>
+               </div>
+               <!-- Tab Contents -->
+               <div class="settings-tab-content">
+                  <!-- Theme Tab -->
+                  <div class="tab-panel active" id="themePanel">
+                     <div class="setting-group">
                         <label>Theme Mode:</label>
                         <select id="themeMode">
-                            <option value="light">Light</option>
-                            <option value="dark">Dark</option>
-                            <option value="custom">Custom</option>
+                           <option value="light">Light</option>
+                           <option value="dark">Dark</option>
+                           <option value="custom">Custom</option>
                         </select>
-                    </div>
-                    
-                    <div class="custom-theme-section" id="customThemeSection">
+                     </div>
+                     <div class="custom-theme-section" id="customThemeSection">
                         <h3>Customize Colors</h3>
-                        
                         <div class="color-picker-grid">
-                            <div class="color-picker-group">
-                                <label for="primaryColorPicker">Primary Color:</label>
-                                <input type="color" id="primaryColorPicker" value="#3b82f6">
-                            </div>
-                            
-                            <div class="color-picker-group">
-                                <label for="backgroundColorPicker">Background Color:</label>
-                                <input type="color" id="backgroundColorPicker" value="#1e293b">
-                            </div>
-                            
-                            <div class="color-picker-group">
-                                <label for="secondaryColorPicker">Secondary Background:</label>
-                                <input type="color" id="secondaryColorPicker" value="#334155">
-                            </div>
-                            
-                            <div class="color-picker-group">
-                                <label for="textPrimaryColorPicker">Primary Text:</label>
-                                <input type="color" id="textPrimaryColorPicker" value="#e2e8f0">
-                            </div>
-                            
-                            <div class="color-picker-group">
-                                <label for="textSecondaryColorPicker">Secondary Text:</label>
-                                <input type="color" id="textSecondaryColorPicker" value="#94a3b8">
-                            </div>
-                            
-                            <div class="color-picker-group">
-                                <label for="hoverColorPicker">Hover Color:</label>
-                                <input type="color" id="hoverColorPicker" value="#2563eb">
-                            </div>
-                            
-                            <div class="color-picker-group">
-                                <label for="borderColorPicker">Border Color:</label>
-                                <input type="color" id="borderColorPicker" value="#475569">
-                            </div>
-                            
-                            <div class="color-picker-group">
-                                <label for="accentColorPicker">Accent Color (favicon):</label>
-                                <input type="color" id="accentColorPicker" value="#3b82f6">
-                            </div>
-                            
-                            <div class="color-picker-group">
-                                <label for="buttonTextColorPicker">Button Text Color:</label>
-                                <input type="color" id="buttonTextColorPicker" value="#ffffff">
-                            </div>
-                            
-                            <div class="color-picker-group">
-                                <label for="shadowColorPicker">Shadow Color:</label>
-                                <div class="shadow-controls">
-                                    <input type="color" id="shadowColorPicker" value="#000000">
-                                    <input type="range" id="shadowOpacity" min="0" max="1" step="0.1" value="0.1">
-                                    <span>Opacity</span>
-                                </div>
-                            </div>
-                            
-                            <div class="color-picker-group">
-                                <label for="errorColorPicker">Error Color:</label>
-                                <input type="color" id="errorColorPicker" value="#dc3545">
-                            </div>
-                            
-                            <div class="color-picker-group">
-                                <label for="youtubeRedColorPicker">YouTube Red:</label>
-                                <input type="color" id="youtubeRedColorPicker" value="#FF0000">
-                            </div>
+                           <div class="color-picker-group">
+                              <label for="primaryColorPicker">Primary Color:</label>
+                              <input type="color" id="primaryColorPicker" value="#3b82f6">
+                           </div>
+                           <div class="color-picker-group">
+                              <label for="backgroundColorPicker">Background Color:</label>
+                              <input type="color" id="backgroundColorPicker" value="#1e293b">
+                           </div>
+                           <div class="color-picker-group">
+                              <label for="secondaryColorPicker">Secondary Background:</label>
+                              <input type="color" id="secondaryColorPicker" value="#334155">
+                           </div>
+                           <div class="color-picker-group">
+                              <label for="textPrimaryColorPicker">Primary Text:</label>
+                              <input type="color" id="textPrimaryColorPicker" value="#e2e8f0">
+                           </div>
+                           <div class="color-picker-group">
+                              <label for="textSecondaryColorPicker">Secondary Text:</label>
+                              <input type="color" id="textSecondaryColorPicker" value="#94a3b8">
+                           </div>
+                           <div class="color-picker-group">
+                              <label for="hoverColorPicker">Hover Color:</label>
+                              <input type="color" id="hoverColorPicker" value="#2563eb">
+                           </div>
+                           <div class="color-picker-group">
+                              <label for="borderColorPicker">Border Color:</label>
+                              <input type="color" id="borderColorPicker" value="#475569">
+                           </div>
+                           <div class="color-picker-group">
+                              <label for="accentColorPicker">Accent Color (favicon):</label>
+                              <input type="color" id="accentColorPicker" value="#3b82f6">
+                           </div>
+                           <div class="color-picker-group">
+                              <label for="buttonTextColorPicker">Button Text Color:</label>
+                              <input type="color" id="buttonTextColorPicker" value="#ffffff">
+                           </div>
+                           <div class="color-picker-group">
+                              <label for="shadowColorPicker">Shadow Color:</label>
+                              <div class="shadow-controls">
+                                 <input type="color" id="shadowColorPicker" value="#000000">
+                                 <input type="range" id="shadowOpacity" min="0" max="1" step="0.1" value="0.1">
+                                 <span>Opacity</span>
+                              </div>
+                           </div>
+                           <div class="color-picker-group">
+                              <label for="errorColorPicker">Error Color:</label>
+                              <input type="color" id="errorColorPicker" value="#dc3545">
+                           </div>
+                           <div class="color-picker-group">
+                              <label for="youtubeRedColorPicker">YouTube Red:</label>
+                              <input type="color" id="youtubeRedColorPicker" value="#FF0000">
+                           </div>
                         </div>
-                        
                         <div class="theme-buttons">
-                            <button id="saveCustomTheme" onclick="musicPlayer.handleSaveCustomTheme()">Save Theme</button>
-                            <button onclick="musicPlayer.resetCustomTheme()">Reset to Defaults</button>
+                           <button id="saveCustomTheme" onclick="musicPlayer.handleSaveCustomTheme()">Save Theme</button>
+                           <button onclick="musicPlayer.resetCustomTheme()">Reset to Defaults</button>
                         </div>
-                        
                         <div class="theme-import-export">
-                            <h4>Import/Export Theme</h4>
-                            <div class="import-export-group">
-                                <button onclick="musicPlayer.exportTheme()">Export Theme to Clipboard</button>
-                                <button onclick="musicPlayer.importTheme()">Import Theme</button>
-                            </div>
-                            <div class="theme-input-group">
-                                <label for="themeImportText">Paste Theme Code:</label>
-                                <textarea id="themeImportText" placeholder="Paste your theme code here..." rows="4"></textarea>
-                            </div>
+                           <h4>Import/Export Theme</h4>
+                           <div class="import-export-group">
+                              <button onclick="musicPlayer.exportTheme()">Export Theme to Clipboard</button>
+                              <button onclick="musicPlayer.importTheme()">Import Theme</button>
+                           </div>
+                           <div class="theme-input-group">
+                              <label for="themeImportText">Paste Theme Code:</label>
+                              <textarea id="themeImportText" placeholder="Paste your theme code here..." rows="4"></textarea>
+                           </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Recommendation Tab -->
-                <div class="tab-panel" id="recommendationPanel">
-                    <div class="setting-group">
+                     </div>
+                  </div>
+                  <!-- Recommendation Tab -->
+                  <div class="tab-panel" id="recommendationPanel">
+                     <div class="setting-group">
                         <label for="recentlyPlayedStorageLimit">Store Last Songs:</label>
                         <div class="number-input-group">
-                            <input type="number" id="recentlyPlayedStorageLimit" min="1" max="100" value="20">
-                            <span class="input-suffix">songs</span>
+                           <input type="number" id="recentlyPlayedStorageLimit" min="1" max="100" value="20">
+                           <span class="input-suffix">songs</span>
                         </div>
                         <p class="setting-description">Maximum number of recently played songs to store</p>
-                    </div>
-
-                    <div class="setting-group">
+                     </div>
+                     <div class="setting-group">
                         <label for="recentlyPlayedDisplayLimit">Recently Listened To Display:</label>
                         <div class="number-input-group">
-                            <input type="number" id="recentlyPlayedDisplayLimit" min="1" max="10" value="3">
-                            <span class="input-suffix">songs</span>
+                           <input type="number" id="recentlyPlayedDisplayLimit" min="1" max="10" value="3">
+                           <span class="input-suffix">songs</span>
                         </div>
                         <p class="setting-description">Number of songs to show in Recently Listened To section</p>
-                    </div>
-
-                    <div class="setting-group">
+                     </div>
+                     <div class="setting-group">
                         <label for="suggestedSongsDisplayLimit">Suggested Songs Display:</label>
                         <div class="number-input-group">
-                            <input type="number" id="suggestedSongsDisplayLimit" min="1" max="10" value="2">
-                            <span class="input-suffix">songs</span>
+                           <input type="number" id="suggestedSongsDisplayLimit" min="1" max="10" value="2">
+                           <span class="input-suffix">songs</span>
                         </div>
                         <p class="setting-description">Number of songs to show in Suggested section</p>
-                    </div>
-
-                    <div class="setting-group">
+                     </div>
+                     <div class="setting-group">
                         <label for="yourPicksDisplayLimit">Your Picks Display:</label>
                         <div class="number-input-group">
-                            <input type="number" id="yourPicksDisplayLimit" min="1" max="10" value="2">
-                            <span class="input-suffix">songs</span>
+                           <input type="number" id="yourPicksDisplayLimit" min="1" max="10" value="2">
+                           <span class="input-suffix">songs</span>
                         </div>
                         <p class="setting-description">Number of songs to show in Your Picks section</p>
-                    </div>
-
-                    <div class="setting-group">
+                     </div>
+                     <div class="setting-group">
                         <label for="recentlyPlayedPlaylistsLimit">Recently Played Playlists Display:</label>
                         <div class="number-input-group">
-                            <input type="number" id="recentlyPlayedPlaylistsLimit" min="1" max="5" value="1">
-                            <span class="input-suffix">playlists</span>
+                           <input type="number" id="recentlyPlayedPlaylistsLimit" min="1" max="5" value="1">
+                           <span class="input-suffix">playlists</span>
                         </div>
                         <p class="setting-description">Number of playlists to show in Recently Played Playlists section</p>
-                    </div>
-
-                    <div class="setting-group">
+                     </div>
+                     <div class="setting-group">
                         <button id="saveDiscoverMoreSettings" class="save-settings-btn">Save Recommendation Settings</button>
-                    </div>
-                </div>
-                
-                <div id="keybindsPanel" class="tab-panel">
-                    <div class="keybinds-content">
+                     </div>
+                  </div>
+                  <div id="keybindsPanel" class="tab-panel">
+                     <div class="keybinds-content">
                         <div class="keybinds-header">
-                            <div>
-                                <h3>Keyboard Shortcuts</h3>
-                                <p>Click any input and press a key to change it. Multiple keys can do the same action.</p>
-                            </div>
-                            <button id="resetKeybindsBtn" class="reset-keybinds-btn">
-                                <i class="fas fa-undo"></i> Reset All
-                            </button>
+                           <div>
+                              <h3>Keyboard Shortcuts</h3>
+                              <p>Click any input and press a key to change it. Multiple keys can do the same action.</p>
+                           </div>
+                           <button id="resetKeybindsBtn" class="reset-keybinds-btn">
+                           <i class="fas fa-undo"></i> Reset All
+                           </button>
                         </div>
-                        
                         <div class="keybinds-grid">
-                            <div class="keybind-category">
-                                <h4><i class="fas fa-play"></i> Playback</h4>
-                                <div class="keybind-items">
-                                    <div class="keybind-item">
-                                        <label>Play/Pause (Primary)</label>
-                                        <input type="text" class="keybind-input" data-action="togglePlayPause" readonly>
-                                    </div>
-                                    <div class="keybind-item">
-                                        <label>Play/Pause (Secondary)</label>
-                                        <input type="text" class="keybind-input" data-action="togglePlayPause2" readonly>
-                                    </div>
-                                    <div class="keybind-item">
-                                        <label>Previous Song (Primary)</label>
-                                        <input type="text" class="keybind-input" data-action="previousSong" readonly>
-                                    </div>
-                                    <div class="keybind-item">
-                                        <label>Previous Song (Secondary)</label>
-                                        <input type="text" class="keybind-input" data-action="previousSong2" readonly>
-                                    </div>
-                                    <div class="keybind-item">
-                                        <label>Next Song (Primary)</label>
-                                        <input type="text" class="keybind-input" data-action="nextSong" readonly>
-                                    </div>
-                                    <div class="keybind-item">
-                                        <label>Next Song (Secondary)</label>
-                                        <input type="text" class="keybind-input" data-action="nextSong2" readonly>
-                                    </div>
-                                    <div class="keybind-item">
-                                        <label>Restart Song</label>
-                                        <input type="text" class="keybind-input" data-action="restartSong" readonly>
-                                    </div>
-                                    <div class="keybind-item">
-                                        <label>Toggle Loop</label>
-                                        <input type="text" class="keybind-input" data-action="toggleLoop" readonly>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="keybind-category">
-                                <h4><i class="fas fa-volume-up"></i> Volume</h4>
-                                <div class="keybind-items">
-                                    <div class="keybind-item">
-                                        <label>Volume Up</label>
-                                        <input type="text" class="keybind-input" data-action="volumeUp" readonly>
-                                    </div>
-                                    <div class="keybind-item">
-                                        <label>Volume Down</label>
-                                        <input type="text" class="keybind-input" data-action="volumeDown" readonly>
-                                    </div>
-                                    <div class="keybind-item">
-                                        <label>Volume Up (Fine)</label>
-                                        <input type="text" class="keybind-input" data-action="volumeUpFine" readonly>
-                                    </div>
-                                    <div class="keybind-item">
-                                        <label>Volume Down (Fine)</label>
-                                        <input type="text" class="keybind-input" data-action="volumeDownFine" readonly>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="keybind-category">
-                                <h4><i class="fas fa-desktop"></i> Interface</h4>
-                                <div class="keybind-items">
-                                    <div class="keybind-item">
-                                        <label>Toggle Control Bar</label>
-                                        <input type="text" class="keybind-input" data-action="toggleControlBar" readonly>
-                                    </div>
-                                    <div class="keybind-item">
-                                        <label>Toggle Sidebar (Primary)</label>
-                                        <input type="text" class="keybind-input" data-action="togglePlaylistSidebar" readonly>
-                                    </div>
-                                    <div class="keybind-item">
-                                        <label>Toggle Sidebar (Secondary)</label>
-                                        <input type="text" class="keybind-input" data-action="togglePlaylistSidebar2" readonly>
-                                    </div>
-                                    <div class="keybind-item">
-                                        <label>Cycle Tab</label>
-                                        <input type="text" class="keybind-input" data-action="cycleTab" readonly>
-                                    </div>
-                                    <div class="keybind-item">
-                                        <label>Toggle Video Fullscreen</label>
-                                        <input type="text" class="keybind-input" data-action="toggleVideoFullscreen" readonly>
-                                    </div>
-                                    <div class="keybind-item">
-                                        <label>Show Queue</label>
-                                        <input type="text" class="keybind-input" data-action="showQueue" readonly>
-                                    </div>
-                                    <div class="keybind-item">
-                                        <label>Toggle Theme</label>
-                                        <input type="text" class="keybind-input" data-action="toggleTheme" readonly>
-                                    </div>
-                                    <div class="keybind-item">
-                                        <label>Open Timer</label>
-                                        <input type="text" class="keybind-input" data-action="openTimer" readonly>
-                                    </div>
-                                    <div class="keybind-item">
-                                        <label>Cycle Favicon</label>
-                                        <input type="text" class="keybind-input" data-action="cycleFavicon" readonly>
-                                    </div>
-                                    <div class="keybind-item">
-                                        <label>Toggle Web Embed</label>
-                                        <input type="text" class="keybind-input" data-action="toggleWebEmbed" readonly>
-                                    </div>
-                                </div>
-                            </div>
+                           <div class="keybind-category">
+                              <h4><i class="fas fa-play"></i> Playback</h4>
+                              <div class="keybind-items">
+                                 <div class="keybind-item">
+                                    <label>Play/Pause (Primary)</label>
+                                    <input type="text" class="keybind-input" data-action="togglePlayPause" readonly>
+                                 </div>
+                                 <div class="keybind-item">
+                                    <label>Play/Pause (Secondary)</label>
+                                    <input type="text" class="keybind-input" data-action="togglePlayPause2" readonly>
+                                 </div>
+                                 <div class="keybind-item">
+                                    <label>Previous Song (Primary)</label>
+                                    <input type="text" class="keybind-input" data-action="previousSong" readonly>
+                                 </div>
+                                 <div class="keybind-item">
+                                    <label>Previous Song (Secondary)</label>
+                                    <input type="text" class="keybind-input" data-action="previousSong2" readonly>
+                                 </div>
+                                 <div class="keybind-item">
+                                    <label>Next Song (Primary)</label>
+                                    <input type="text" class="keybind-input" data-action="nextSong" readonly>
+                                 </div>
+                                 <div class="keybind-item">
+                                    <label>Next Song (Secondary)</label>
+                                    <input type="text" class="keybind-input" data-action="nextSong2" readonly>
+                                 </div>
+                                 <div class="keybind-item">
+                                    <label>Restart Song</label>
+                                    <input type="text" class="keybind-input" data-action="restartSong" readonly>
+                                 </div>
+                                 <div class="keybind-item">
+                                    <label>Toggle Loop</label>
+                                    <input type="text" class="keybind-input" data-action="toggleLoop" readonly>
+                                 </div>
+                              </div>
+                           </div>
+                           <div class="keybind-category">
+                              <h4><i class="fas fa-volume-up"></i> Volume</h4>
+                              <div class="keybind-items">
+                                 <div class="keybind-item">
+                                    <label>Volume Up</label>
+                                    <input type="text" class="keybind-input" data-action="volumeUp" readonly>
+                                 </div>
+                                 <div class="keybind-item">
+                                    <label>Volume Down</label>
+                                    <input type="text" class="keybind-input" data-action="volumeDown" readonly>
+                                 </div>
+                                 <div class="keybind-item">
+                                    <label>Volume Up (Fine)</label>
+                                    <input type="text" class="keybind-input" data-action="volumeUpFine" readonly>
+                                 </div>
+                                 <div class="keybind-item">
+                                    <label>Volume Down (Fine)</label>
+                                    <input type="text" class="keybind-input" data-action="volumeDownFine" readonly>
+                                 </div>
+                              </div>
+                           </div>
+                           <div class="keybind-category">
+                              <h4><i class="fas fa-desktop"></i> Interface</h4>
+                              <div class="keybind-items">
+                                 <div class="keybind-item">
+                                    <label>Toggle Control Bar</label>
+                                    <input type="text" class="keybind-input" data-action="toggleControlBar" readonly>
+                                 </div>
+                                 <div class="keybind-item">
+                                    <label>Toggle Sidebar (Primary)</label>
+                                    <input type="text" class="keybind-input" data-action="togglePlaylistSidebar" readonly>
+                                 </div>
+                                 <div class="keybind-item">
+                                    <label>Toggle Sidebar (Secondary)</label>
+                                    <input type="text" class="keybind-input" data-action="togglePlaylistSidebar2" readonly>
+                                 </div>
+                                 <div class="keybind-item">
+                                    <label>Cycle Tab</label>
+                                    <input type="text" class="keybind-input" data-action="cycleTab" readonly>
+                                 </div>
+                                 <div class="keybind-item">
+                                    <label>Toggle Video Fullscreen</label>
+                                    <input type="text" class="keybind-input" data-action="toggleVideoFullscreen" readonly>
+                                 </div>
+                                 <div class="keybind-item">
+                                    <label>Show Queue</label>
+                                    <input type="text" class="keybind-input" data-action="showQueue" readonly>
+                                 </div>
+                                 <div class="keybind-item">
+                                    <label>Toggle Theme</label>
+                                    <input type="text" class="keybind-input" data-action="toggleTheme" readonly>
+                                 </div>
+                                 <div class="keybind-item">
+                                    <label>Open Timer</label>
+                                    <input type="text" class="keybind-input" data-action="openTimer" readonly>
+                                 </div>
+                                 <div class="keybind-item">
+                                    <label>Cycle Favicon</label>
+                                    <input type="text" class="keybind-input" data-action="cycleFavicon" readonly>
+                                 </div>
+                                 <div class="keybind-item">
+                                    <label>Toggle Web Embed</label>
+                                    <input type="text" class="keybind-input" data-action="toggleWebEmbed" readonly>
+                                 </div>
+                              </div>
+                           </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Feedback Tab -->
-                <div class="tab-panel" id="feedbackPanel">
-                    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd_TCuV0fb6j0Psu2-QowYAlK440IOd4f1XxhzswTfWOkLHyw/viewform?embedded=true" width="100%" height="600" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
-                </div>
-
-                <!-- Additional Tab -->
-                <div class="tab-panel" id="additionalPanel">
-                    <div class="setting-group">
+                     </div>
+                  </div>
+                  <!-- Feedback Tab -->
+                  <div class="tab-panel" id="feedbackPanel">
+                     <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd_TCuV0fb6j0Psu2-QowYAlK440IOd4f1XxhzswTfWOkLHyw/viewform?embedded=true" width="100%" height="600" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
+                  </div>
+                  <!-- Additional Tab -->
+                  <div class="tab-panel" id="additionalPanel">
+                     <div class="setting-group">
                         <label for="adsToggle">Enable Advertisements:</label>
                         <div class="toggle-switch">
-                            <input type="checkbox" id="adsToggle" class="toggle-input">
-                            <label for="adsToggle" class="toggle-label">
-                                <span class="toggle-slider"></span>
-                            </label>
+                           <input type="checkbox" id="adsToggle" class="toggle-input">
+                           <label for="adsToggle" class="toggle-label">
+                           <span class="toggle-slider"></span>
+                           </label>
                         </div>
                         <p class="setting-description">Turning on advertisements won't even give me a hundredth of a cent</p>
-                    </div>
-
-                    <div class="setting-group">
+                     </div>
+                     <div class="setting-group">
                         <label for="visualizerToggle">Enable Music Visualizer:</label>
                         <div class="toggle-switch">
-                            <input type="checkbox" id="visualizerToggle" class="toggle-input" checked>
-                            <label for="visualizerToggle" class="toggle-label">
-                                <span class="toggle-slider"></span>
-                            </label>
+                           <input type="checkbox" id="visualizerToggle" class="toggle-input" checked>
+                           <label for="visualizerToggle" class="toggle-label">
+                           <span class="toggle-slider"></span>
+                           </label>
                         </div>
                         <p class="setting-description">Show animated background visualizer while music is playing</p>
-                    </div>
-                    <div class="setting-group">
+                     </div>
+                     <div class="setting-group">
                         <label for="librarySortToggle">Sort Library Alphabetically:</label>
                         <div class="toggle-switch">
-                            <input type="checkbox" id="librarySortToggle" class="toggle-input" checked>
-                            <label for="librarySortToggle" class="toggle-label">
-                                <span class="toggle-slider"></span>
-                            </label>
+                           <input type="checkbox" id="librarySortToggle" class="toggle-input" checked>
+                           <label for="librarySortToggle" class="toggle-label">
+                           <span class="toggle-slider"></span>
+                           </label>
                         </div>
                         <p class="setting-description">When off, shows songs in the order they were added</p>
-                    </div>
-                    <div class="setting-group">
+                     </div>
+                     <div class="setting-group">
                         <label for="libraryReverseToggle">Reverse Library Order:</label>
                         <div class="toggle-switch">
-                            <input type="checkbox" id="libraryReverseToggle" class="toggle-input">
-                            <label for="libraryReverseToggle" class="toggle-label">
-                                <span class="toggle-slider"></span>
-                            </label>
+                           <input type="checkbox" id="libraryReverseToggle" class="toggle-input">
+                           <label for="libraryReverseToggle" class="toggle-label">
+                           <span class="toggle-slider"></span>
+                           </label>
                         </div>
                         <p class="setting-description">Reverses the current sort order (favorites always stay on top)</p>
-                    </div>
-                </div>
-                
-
+                     </div>
+                  </div>
+               </div>
             </div>
-        </div>
-    </div>
-</div>
-
-
-
-
-
-
-
-
-
-          
-    </div>
-</div>
-</div>
+         </div>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
+      <div id="recentlyPlayedModal" class="recently-played-modal-bg" style="display: none;">
+         <div class="recently-played-modal">
+            <div class="recently-played-header">
+               <h2>Recently Listened To</h2>
+               <div class="recently-played-settings">
+                  <label class="recently-played-settings-label">Store last </label>
+                  <input type="number" min="1" max="100" value="20" class="recently-played-settings-input" id="recentlyPlayedLimitInput">
+                  <span class="recently-played-settings-label"> songs</span>
+               </div>
+               <button class="recently-played-close" id="closeRecentlyPlayedModal">×</button>
             </div>
-        </div>
-    </div>
-</div>
-
-
-<div id="recentlyPlayedModal" class="recently-played-modal-bg" style="display: none;">
-  <div class="recently-played-modal">
-    <div class="recently-played-header">
-      <h2>Recently Listened To</h2>
-      <div class="recently-played-settings">
-        <label class="recently-played-settings-label">Store last </label>
-        <input type="number" min="1" max="100" value="20" class="recently-played-settings-input" id="recentlyPlayedLimitInput">
-        <span class="recently-played-settings-label"> songs</span>
+            <div class="recently-played-content" id="recentlyPlayedContent">
+               <!-- Songs will be populated here by JavaScript -->
+            </div>
+         </div>
       </div>
-      <button class="recently-played-close" id="closeRecentlyPlayedModal">×</button>
-    </div>
-    <div class="recently-played-content" id="recentlyPlayedContent">
-      <!-- Songs will be populated here by JavaScript -->
-    </div>
-  </div>
-</div>
-<!-- Lyrics Maker Modal -->
-<div id="lyricsModal" class="lyrics-maker-modal hidden">
-  <div class="lyrics-maker-content">
-    <div class="lyrics-header">
-      <h1 id="lyricsTitle">Lyrics Maker</h1>
-      <span id="closeLyricsModal" class="close-btn">&times;</span>
-    </div>
-    
-    <div class="lyrics-navbar">
-      <button class="lyrics-nav-item active" data-tab="setupTab">1. Setup</button>
-      <button class="lyrics-nav-item" data-tab="recordTab">2. Record</button>
-      <button class="lyrics-nav-item" data-tab="exportTab">3. Export</button>
-    </div>
-
-    <div id="setupTab" class="lyrics-tab active">
-      <div class="lyrics-section">
-        <h2>YouTube Video</h2>
-        <input type="text" id="youtubeLink" readonly>
-        <button id="loadVideoBtn">Load Video</button>
+      <!-- Lyrics Maker Modal -->
+      <div id="lyricsModal" class="lyrics-maker-modal hidden">
+         <div class="lyrics-maker-content">
+            <div class="lyrics-header">
+               <h1 id="lyricsTitle">Lyrics Maker</h1>
+               <span id="closeLyricsModal" class="close-btn">&times;</span>
+            </div>
+            <div class="lyrics-navbar">
+               <button class="lyrics-nav-item active" data-tab="setupTab">1. Setup</button>
+               <button class="lyrics-nav-item" data-tab="recordTab">2. Record</button>
+               <button class="lyrics-nav-item" data-tab="exportTab">3. Export</button>
+            </div>
+            <div id="setupTab" class="lyrics-tab active">
+               <div class="lyrics-section">
+                  <h2>YouTube Video</h2>
+                  <input type="text" id="youtubeLink" readonly>
+                  <button id="loadVideoBtn">Load Video</button>
+               </div>
+               <div class="lyrics-section">
+                  <h2>Enter Lyrics</h2>
+                  <div class="lyrics-search-buttons">
+                     <button id="azlyricsBtn" class="lyrics-search-btn">Find Lyrics via AZLyrics</button>
+                     <button id="letrasBtn" class="lyrics-search-btn">Find Lyrics via Letras</button>
+                     <button id="geniusBtn" class="lyrics-search-btn">Find Lyrics via Genius</button>
+                     <button id="googleBtn" class="lyrics-search-btn">Find Lyrics via Google</button>
+                  </div>
+                  <textarea id="lyricsInput" placeholder="Enter your lyrics here. Put each line on a new line."></textarea>
+                  <button id="prepareLyricsBtn">Prepare Lyrics</button>
+               </div>
+               <button id="nextToRecordBtn">Next: Record Timing</button>
+            </div>
+            <div id="recordTab" class="lyrics-tab">
+               <div id="videoContainer"></div>
+               <div id="prevLine" class="lyrics-box"></div>
+               <div id="currentLine" class="lyrics-box">Press "Start Recording" when ready</div>
+               <div id="nextLine" class="lyrics-box"></div>
+               <div id="currentTime">0:00</div>
+               <div class="lyrics-section">
+                  <button id="startRecording">Start Recording</button>
+                  <button id="prevLineBtn" disabled>← Previous Line</button>
+                  <button id="markLine" disabled>Mark Line</button>
+                  <button id="nextLineBtn" disabled>Next Line →</button>
+                  <button id="finishRecording" disabled>Finish Recording</button>
+               </div>
+               <div id="progressContainer">
+                  <h3>Progress</h3>
+               </div>
+            </div>
+            <div id="exportTab" class="lyrics-tab">
+               <h2>Export Timed Lyrics</h2>
+               <div class="lyrics-section">
+                  <h3>Preview</h3>
+                  <div id="previewContainer"></div>
+               </div>
+               <div class="lyrics-section">
+                  <h3>Timed Lyrics</h3>
+                  <textarea id="exportOutput" readonly></textarea>
+                  <button id="copyToClipboardBtn">Copy to Clipboard</button>
+                  <button id="saveTranscriptLyricsBtn" class="accent-btn">Save to Song</button>
+               </div>
+            </div>
+         </div>
       </div>
-      <div class="lyrics-section">
-  <h2>Enter Lyrics</h2>
-  <div class="lyrics-search-buttons">
-    <button id="azlyricsBtn" class="lyrics-search-btn">Find Lyrics via AZLyrics</button>
-    <button id="letrasBtn" class="lyrics-search-btn">Find Lyrics via Letras</button>
-    <button id="geniusBtn" class="lyrics-search-btn">Find Lyrics via Genius</button>
-    <button id="googleBtn" class="lyrics-search-btn">Find Lyrics via Google</button>
-  </div>
-  <textarea id="lyricsInput" placeholder="Enter your lyrics here. Put each line on a new line."></textarea>
-  <button id="prepareLyricsBtn">Prepare Lyrics</button>
-</div>
-      <button id="nextToRecordBtn">Next: Record Timing</button>
-    </div>
-
-<div id="recordTab" class="lyrics-tab">
-  <div id="videoContainer"></div>
-  <div id="prevLine" class="lyrics-box"></div>
-  <div id="currentLine" class="lyrics-box">Press "Start Recording" when ready</div>
-  <div id="nextLine" class="lyrics-box"></div>
-  <div id="currentTime">0:00</div>
-  <div class="lyrics-section">
-    <button id="startRecording">Start Recording</button>
-    <button id="prevLineBtn" disabled>← Previous Line</button>
-    <button id="markLine" disabled>Mark Line</button>
-    <button id="nextLineBtn" disabled>Next Line →</button>
-    <button id="finishRecording" disabled>Finish Recording</button>
-  </div>
-  <div id="progressContainer">
-    <h3>Progress</h3>
-  </div>
-</div>
-
-    <div id="exportTab" class="lyrics-tab">
-      <h2>Export Timed Lyrics</h2>
-      <div class="lyrics-section">
-        <h3>Preview</h3>
-        <div id="previewContainer"></div>
-      </div>
-      <div class="lyrics-section">
-        <h3>Timed Lyrics</h3>
-        <textarea id="exportOutput" readonly></textarea>
-        <button id="copyToClipboardBtn">Copy to Clipboard</button>
-        <button id="saveTranscriptLyricsBtn" class="accent-btn">Save to Song</button>
-      </div>
-    </div>
-  </div>
-</div>
-    <!-- Find Songs Feature - Outside app-container -->
-<div id="findSongsDiv" class="find-songs-container" style="display: none;">
-    <div class="find-songs-content">
-        <div class="find-songs-header">
+      <!-- Find Songs Feature - Outside app-container -->
+      <div id="findSongsDiv" class="find-songs-container" style="display: none;">
+      <div class="find-songs-content">
+         <div class="find-songs-header">
             <h2>Find Songs from the Global Library</h2>
             <button id="globalLibraryEditBtn" class="global-library-edit-btn" title="Edit Global Library">✏️</button>
             <button id="closeFindSongs" class="close-btn">&times;</button>
-        </div>
-        
-        <div class="find-songs-body">
+         </div>
+         <div class="find-songs-body">
             <!-- Recommendations Panel on Left -->
             <div class="recommendations-panel" id="recommendationsPanel">
-                <!-- Top Songs of the Week Section -->
-                <div class="recommendation-section">
-                    <h3 class="recommendation-title">🏆 Top Songs This Week</h3>
-                    <div id="topSongsContainer" class="top-songs-container">
-                        <!-- Will be populated by JavaScript -->
-                    </div>
-                </div>
-                
-                <!-- Random Recommendations Section -->
-                <div class="recommendation-section">
-                    <h3 class="recommendation-title">🎲 Discover Something New</h3>
-                    <div id="randomSongsContainer" class="random-songs-container">
-                        <!-- Will be populated by JavaScript -->
-                    </div>
-                    <button id="refreshRandomBtn" class="refresh-random-btn">🔄 Refresh</button>
-                </div>
+               <!-- Top Songs of the Week Section -->
+               <div class="recommendation-section">
+                  <h3 class="recommendation-title">🏆 Top Songs This Week</h3>
+                  <div id="topSongsContainer" class="top-songs-container">
+                     <!-- Will be populated by JavaScript -->
+                  </div>
+               </div>
+               <!-- Random Recommendations Section -->
+               <div class="recommendation-section">
+                  <h3 class="recommendation-title">🎲 Discover Something New</h3>
+                  <div id="randomSongsContainer" class="random-songs-container">
+                     <!-- Will be populated by JavaScript -->
+                  </div>
+                  <button id="refreshRandomBtn" class="refresh-random-btn">🔄 Refresh</button>
+               </div>
             </div>
-            
             <!-- Main Content on Right -->
             <div class="find-songs-main-content">
-            <div class="find-songs-search">
-                <input type="text" id="findSongsSearch" placeholder="Search for artists, songs, or playlists...">
+               <div class="find-songs-search">
+                  <input type="text" id="findSongsSearch" placeholder="Search for artists, songs, or playlists...">
+               </div>
+               <div id="findSongsResults" class="find-songs-results">
+                  <!-- Results will be populated here by JavaScript -->
+               </div>
+               <div class="not-finding-section" id="notFindingSection" style="display: none;">
+                  <p>Not finding what you're looking for?</p>
+                  <button class="generate-playlist-btn" id="openAiGeneratorBtn">Generate your wanted playlist with AI</button>
+               </div>
             </div>
-            <div id="findSongsResults" class="find-songs-results">
-                <!-- Results will be populated here by JavaScript -->
+         </div>
+      </div>
+      <div id="globalLibraryModal" class="global-library-modal" style="display: none;">
+         <div class="global-library-content">
+            <div class="global-library-header">
+               <h2>🎵 Global Library Management</h2>
+               <button id="globalLibraryCloseBtn" class="close-btn">&times;</button>
             </div>
-            <div class="not-finding-section" id="notFindingSection" style="display: none;">
-                <p>Not finding what you're looking for?</p>
-                <button class="generate-playlist-btn" id="openAiGeneratorBtn">Generate your wanted playlist with AI</button>
+            <!-- Login Form -->
+            <div id="globalLibraryLoginSection">
+               <h3>Login to Global Library</h3>
+               <input type="email" id="globalLibraryEmail" placeholder="Email" class="global-library-input" autocomplete="username">
+               <input type="password" id="globalLibraryPassword" placeholder="Password" class="global-library-input" autocomplete="current-password">
+               <button id="globalLibraryLoginBtn" class="global-library-btn">Login</button>
+               <div id="globalLibraryAuthError" class="error-message"></div>
             </div>
-        </div>
-    </div>
-</div>
-
-<div id="globalLibraryModal" class="global-library-modal" style="display: none;">
-    <div class="global-library-content">
-        <div class="global-library-header">
-            
-            <h2>🎵 Global Library Management</h2>
-            <button id="globalLibraryCloseBtn" class="close-btn">&times;</button>
-        </div>
-        
-        <!-- Login Form -->
-        <div id="globalLibraryLoginSection">
-            <h3>Login to Global Library</h3>
-            <input type="email" id="globalLibraryEmail" placeholder="Email" class="global-library-input" autocomplete="username">
-<input type="password" id="globalLibraryPassword" placeholder="Password" class="global-library-input" autocomplete="current-password">
-
-            <button id="globalLibraryLoginBtn" class="global-library-btn">Login</button>
-            <div id="globalLibraryAuthError" class="error-message"></div>
-        </div>
-
-        <!-- Main Content -->
-        <div id="globalLibraryMainSection" style="display: none;">
-            <div class="global-library-user-info">
-                <span id="globalLibraryUserInfo"></span>
-                <button id="globalLibraryLogoutBtn" class="global-library-btn global-library-btn-secondary">Logout</button>
-            </div>
-            
-            <div class="global-library-controls">
-                <div class="control-group">
-                    <h4>Create Playlist</h4>
-                    <input type="text" id="globalLibraryNewPlaylistName" placeholder="Playlist name" class="global-library-input">
-                    <button id="globalLibraryCreateBtn" class="global-library-btn">Create</button>
-                </div>
-                
-                <div class="control-group">
-                    <h4>Add Song</h4>
-                    <div class="playlist-select-container">
+            <!-- Main Content -->
+            <div id="globalLibraryMainSection" style="display: none;">
+               <div class="global-library-user-info">
+                  <span id="globalLibraryUserInfo"></span>
+                  <button id="globalLibraryLogoutBtn" class="global-library-btn global-library-btn-secondary">Logout</button>
+               </div>
+               <div class="global-library-controls">
+                  <div class="control-group">
+                     <h4>Create Playlist</h4>
+                     <input type="text" id="globalLibraryNewPlaylistName" placeholder="Playlist name" class="global-library-input">
+                     <button id="globalLibraryCreateBtn" class="global-library-btn">Create</button>
+                  </div>
+                  <div class="control-group">
+                     <h4>Add Song</h4>
+                     <div class="playlist-select-container">
                         <input type="text" id="globalLibraryPlaylistSearch" placeholder="Search playlists..." class="global-library-input playlist-search">
                         <select id="globalLibrarySongPlaylistSelect" class="global-library-select">
-                            <option value="">Select Playlist</option>
+                           <option value="">Select Playlist</option>
                         </select>
-                    </div>
-                    <input type="text" id="globalLibraryNewSongName" placeholder="Song name" class="global-library-input">
-                    <input type="text" id="globalLibraryNewSongAuthor" placeholder="Author" class="global-library-input">
-                    <input type="url" id="globalLibraryNewSongUrl" placeholder="YouTube URL" class="global-library-input">
-                    <button id="globalLibraryAddSongBtn" class="global-library-btn">Add Song</button>
-                </div>
-
-                <div class="control-group">
-                    <h4>Mass Import</h4>
-                    <div class="playlist-select-container">
+                     </div>
+                     <input type="text" id="globalLibraryNewSongName" placeholder="Song name" class="global-library-input">
+                     <input type="text" id="globalLibraryNewSongAuthor" placeholder="Author" class="global-library-input">
+                     <input type="url" id="globalLibraryNewSongUrl" placeholder="YouTube URL" class="global-library-input">
+                     <button id="globalLibraryAddSongBtn" class="global-library-btn">Add Song</button>
+                  </div>
+                  <div class="control-group">
+                     <h4>Mass Import</h4>
+                     <div class="playlist-select-container">
                         <select id="globalLibraryMassImportSelect" class="global-library-select">
-                            <option value="">Select Playlist for Import</option>
+                           <option value="">Select Playlist for Import</option>
                         </select>
-                    </div>
-                    <textarea id="globalLibraryMassImportText" placeholder="Format: Song Name, YouTube URL, Author
-Example:
-Shape of You, https://youtube.com/watch?v=abc123, Ed Sheeran
-Blinding Lights, https://youtube.com/watch?v=def456, The Weeknd" class="global-library-textarea"></textarea>
-                    <button id="globalLibraryMassImportBtn" class="global-library-btn">Import Songs</button>
-                </div>
+                     </div>
+                     <textarea id="globalLibraryMassImportText" placeholder="Format: Song Name, YouTube URL, Author
+                        Example:
+                        Shape of You, https://youtube.com/watch?v=abc123, Ed Sheeran
+                        Blinding Lights, https://youtube.com/watch?v=def456, The Weeknd" class="global-library-textarea"></textarea>
+                     <button id="globalLibraryMassImportBtn" class="global-library-btn">Import Songs</button>
+                  </div>
+               </div>
+               <!-- Add this as a new control-group in the global-library-controls -->
+               <div class="control-group">
+                  <h4>Manage Top Songs of the Week</h4>
+                  <div id="topSongsManagement">
+                     <!-- Will be populated by JavaScript -->
+                  </div>
+               </div>
+               <input type="text" id="globalLibrarySearchBar" class="global-library-search-bar" placeholder="Search playlists and songs...">
+               <div id="globalLibraryArtistsContainer"></div>
+               <div id="globalLibraryMessages"></div>
             </div>
-            <!-- Add this as a new control-group in the global-library-controls -->
-<div class="control-group">
-    <h4>Manage Top Songs of the Week</h4>
-    <div id="topSongsManagement">
-        <!-- Will be populated by JavaScript -->
-    </div>
-</div>
-
-            <input type="text" id="globalLibrarySearchBar" class="global-library-search-bar" placeholder="Search playlists and songs...">
-            
-            <div id="globalLibraryArtistsContainer"></div>
-            <div id="globalLibraryMessages"></div>
-        </div>
-    </div>
-</div>
-    <!-- AI Song Generator Modal - Add after findSongsDiv -->
-<!-- AI Song Generator Modal - Add after findSongsDiv -->
-<div id="aiGeneratorDiv" class="ai-generator-container" style="display: none;">
-    <div class="ai-generator-content">
-        <div class="ai-generator-header">
-            <div class="ai-generator-header-content">
-                <h1>AI Playlist Generator</h1>
-                <p>Generate a playlist using AI for any artist. Reliable for famous artists. Unknown artists might result in unreliable results</p>
+         </div>
+      </div>
+      <!-- AI Song Generator Modal - Add after findSongsDiv -->
+      <!-- AI Song Generator Modal - Add after findSongsDiv -->
+      <div id="aiGeneratorDiv" class="ai-generator-container" style="display: none;">
+         <div class="ai-generator-content">
+            <div class="ai-generator-header">
+               <div class="ai-generator-header-content">
+                  <h1>AI Playlist Generator</h1>
+                  <p>Generate a playlist using AI for any artist. Reliable for famous artists. Unknown artists might result in unreliable results</p>
+               </div>
+               <button id="closeAiGenerator" class="close-btn">&times;</button>
             </div>
-            <button id="closeAiGenerator" class="close-btn">&times;</button>
-        </div>
-        
-        <div class="ai-generator-form">
-            <div class="form-group">
-                <label for="aiArtistName">Artist Name:</label>
-                <input type="text" id="aiArtistName" placeholder="Enter artist name (e.g., Taylor Swift, The Beatles)" required>
+            <div class="ai-generator-form">
+               <div class="form-group">
+                  <label for="aiArtistName">Artist Name:</label>
+                  <input type="text" id="aiArtistName" placeholder="Enter artist name (e.g., Taylor Swift, The Beatles)" required>
+               </div>
+               <div class="form-group">
+                  <label for="aiSongCount">Number of Songs:</label>
+                  <input type="number" id="aiSongCount" min="1" max="50" value="10" required>
+               </div>
+               <div class="form-group">
+                  <label for="aiRequiredSongs">Required Songs (Optional):</label>
+                  <input type="text" id="aiRequiredSongs" placeholder="Enter specific songs that must be included (comma-separated)">
+                  <small style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 5px; display: block;">
+                  Example: Young black and rich, God's plan, Started from the bottom
+                  </small>
+               </div>
+               <div class="ai-button-group">
+                  <button class="ai-generate-btn" id="aiGenerateBtn">Generate Song List</button>
+                  <button class="ai-copy-btn" id="aiCopyBtn" style="display: none;">Copy to Clipboard</button>
+                  <button class="ai-import-global-btn" id="aiImportGlobalBtn" style="display: none;">Import to Global Library</button>
+                  <button class="ai-import-btn" id="aiImportBtn" style="display: none;">Import to Library</button>
+               </div>
             </div>
-            
-            <div class="form-group">
-                <label for="aiSongCount">Number of Songs:</label>
-                <input type="number" id="aiSongCount" min="1" max="50" value="10" required>
+            <div class="ai-output-section" style="display: none;" id="aiOutputSection">
+               <div class="ai-output-container" id="aiOutput"></div>
             </div>
-            
-            <div class="form-group">
-                <label for="aiRequiredSongs">Required Songs (Optional):</label>
-                <input type="text" id="aiRequiredSongs" placeholder="Enter specific songs that must be included (comma-separated)">
-                <small style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 5px; display: block;">
-                    Example: Young black and rich, God's plan, Started from the bottom
-                </small>
-            </div>
-            
-            <div class="ai-button-group">
-                <button class="ai-generate-btn" id="aiGenerateBtn">Generate Song List</button>
-                <button class="ai-copy-btn" id="aiCopyBtn" style="display: none;">Copy to Clipboard</button>
-                <button class="ai-import-global-btn" id="aiImportGlobalBtn" style="display: none;">Import to Global Library</button>
-                <button class="ai-import-btn" id="aiImportBtn" style="display: none;">Import to Library</button>
-            </div>
-        </div>
-        
-        <div class="ai-output-section" style="display: none;" id="aiOutputSection">
-            <div class="ai-output-container" id="aiOutput"></div>
-        </div>
-    </div>
-</div>
-
-
-    
-    <script src="https://www.youtube.com/iframe_api"></script>
-    <script src="script.js"></script>
-
-
-    
-    
-
-  
-  
-    <div id="ytPlayer"></div>
-     
-</body>
+         </div>
+      </div>
+      <script src="https://www.youtube.com/iframe_api"></script>
+      <script src="script.js"></script>
+      <div id="ytPlayer"></div>
+   </body>
 </html>
