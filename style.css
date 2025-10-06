@@ -6549,3 +6549,163 @@ body:has(#ytPlayer.fullscreen-video) {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+.music-cover-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.music-cover-overlay.visible {
+    display: flex;
+    opacity: 1;
+}
+
+.music-cover-content {
+    background: var(--bg-secondary);
+    opacity: 0.7;
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 20px 60px var(--shadow-color);
+}
+
+.music-cover-artwork {
+    margin-bottom: 30px;
+}
+
+.music-cover-artwork img {
+    width: 100%;
+    max-width: 350px;
+    height: auto;
+    aspect-ratio: 1;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px var(--shadow-color);
+    object-fit: cover;
+}
+
+.music-cover-info {
+    margin-bottom: 30px;
+}
+
+.music-cover-info h2 {
+    color: var(--text-primary);
+    font-size: 28px;
+    margin: 0 0 10px 0;
+    font-weight: 600;
+}
+
+.music-cover-info p {
+    color: var(--text-secondary);
+    font-size: 16px;
+    margin: 5px 0;
+}
+
+.music-cover-controls {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.cover-control-btn {
+    background: var(--accent-color);
+    color: var(--button-text-color);
+    border: none;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    transition: all 0.3s ease;
+}
+
+.cover-control-btn:hover {
+    background: var(--hover-color);
+    transform: scale(1.1);
+}
+
+.cover-play-btn {
+    width: 70px;
+    height: 70px;
+    font-size: 28px;
+}
+
+.music-cover-progress {
+    margin-bottom: 20px;
+}
+
+#coverProgressBar {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.cover-time-display {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.music-cover-toggles {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.cover-toggle-btn {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 2px solid var(--border-color);
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: all 0.3s ease;
+}
+
+.cover-toggle-btn:hover {
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.cover-toggle-btn.active {
+    background: var(--accent-color);
+    color: var(--button-text-color);
+    border-color: var(--accent-color);
+}
+
+.close-music-cover {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close-music-cover:hover {
+    color: var(--text-primary);
+}
