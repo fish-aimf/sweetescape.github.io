@@ -9598,6 +9598,16 @@ syncLibraryDisplayUI() {
 }
 
     openMusicCover() {
+    console.log('openMusicCover called');
+    console.log('musicCover element:', this.elements.musicCover);
+    console.log('currentSong:', this.currentSong);
+    
+    if (!this.elements.musicCover) {
+        console.error('Music cover element not found!');
+        alert('Music cover element not initialized');
+        return;
+    }
+    
     if (!this.currentSong) {
         alert('No song is currently playing');
         return;
@@ -9606,6 +9616,9 @@ syncLibraryDisplayUI() {
     this.updateMusicCover();
     this.elements.musicCover.classList.add('visible');
     this.isMusicCoverVisible = true;
+    
+    console.log('Music cover should now be visible');
+    console.log('classList:', this.elements.musicCover.classList);
 }
 
 // New method: Close Music Cover
