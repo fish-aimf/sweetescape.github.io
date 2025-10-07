@@ -197,7 +197,6 @@ this.globalLibrarySearchFilter = '';
         this.setupKeyboardControls();
         this.renderInitialState();
         this.renderAdditionalDetails();
-        this.initializeCoverMode();
         this.setupLyricsTabContextMenu();
         this.initializeFullscreenLyrics();
         this.initializeAdvertisementSettings();
@@ -1813,7 +1812,6 @@ hideCreatePlaylistDiv() {
     this.hideSidebar();
     this.saveRecentlyPlayedSong(song);
     this.updateCurrentSongDisplay();
-    this.updateCoverModeUI();
     if (
         document.getElementById("lyrics") &&
         document.getElementById("lyrics").classList.contains("active")
@@ -1894,107 +1892,104 @@ hideCreatePlaylistDiv() {
 }
   togglePlayPause() {
     if (!this.ytPlayer) {
-        console.warn("YouTube player not initialized");
-        return;
+      console.warn("YouTube player not initialized");
+      return;
     }
     try {
-        const playerState = this.ytPlayer.getPlayerState();
-        if (playerState === YT.PlayerState.PLAYING) {
-            this.ytPlayer.pauseVideo();
-            this.isPlaying = false;
-            if (this.titleScrollInterval) {
-                clearInterval(this.titleScrollInterval);
-                this.titleScrollInterval = null;
-                document.title = "Music Player";
-            }
-        } else {
-            this.ytPlayer.playVideo();
-            this.isPlaying = true;
-            this.updatePageTitle();
+      const playerState = this.ytPlayer.getPlayerState();
+      if (playerState === YT.PlayerState.PLAYING) {
+        this.ytPlayer.pauseVideo();
+        this.isPlaying = false;
+        if (this.titleScrollInterval) {
+          clearInterval(this.titleScrollInterval);
+          this.titleScrollInterval = null;
+          document.title = "Music Player";
         }
-        this.updatePlayerUI();
-        this.updateCoverModeUI();
+      } else {
+        this.ytPlayer.playVideo();
+        this.isPlaying = true;
+        this.updatePageTitle();
+      }
+      this.updatePlayerUI();
     } catch (error) {
-        console.error("Error toggling play/pause:", error);
+      console.error("Error toggling play/pause:", error);
     }
-}
+  }
 playNextSong() {
-    if (this.songQueue.length > 0) {
-        const nextSong = this.songQueue.shift();
-        this.saveQueue();
-        this.updateQueueVisualIndicators();
-        const songInLibrary = this.songLibrary.find(s => s.videoId === nextSong.videoId);
-        if (songInLibrary) {
-            this.currentSongIndex = this.songLibrary.findIndex(s => s.id === songInLibrary.id);
-            this.currentPlaylist = null;
-        }
-        this.currentSong = nextSong; 
-        this.saveRecentlyPlayedSong(nextSong);
-        this.playSongById(nextSong.videoId);
-        this.updatePlayerUI();
-        this.updateCurrentSongDisplay();
-        this.updateCoverModeUI();
-        return;
+  if (this.songQueue.length > 0) {
+    const nextSong = this.songQueue.shift();
+    this.saveQueue();
+    this.updateQueueVisualIndicators();
+    const songInLibrary = this.songLibrary.find(s => s.videoId === nextSong.videoId);
+    if (songInLibrary) {
+      this.currentSongIndex = this.songLibrary.findIndex(s => s.id === songInLibrary.id);
+      this.currentPlaylist = null;
     }
-    const source = this.currentPlaylist ? this.currentPlaylist.songs : this.songLibrary;
-    if (!source.length) return;
-    if (this.currentPlaylist && this.temporarilySkippedSongs && this.temporarilySkippedSongs.size > 0) {
-        this.playNextNonSkippedSong();
-        return;
+    this.currentSong = nextSong; 
+    this.saveRecentlyPlayedSong(nextSong);
+    this.playSongById(nextSong.videoId);
+    this.updatePlayerUI();
+    this.updateCurrentSongDisplay(); 
+    return;
+  }
+  const source = this.currentPlaylist ? this.currentPlaylist.songs : this.songLibrary;
+  if (!source.length) return;
+  if (this.currentPlaylist && this.temporarilySkippedSongs && this.temporarilySkippedSongs.size > 0) {
+    this.playNextNonSkippedSong();
+    return;
+  }
+  if (this.currentSongIndex === source.length - 1 && !this.isPlaylistLooping) {
+    if (this.ytPlayer) {
+      this.ytPlayer.stopVideo();
+      this.isPlaying = false;
+      this.updatePlayerUI();
     }
-    if (this.currentSongIndex === source.length - 1 && !this.isPlaylistLooping) {
-        if (this.ytPlayer) {
-            this.ytPlayer.stopVideo();
-            this.isPlaying = false;
-            this.updatePlayerUI();
-            this.updateCoverModeUI();
-        }
-        return;
-    }
-    this.currentSongIndex = (this.currentSongIndex + 1) % source.length;
-    const currentSong = source[this.currentSongIndex];
-    this.currentSong = currentSong; 
-    this.saveRecentlyPlayedSong(currentSong);
-    if (this.currentPlaylist) {
-        this.playSongById(currentSong.videoId);
-    } else {
-        this.playCurrentSong();
-    }
-    this.updateCurrentSongDisplay();
-    this.updateCoverModeUI();
+    return;
+  }
+  this.currentSongIndex = (this.currentSongIndex + 1) % source.length;
+  const currentSong = source[this.currentSongIndex];
+  this.currentSong = currentSong; 
+  this.saveRecentlyPlayedSong(currentSong);
+  if (this.currentPlaylist) {
+    this.playSongById(currentSong.videoId);
+  } else {
+    this.playCurrentSong();
+  }
+  this.updateCurrentSongDisplay(); 
 }
 playPreviousSong() {
-    const source = this.currentPlaylist ? this.currentPlaylist.songs : this.songLibrary;
-    if (!source.length) return;
-    if (this.currentPlaylist && this.temporarilySkippedSongs.size > 0) {
-        const totalSongs = source.length;
-        let prevIndex = (this.currentSongIndex - 1 + totalSongs) % totalSongs;
-        const startIndex = prevIndex;
-        while (this.isSongTemporarilySkipped(source[prevIndex])) {
-            prevIndex = (prevIndex - 1 + totalSongs) % totalSongs;
-            if (prevIndex === startIndex) {
-                return;
-            }
-        }
-        this.currentSongIndex = prevIndex;
-        this.currentSong = source[this.currentSongIndex]; 
-        this.saveRecentlyPlayedSong(source[this.currentSongIndex]); 
-        this.playSongById(source[this.currentSongIndex].videoId);
-        this.updateCurrentSongDisplay();
-        this.updateCoverModeUI();
+  const source = this.currentPlaylist
+    ? this.currentPlaylist.songs
+    : this.songLibrary;
+  if (!source.length) return;
+  if (this.currentPlaylist && this.temporarilySkippedSongs.size > 0) {
+    const totalSongs = source.length;
+    let prevIndex = (this.currentSongIndex - 1 + totalSongs) % totalSongs;
+    const startIndex = prevIndex;
+    while (this.isSongTemporarilySkipped(source[prevIndex])) {
+      prevIndex = (prevIndex - 1 + totalSongs) % totalSongs;
+      if (prevIndex === startIndex) {
         return;
+      }
     }
-    this.currentSongIndex = (this.currentSongIndex - 1 + source.length) % source.length;
-    const currentSong = source[this.currentSongIndex];
-    this.currentSong = currentSong; 
-    this.saveRecentlyPlayedSong(currentSong); 
-    if (this.currentPlaylist) {
-        this.playSongById(source[this.currentSongIndex].videoId);
-    } else {
-        this.playCurrentSong();
-    }
-    this.updateCurrentSongDisplay();
-    this.updateCoverModeUI();
+    this.currentSongIndex = prevIndex;
+    this.currentSong = source[this.currentSongIndex]; 
+    this.saveRecentlyPlayedSong(source[this.currentSongIndex]); 
+    this.playSongById(source[this.currentSongIndex].videoId);
+    this.updateCurrentSongDisplay(); 
+    return;
+  }
+  this.currentSongIndex =
+    (this.currentSongIndex - 1 + source.length) % source.length;
+  const currentSong = source[this.currentSongIndex];
+  this.currentSong = currentSong; 
+  this.saveRecentlyPlayedSong(currentSong); 
+  if (this.currentPlaylist) {
+    this.playSongById(source[this.currentSongIndex].videoId);
+  } else {
+    this.playCurrentSong();
+  }
+  this.updateCurrentSongDisplay(); 
 }
 playCurrentSong() {
     if (!this.songLibrary.length) return;
@@ -2009,18 +2004,18 @@ playCurrentSong() {
     this.updateCurrentSongDisplay(); 
 }
 playSongFromPlaylist(index) {
-    if (!this.currentPlaylist || index >= this.currentPlaylist.songs.length) return;
-    const song = this.currentPlaylist.songs[index];
-    const entryId = song.entryId || "id_" + song.videoId;
-    if (this.temporarilySkippedSongs.has(entryId)) {
-        return;
-    }
-    this.currentSongIndex = index;
-    this.currentSong = song; 
-    this.saveRecentlyPlayedSong(song); 
-    this.playSongById(song.videoId);
-    this.updateCurrentSongDisplay();
-    this.updateCoverModeUI();
+  if (!this.currentPlaylist || index >= this.currentPlaylist.songs.length)
+    return;
+  const song = this.currentPlaylist.songs[index];
+  const entryId = song.entryId || "id_" + song.videoId;
+  if (this.temporarilySkippedSongs.has(entryId)) {
+    return;
+  }
+  this.currentSongIndex = index;
+  this.currentSong = song; 
+  this.saveRecentlyPlayedSong(song); 
+  this.playSongById(song.videoId);
+  this.updateCurrentSongDisplay(); 
 }
 async saveSetting(key, value) {
   if (!this.db) return;
@@ -2368,13 +2363,9 @@ onPlayerStateChange(event) {
 
   toggleLoop() {
     this.isLooping = !this.isLooping;
-    if (this.elements.loopBtn) {
-        this.elements.loopBtn.classList.toggle("active", this.isLooping);
-    }
+    this.elements.loopBtn.classList.toggle("active", this.isLooping);
     this.updatePlayerUI();
-    this.updateCoverModeUI();
-    this.saveSetting("looping", this.isLooping);
-}
+  }
   setVolume(volume) {
     if (this.ytPlayer) {
       this.ytPlayer.setVolume(volume);
@@ -4618,7 +4609,6 @@ removeGhostPreview() {
         currentSongDiv.id = 'currentSongSection';
         currentSongDiv.className = 'current-song-section';
         currentSongDiv.style.display = 'none';
-        currentSongDiv.style.cursor = 'pointer';
         currentSongDiv.innerHTML = `
             <h4 class="current-song-title">Now Playing</h4>
             <div class="current-song-container">
@@ -4631,26 +4621,19 @@ removeGhostPreview() {
                 </div>
             </div>
         `;
-        currentSongDiv.addEventListener('click', () => {
-            this.toggleCoverMode();
-        });
         this.elements.additionalDetails.appendChild(currentSongDiv);
     } else {
-        currentSongSection.style.cursor = 'pointer';
-        currentSongSection.addEventListener('click', () => {
-            this.toggleCoverMode();
-        });
         this.elements.additionalDetails.appendChild(currentSongSection);
     }
     this.updateCurrentSongDisplay();
-    const recentlyListenedItems = this.getCombinedRecentlyPlayed();
-    if (recentlyListenedItems.length > 0) {
-        this.createDetailsSection(
-            "Recently Listened To",
-            recentlyListenedItems.slice(0, this.recentlyPlayedDisplayLimit || 3),
-            "mixed"
-        );
-    }
+const recentlyListenedItems = this.getCombinedRecentlyPlayed();
+if (recentlyListenedItems.length > 0) {
+    this.createDetailsSection(
+        "Recently Listened To",
+        recentlyListenedItems.slice(0, this.recentlyPlayedDisplayLimit || 3),
+        "mixed"
+    );
+}
     if (this.songLibrary.length > 0) {
         this.createDetailsSection(
             "Suggested",
@@ -9529,289 +9512,6 @@ syncLibraryDisplayUI() {
     }
 }
 
-
-
-
-// ==================== COVER MODE METHODS ====================
-
-initializeCoverMode() {
-    const currentSongSection = document.getElementById('currentSongSection');
-    if (currentSongSection) {
-        currentSongSection.style.cursor = 'pointer';
-        currentSongSection.addEventListener('click', () => {
-            this.toggleCoverMode();
-        });
-    }
-}
-
-toggleCoverMode() {
-    const appContainer = document.querySelector('.app-container');
-    const coverModeContainer = document.getElementById('coverModeContainer');
-    
-    if (!coverModeContainer) {
-        this.createCoverModeContainer();
-        this.showCoverMode();
-    } else {
-        if (coverModeContainer.style.display === 'none') {
-            this.showCoverMode();
-        } else {
-            this.hideCoverMode();
-        }
-    }
-}
-
-createCoverModeContainer() {
-    const coverModeContainer = document.createElement('div');
-    coverModeContainer.id = 'coverModeContainer';
-    coverModeContainer.className = 'cover-mode-container';
-    coverModeContainer.style.display = 'none';
-    
-    coverModeContainer.innerHTML = `
-        <div class="cover-mode-content">
-            <button class="cover-mode-close" id="coverModeClose">
-                <i class="fas fa-times"></i>
-            </button>
-            
-            <div class="cover-mode-artwork">
-                <img id="coverModeImage" src="" alt="Album Art" />
-            </div>
-            
-            <div class="cover-mode-info">
-                <h2 class="cover-mode-title" id="coverModeTitle">Song Title</h2>
-                <p class="cover-mode-author" id="coverModeAuthor">Artist Name</p>
-                <p class="cover-mode-playlist" id="coverModePlaylist"></p>
-            </div>
-            
-            <div class="cover-mode-controls">
-                <div class="cover-mode-progress">
-                    <input type="range" id="coverModeProgressBar" min="0" max="100" value="0" />
-                    <div class="cover-mode-time" id="coverModeTimeDisplay">0:00 / 0:00</div>
-                </div>
-                
-                <div class="cover-mode-buttons">
-                    <button id="coverModePrevBtn" class="cover-control-btn">
-                        <i class="fas fa-step-backward"></i>
-                    </button>
-                    <button id="coverModePlayPauseBtn" class="cover-control-btn cover-play-btn">
-                        <i class="fas fa-play"></i>
-                    </button>
-                    <button id="coverModeNextBtn" class="cover-control-btn">
-                        <i class="fas fa-step-forward"></i>
-                    </button>
-                    <button id="coverModeLoopBtn" class="cover-control-btn">
-                        <i class="fas fa-redo"></i>
-                    </button>
-                </div>
-                
-                <div class="cover-mode-volume">
-                    <i class="fas fa-volume-up"></i>
-                    <input type="range" id="coverModeVolumeSlider" min="0" max="100" value="50" />
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(coverModeContainer);
-    this.setupCoverModeEventListeners();
-}
-
-setupCoverModeEventListeners() {
-    const closeBtn = document.getElementById('coverModeClose');
-    const playPauseBtn = document.getElementById('coverModePlayPauseBtn');
-    const prevBtn = document.getElementById('coverModePrevBtn');
-    const nextBtn = document.getElementById('coverModeNextBtn');
-    const loopBtn = document.getElementById('coverModeLoopBtn');
-    const progressBar = document.getElementById('coverModeProgressBar');
-    const volumeSlider = document.getElementById('coverModeVolumeSlider');
-    
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            this.hideCoverMode();
-        });
-    }
-    
-    if (playPauseBtn) {
-        playPauseBtn.addEventListener('click', () => {
-            this.togglePlayPause();
-            this.updateCoverModeUI();
-        });
-    }
-    
-    if (prevBtn) {
-        prevBtn.addEventListener('click', () => {
-            this.playPreviousSong();
-        });
-    }
-    
-    if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
-            this.playNextSong();
-        });
-    }
-    
-    if (loopBtn) {
-        loopBtn.addEventListener('click', () => {
-            this.toggleLoop();
-            this.updateCoverModeUI();
-        });
-    }
-    
-    if (progressBar) {
-        progressBar.addEventListener('input', (e) => {
-            this.seekMusic(e);
-        });
-    }
-    
-    if (volumeSlider) {
-        volumeSlider.addEventListener('input', (e) => {
-            this.setVolume(e.target.value);
-        });
-        const currentVolume = this.elements.volumeSlider ? this.elements.volumeSlider.value : 50;
-        volumeSlider.value = currentVolume;
-    }
-}
-
-showCoverMode() {
-    const appContainer = document.querySelector('.app-container');
-    const coverModeContainer = document.getElementById('coverModeContainer');
-    const leftBanner = document.querySelector('.left-banner');
-    const rightBanner = document.querySelector('.right-banner');
-    
-    if (appContainer) {
-        appContainer.style.display = 'none';
-    }
-    
-    if (leftBanner) {
-        leftBanner.style.display = 'none';
-    }
-    
-    if (rightBanner) {
-        rightBanner.style.display = 'none';
-    }
-    
-    if (coverModeContainer) {
-        coverModeContainer.style.display = 'flex';
-        this.updateCoverModeUI();
-        this.startCoverModeProgressUpdate();
-    }
-}
-
-hideCoverMode() {
-    const appContainer = document.querySelector('.app-container');
-    const coverModeContainer = document.getElementById('coverModeContainer');
-    const leftBanner = document.querySelector('.left-banner');
-    const rightBanner = document.querySelector('.right-banner');
-    
-    if (appContainer) {
-        appContainer.style.display = 'grid';
-    }
-    
-    if (leftBanner) {
-        leftBanner.style.display = 'block';
-    }
-    
-    if (rightBanner) {
-        rightBanner.style.display = 'block';
-    }
-    
-    if (coverModeContainer) {
-        coverModeContainer.style.display = 'none';
-        this.stopCoverModeProgressUpdate();
-    }
-}
-
-updateCoverModeUI() {
-    if (!this.currentSong) return;
-    
-    const coverImage = document.getElementById('coverModeImage');
-    const coverTitle = document.getElementById('coverModeTitle');
-    const coverAuthor = document.getElementById('coverModeAuthor');
-    const coverPlaylist = document.getElementById('coverModePlaylist');
-    const playPauseBtn = document.getElementById('coverModePlayPauseBtn');
-    const loopBtn = document.getElementById('coverModeLoopBtn');
-    
-    if (coverImage) {
-        const thumbnailUrl = this.currentSong.thumbnailUrl || 
-            `https://img.youtube.com/vi/${this.currentSong.videoId}/maxresdefault.jpg`;
-        coverImage.src = thumbnailUrl;
-        coverImage.alt = this.currentSong.name || 'Album Art';
-    }
-    
-    if (coverTitle) {
-        coverTitle.textContent = this.currentSong.name || 'Unknown Title';
-    }
-    
-    if (coverAuthor) {
-        coverAuthor.textContent = this.currentSong.author || 'Unknown Artist';
-    }
-    
-    if (coverPlaylist) {
-        if (this.currentPlaylist) {
-            coverPlaylist.textContent = `Playlist: ${this.currentPlaylist.name}`;
-            coverPlaylist.style.display = 'block';
-        } else {
-            coverPlaylist.style.display = 'none';
-        }
-    }
-    
-    if (playPauseBtn) {
-        const icon = playPauseBtn.querySelector('i');
-        if (icon) {
-            icon.classList.remove('fa-play', 'fa-pause');
-            icon.classList.add(this.isPlaying ? 'fa-pause' : 'fa-play');
-        }
-    }
-    
-    if (loopBtn) {
-        loopBtn.classList.toggle('active', this.isLooping);
-    }
-}
-
-startCoverModeProgressUpdate() {
-    this.stopCoverModeProgressUpdate();
-    
-    this.coverModeProgressInterval = setInterval(() => {
-        if (!this.ytPlayer || !this.ytPlayer.getCurrentTime) return;
-        
-        try {
-            const currentTime = this.ytPlayer.getCurrentTime();
-            const duration = this.ytPlayer.getDuration();
-            
-            const progressBar = document.getElementById('coverModeProgressBar');
-            const timeDisplay = document.getElementById('coverModeTimeDisplay');
-            
-            if (progressBar && duration > 0) {
-                progressBar.max = duration;
-                progressBar.value = currentTime;
-            }
-            
-            if (timeDisplay) {
-                const currentTimeStr = this.formatTime(currentTime);
-                const durationStr = this.formatTime(duration);
-                timeDisplay.textContent = `${currentTimeStr} / ${durationStr}`;
-            }
-        } catch (error) {
-            console.warn('Error updating cover mode progress:', error);
-        }
-    }, 1000);
-}
-
-stopCoverModeProgressUpdate() {
-    if (this.coverModeProgressInterval) {
-        clearInterval(this.coverModeProgressInterval);
-        this.coverModeProgressInterval = null;
-    }
-}
-
-// ==================== END COVER MODE METHODS ====================
-
-
-
-
-
-
-
-  
 
 
 
