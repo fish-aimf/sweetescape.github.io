@@ -1773,7 +1773,7 @@ hideCreatePlaylistDiv() {
         alert("Failed to delete playlist. Please try again.");
       });
   }
-  playPlaylist(playlistId) {
+ playPlaylist(playlistId) {
     const playlist = this.playlists.find((p) => p.id === playlistId);
     if (!playlist || !playlist.songs.length) {
       alert("Playlist is empty");
@@ -1797,10 +1797,14 @@ hideCreatePlaylistDiv() {
         return;
       }
     }
-    this.playSongById(playlist.songs[this.currentSongIndex].videoId);
+    const currentSong = playlist.songs[this.currentSongIndex];
+    this.currentSong = currentSong;
+    this.saveRecentlyPlayedSong(currentSong);
+    this.playSongById(currentSong.videoId);
     this.showSidebar();
     this.renderPlaylistSidebar();
     this.saveRecentlyPlayedPlaylist(playlist);
+    this.updateCurrentSongDisplay();
   }
   playSong(songId) {
     const song = this.songLibrary.find((s) => s.id === songId);
