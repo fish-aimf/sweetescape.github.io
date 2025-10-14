@@ -324,3 +324,5 @@
 - onplayerstate change loop no longer reloads the whole video, it just sets video time to 0 and continue. this saves significant resources v43.5.1
 - plan some changes, like a music cover v43.5.1
 - reordered formatted code v43.5.2
+- fixed bugs where playing the playlist wont update current song display v43.5.3
+- reformatted all the code v43.5.4
