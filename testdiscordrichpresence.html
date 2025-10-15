@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Rich Presence Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #5865F2;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #5865F2;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #5865F2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #4752C4;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .status.connecting {
+            background: #FEE;
+            color: #C00;
+        }
+
+        .status.connected {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .status.error {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+
+        .status.sent {
+            background: #E3F2FD;
+            color: #1565C0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Discord Rich Presence Test</h1>
+        <p class="subtitle">Send song info to your desktop app</p>
+
+        <div class="form-group">
+            <label for="songName">Song Name</label>
+            <input type="text" id="songName" placeholder="Enter song name" value="Sweet Escape">
+        </div>
+
+        <div class="form-group">
+            <label for="songAuthor">Artist/Author</label>
+            <input type="text" id="songAuthor" placeholder="Enter artist name" value="Gwen Stefani">
+        </div>
+
+        <div class="form-group">
+            <label for="youtubeUrl">YouTube URL</label>
+            <input type="text" id="youtubeUrl" placeholder="https://youtube.com/watch?v=..." value="https://www.youtube.com/watch?v=O0lf_fE3HwA">
+        </div>
+
+        <button id="sendBtn" onclick="sendToDesktop()">Send to Discord</button>
+
+        <div id="status" class="status connecting">Connecting to desktop app...</div>
+    </div>
+
+    <script>
+        let ws = null;
+        const statusDiv = document.getElementById('status');
+        const sendBtn = document.getElementById('sendBtn');
+
+        function connect() {
+            // Try to connect to local WebSocket server
+            ws = new WebSocket('ws://localhost:8765');
+
+            ws.onopen = function() {
+                statusDiv.textContent = '✅ Connected to desktop app!';
+                statusDiv.className = 'status connected';
+                sendBtn.disabled = false;
+            };
+
+            ws.onclose = function() {
+                statusDiv.textContent = '❌ Desktop app not running. Please start it first!';
+                statusDiv.className = 'status error';
+                sendBtn.disabled = true;
+                
+                // Try to reconnect after 3 seconds
+                setTimeout(connect, 3000);
+            };
+
+            ws.onerror = function() {
+                statusDiv.textContent = '❌ Cannot connect. Make sure desktop app is running!';
+                statusDiv.className = 'status error';
+                sendBtn.disabled = true;
+            };
+
+            ws.onmessage = function(event) {
+                statusDiv.textContent = '✅ ' + event.data;
+                statusDiv.className = 'status sent';
+            };
+        }
+
+        function sendToDesktop() {
+            const songName = document.getElementById('songName').value;
+            const songAuthor = document.getElementById('songAuthor').value;
+            const youtubeUrl = document.getElementById('youtubeUrl').value;
+
+            if (!songName || !songAuthor || !youtubeUrl) {
+                statusDiv.textContent = '⚠️ Please fill in all fields!';
+                statusDiv.className = 'status error';
+                return;
+            }
+
+            const data = {
+                song: songName,
+                artist: songAuthor,
+                url: youtubeUrl
+            };
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(data));
+                statusDiv.textContent = '📤 Sending to Discord...';
+                statusDiv.className = 'status sent';
+            } else {
+                statusDiv.textContent = '❌ Not connected to desktop app!';
+                statusDiv.className = 'status error';
+            }
+        }
+
+        // Connect when page loads
+        connect();
+    </script>
+</body>
+</html>
