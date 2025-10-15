@@ -15,19 +15,19 @@ SweetEscape is a **self-contained static website** that:
 - Stores all your songs, settings, and playlists **locally** using **Session Storage**, **LocalStorage**, and **IndexedDB**.
 - Allows you to **add music manually from YouTube** or **import premade playlists**.
 - Doubles as a **karaoke player** and **lyrics transcriber**.
-- Is designed for **speed, simplicity, and beauty** — with a goal of hitting **1 million visits** 🎯.
+- Is designed for **speed, simplicity, and beauty** — with a goal of hitting **1 million visits** 🎯. (3800 visits as of 10/16/2025)
 
 > Once just a fun Glitch experiment, SweetEscape became something much more —  
 > a full-fledged, privacy-friendly, personal music world that runs entirely in your browser.
+> It is also published on product hunt so drop a upvote please? [product hunt](https://www.producthunt.com/products/music-player-website-ultimate)
 
 ---
 
 ## 💡 Key Features
 
-- 🎧 **Fully Offline-Capable** (works after loading)
 - 💾 **IndexedDB Library** for song storage  
 - 🧠 **AI-Enabled Discovery System** (Supabase integrated)
-- 🎶 **Lyric Editor & Karaoke Mode**
+- 🎶 **Lyric transcriber & Karaoke Mode**
 - 🔁 **Looping** (all or single)
 - 🔍 **Playlist Import & Management**
 - 🎨 **Dark/Light Mode Toggle**
@@ -84,8 +84,8 @@ This repository serves as the **source code** for the deployed site.
 
 ## ❤️ Credits
 
-Created with love, long nights, and too much caffeine by **[FishAreSmart](https://github.com/FishAreSmart)**.  
-Every line of code represents passion for both **music** and **technology**.
+Created with love and passion by **[FishAreSmart](https://github.com/fish-aimf)**.  
+Every line of code represents passion for the music.
 
 ---
 
