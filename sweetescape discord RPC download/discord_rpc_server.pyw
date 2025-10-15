@@ -32,6 +32,9 @@ def init_discord():
 
 def extract_youtube_id(url):
     """Extract YouTube video ID from URL"""
+    if not url:
+        return None
+        
     patterns = [
         r'(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)',
         r'youtube\.com\/embed\/([^&\n?#]+)',
@@ -48,10 +51,10 @@ def update_discord_rpc(song, artist, url):
     try:
         video_id = extract_youtube_id(url)
         
+        # Build RPC data with proper image handling
         rpc_data = {
             "details": f"🎧 Listening to {song}",
             "state": f"by {artist}",
-            "large_image": f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg" if video_id else "music_note",
             "large_text": f"🎶 {song} • {artist}",
             "small_image": "favicon",
             "small_text": "sweetescape.vercel.app",
@@ -60,6 +63,12 @@ def update_discord_rpc(song, artist, url):
                 {"label": "🌐 Open SweetEscape", "url": "https://sweetescape.vercel.app"}
             ]
         }
+        
+        # Add large_image only if we have a valid video_id
+        if video_id:
+            rpc_data["large_image"] = f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg"
+        else:
+            rpc_data["large_image"] = "music_note"
         
         rpc.update(**rpc_data)
         return True
@@ -108,7 +117,7 @@ async def handle_client(websocket):
         await loop.run_in_executor(None, clear_discord_rpc)
 
 async def start_server():
-    async with websockets.serve(handle_client, "localhost", 8765):
+    async with websockets.serve(handle_client, "localhost", 9112):
         await asyncio.Future()
 
 def create_icon():
