@@ -326,3 +326,4 @@
 - reordered formatted code v43.5.2
 - fixed bugs where playing the playlist wont update current song display v43.5.3
 - reformatted all the code v43.5.4
+- huge update. Beta feature. Update discord custom rich presence v44.0.0
