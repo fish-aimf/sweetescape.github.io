@@ -151,7 +151,7 @@
 
         function connect() {
             // Try to connect to local WebSocket server
-            ws = new WebSocket('ws://localhost:8765');
+            ws = new WebSocket('ws://localhost:9112');
 
             ws.onopen = function() {
                 statusDiv.textContent = '✅ Connected to desktop app!';
