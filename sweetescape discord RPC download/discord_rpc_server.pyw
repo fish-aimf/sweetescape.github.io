@@ -10,14 +10,25 @@ import pystray
 from PIL import Image, ImageDraw
 import subprocess
 import os
+from datetime import datetime
 
 # Your Discord Application ID
 CLIENT_ID = "1428031900877983825"
 
-# Initialize Discord Rich Presence
+# Global state
 rpc = None
 connected_to_discord = False
 discord_lock = threading.Lock()
+server_stats = {
+    "connected_clients": 0,
+    "total_updates": 0,
+    "uptime_start": None,
+    "last_song": None,
+    "last_artist": None,
+    "last_update": None,
+    "errors": 0
+}
+stats_lock = threading.Lock()
 
 def init_discord():
     """Initialize Discord connection in a separate thread"""
@@ -28,6 +39,8 @@ def init_discord():
         with discord_lock:
             connected_to_discord = True
     except Exception as e:
+        with stats_lock:
+            server_stats["errors"] += 1
         pass
 
 def extract_youtube_id(url):
@@ -53,9 +66,9 @@ def update_discord_rpc(song, artist, url):
         
         # Build RPC data with proper image handling
         rpc_data = {
-            "details": f"🎧 Listening to {song}",
-            "state": f"by {artist}",
-            "large_text": f"🎶 {song} • {artist}",
+            "details": f"Listening to \"{song}\"",
+            "state": f"song by {artist}",
+            "large_text": f"{song} • {artist}",
             "small_image": "favicon",
             "small_text": "sweetescape.vercel.app",
             "buttons": [
@@ -71,8 +84,18 @@ def update_discord_rpc(song, artist, url):
             rpc_data["large_image"] = "music_note"
         
         rpc.update(**rpc_data)
+        
+        # Update stats
+        with stats_lock:
+            server_stats["total_updates"] += 1
+            server_stats["last_song"] = song
+            server_stats["last_artist"] = artist
+            server_stats["last_update"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
         return True
     except Exception as e:
+        with stats_lock:
+            server_stats["errors"] += 1
         return False
 
 def clear_discord_rpc():
@@ -81,10 +104,15 @@ def clear_discord_rpc():
         rpc.clear()
         return True
     except Exception as e:
+        with stats_lock:
+            server_stats["errors"] += 1
         return False
 
 async def handle_client(websocket):
     global connected_to_discord
+    
+    with stats_lock:
+        server_stats["connected_clients"] += 1
     
     if not connected_to_discord:
         discord_thread = threading.Thread(target=init_discord)
@@ -107,23 +135,38 @@ async def handle_client(websocket):
             success = await loop.run_in_executor(None, update_discord_rpc, song, artist, url)
             
             if success:
-                response = f"Rich Presence updated: {song} by {artist}"
-                await websocket.send(response)
+                response = {
+                    "status": "success",
+                    "message": f"Rich Presence updated: {song} by {artist}",
+                    "timestamp": datetime.now().isoformat()
+                }
+                await websocket.send(json.dumps(response))
             else:
-                await websocket.send("Error: Could not update Discord")
+                response = {
+                    "status": "error",
+                    "message": "Could not update Discord"
+                }
+                await websocket.send(json.dumps(response))
     
     except websockets.exceptions.ConnectionClosed:
+        with stats_lock:
+            server_stats["connected_clients"] -= 1
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, clear_discord_rpc)
+    except Exception as e:
+        with stats_lock:
+            server_stats["errors"] += 1
+        with stats_lock:
+            server_stats["connected_clients"] -= 1
 
 async def start_server():
-    async with websockets.serve(handle_client, "localhost", 9112):
+    # ping_interval=None and ping_timeout=None reduce CPU usage on idle connections
+    async with websockets.serve(handle_client, "localhost", 9112, ping_interval=None, ping_timeout=None):
         await asyncio.Future()
 
 def create_icon():
     """Create system tray icon from sweetescapesystemtray.png or fallback"""
     try:
-        # Try to load the icon (same directory as script)
         script_dir = os.path.dirname(os.path.abspath(__file__))
         icon_path = os.path.join(script_dir, 'sweetescapesystemtray.png')
         
@@ -147,22 +190,71 @@ def create_icon():
         dc.ellipse([16, 16, 48, 48], fill=(88, 101, 242))
         return image
 
+def get_uptime():
+    """Calculate uptime in a readable format"""
+    if not server_stats["uptime_start"]:
+        return "0s"
+    
+    elapsed = time.time() - server_stats["uptime_start"]
+    hours, remainder = divmod(int(elapsed), 3600)
+    minutes, seconds = divmod(remainder, 60)
+    
+    if hours > 0:
+        return f"{hours}h {minutes}m {seconds}s"
+    elif minutes > 0:
+        return f"{minutes}m {seconds}s"
+    else:
+        return f"{seconds}s"
+
 def show_console(icon, item):
-    """Show console window with status"""
-    status = "Connected" if connected_to_discord else "Disconnected"
+    """Show console window with detailed status"""
+    with stats_lock:
+        status = "✅ Connected" if connected_to_discord else "❌ Disconnected"
+        uptime = get_uptime()
+        last_song = server_stats["last_song"] or "None"
+        last_artist = server_stats["last_artist"] or "None"
+        last_update = server_stats["last_update"] or "Never"
+        total_updates = server_stats["total_updates"]
+        errors = server_stats["errors"]
+        clients = server_stats["connected_clients"]
+    
     if sys.platform == 'win32':
         script = f'''
-print("=" * 60)
-print("🚀 Discord RPC Server - Status")
-print("=" * 60)
-print("✅ Server: Running on localhost:8765")
-print("✅ Discord: {status}")
+import time
+print("=" * 70)
+print("🎵 DISCORD RPC SERVER - LIVE STATUS")
+print("=" * 70)
 print("")
-print("💡 Close this window to hide")
-print("=" * 60)
+print("📊 SERVER STATUS:")
+print("  ✓ Server: Running on localhost:9112")
+print("  ✓ Discord: {status}")
+print("  ✓ Uptime: {uptime}")
+print("")
+print("📈 STATISTICS:")
+print("  • Total Updates: {total_updates}")
+print("  • Active Clients: {clients}")
+print("  • Errors: {errors}")
+print("")
+print("🎧 CURRENT TRACK:")
+print("  • Song: {last_song}")
+print("  • Artist: {last_artist}")
+print("  • Last Updated: {last_update}")
+print("")
+print("=" * 70)
+print("💡 Close this window to hide the console")
+print("=" * 70)
 input("\\nPress Enter to close...")
 '''
         subprocess.Popen(['python', '-c', script], creationflags=subprocess.CREATE_NEW_CONSOLE)
+    else:
+        # Linux/macOS
+        print("=" * 70)
+        print("🎵 DISCORD RPC SERVER - LIVE STATUS")
+        print("=" * 70)
+        print(f"\n📊 SERVER STATUS:\n  ✓ Server: Running on localhost:9112\n  ✓ Discord: {status}\n  ✓ Uptime: {uptime}")
+        print(f"\n📈 STATISTICS:\n  • Total Updates: {total_updates}\n  • Active Clients: {clients}\n  • Errors: {errors}")
+        print(f"\n🎧 CURRENT TRACK:\n  • Song: {last_song}\n  • Artist: {last_artist}\n  • Last Updated: {last_update}")
+        print("\n" + "=" * 70)
 
 def quit_action(icon, item):
     """Quit the application"""
@@ -172,6 +264,9 @@ def quit_action(icon, item):
     os._exit(0)
 
 def main():
+    # Initialize uptime tracker
+    server_stats["uptime_start"] = time.time()
+    
     # Start websocket server in background thread
     loop = asyncio.new_event_loop()
     
@@ -190,7 +285,7 @@ def main():
         create_icon(),
         "Discord RPC Server",
         menu=pystray.Menu(
-            pystray.MenuItem("Show Console", show_console),
+            pystray.MenuItem("📊 Show Status", show_console),
             pystray.MenuItem("Quit", quit_action)
         )
     )
