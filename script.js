@@ -9925,23 +9925,214 @@ async checkDiscordAppRunning() {
     });
 }
 
-async handleDiscordClick() {
-    const isRunning = await this.checkDiscordAppRunning();
+
+// ADD THIS NEW METHOD
+showDiscordSetupModal() {
+    // Remove existing modal if any
+    const existingModal = document.getElementById('discordSetupModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
     
-    if (!isRunning && !this.discordEnabled) {
-        const userWantsDownload = confirm(
-            'Discord RPC desktop app is not running.\n\n' +
-            'Would you like to download it?\n\n' +
-            'Click OK to open the download page, or Cancel to continue without Discord RPC.'
-        );
-        
-        if (userWantsDownload) {
-            window.open('https://github.com/fish-aimf/sweetescape.github.io/tree/main/sweetescape%20discord%20RPC%20download', '_blank');
+    const modal = document.createElement('div');
+    modal.id = 'discordSetupModal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        animation: fadeIn 0.3s ease;
+    `;
+    
+    const content = document.createElement('div');
+    content.style.cssText = `
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.3s ease;
+    `;
+    
+    content.innerHTML = `
+        <style>
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideUp {
+                from { transform: translateY(20px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+            #discordSetupModal h2 {
+                color: #5865F2;
+                margin: 0 0 15px 0;
+                font-size: 24px;
+            }
+            #discordSetupModal p {
+                color: #333;
+                margin: 0 0 20px 0;
+                line-height: 1.6;
+            }
+            #discordSetupModal .button-group {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+            #discordSetupModal button {
+                flex: 1;
+                min-width: 140px;
+                padding: 12px 20px;
+                border: none;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+            #discordSetupModal .btn-primary {
+                background: #5865F2;
+                color: white;
+            }
+            #discordSetupModal .btn-primary:hover {
+                background: #4752C4;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(88, 101, 242, 0.3);
+            }
+            #discordSetupModal .btn-secondary {
+                background: #43b581;
+                color: white;
+            }
+            #discordSetupModal .btn-secondary:hover {
+                background: #3ca374;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(67, 181, 129, 0.3);
+            }
+            #discordSetupModal .btn-cancel {
+                background: #f0f0f0;
+                color: #666;
+            }
+            #discordSetupModal .btn-cancel:hover {
+                background: #e0e0e0;
+            }
+            #discordSetupModal .info-box {
+                background: #f8f9fa;
+                padding: 15px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                border-left: 4px solid #5865F2;
+            }
+            #discordSetupModal .info-box p {
+                margin: 0;
+                font-size: 13px;
+                color: #555;
+            }
+        </style>
+        <h2>🎵 Discord Rich Presence Setup</h2>
+        <p>The Discord RPC desktop app is not currently running.</p>
+        <div class="info-box">
+            <p><strong>💡 Choose an option:</strong></p>
+        </div>
+        <div class="button-group">
+            <button class="btn-primary" id="launchAppBtn">
+                🚀 Launch App
+            </button>
+            <button class="btn-secondary" id="downloadAppBtn">
+                📥 Download App
+            </button>
+            <button class="btn-cancel" id="cancelBtn">
+                Cancel
+            </button>
+        </div>
+    `;
+    
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+    
+    // Event listeners
+    document.getElementById('launchAppBtn').addEventListener('click', () => {
+        this.attemptLaunchApp();
+        modal.remove();
+    });
+    
+    document.getElementById('downloadAppBtn').addEventListener('click', () => {
+        window.open('https://github.com/fish-aimf/sweetescape.github.io/tree/main/sweetescape%20discord%20RPC%20download', '_blank');
+        modal.remove();
+    });
+    
+    document.getElementById('cancelBtn').addEventListener('click', () => {
+        modal.remove();
+    });
+    
+    // Close on background click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
         }
+    });
+}
+
+// ADD THIS NEW METHOD
+attemptLaunchApp() {
+    // Create a temporary link to try opening the .pyw file
+    const link = document.createElement('a');
+    
+    // Try multiple approaches
+    // Approach 1: Custom protocol (if user has set it up)
+    link.href = 'discord-rpc-sweetescape://launch';
+    link.click();
+    
+    // Approach 2: Try file:// protocol (may work in some browsers)
+    setTimeout(() => {
+        const fileLink = document.createElement('a');
+        fileLink.href = 'file:///discord_rpc_server.pyw';
+        fileLink.click();
+    }, 100);
+    
+    // Show a message and check if app started
+    setTimeout(async () => {
+        const isRunning = await this.checkDiscordAppRunning();
+        if (isRunning) {
+            alert('✅ Discord RPC app detected! Enabling Rich Presence...');
+            this.toggleDiscordRPC();
+        } else {
+            const retry = confirm(
+                '⚠️ Could not detect the app.\n\n' +
+                'Please start discord_rpc_server.pyw manually.\n\n' +
+                'Would you like to download the app?'
+            );
+            if (retry) {
+                window.open('https://github.com/fish-aimf/sweetescape.github.io/tree/main/sweetescape%20discord%20RPC%20download', '_blank');
+            }
+        }
+    }, 3000);
+}
+async handleDiscordClick() {
+    // If already enabled, just toggle off
+    if (this.discordEnabled) {
+        this.toggleDiscordRPC();
         return;
     }
     
-    this.toggleDiscordRPC();
+    // Check if desktop app is running
+    const isRunning = await this.checkDiscordAppRunning();
+    
+    if (isRunning) {
+        // App is running, just enable it
+        this.toggleDiscordRPC();
+        return;
+    }
+    
+    // App is not running - show options
+    const modal = this.createDiscordSetupModal();
+    document.body.appendChild(modal);
 }
 
 
