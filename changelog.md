@@ -329,3 +329,5 @@
 - huge update. Beta feature. Update discord custom rich presence v44.0.0
 - rewritten the changelog.md so maybe someone will join. v44.0.1
 - massive update fully implimented. you can now show your songs in discord rich presence with the help of the download. v44.1.0
+- better cleanup for discord rp v44.1.1
+- made version changelog reverse so newest updates on top. v44.2.0
