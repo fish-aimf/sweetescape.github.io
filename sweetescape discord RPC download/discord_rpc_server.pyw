@@ -26,7 +26,8 @@ server_stats = {
     "last_song": None,
     "last_artist": None,
     "last_update": None,
-    "errors": 0
+    "errors": 0,
+    "clears": 0
 }
 stats_lock = threading.Lock()
 
@@ -38,10 +39,11 @@ def init_discord():
         rpc.connect()
         with discord_lock:
             connected_to_discord = True
+        print("✅ Discord RPC connected")
     except Exception as e:
+        print(f"❌ Discord connection failed: {e}")
         with stats_lock:
             server_stats["errors"] += 1
-        pass
 
 def extract_youtube_id(url):
     """Extract YouTube video ID from URL"""
@@ -67,7 +69,7 @@ def update_discord_rpc(song, artist, url):
         # Build RPC data with proper image handling
         rpc_data = {
             "details": f"Listening to \"{song}\"",
-            "state": f"song by {artist}",
+            "state": f"Song by \"{artist}\"",
             "large_text": f"{song} • {artist}",
             "small_image": "favicon",
             "small_text": "sweetescape.vercel.app",
@@ -92,8 +94,13 @@ def update_discord_rpc(song, artist, url):
             server_stats["last_artist"] = artist
             server_stats["last_update"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
+        # Compact console output
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        print(f"[{timestamp}] 🎵 {song[:40]}... by {artist[:30]}...")
+        
         return True
     except Exception as e:
+        print(f"❌ Update failed: {e}")
         with stats_lock:
             server_stats["errors"] += 1
         return False
@@ -102,8 +109,17 @@ def clear_discord_rpc():
     """Clear Discord Rich Presence"""
     try:
         rpc.clear()
+        with stats_lock:
+            server_stats["clears"] += 1
+            server_stats["last_song"] = None
+            server_stats["last_artist"] = None
+            server_stats["last_update"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        print(f"[{timestamp}] 🔇 Discord presence cleared")
         return True
     except Exception as e:
+        print(f"❌ Clear failed: {e}")
         with stats_lock:
             server_stats["errors"] += 1
         return False
@@ -113,6 +129,8 @@ async def handle_client(websocket):
     
     with stats_lock:
         server_stats["connected_clients"] += 1
+    
+    print(f"📱 Client connected (Total: {server_stats['connected_clients']})")
     
     if not connected_to_discord:
         discord_thread = threading.Thread(target=init_discord)
@@ -126,6 +144,26 @@ async def handle_client(websocket):
     try:
         async for message in websocket:
             data = json.loads(message)
+            
+            # Check if this is a disable/clear signal
+            if data.get('action') == 'clear' or data.get('enabled') == False:
+                loop = asyncio.get_event_loop()
+                success = await loop.run_in_executor(None, clear_discord_rpc)
+                
+                if success:
+                    response = {
+                        "status": "success",
+                        "message": "Rich Presence cleared",
+                        "timestamp": datetime.now().isoformat()
+                    }
+                    await websocket.send(json.dumps(response))
+                else:
+                    response = {
+                        "status": "error",
+                        "message": "Could not clear Discord presence"
+                    }
+                    await websocket.send(json.dumps(response))
+                continue
             
             song = data.get('song', 'Unknown')
             artist = data.get('artist', 'Unknown')
@@ -151,17 +189,20 @@ async def handle_client(websocket):
     except websockets.exceptions.ConnectionClosed:
         with stats_lock:
             server_stats["connected_clients"] -= 1
+        print(f"📱 Client disconnected (Remaining: {server_stats['connected_clients']})")
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, clear_discord_rpc)
     except Exception as e:
+        print(f"❌ Client error: {e}")
         with stats_lock:
             server_stats["errors"] += 1
-        with stats_lock:
             server_stats["connected_clients"] -= 1
 
 async def start_server():
     # ping_interval=None and ping_timeout=None reduce CPU usage on idle connections
     async with websockets.serve(handle_client, "localhost", 9112, ping_interval=None, ping_timeout=None):
+        print("🚀 Discord RPC Server started on ws://localhost:9112")
+        print("="*60)
         await asyncio.Future()
 
 def create_icon():
@@ -215,6 +256,7 @@ def show_console(icon, item):
         last_artist = server_stats["last_artist"] or "None"
         last_update = server_stats["last_update"] or "Never"
         total_updates = server_stats["total_updates"]
+        clears = server_stats["clears"]
         errors = server_stats["errors"]
         clients = server_stats["connected_clients"]
     
@@ -232,6 +274,7 @@ print("  ✓ Uptime: {uptime}")
 print("")
 print("📈 STATISTICS:")
 print("  • Total Updates: {total_updates}")
+print("  • Total Clears: {clears}")
 print("  • Active Clients: {clients}")
 print("  • Errors: {errors}")
 print("")
@@ -252,7 +295,7 @@ input("\\nPress Enter to close...")
         print("🎵 DISCORD RPC SERVER - LIVE STATUS")
         print("=" * 70)
         print(f"\n📊 SERVER STATUS:\n  ✓ Server: Running on localhost:9112\n  ✓ Discord: {status}\n  ✓ Uptime: {uptime}")
-        print(f"\n📈 STATISTICS:\n  • Total Updates: {total_updates}\n  • Active Clients: {clients}\n  • Errors: {errors}")
+        print(f"\n📈 STATISTICS:\n  • Total Updates: {total_updates}\n  • Total Clears: {clears}\n  • Active Clients: {clients}\n  • Errors: {errors}")
         print(f"\n🎧 CURRENT TRACK:\n  • Song: {last_song}\n  • Artist: {last_artist}\n  • Last Updated: {last_update}")
         print("\n" + "=" * 70)
 
@@ -266,6 +309,9 @@ def quit_action(icon, item):
 def main():
     # Initialize uptime tracker
     server_stats["uptime_start"] = time.time()
+    
+    print("🎵 SweetEscape Discord RPC Server")
+    print("="*60)
     
     # Start websocket server in background thread
     loop = asyncio.new_event_loop()
@@ -285,7 +331,7 @@ def main():
         create_icon(),
         "Discord RPC Server",
         menu=pystray.Menu(
-            pystray.MenuItem("📊 Show Status", show_console),
+            pystray.MenuItem("Show Status", show_console),
             pystray.MenuItem("Quit", quit_action)
         )
     )
