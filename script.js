@@ -1966,108 +1966,145 @@ class AdvancedMusicPlayer {
             console.error("Error toggling play/pause:", error);
         }
     }
-    playNextSong() {
-        if (this.songQueue.length > 0) {
-            const nextSong = this.songQueue.shift();
-            this.saveQueue();
-            this.updateQueueVisualIndicators();
-            const songInLibrary = this.songLibrary.find(s => s.videoId === nextSong.videoId);
-            if (songInLibrary) {
-                this.currentSongIndex = this.songLibrary.findIndex(s => s.id === songInLibrary.id);
-                this.currentPlaylist = null;
-            }
-            this.currentSong = nextSong;
-            this.saveRecentlyPlayedSong(nextSong);
-            this.playSongById(nextSong.videoId);
-            this.updatePlayerUI();
-            this.updateCurrentSongDisplay();
-            return;
+    // Complete playNextSong method with Discord RPC
+playNextSong() {
+    if (this.songQueue.length > 0) {
+        const nextSong = this.songQueue.shift();
+        this.saveQueue();
+        this.updateQueueVisualIndicators();
+        const songInLibrary = this.songLibrary.find(s => s.videoId === nextSong.videoId);
+        if (songInLibrary) {
+            this.currentSongIndex = this.songLibrary.findIndex(s => s.id === songInLibrary.id);
+            this.currentPlaylist = null;
         }
-        const source = this.currentPlaylist ? this.currentPlaylist.songs : this.songLibrary;
-        if (!source.length) return;
-        if (this.currentPlaylist && this.temporarilySkippedSongs && this.temporarilySkippedSongs.size > 0) {
-            this.playNextNonSkippedSong();
-            return;
-        }
-        if (this.currentSongIndex === source.length - 1 && !this.isPlaylistLooping) {
-            if (this.ytPlayer) {
-                this.ytPlayer.stopVideo();
-                this.isPlaying = false;
-                this.updatePlayerUI();
-            }
-            return;
-        }
-        this.currentSongIndex = (this.currentSongIndex + 1) % source.length;
-        const currentSong = source[this.currentSongIndex];
-        this.currentSong = currentSong;
-        this.saveRecentlyPlayedSong(currentSong);
-        if (this.currentPlaylist) {
-            this.playSongById(currentSong.videoId);
-        } else {
-            this.playCurrentSong();
-        }
+        this.currentSong = nextSong;
+        this.saveRecentlyPlayedSong(nextSong);
+        this.playSongById(nextSong.videoId);
+        this.updatePlayerUI();
         this.updateCurrentSongDisplay();
-    }
-    playPreviousSong() {
-        const source = this.currentPlaylist ?
-            this.currentPlaylist.songs :
-            this.songLibrary;
-        if (!source.length) return;
-        if (this.currentPlaylist && this.temporarilySkippedSongs.size > 0) {
-            const totalSongs = source.length;
-            let prevIndex = (this.currentSongIndex - 1 + totalSongs) % totalSongs;
-            const startIndex = prevIndex;
-            while (this.isSongTemporarilySkipped(source[prevIndex])) {
-                prevIndex = (prevIndex - 1 + totalSongs) % totalSongs;
-                if (prevIndex === startIndex) {
-                    return;
-                }
-            }
-            this.currentSongIndex = prevIndex;
-            this.currentSong = source[this.currentSongIndex];
-            this.saveRecentlyPlayedSong(source[this.currentSongIndex]);
-            this.playSongById(source[this.currentSongIndex].videoId);
-            this.updateCurrentSongDisplay();
-            return;
+        
+        // Send Discord RPC update
+        if (this.discordEnabled && this.discordConnected) {
+            this.sendDiscordRPC();
         }
-        this.currentSongIndex =
-            (this.currentSongIndex - 1 + source.length) % source.length;
-        const currentSong = source[this.currentSongIndex];
-        this.currentSong = currentSong;
-        this.saveRecentlyPlayedSong(currentSong);
-        if (this.currentPlaylist) {
-            this.playSongById(source[this.currentSongIndex].videoId);
-        } else {
-            this.playCurrentSong();
-        }
-        this.updateCurrentSongDisplay();
+        return;
     }
-    playCurrentSong() {
-        if (!this.songLibrary.length) return;
-        const currentSong = this.songLibrary[this.currentSongIndex];
-        this.currentSong = currentSong;
+    const source = this.currentPlaylist ? this.currentPlaylist.songs : this.songLibrary;
+    if (!source.length) return;
+    if (this.currentPlaylist && this.temporarilySkippedSongs && this.temporarilySkippedSongs.size > 0) {
+        this.playNextNonSkippedSong();
+        return;
+    }
+    if (this.currentSongIndex === source.length - 1 && !this.isPlaylistLooping) {
         if (this.ytPlayer) {
-            this.ytPlayer.loadVideoById(currentSong.videoId);
-            this.ytPlayer.playVideo();
-            this.isPlaying = true;
+            this.ytPlayer.stopVideo();
+            this.isPlaying = false;
             this.updatePlayerUI();
         }
-        this.updateCurrentSongDisplay();
+        return;
     }
-    playSongFromPlaylist(index) {
-        if (!this.currentPlaylist || index >= this.currentPlaylist.songs.length)
-            return;
-        const song = this.currentPlaylist.songs[index];
-        const entryId = song.entryId || "id_" + song.videoId;
-        if (this.temporarilySkippedSongs.has(entryId)) {
-            return;
+    this.currentSongIndex = (this.currentSongIndex + 1) % source.length;
+    const currentSong = source[this.currentSongIndex];
+    this.currentSong = currentSong;
+    this.saveRecentlyPlayedSong(currentSong);
+    if (this.currentPlaylist) {
+        this.playSongById(currentSong.videoId);
+    } else {
+        this.playCurrentSong();
+    }
+    this.updateCurrentSongDisplay();
+    
+    // Send Discord RPC update
+    if (this.discordEnabled && this.discordConnected) {
+        this.sendDiscordRPC();
+    }
+}
+
+// Complete playPreviousSong method with Discord RPC
+playPreviousSong() {
+    const source = this.currentPlaylist ?
+        this.currentPlaylist.songs :
+        this.songLibrary;
+    if (!source.length) return;
+    if (this.currentPlaylist && this.temporarilySkippedSongs.size > 0) {
+        const totalSongs = source.length;
+        let prevIndex = (this.currentSongIndex - 1 + totalSongs) % totalSongs;
+        const startIndex = prevIndex;
+        while (this.isSongTemporarilySkipped(source[prevIndex])) {
+            prevIndex = (prevIndex - 1 + totalSongs) % totalSongs;
+            if (prevIndex === startIndex) {
+                return;
+            }
         }
-        this.currentSongIndex = index;
-        this.currentSong = song;
-        this.saveRecentlyPlayedSong(song);
-        this.playSongById(song.videoId);
+        this.currentSongIndex = prevIndex;
+        this.currentSong = source[this.currentSongIndex];
+        this.saveRecentlyPlayedSong(source[this.currentSongIndex]);
+        this.playSongById(source[this.currentSongIndex].videoId);
         this.updateCurrentSongDisplay();
+        
+        // Send Discord RPC update
+        if (this.discordEnabled && this.discordConnected) {
+            this.sendDiscordRPC();
+        }
+        return;
     }
+    this.currentSongIndex =
+        (this.currentSongIndex - 1 + source.length) % source.length;
+    const currentSong = source[this.currentSongIndex];
+    this.currentSong = currentSong;
+    this.saveRecentlyPlayedSong(currentSong);
+    if (this.currentPlaylist) {
+        this.playSongById(source[this.currentSongIndex].videoId);
+    } else {
+        this.playCurrentSong();
+    }
+    this.updateCurrentSongDisplay();
+    
+    // Send Discord RPC update
+    if (this.discordEnabled && this.discordConnected) {
+        this.sendDiscordRPC();
+    }
+}
+
+// Complete playCurrentSong method with Discord RPC
+playCurrentSong() {
+    if (!this.songLibrary.length) return;
+    const currentSong = this.songLibrary[this.currentSongIndex];
+    this.currentSong = currentSong;
+    if (this.ytPlayer) {
+        this.ytPlayer.loadVideoById(currentSong.videoId);
+        this.ytPlayer.playVideo();
+        this.isPlaying = true;
+        this.updatePlayerUI();
+    }
+    this.updateCurrentSongDisplay();
+    
+    // Send Discord RPC update
+    if (this.discordEnabled && this.discordConnected) {
+        this.sendDiscordRPC();
+    }
+}
+
+// Complete playSongFromPlaylist method with Discord RPC
+playSongFromPlaylist(index) {
+    if (!this.currentPlaylist || index >= this.currentPlaylist.songs.length)
+        return;
+    const song = this.currentPlaylist.songs[index];
+    const entryId = song.entryId || "id_" + song.videoId;
+    if (this.temporarilySkippedSongs.has(entryId)) {
+        return;
+    }
+    this.currentSongIndex = index;
+    this.currentSong = song;
+    this.saveRecentlyPlayedSong(song);
+    this.playSongById(song.videoId);
+    this.updateCurrentSongDisplay();
+    
+    // Send Discord RPC update
+    if (this.discordEnabled && this.discordConnected) {
+        this.sendDiscordRPC();
+    }
+}
     async saveSetting(key, value) {
         if (!this.db) return;
         return new Promise((resolve, reject) => {
