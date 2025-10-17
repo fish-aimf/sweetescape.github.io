@@ -6808,7 +6808,7 @@ playSongFromPlaylist(index) {
         const content = document.getElementById('changelogContent');
         if (modal && content && this.fullChangelog) {
             const lines = this.fullChangelog.trim().split('\n').filter(line => line.trim());
-            const htmlContent = lines.map(line => {
+            const htmlContent = lines.reverse().map(line => {
                 const versionMatch = line.match(/(v\d+\.\d+\.\d+)/);
                 if (versionMatch) {
                     const version = versionMatch[1];
