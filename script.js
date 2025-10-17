@@ -9731,8 +9731,7 @@ Song list:`;
 
 
 
-
-    async loadDiscordSettings() {
+async loadDiscordSettings() {
     try {
         const transaction = this.db.transaction(["settings"], "readonly");
         const store = transaction.objectStore("settings");
@@ -9765,6 +9764,7 @@ async saveDiscordSettings() {
         console.error("Error saving Discord settings:", error);
     }
 }
+
 initDiscordConnection() {
     if (this.discordWs && this.discordWs.readyState === WebSocket.OPEN) {
         return;
@@ -9819,21 +9819,38 @@ initDiscordConnection() {
 }
 
 closeDiscordConnection() {
+    // Send clear signal before closing
+    if (this.discordWs && this.discordWs.readyState === WebSocket.OPEN) {
+        try {
+            this.discordWs.send(JSON.stringify({
+                action: 'clear',
+                enabled: false
+            }));
+            console.log('🔇 Sent clear signal to Discord RPC');
+        } catch (error) {
+            console.error('Failed to send clear signal:', error);
+        }
+    }
+    
     if (this.discordReconnectTimer) {
         clearTimeout(this.discordReconnectTimer);
         this.discordReconnectTimer = null;
     }
     
     if (this.discordWs) {
-        this.discordWs.close();
-        this.discordWs = null;
+        // Give the clear message time to send before closing
+        setTimeout(() => {
+            if (this.discordWs) {
+                this.discordWs.close();
+                this.discordWs = null;
+            }
+        }, 100);
     }
     
     this.discordConnected = false;
     this.discordReconnectAttempts = 0;
     this.updateDiscordButtonUI();
 }
-
 
 buildYouTubeUrl(videoId) {
     if (!videoId) return '';
@@ -9865,6 +9882,26 @@ sendDiscordRPC() {
     }
 }
 
+clearDiscordRPC() {
+    if (!this.discordConnected) {
+        return;
+    }
+    
+    if (!this.discordWs || this.discordWs.readyState !== WebSocket.OPEN) {
+        console.warn('Discord WebSocket not ready');
+        return;
+    }
+    
+    try {
+        this.discordWs.send(JSON.stringify({
+            action: 'clear',
+            enabled: false
+        }));
+        console.log('🔇 Cleared Discord RPC');
+    } catch (error) {
+        console.error('Failed to clear Discord RPC:', error);
+    }
+}
 
 toggleDiscordRPC() {
     this.discordEnabled = !this.discordEnabled;
