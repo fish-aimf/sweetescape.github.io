@@ -9925,8 +9925,28 @@ async checkDiscordAppRunning() {
     });
 }
 
-
-// ADD THIS NEW METHOD
+async handleDiscordClick() {
+    // If already enabled, just toggle off
+    if (this.discordEnabled) {
+        this.toggleDiscordRPC();
+        return;
+    }
+    
+    // Check if desktop app is running
+    const isRunning = await this.checkDiscordAppRunning();
+    
+    if (isRunning) {
+        // App is running, just enable it
+        this.toggleDiscordRPC();
+        return;
+    }
+    
+    // App is not running - show options modal
+    this.showDiscordSetupModal();
+}
+// ========================================
+// NEW METHOD 1: showDiscordSetupModal
+// ========================================
 showDiscordSetupModal() {
     // Remove existing modal if any
     const existingModal = document.getElementById('discordSetupModal');
@@ -10079,7 +10099,9 @@ showDiscordSetupModal() {
     });
 }
 
-// ADD THIS NEW METHOD
+// ========================================
+// NEW METHOD 2: attemptLaunchApp
+// ========================================
 attemptLaunchApp() {
     // Create a temporary link to try opening the .pyw file
     const link = document.createElement('a');
@@ -10113,26 +10135,6 @@ attemptLaunchApp() {
             }
         }
     }, 3000);
-}
-async handleDiscordClick() {
-    // If already enabled, just toggle off
-    if (this.discordEnabled) {
-        this.toggleDiscordRPC();
-        return;
-    }
-    
-    // Check if desktop app is running
-    const isRunning = await this.checkDiscordAppRunning();
-    
-    if (isRunning) {
-        // App is running, just enable it
-        this.toggleDiscordRPC();
-        return;
-    }
-    
-    // App is not running - show options
-    const modal = this.createDiscordSetupModal();
-    document.body.appendChild(modal);
 }
 
 
