@@ -6549,3 +6549,60 @@ body:has(#ytPlayer.fullscreen-video) {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* Discord Button States */
+#discordButton {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+#discordButton i {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+/* Disabled state - slash over icon */
+#discordButton i.discord-disabled::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120%;
+    height: 2px;
+    background-color: currentColor;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    opacity: 0.8;
+}
+
+/* Enabled but disconnected - pulsing */
+#discordButton i.discord-enabled.discord-disconnected {
+    animation: discordPulse 2s ease-in-out infinite;
+    opacity: 0.6;
+}
+
+@keyframes discordPulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+/* Connected state - solid */
+#discordButton i.discord-enabled.discord-connected {
+    opacity: 1;
+    color: #5865F2;
+}
+
+/* Hover effects */
+#discordButton:hover i.discord-disabled {
+    opacity: 0.8;
+}
+
+#discordButton:hover i.discord-enabled.discord-connected {
+    color: #4752C4;
+    transform: scale(1.1);
+}
+
+#discordButton:active {
+    transform: scale(0.95);
+}
+
+
