@@ -10033,6 +10033,7 @@ async handleDiscordClick() {
         this.restorePageAppearance();
         this.disconnectObservers();
         this.removeDynamicEventListeners();
+        this.closeDiscordConnection();  
         this.gracefulDatabaseClose();
         console.log("Cleanup process completed successfully");
     }
