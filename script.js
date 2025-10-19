@@ -853,7 +853,7 @@ class AdvancedMusicPlayer {
             } catch (error) {
                 console.error("Error updating progress bar:", error);
             }
-        }, 500);
+        }, 1200);
     }
     seekMusic(e) {
         if (!this.ytPlayer) return;
