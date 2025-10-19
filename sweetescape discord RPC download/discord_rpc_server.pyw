@@ -31,6 +31,16 @@ server_stats = {
 }
 stats_lock = threading.Lock()
 
+# Optimization: Pre-allocated RPC template to reduce memory allocations
+BASE_RPC_DATA = {
+    "small_image": "favicon",
+    "small_text": "sweetescape.vercel.app",
+}
+
+# Optimization: Cache for log throttling
+last_log_time = 0
+LOG_INTERVAL = 1  # Log at most every 1 second
+
 def init_discord():
     """Initialize Discord connection in a separate thread"""
     global rpc, connected_to_discord
@@ -63,21 +73,25 @@ def extract_youtube_id(url):
 
 def update_discord_rpc(song, artist, url):
     """Update Discord RPC in a thread-safe way"""
+    global last_log_time
+    
     try:
         video_id = extract_youtube_id(url)
         
-        # Build RPC data with proper image handling
-        rpc_data = {
-            "details": f"Listening to \"{song}\"",
-            "state": f"Song by \"{artist}\"",
-            "large_text": f"{song} • {artist}",
-            "small_image": "favicon",
-            "small_text": "sweetescape.vercel.app",
-            "buttons": [
-                {"label": "🎵 Listen on YouTube", "url": url},
-                {"label": "🌐 Open SweetEscape", "url": "https://sweetescape.vercel.app"}
-            ]
-        }
+        # Optimization: Reuse base template and update only what's needed
+        rpc_data = BASE_RPC_DATA.copy()
+        rpc_data["details"] = f"Listening to \"{song}\""
+        rpc_data["large_text"] = f"{song} • {artist}"
+        
+        # Build buttons - reuse list structure
+        rpc_data["buttons"] = [
+            {"label": "🎵 Listen on YouTube", "url": url},
+            {"label": "🌐 Open SweetEscape", "url": "https://sweetescape.vercel.app"}
+        ]
+        
+        # Only add state if artist is not "Unknown Artist"
+        if artist != "Unknown Artist":
+            rpc_data["state"] = f"Song by \"{artist}\""
         
         # Add large_image only if we have a valid video_id
         if video_id:
@@ -94,9 +108,15 @@ def update_discord_rpc(song, artist, url):
             server_stats["last_artist"] = artist
             server_stats["last_update"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        # Compact console output
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        print(f"[{timestamp}] 🎵 {song[:40]}... by {artist[:30]}...")
+        # Optimization: Throttle console logging to reduce I/O
+        current_time = time.time()
+        if current_time - last_log_time >= LOG_INTERVAL:
+            last_log_time = current_time
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            if artist != "Unknown":
+                print(f"[{timestamp}] 🎵 {song[:40]}... by {artist[:30]}...")
+            else:
+                print(f"[{timestamp}] 🎵 {song[:40]}...")
         
         return True
     except Exception as e:
@@ -199,8 +219,17 @@ async def handle_client(websocket):
             server_stats["connected_clients"] -= 1
 
 async def start_server():
-    # ping_interval=None and ping_timeout=None reduce CPU usage on idle connections
-    async with websockets.serve(handle_client, "localhost", 9112, ping_interval=None, ping_timeout=None):
+    # Optimization: Disable ping/pong, compression, and set optimized buffer sizes
+    async with websockets.serve(
+        handle_client, 
+        "localhost", 
+        9112, 
+        ping_interval=None, 
+        ping_timeout=None,
+        compression=None,
+        max_size=10_485_760,
+        max_queue=32
+    ):
         print("🚀 Discord RPC Server started on ws://localhost:9112")
         print("="*60)
         await asyncio.Future()
@@ -264,21 +293,21 @@ def show_console(icon, item):
         script = f'''
 import time
 print("=" * 70)
-print("🎵 DISCORD RPC SERVER - LIVE STATUS")
+print("DISCORD RPC SERVER - LIVE STATUS")
 print("=" * 70)
 print("")
-print("📊 SERVER STATUS:")
+print("SERVER STATUS:")
 print("  ✓ Server: Running on localhost:9112")
 print("  ✓ Discord: {status}")
 print("  ✓ Uptime: {uptime}")
 print("")
-print("📈 STATISTICS:")
+print("STATISTICS:")
 print("  • Total Updates: {total_updates}")
 print("  • Total Clears: {clears}")
 print("  • Active Clients: {clients}")
 print("  • Errors: {errors}")
 print("")
-print("🎧 CURRENT TRACK:")
+print("CURRENT TRACK:")
 print("  • Song: {last_song}")
 print("  • Artist: {last_artist}")
 print("  • Last Updated: {last_update}")
@@ -294,9 +323,9 @@ input("\\nPress Enter to close...")
         print("=" * 70)
         print("🎵 DISCORD RPC SERVER - LIVE STATUS")
         print("=" * 70)
-        print(f"\n📊 SERVER STATUS:\n  ✓ Server: Running on localhost:9112\n  ✓ Discord: {status}\n  ✓ Uptime: {uptime}")
-        print(f"\n📈 STATISTICS:\n  • Total Updates: {total_updates}\n  • Total Clears: {clears}\n  • Active Clients: {clients}\n  • Errors: {errors}")
-        print(f"\n🎧 CURRENT TRACK:\n  • Song: {last_song}\n  • Artist: {last_artist}\n  • Last Updated: {last_update}")
+        print(f"\n SERVER STATUS:\n  ✓ Server: Running on localhost:9112\n  ✓ Discord: {status}\n  ✓ Uptime: {uptime}")
+        print(f"\n STATISTICS:\n  • Total Updates: {total_updates}\n  • Total Clears: {clears}\n  • Active Clients: {clients}\n  • Errors: {errors}")
+        print(f"\n CURRENT TRACK:\n  • Song: {last_song}\n  • Artist: {last_artist}\n  • Last Updated: {last_update}")
         print("\n" + "=" * 70)
 
 def quit_action(icon, item):
@@ -310,7 +339,7 @@ def main():
     # Initialize uptime tracker
     server_stats["uptime_start"] = time.time()
     
-    print("🎵 SweetEscape Discord RPC Server")
+    print("SweetEscape Discord RPC Server")
     print("="*60)
     
     # Start websocket server in background thread
