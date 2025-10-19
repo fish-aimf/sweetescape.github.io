@@ -331,3 +331,6 @@
 - massive update fully implimented. you can now show your songs in discord rich presence with the help of the download. v44.1.0
 - better cleanup for discord rp v44.1.1
 - made version changelog reverse so newest updates on top. v44.2.0
+- improved the download cpu usage. v44.2.1
+- improved dom update frequency to increase battery life v44.2.2
+- working on improving battery life by stopping dom updates when you are not in the tab v44.2.2
