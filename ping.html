@@ -21,10 +21,9 @@
                 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
                 
                 // Simple query to keep the connection active
-                // Adjust table name to match one of your tables
                 const { data, error } = await supabase
-                    .from('artists') // or whatever table name you have
-                    .select('*')
+                    .from('artists')
+                    .select('id')
                     .limit(1);
                 
                 if (error) throw error;
