@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Ping</title>
+</head>
+<body>
+    <h1>Supabase Keep-Alive</h1>
+    <p id="status">Pinging Supabase...</p>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        async function pingSupabase() {
+            const statusEl = document.getElementById('status');
+            
+            try {
+                const supabaseUrl = 'https://cwhxanbpymkngzpbsshh.supabase.co';
+                const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3aHhhbmJweW1rbmd6cGJzc2hoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NTQzMTksImV4cCI6MjA2OTQzMDMxOX0.6K3eM1XoWaPmyMHsLYgw0mAnSxYjME4clflL4PxQalQ';
+                
+                const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+                
+                // Simple query to keep the connection active
+                // Adjust table name to match one of your tables
+                const { data, error } = await supabase
+                    .from('artists') // or whatever table name you have
+                    .select('*')
+                    .limit(1);
+                
+                if (error) throw error;
+                
+                statusEl.textContent = `✅ Success! Pinged at ${new Date().toLocaleString()}`;
+                statusEl.style.color = 'green';
+            } catch (error) {
+                statusEl.textContent = `❌ Error: ${error.message}`;
+                statusEl.style.color = 'red';
+            }
+        }
+        
+        // Ping on page load
+        pingSupabase();
+    </script>
+</body>
+</html>
