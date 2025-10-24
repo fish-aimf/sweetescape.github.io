@@ -167,13 +167,15 @@ class AdvancedMusicPlayer {
             toggleVideoFullscreen: 'KeyU',
             showQueue: 'KeyY',
             cycleFavicon: 'KeyB',
-            toggleWebEmbed: 'KeyN'
+            toggleWebEmbed: 'KeyN',
+            toggleMusicExplorer: 'KeyO' 
         };
         this.currentKeybinds = {
             ...this.defaultKeybinds
         };
         this.isRecordingKeybind = false;
         this.recordingAction = null;
+        this.isAdditionalDetailsHidden = false;
         this.discordWs = null;
         this.discordConnected = false;
         this.discordEnabled = false;
@@ -199,7 +201,7 @@ class AdvancedMusicPlayer {
             .then(() => {
                 this.initializeElements();
                 this.syncLibraryDisplayUI();
-                this.setupYouTubePlayer(); // This will now complete faster
+                this.setupYouTubePlayer();
                 this.loadQueue();
                 this.setupEventListeners();
                 this.initializeTheme();
@@ -4770,18 +4772,74 @@ playSongFromPlaylist(index) {
     }
     renderAdditionalDetails() {
         if (!this.elements.additionalDetails) return;
-        const header = this.elements.additionalDetails.querySelector('.additional-details-header');
-        const currentSongSection = this.elements.additionalDetails.querySelector('#currentSongSection');
-        this.elements.additionalDetails.innerHTML = '';
-        if (header) {
-            this.elements.additionalDetails.appendChild(header);
+        
+        // Check if hidden - if so, skip rendering to save resources
+        if (this.isAdditionalDetailsHidden) {
+            return;
         }
-        if (!currentSongSection) {
-            const currentSongDiv = document.createElement('div');
-            currentSongDiv.id = 'currentSongSection';
-            currentSongDiv.className = 'current-song-section';
-            currentSongDiv.style.display = 'none';
-            currentSongDiv.innerHTML = `
+        
+        this.elements.additionalDetails.innerHTML = '';
+        
+        // Create header container with hide button
+        const headerContainer = document.createElement('div');
+        headerContainer.style.display = 'flex';
+        headerContainer.style.justifyContent = 'space-between';
+        headerContainer.style.alignItems = 'center';
+        headerContainer.style.marginBottom = '6px';
+        headerContainer.style.paddingBottom = '6px';
+        headerContainer.style.borderBottom = '1px solid var(--border-color)';
+        headerContainer.style.flexShrink = '0';
+        
+        const headerText = document.createElement('h3');
+        headerText.className = 'additional-details-header';
+        headerText.textContent = 'Music Explorer';
+        headerText.style.margin = '0';
+        headerText.style.border = 'none';
+        headerText.style.paddingBottom = '0';
+        
+        const hideBtn = document.createElement('button');
+        hideBtn.className = 'hide-details-btn';
+        hideBtn.innerHTML = '−';
+        const keybindKey = this.currentKeybinds.toggleMusicExplorer || 'KeyO';
+        hideBtn.title = `[${this.getKeyDisplayName(keybindKey)}] Hide Music Explorer`;
+        hideBtn.style.cssText = `
+            background: transparent;
+            border: none;
+            color: var(--bg-primary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            line-height: 1;
+            font-weight: bold;
+            flex-shrink: 0;
+        `;
+        
+        hideBtn.addEventListener('mouseenter', () => {
+            hideBtn.style.color = 'var(--hover-color)';
+            hideBtn.style.background = 'var(--bg-secondary)';
+        });
+        
+        hideBtn.addEventListener('mouseleave', () => {
+            hideBtn.style.color = 'var(--bg-primary)';
+            hideBtn.style.background = 'transparent';
+        });
+        
+        hideBtn.addEventListener('click', () => {
+            this.toggleAdditionalDetails();
+        });
+        
+        headerContainer.appendChild(headerText);
+        headerContainer.appendChild(hideBtn);
+        this.elements.additionalDetails.appendChild(headerContainer);
+        
+        // Create current song section
+        const currentSongDiv = document.createElement('div');
+        currentSongDiv.id = 'currentSongSection';
+        currentSongDiv.className = 'current-song-section';
+        currentSongDiv.style.display = 'none';
+        currentSongDiv.innerHTML = `
             <h4 class="current-song-title">Now Playing</h4>
             <div class="current-song-container">
                 <div class="current-song-thumbnail">
@@ -4793,11 +4851,10 @@ playSongFromPlaylist(index) {
                 </div>
             </div>
         `;
-            this.elements.additionalDetails.appendChild(currentSongDiv);
-        } else {
-            this.elements.additionalDetails.appendChild(currentSongSection);
-        }
+        this.elements.additionalDetails.appendChild(currentSongDiv);
+        
         this.updateCurrentSongDisplay();
+        
         const recentlyListenedItems = this.getCombinedRecentlyPlayed();
         if (recentlyListenedItems.length > 0) {
             this.createDetailsSection(
@@ -4806,6 +4863,7 @@ playSongFromPlaylist(index) {
                 "mixed"
             );
         }
+        
         if (this.songLibrary.length > 0) {
             this.createDetailsSection(
                 "Suggested",
@@ -4813,6 +4871,7 @@ playSongFromPlaylist(index) {
                 "song"
             );
         }
+        
         const favoriteSongs = this.songLibrary.filter((song) => song.favorite);
         if (favoriteSongs.length > 0) {
             this.createDetailsSection(
@@ -4821,6 +4880,7 @@ playSongFromPlaylist(index) {
                 "song"
             );
         }
+        
         if (this.recentlyPlayedPlaylists.length > 0) {
             this.createDetailsSection(
                 "Recently Played Playlists",
@@ -5107,6 +5167,26 @@ playSongFromPlaylist(index) {
             itemsList.appendChild(itemElement);
         });
     }
+
+
+    toggleAdditionalDetails() {
+        const additionalDetails = document.getElementById('additionalDetails');
+        if (!additionalDetails) return;
+        
+        if (additionalDetails.style.display === 'none') {
+            additionalDetails.style.display = 'flex';
+            this.isAdditionalDetailsHidden = false;
+            // Re-render when showing
+            this.renderAdditionalDetails();
+        } else {
+            additionalDetails.style.display = 'none';
+            this.isAdditionalDetailsHidden = true;
+        }
+    }
+
+
+
+    
     refreshSuggestedSongs() {
         if (this.songLibrary.length > 0) {
             this.renderAdditionalDetails();
@@ -9484,50 +9564,54 @@ Song list:`;
     }
 
     handleKeybind(code) {
-        const k = this.currentKeybinds;
+    const k = this.currentKeybinds;
 
-        if (code === k.cycleFavicon && k.cycleFavicon !== '') {
-            this.cycleFaviconAndTitle();
-        } else if (code === k.toggleWebEmbed && k.toggleWebEmbed !== '') {} else if ((code === k.togglePlayPause && k.togglePlayPause !== '') ||
-            (code === k.togglePlayPause2 && k.togglePlayPause2 !== '')) {
-            this.togglePlayPause();
-        } else if ((code === k.previousSong && k.previousSong !== '') ||
-            (code === k.previousSong2 && k.previousSong2 !== '')) {
-            this.playPreviousSong();
-        } else if ((code === k.nextSong && k.nextSong !== '') ||
-            (code === k.nextSong2 && k.nextSong2 !== '')) {
-            this.playNextSong();
-        } else if (code === k.volumeUp && k.volumeUp !== '') {
-            this.adjustVolume(0.1);
-        } else if (code === k.volumeDown && k.volumeDown !== '') {
-            this.adjustVolume(-0.1);
-        } else if (code === k.toggleLoop && k.toggleLoop !== '') {
-            this.toggleLoop();
-        } else if (code === k.restartSong && k.restartSong !== '') {
-            if (this.ytPlayer) this.ytPlayer.seekTo(0, true);
-        } else if (code === k.toggleTheme && k.toggleTheme !== '') {
-            this.toggleTheme();
-        } else if (code === k.openTimer && k.openTimer !== '') {
-            this.openTimerModal();
-        } else if (code === k.volumeUpFine && k.volumeUpFine !== '') {
-            this.adjustVolume(0.01);
-        } else if (code === k.volumeDownFine && k.volumeDownFine !== '') {
-            this.adjustVolume(-0.01);
-        } else if (code === k.toggleControlBar && k.toggleControlBar !== '') {
-            this.toggleControlBar();
-        } else if ((code === k.togglePlaylistSidebar && k.togglePlaylistSidebar !== '') ||
-            (code === k.togglePlaylistSidebar2 && k.togglePlaylistSidebar2 !== '')) {
-            this.togglePlaylistSidebar();
-        } else if (code === k.cycleTab && k.cycleTab !== '') {
-            this.cycleToNextTab();
-        } else if (code === k.toggleVideoFullscreen && k.toggleVideoFullscreen !== '') {
-            if (this.ytPlayer && this.elements.currentSongName.textContent !== "No Song Playing") {
-                this.toggleVideoFullscreen();
-            }
-        } else if (code === k.showQueue && k.showQueue !== '') {
-            this.showQueueOverlay();
+    if (code === k.cycleFavicon && k.cycleFavicon !== '') {
+        this.cycleFaviconAndTitle();
+    } else if (code === k.toggleWebEmbed && k.toggleWebEmbed !== '') {
+        // Your web embed logic
+    } else if ((code === k.togglePlayPause && k.togglePlayPause !== '') ||
+        (code === k.togglePlayPause2 && k.togglePlayPause2 !== '')) {
+        this.togglePlayPause();
+    } else if ((code === k.previousSong && k.previousSong !== '') ||
+        (code === k.previousSong2 && k.previousSong2 !== '')) {
+        this.playPreviousSong();
+    } else if ((code === k.nextSong && k.nextSong !== '') ||
+        (code === k.nextSong2 && k.nextSong2 !== '')) {
+        this.playNextSong();
+    } else if (code === k.volumeUp && k.volumeUp !== '') {
+        this.adjustVolume(0.1);
+    } else if (code === k.volumeDown && k.volumeDown !== '') {
+        this.adjustVolume(-0.1);
+    } else if (code === k.toggleLoop && k.toggleLoop !== '') {
+        this.toggleLoop();
+    } else if (code === k.restartSong && k.restartSong !== '') {
+        if (this.ytPlayer) this.ytPlayer.seekTo(0, true);
+    } else if (code === k.toggleTheme && k.toggleTheme !== '') {
+        this.toggleTheme();
+    } else if (code === k.openTimer && k.openTimer !== '') {
+        this.openTimerModal();
+    } else if (code === k.volumeUpFine && k.volumeUpFine !== '') {
+        this.adjustVolume(0.01);
+    } else if (code === k.volumeDownFine && k.volumeDownFine !== '') {
+        this.adjustVolume(-0.01);
+    } else if (code === k.toggleControlBar && k.toggleControlBar !== '') {
+        this.toggleControlBar();
+    } else if ((code === k.togglePlaylistSidebar && k.togglePlaylistSidebar !== '') ||
+        (code === k.togglePlaylistSidebar2 && k.togglePlaylistSidebar2 !== '')) {
+        this.togglePlaylistSidebar();
+    } else if (code === k.cycleTab && k.cycleTab !== '') {
+        this.cycleToNextTab();
+    } else if (code === k.toggleVideoFullscreen && k.toggleVideoFullscreen !== '') {
+        if (this.ytPlayer && this.elements.currentSongName.textContent !== "No Song Playing") {
+            this.toggleVideoFullscreen();
         }
+    } else if (code === k.showQueue && k.showQueue !== '') {
+        this.showQueueOverlay();
+    } else if (code === k.toggleMusicExplorer && k.toggleMusicExplorer !== '') {
+        this.toggleAdditionalDetails();
     }
+}
 
     loadKeybindsSettings() {
         const keybindInputs = document.querySelectorAll('.keybind-input');
@@ -9594,33 +9678,34 @@ Song list:`;
         document.addEventListener('keydown', this.keybindListener, true);
     }
     getActionDisplayName(action) {
-        const actionNames = {
-            togglePlayPause: 'Play/Pause',
-            togglePlayPause2: 'Play/Pause (Alt)',
-            previousSong: 'Previous Song',
-            previousSong2: 'Previous Song (Alt)',
-            nextSong: 'Next Song',
-            nextSong2: 'Next Song (Alt)',
-            volumeUp: 'Volume Up',
-            volumeDown: 'Volume Down',
-            toggleLoop: 'Toggle Loop',
-            restartSong: 'Restart Song',
-            toggleTheme: 'Toggle Theme',
-            openTimer: 'Open Timer',
-            volumeUpFine: 'Volume Up (Fine)',
-            volumeDownFine: 'Volume Down (Fine)',
-            toggleControlBar: 'Toggle Control Bar',
-            togglePlaylistSidebar: 'Toggle Sidebar',
-            togglePlaylistSidebar2: 'Toggle Sidebar (Alt)',
-            cycleTab: 'Cycle Tab',
-            toggleVideoFullscreen: 'Toggle Fullscreen',
-            showQueue: 'Show Queue',
-            cycleFavicon: 'Cycle Favicon',
-            toggleWebEmbed: 'Toggle Web Embed'
-        };
+    const actionNames = {
+        togglePlayPause: 'Play/Pause',
+        togglePlayPause2: 'Play/Pause (Alt)',
+        previousSong: 'Previous Song',
+        previousSong2: 'Previous Song (Alt)',
+        nextSong: 'Next Song',
+        nextSong2: 'Next Song (Alt)',
+        volumeUp: 'Volume Up',
+        volumeDown: 'Volume Down',
+        toggleLoop: 'Toggle Loop',
+        restartSong: 'Restart Song',
+        toggleTheme: 'Toggle Theme',
+        openTimer: 'Open Timer',
+        volumeUpFine: 'Volume Up (Fine)',
+        volumeDownFine: 'Volume Down (Fine)',
+        toggleControlBar: 'Toggle Control Bar',
+        togglePlaylistSidebar: 'Toggle Sidebar',
+        togglePlaylistSidebar2: 'Toggle Sidebar (Alt)',
+        cycleTab: 'Cycle Tab',
+        toggleVideoFullscreen: 'Toggle Fullscreen',
+        showQueue: 'Show Queue',
+        cycleFavicon: 'Cycle Favicon',
+        toggleWebEmbed: 'Toggle Web Embed',
+        toggleMusicExplorer: 'Toggle Music Explorer'  // NEW: Add this line
+    };
 
-        return actionNames[action] || action;
-    }
+    return actionNames[action] || action;
+}
 
     recordKeybind(keyCode) {
         if (!this.isRecordingKeybind) return;
