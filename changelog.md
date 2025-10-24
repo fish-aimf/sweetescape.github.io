@@ -334,3 +334,4 @@
 - improved the download cpu usage. v44.2.1
 - improved dom update frequency to increase battery life v44.2.2
 - working on improving battery life by stopping dom updates when you are not in the tab v44.2.2
+- added ping.html so uptimerobot can keep the supabase project alive. v44.2.3
