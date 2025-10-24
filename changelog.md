@@ -335,3 +335,4 @@
 - improved dom update frequency to increase battery life v44.2.2
 - working on improving battery life by stopping dom updates when you are not in the tab v44.2.2
 - added ping.html so uptimerobot can keep the supabase project alive. v44.2.3
+- updated all initialization chain so that playing the song immediately after pageload will not trigger an error. v44.2.4
