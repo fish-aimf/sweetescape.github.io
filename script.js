@@ -1,5 +1,6 @@
 class AdvancedMusicPlayer {
     constructor() {
+        
         this.playlists = [];
         this.songLibrary = [];
         this.songQueue = [];
@@ -9,7 +10,9 @@ class AdvancedMusicPlayer {
         this.currentSongIndex = 0;
         this.ytPlayer = null;
         this.currentSong = null;
+        this.ytPlayerReady = false;
         this.isPlaying = false;
+        
         this.isLooping = false;
         this.progressBar = null;
         this.progressInterval = null;
@@ -196,9 +199,8 @@ class AdvancedMusicPlayer {
             .then(() => {
                 this.initializeElements();
                 this.syncLibraryDisplayUI();
-                this.setupYouTubePlayer();
+                this.setupYouTubePlayer(); // This will now complete faster
                 this.loadQueue();
-
                 this.setupEventListeners();
                 this.initializeTheme();
                 this.initializeAutoplay();
@@ -1886,61 +1888,68 @@ class AdvancedMusicPlayer {
         }
     }
     playSongById(videoId) {
-        if (!this.ytPlayer) {
-            console.error("YouTube player not initialized");
-            return;
+    if (!this.ytPlayer) {
+        console.error("YouTube player not initialized");
+        return;
+    }
+    if (!videoId) {
+        console.error("No video ID provided");
+        return;
+    }
+    
+    // Check if player is ready
+    if (!this.ytPlayerReady) {
+        console.log("Player not ready yet, please wait a moment...");
+        return;
+    }
+    
+    try {
+        console.log("Loading video:", videoId);
+        this.ytPlayer.loadVideoById({
+            videoId: videoId,
+            suggestedQuality: "small",
+        });
+        setTimeout(() => {
+            try {
+                this.ytPlayer.setPlaybackQuality("small");
+            } catch (error) {
+                console.warn("Failed to set video quality:", error);
+            }
+        }, 200);
+        this.isPlaying = true;
+        this.updatePlayerUI();
+        if (this.elements.progressBar) {
+            this.elements.progressBar.value = 0;
         }
-        if (!videoId) {
-            console.error("No video ID provided");
-            return;
+        if (this.currentPlaylist && this.isSidebarVisible) {
+            this.renderPlaylistSidebar();
         }
-        try {
-            console.log("Loading video:", videoId);
-            this.ytPlayer.loadVideoById({
-                videoId: videoId,
-                suggestedQuality: "small",
-            });
+        if (this.currentSpeed !== 1) {
             setTimeout(() => {
                 try {
-                    this.ytPlayer.setPlaybackQuality("small");
+                    this.ytPlayer.setPlaybackRate(this.currentSpeed);
                 } catch (error) {
-                    console.warn("Failed to set video quality:", error);
+                    console.warn("Failed to set playback speed:", error);
                 }
-            }, 200);
-            this.isPlaying = true;
-            this.updatePlayerUI();
-            if (this.elements.progressBar) {
-                this.elements.progressBar.value = 0;
+            }, 500);
+        }
+        this.updateProgressBar();
+        this.updatePageTitle();
+        setTimeout(() => {
+            if (this.discordEnabled && this.discordConnected) {
+                this.sendDiscordRPC();
             }
-            if (this.currentPlaylist && this.isSidebarVisible) {
-                this.renderPlaylistSidebar();
-            }
-            if (this.currentSpeed !== 1) {
-                setTimeout(() => {
-                    try {
-                        this.ytPlayer.setPlaybackRate(this.currentSpeed);
-                    } catch (error) {
-                        console.warn("Failed to set playback speed:", error);
-                    }
-                }, 500);
-            }
-            this.updateProgressBar();
-            this.updatePageTitle();
+        }, 1000);
+    } catch (error) {
+        console.error("Error playing song with ID " + videoId + ":", error);
+        alert("Failed to play the video. Please try again.");
+        if (this.isAutoplayEnabled) {
             setTimeout(() => {
-                if (this.discordEnabled && this.discordConnected) {
-                    this.sendDiscordRPC();
-                }
+                this.playNextSong();
             }, 1000);
-        } catch (error) {
-            console.error("Error playing song with ID " + videoId + ":", error);
-            alert("Failed to play the video. Please try again.");
-            if (this.isAutoplayEnabled) {
-                setTimeout(() => {
-                    this.playNextSong();
-                }, 1000);
-            }
         }
     }
+}
     togglePlayPause() {
         if (!this.ytPlayer) {
             console.warn("YouTube player not initialized");
@@ -2310,34 +2319,54 @@ playSongFromPlaylist(index) {
             window.onYouTubeIframeAPIReady = () => this.initializeYouTubePlayer();
         }
     }
-    initializeYouTubePlayer() {
-        this.ytPlayer = new YT.Player("ytPlayer", {
-            height: "1",
-            width: "1",
-            playerVars: {
-                'rel': 0,
-                'showinfo': 0,
-                'controls': 0,
-                'disablekb': 1,
-                'fs': 0,
-                'modestbranding': 1,
-                'playsinline': 1,
-                'autoplay': 0,
-                'iv_load_policy': 3,
-                'cc_load_policy': 0,
-                'cc_lang_pref': 'en',
-                'hl': 'en',
-                'enablejsapi': 1,
-                'origin': window.location.origin,
-                'widget_referrer': window.location.href
-            },
-            events: {
-                onReady: this.onPlayerReady.bind(this),
-                onStateChange: this.onPlayerStateChange.bind(this),
-                onError: this.onPlayerError.bind(this)
-            },
-        });
+    loadYouTubeAPI() {
+    // Check if API is already loaded
+    if (window.YT && window.YT.Player) {
+        return;
     }
+    
+    // Check if script is already being loaded
+    if (document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+        return;
+    }
+    
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+}
+    initializeYouTubePlayer() {
+    this.ytPlayer = new YT.Player("ytPlayer", {
+        height: "1",
+        width: "1",
+        playerVars: {
+            'rel': 0,
+            'showinfo': 0,
+            'controls': 0,
+            'disablekb': 1,
+            'fs': 0,
+            'modestbranding': 1,
+            'playsinline': 1,
+            'autoplay': 0,
+            'iv_load_policy': 3,
+            'cc_load_policy': 0,
+            'cc_lang_pref': 'en',
+            'hl': 'en',
+            'enablejsapi': 1,
+            'origin': window.location.origin,
+            'widget_referrer': window.location.href
+        },
+        events: {
+            onReady: (event) => {
+                this.onPlayerReady(event);
+                this.ytPlayerReady = true; // SET READY FLAG
+                console.log("YouTube player is ready");
+            },
+            onStateChange: this.onPlayerStateChange.bind(this),
+            onError: this.onPlayerError.bind(this)
+        },
+    });
+}
     onPlayerReady(event) {
         console.log("YouTube player is ready");
         this.initializeAutoplay();
