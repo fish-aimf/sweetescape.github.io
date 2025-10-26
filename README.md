@@ -86,7 +86,8 @@ This repository serves as the **source code** for the deployed site.
 
 Created with love and passion by **[FishAreSmart](https://github.com/fish-aimf)**.  
 Every line of code represents passion for the music.
-
+Speical thanks to, Youtube, Google developers studio, Vercel, Gemini, Openai Chatgpt, Claude, Supabase, Amazing counters free hit counters, Youtube API, Spotify, Discord, Google analytics, Twitter cards, Picsvg.
+HTML, CSS, JAVASCRIPT, PYW, MD. And all the friends who have supported me on the way.
 ---
 
 ## 📈 Goal
