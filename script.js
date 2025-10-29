@@ -2627,42 +2627,48 @@ playSongFromPlaylist(index) {
         });
     }
     renderInitialState() {
-        this.renderPlaylists();
-        this.renderSongLibrary();
-        this.updatePlaylistSelection();
-        this.updateListeningTimeDisplay();
-        this.renderAdditionalDetails();
-        document.title = "Music";
-        this.elements.speedBtn.textContent = this.currentSpeed + "x";
-        
-        const controlBarVisible = localStorage.getItem("controlBarVisible");
-        if (controlBarVisible === "false") {
-            setTimeout(() => {
-                const controlBar =
-                    document
-                    .querySelector(".player-controls")
-                    .closest(".player-container") ||
-                    document.querySelector(".player-controls").parentElement;
-                if (controlBar) {
-                    controlBar.style.visibility = "hidden";
-                    controlBar.style.position = "absolute";
-                    controlBar.style.pointerEvents = "none";
-                }
-                const toggleBtn = document.getElementById("toggleControlBarBtn");
-            }, 100);
-        }
+    this.renderPlaylists();
+    this.renderSongLibrary();
+    this.updatePlaylistSelection();
+    this.updateListeningTimeDisplay();
+    this.renderAdditionalDetails();
+    document.title = "Music";
+    this.elements.speedBtn.textContent = this.currentSpeed + "x";
     
-        this.updateDiscordButtonUI();
-        if (this.discordEnabled) {
-            setTimeout(() => {
-                this.initDiscordConnection();
-            }, 1500);
-        }
-        
+    const controlBarVisible = localStorage.getItem("controlBarVisible");
+    const spacerDiv = document.getElementById("controlBarSpacer");
+    
+    if (controlBarVisible === "false") {
         setTimeout(() => {
-            this.showWelcomeModal();
-        }, 1000);
+            const controlBar =
+                document
+                .querySelector(".player-controls")
+                .closest(".player-container") ||
+                document.querySelector(".player-controls").parentElement;
+            if (controlBar) {
+                controlBar.style.visibility = "hidden";
+                controlBar.style.position = "absolute";
+                controlBar.style.pointerEvents = "none";
+            }
+            if (spacerDiv) spacerDiv.style.display = "none";
+            const toggleBtn = document.getElementById("toggleControlBarBtn");
+        }, 100);
+    } else {
+        // ADD THIS: Ensure spacer is visible when control bar is visible
+        if (spacerDiv) spacerDiv.style.display = "block";
     }
+
+    this.updateDiscordButtonUI();
+    if (this.discordEnabled) {
+        setTimeout(() => {
+            this.initDiscordConnection();
+        }, 1500);
+    }
+    
+    setTimeout(() => {
+        this.showWelcomeModal();
+    }, 1000);
+}
     extractYouTubeId(url) {
         if (!url) return null;
         const patterns = [
