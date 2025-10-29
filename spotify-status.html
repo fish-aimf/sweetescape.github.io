@@ -119,11 +119,9 @@
             try {
                 const token = await getAccessToken();
                 
-                // Try multiple global playlists
+                // Global Top 50 playlist
                 const playlistIds = [
-                    '37i9dQZEVXbMDoHDwVN2tF', // Global Top 50
-                    '37i9dQZEVXbNG2KDcFcKOF', // Top Songs - Global
-                    '37i9dQZF1DXcBWIGoYBM5M'  // Today's Top Hits
+                    '37i9dQZEVXbMDoHDwVN2tF' // Global Top 50
                 ];
                 
                 let data = null;
