@@ -337,3 +337,4 @@
 - added ping.html so uptimerobot can keep the supabase project alive. v44.2.3
 - updated all initialization chain so that playing the song immediately after pageload will not trigger an error. v44.2.4
 - added minimize additional detail section button, and added hotkey to toggle visibility v44.3.0
+- on startup it will ensure the control bar spacer is visible v44.4.0
