@@ -119,18 +119,40 @@
             try {
                 const token = await getAccessToken();
                 
-                // Using Spotify's Global Top 50 playlist
-                const playlistId = '37i9dQZEVXbMDoHDwVN2tF';
-                const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks?limit=10`, {
-                    headers: {
-                        'Authorization': 'Bearer ' + token
-                    }
-                });
+                // Try multiple global playlists
+                const playlistIds = [
+                    '37i9dQZEVXbMDoHDwVN2tF', // Global Top 50
+                    '37i9dQZEVXbNG2KDcFcKOF', // Top Songs - Global
+                    '37i9dQZF1DXcBWIGoYBM5M'  // Today's Top Hits
+                ];
                 
-                const data = await response.json();
+                let data = null;
+                for (const playlistId of playlistIds) {
+                    try {
+                        const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks?limit=10`, {
+                            headers: {
+                                'Authorization': 'Bearer ' + token
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            data = await response.json();
+                            if (data && data.items && data.items.length > 0) {
+                                break;
+                            }
+                        }
+                    } catch (e) {
+                        console.log('Trying next playlist...');
+                    }
+                }
+                
+                if (!data || !data.items || data.items.length === 0) {
+                    throw new Error('No tracks found');
+                }
+                
                 displayTracks(data.items);
             } catch (error) {
-                document.getElementById('tracks').innerHTML = '<div class="error">Failed to load tracks. Please try again later.</div>';
+                document.getElementById('tracks').innerHTML = '<div class="error">Failed to load tracks. Please try again later.<br><small>' + error.message + '</small></div>';
                 console.error('Error:', error);
             }
         }
@@ -138,17 +160,27 @@
         function displayTracks(items) {
             const tracksDiv = document.getElementById('tracks');
             tracksDiv.className = '';
+            
+            if (!items || items.length === 0) {
+                tracksDiv.innerHTML = '<div class="error">No tracks available</div>';
+                return;
+            }
+            
             tracksDiv.innerHTML = items.map((item, index) => {
+                if (!item || !item.track) return '';
+                
                 const track = item.track;
+                const albumArt = track.album?.images?.[2]?.url || track.album?.images?.[0]?.url || '';
+                const trackName = track.name || 'Unknown Track';
+                const artists = track.artists?.map(a => a.name).join(', ') || 'Unknown Artist';
+                
                 return `
                     <div class="track">
                         <div class="rank">${index + 1}</div>
-                        <img src="${track.album.images[2]?.url || track.album.images[0]?.url}" 
-                             alt="${track.name}" 
-                             class="album-art">
+                        ${albumArt ? `<img src="${albumArt}" alt="${trackName}" class="album-art">` : '<div style="width:50px;height:50px;margin:0 16px;background:#282828;border-radius:4px;"></div>'}
                         <div class="track-info">
-                            <div class="track-name">${track.name}</div>
-                            <div class="artist-name">${track.artists.map(a => a.name).join(', ')}</div>
+                            <div class="track-name">${trackName}</div>
+                            <div class="artist-name">${artists}</div>
                         </div>
                     </div>
                 `;
