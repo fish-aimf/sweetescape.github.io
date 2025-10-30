@@ -182,6 +182,8 @@ class AdvancedMusicPlayer {
         this.discordReconnectTimer = null;
         this.discordReconnectAttempts = 0;
         this.maxDiscordReconnectAttempts = 3;
+        this.librarySortAlphabetically = true; 
+        this.libraryReverseOrder = false; 
         this.isTabVisible = !document.hidden;
         this.handleVisibilityChange = null;
         this.initDatabase()
@@ -192,16 +194,25 @@ class AdvancedMusicPlayer {
                     this.loadSettings(),
                     this.loadRecentlyPlayed(),
                     this.loadDiscoverMoreSettingsOnStartup(),
-                    this.loadVisualizerSettings(),
-                    this.loadLibrarySortSetting(),
-                    this.loadLibraryReverseSetting(),
                     this.loadKeybinds(),
                     this.loadLibraryDisplaySettings(),
-                    this.loadDiscordSettings()
+                    this.loadDiscordSettings(),
+                    this.loadLibrarySortValue(),      // Load value only
+                    this.loadLibraryReverseValue(),   // Load value only
+                    this.loadVisualizerValue()        // Load value only
                 ]);
             })
             .then(() => {
                 this.initializeElements();
+                
+                // Now sync UI with loaded values (no re-render needed)
+                if (this.elements.librarySortToggle) {
+                    this.elements.librarySortToggle.checked = this.librarySortAlphabetically;
+                }
+                if (this.elements.libraryReverseToggle) {
+                    this.elements.libraryReverseToggle.checked = this.libraryReverseOrder;
+                }
+                
                 this.syncLibraryDisplayUI();
                 this.setupYouTubePlayer();
                 this.loadQueue();
@@ -209,13 +220,13 @@ class AdvancedMusicPlayer {
                 this.initializeTheme();
                 this.initializeAutoplay();
                 this.setupKeyboardControls();
-                this.renderInitialState();
+                this.renderInitialState();  // This renders library ONCE with correct settings
                 this.renderAdditionalDetails();
                 this.setupLyricsTabContextMenu();
                 this.initializeFullscreenLyrics();
                 this.initializeAdvertisementSettings();
                 this.initializeVisualizer();
-                this.loadVisualizerSettings();
+                this.syncVisualizerUI();  // Sync visualizer UI after elements exist
                 this.initializeGlobalLibrary();
             })
             .catch((error) => {
@@ -10193,6 +10204,91 @@ syncUIWithCurrentState() {
             }
         } catch (error) {
             console.warn('Could not sync UI state:', error);
+        }
+    }
+}
+    loadLibrarySortValue() {
+    return new Promise((resolve) => {
+        if (!this.db) {
+            resolve();
+            return;
+        }
+        const transaction = this.db.transaction(["settings"], "readonly");
+        const store = transaction.objectStore("settings");
+        const request = store.get("librarySortAlphabetically");
+        
+        request.onsuccess = () => {
+            this.librarySortAlphabetically = request.result ? request.result.value : true;
+            resolve();
+        };
+        
+        request.onerror = () => {
+            this.librarySortAlphabetically = true;
+            resolve();
+        };
+    });
+}
+
+loadLibraryReverseValue() {
+    return new Promise((resolve) => {
+        if (!this.db) {
+            resolve();
+            return;
+        }
+        const transaction = this.db.transaction(["settings"], "readonly");
+        const store = transaction.objectStore("settings");
+        const request = store.get("libraryReverseOrder");
+        
+        request.onsuccess = () => {
+            this.libraryReverseOrder = request.result ? request.result.value : false;
+            resolve();
+        };
+        
+        request.onerror = () => {
+            this.libraryReverseOrder = false;
+            resolve();
+        };
+    });
+}
+
+loadVisualizerValue() {
+    return new Promise((resolve) => {
+        if (!this.db) {
+            resolve();
+            return;
+        }
+        const transaction = this.db.transaction(["settings"], "readonly");
+        const store = transaction.objectStore("settings");
+        const request = store.get("visualizerEnabled");
+        
+        request.onsuccess = () => {
+            this.visualizerEnabled = request.result ? request.result.value : true;
+            resolve();
+        };
+        
+        request.onerror = () => {
+            this.visualizerEnabled = true;
+            resolve();
+        };
+    });
+}
+
+syncVisualizerUI() {
+    if (this.elements.visualizerToggle) {
+        this.elements.visualizerToggle.checked = this.visualizerEnabled;
+    }
+    if (this.visualizerEnabled) {
+        document.getElementById('musicVisualizer').style.display = 'block';
+        this.visualizer.isActive = true;
+        if (!this.visualizer.animationId) {
+            this.startVisualizer();
+        }
+    } else {
+        document.getElementById('musicVisualizer').style.display = 'none';
+        this.visualizer.isActive = false;
+        if (this.visualizer.animationId) {
+            cancelAnimationFrame(this.visualizer.animationId);
+            this.visualizer.animationId = null;
         }
     }
 }
