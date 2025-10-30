@@ -53,7 +53,7 @@ class AdvancedMusicPlayer {
         this.globalLibraryCurrentUser = null;
         this.globalLibraryArtists = [];
 
-        this.GEMINI_API_KEY = 'AIzaSyAnTvSEHbotQEoJCzRu7R20gPwp96F7-Xo';
+        this.GEMINI_API_KEY = 'AIzaSyBk6siv7qqObbOnpvq-nzpeeM7GmZIYcQA';
         this.YOUTUBE_API_KEYS = [
             'AIzaSyDPT2lmIab9DPC-ltZh4sWrlhapwp0mgTA',
             'AIzaSyAENxiCNCZPHgPt2-ip4-GUWcLTkxge8tc',
