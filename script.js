@@ -182,6 +182,8 @@ class AdvancedMusicPlayer {
         this.discordReconnectTimer = null;
         this.discordReconnectAttempts = 0;
         this.maxDiscordReconnectAttempts = 3;
+        this.isTabVisible = !document.hidden;
+        this.handleVisibilityChange = null;
         this.initDatabase()
             .then(() => {
                 return Promise.all([
@@ -830,35 +832,47 @@ class AdvancedMusicPlayer {
         this.elements.progressBar.addEventListener('touchend', this.handleTouchEnd.bind(this));
     }
     updateProgressBar() {
-        if (!this.ytPlayer || !this.elements.progressBar) return;
-        if (this.progressInterval) {
-            clearInterval(this.progressInterval);
-            this.progressInterval = null;
-        }
-        this.progressInterval = setInterval(() => {
-            try {
-                if (
-                    !this.ytPlayer ||
-                    this.ytPlayer.getPlayerState() !== YT.PlayerState.PLAYING
-                ) {
+            if (!this.ytPlayer || !this.elements.progressBar) return;
+            
+            // Don't start if tab is hidden
+            if (!this.isTabVisible) {
+                return;
+            }
+            
+            if (this.progressInterval) {
+                clearInterval(this.progressInterval);
+                this.progressInterval = null;
+            }
+            
+            this.progressInterval = setInterval(() => {
+                // Skip updates when tab is hidden
+                if (!this.isTabVisible) {
                     return;
                 }
-                const currentTime = this.ytPlayer.getCurrentTime() || 0;
-                const duration = this.ytPlayer.getDuration() || 0;
-                if (duration > 0) {
-                    const progressPercent = (currentTime / duration) * 100;
-                    this.elements.progressBar.value = progressPercent;
-                    if (this.elements.timeDisplay) {
-                        const formattedCurrentTime = this.formatTime(currentTime);
-                        const formattedDuration = this.formatTime(duration);
-                        this.elements.timeDisplay.textContent = `${formattedCurrentTime}/${formattedDuration}`;
+                
+                try {
+                    if (
+                        !this.ytPlayer ||
+                        this.ytPlayer.getPlayerState() !== YT.PlayerState.PLAYING
+                    ) {
+                        return;
                     }
+                    const currentTime = this.ytPlayer.getCurrentTime() || 0;
+                    const duration = this.ytPlayer.getDuration() || 0;
+                    if (duration > 0) {
+                        const progressPercent = (currentTime / duration) * 100;
+                        this.elements.progressBar.value = progressPercent;
+                        if (this.elements.timeDisplay) {
+                            const formattedCurrentTime = this.formatTime(currentTime);
+                            const formattedDuration = this.formatTime(duration);
+                            this.elements.timeDisplay.textContent = `${formattedCurrentTime}/${formattedDuration}`;
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error updating progress bar:", error);
                 }
-            } catch (error) {
-                console.error("Error updating progress bar:", error);
-            }
-        }, 1200);
-    }
+            }, 1200);
+        }
     seekMusic(e) {
         if (!this.ytPlayer) return;
         const duration = this.ytPlayer.getDuration();
@@ -2397,63 +2411,72 @@ playSongFromPlaylist(index) {
         }
     }
     onPlayerStateChange(event) {
-        if (event.data === YT.PlayerState.ENDED) {
-            console.log("Song ended - taking immediate action");
-            setTimeout(() => {
-                if (this.isLooping) {
-                    // Efficient loop - just restart the video
-                    if (this.ytPlayer) {
-                        this.ytPlayer.seekTo(0, true);
-                    }
-                } else if (this.isAutoplayEnabled) {
-                    this.playNextSong();
-                } else {
-                    this.isPlaying = false;
-                    this.updatePlayerUI();
+    if (event.data === YT.PlayerState.ENDED) {
+        console.log("Song ended - taking immediate action");
+        setTimeout(() => {
+            if (this.isLooping) {
+                // Efficient loop - just restart the video
+                if (this.ytPlayer) {
+                    this.ytPlayer.seekTo(0, true);
                 }
-            }, 0);
-            if (this.elements.progressBar) {
-                this.elements.progressBar.value = 0;
+            } else if (this.isAutoplayEnabled) {
+                this.playNextSong();
+            } else {
+                this.isPlaying = false;
+                this.updatePlayerUI();
             }
-            if (this.elements.timeDisplay) {
-                this.elements.timeDisplay.textContent = "0:00/0:00";
-            }
-        } else if (event.data === YT.PlayerState.PAUSED) {
-            this.isPlaying = false;
-            this.updatePlayerUI();
-            if (this.titleScrollInterval) {
-                clearInterval(this.titleScrollInterval);
-                this.titleScrollInterval = null;
-            }
-            this.updatePageTitle();
-            if (this.progressInterval) {
-                clearInterval(this.progressInterval);
-            }
-            if (this.lyricsInterval) {
-                clearInterval(this.lyricsInterval);
-            }
-            if (this.fullscreenLyricsInterval) {
-                clearInterval(this.fullscreenLyricsInterval);
-            }
-        } else if (event.data === YT.PlayerState.PLAYING) {
-            this.isPlaying = true;
-            this.updatePlayerUI();
-            if (this.currentSpeed !== 1) {
-                this.ytPlayer.setPlaybackRate(this.currentSpeed);
-            }
-            this.updateProgressBar();
-            this.startListeningTimeTracking();
-            if (document.getElementById("lyrics") && document.getElementById("lyrics").classList.contains("active")) {
-                this.renderLyricsTab();
-            }
-            if (this.isLyricsFullscreen) {
-                this.renderFullscreenLyrics();
-            }
+        }, 0);
+        if (this.elements.progressBar) {
+            this.elements.progressBar.value = 0;
         }
-        if (event.data === YT.PlayerState.PLAYING) {
-            this.visualizer.isActive = true;
+        if (this.elements.timeDisplay) {
+            this.elements.timeDisplay.textContent = "0:00/0:00";
+        }
+    } else if (event.data === YT.PlayerState.PAUSED) {
+        this.isPlaying = false;
+        this.updatePlayerUI();
+        if (this.titleScrollInterval) {
+            clearInterval(this.titleScrollInterval);
+            this.titleScrollInterval = null;
+        }
+        this.updatePageTitle();
+        if (this.progressInterval) {
+            clearInterval(this.progressInterval);
+        }
+        if (this.lyricsInterval) {
+            clearInterval(this.lyricsInterval);
+        }
+        if (this.fullscreenLyricsInterval) {
+            clearInterval(this.fullscreenLyricsInterval);
+        }
+    } else if (event.data === YT.PlayerState.PLAYING) {
+        this.isPlaying = true;
+        this.updatePlayerUI();
+        if (this.currentSpeed !== 1) {
+            this.ytPlayer.setPlaybackRate(this.currentSpeed);
+        }
+        
+        // Only start progress bar if tab is visible
+        if (this.isTabVisible) {
+            this.updateProgressBar();
+        }
+        
+        this.startListeningTimeTracking();
+        if (document.getElementById("lyrics") && document.getElementById("lyrics").classList.contains("active")) {
+            this.renderLyricsTab();
+        }
+        if (this.isLyricsFullscreen) {
+            this.renderFullscreenLyrics();
         }
     }
+    if (event.data === YT.PlayerState.PLAYING) {
+        this.visualizer.isActive = true;
+        // Only start visualizer if tab is visible
+        if (this.isTabVisible) {
+            this.animateVisualizer();
+        }
+    }
+}
 
     getCurrentVideoId() {
         if (!this.ytPlayer || !this.ytPlayer.getVideoData) return null;
@@ -2627,48 +2650,49 @@ playSongFromPlaylist(index) {
         });
     }
     renderInitialState() {
-    this.renderPlaylists();
-    this.renderSongLibrary();
-    this.updatePlaylistSelection();
-    this.updateListeningTimeDisplay();
-    this.renderAdditionalDetails();
-    document.title = "Music";
-    this.elements.speedBtn.textContent = this.currentSpeed + "x";
-    
-    const controlBarVisible = localStorage.getItem("controlBarVisible");
-    const spacerDiv = document.getElementById("controlBarSpacer");
-    
-    if (controlBarVisible === "false") {
-        setTimeout(() => {
-            const controlBar =
-                document
-                .querySelector(".player-controls")
-                .closest(".player-container") ||
-                document.querySelector(".player-controls").parentElement;
-            if (controlBar) {
-                controlBar.style.visibility = "hidden";
-                controlBar.style.position = "absolute";
-                controlBar.style.pointerEvents = "none";
+            this.renderPlaylists();
+            this.renderSongLibrary();
+            this.updatePlaylistSelection();
+            this.updateListeningTimeDisplay();
+            this.renderAdditionalDetails();
+            document.title = "Music";
+            this.elements.speedBtn.textContent = this.currentSpeed + "x";
+            
+            const controlBarVisible = localStorage.getItem("controlBarVisible");
+            const spacerDiv = document.getElementById("controlBarSpacer");
+            
+            if (controlBarVisible === "false") {
+                setTimeout(() => {
+                    const controlBar =
+                        document
+                        .querySelector(".player-controls")
+                        .closest(".player-container") ||
+                        document.querySelector(".player-controls").parentElement;
+                    if (controlBar) {
+                        controlBar.style.visibility = "hidden";
+                        controlBar.style.position = "absolute";
+                        controlBar.style.pointerEvents = "none";
+                    }
+                    if (spacerDiv) spacerDiv.style.display = "none";
+                    const toggleBtn = document.getElementById("toggleControlBarBtn");
+                }, 100);
+            } else {
+                if (spacerDiv) spacerDiv.style.display = "block";
             }
-            if (spacerDiv) spacerDiv.style.display = "none";
-            const toggleBtn = document.getElementById("toggleControlBarBtn");
-        }, 100);
-    } else {
-        // ADD THIS: Ensure spacer is visible when control bar is visible
-        if (spacerDiv) spacerDiv.style.display = "block";
-    }
-
-    this.updateDiscordButtonUI();
-    if (this.discordEnabled) {
-        setTimeout(() => {
-            this.initDiscordConnection();
-        }, 1500);
-    }
-    
-    setTimeout(() => {
-        this.showWelcomeModal();
-    }, 1000);
-}
+            this.updateDiscordButtonUI();
+            if (this.discordEnabled) {
+                setTimeout(() => {
+                    this.initDiscordConnection();
+                }, 1500);
+            }
+            
+            // ADD THIS LINE:
+            this.initializeVisibilityTracking();
+            
+            setTimeout(() => {
+                this.showWelcomeModal();
+            }, 1000);
+        }
     extractYouTubeId(url) {
         if (!url) return null;
         const patterns = [
@@ -8214,11 +8238,19 @@ playSongFromPlaylist(index) {
         this.animateVisualizer();
     }
     animateVisualizer() {
-        if (!this.visualizer.isActive) return;
-        this.animateBars();
-        this.animateParticles();
-        this.visualizer.animationId = requestAnimationFrame(() => this.animateVisualizer());
-    }
+            // Don't animate if tab is hidden or visualizer inactive
+            if (!this.visualizer.isActive || !this.isTabVisible) {
+                return;
+            }
+            
+            this.animateBars();
+            this.animateParticles();
+            
+            // Only request next frame if tab is visible and visualizer is active
+            if (this.isTabVisible && this.visualizer.isActive) {
+                this.visualizer.animationId = requestAnimationFrame(() => this.animateVisualizer());
+            }
+        }
     animateBars() {
         this.visualizer.bars.forEach((bar, index) => {
             let intensity = this.isPlaying ? 1.5 : 0.15;
@@ -10100,7 +10132,52 @@ async handleDiscordClick() {
     
     this.toggleDiscordRPC();
 }
+initializeVisibilityTracking() {
+    this.handleVisibilityChange = () => {
+        const wasVisible = this.isTabVisible;
+        this.isTabVisible = !document.hidden;
+        
+        if (!wasVisible && this.isTabVisible) {
+            // Tab became visible - resume operations
+            console.log('Tab visible - resuming DOM updates');
+            if (this.isPlaying) {
+                this.updateProgressBar();
+                if (this.visualizer.isActive) {
+                    this.animateVisualizer();
+                }
+                // Sync UI immediately
+                this.syncUIWithCurrentState();
+            }
+        } else if (wasVisible && !this.isTabVisible) {
+            // Tab hidden - operations will auto-pause via checks
+            console.log('Tab hidden - pausing DOM updates');
+        }
+    };
+    
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
+}
 
+syncUIWithCurrentState() {
+    if (this.ytPlayer && this.ytPlayerReady) {
+        try {
+            const currentTime = this.ytPlayer.getCurrentTime() || 0;
+            const duration = this.ytPlayer.getDuration() || 0;
+            
+            if (duration > 0 && this.elements.progressBar) {
+                const progressPercent = (currentTime / duration) * 100;
+                this.elements.progressBar.value = progressPercent;
+                
+                if (this.elements.timeDisplay) {
+                    const formattedCurrentTime = this.formatTime(currentTime);
+                    const formattedDuration = this.formatTime(duration);
+                    this.elements.timeDisplay.textContent = `${formattedCurrentTime}/${formattedDuration}`;
+                }
+            }
+        } catch (error) {
+            console.warn('Could not sync UI state:', error);
+        }
+    }
+}
 
 
 
@@ -10153,6 +10230,10 @@ async handleDiscordClick() {
         this.restorePageAppearance();
         this.disconnectObservers();
         this.removeDynamicEventListeners();
+        if (this.handleVisibilityChange) {
+            document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+        }
+        
         this.closeDiscordConnection();  
         this.gracefulDatabaseClose();
         console.log("Cleanup process completed successfully");
