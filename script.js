@@ -186,7 +186,6 @@ class AdvancedMusicPlayer {
         this.libraryReverseOrder = false; 
         this.isTabVisible = !document.hidden;
         this.handleVisibilityChange = null;
-        this.debouncedUpdatePlayerUI = this.debounce(this.updatePlayerUI.bind(this), 50);
         this.initDatabase()
             .then(() => {
                 return Promise.all([
@@ -1074,29 +1073,28 @@ class AdvancedMusicPlayer {
         }
     }
     createSongElement(song) {
-    const songElement = document.createElement("div");
-    songElement.classList.add("song-item");
-    songElement.dataset.songId = song.id; // Store song ID on container
-    
-    const favoriteBtn = song.favorite ?
-        `<button class="favorite-btn" data-song-id="${song.id}">
-           <i class="fa fa-star"></i>
-       </button>` :
-        (this.showUnfavoriteButtons ?
+        const songElement = document.createElement("div");
+        songElement.classList.add("song-item");
+
+        const favoriteBtn = song.favorite ?
             `<button class="favorite-btn" data-song-id="${song.id}">
-               <i class="fa fa-star-o"></i>
+               <i class="fa fa-star"></i>
            </button>` :
-            '');
-    
-    const deleteBtn = this.showDeleteButtons ?
-        `<button class="remove-btn" data-song-id="${song.id}">Remove</button>` :
-        '';
-    
-    const editBtn = this.showEditButtons ?
-        `<button class="edit-btn" data-song-id="${song.id}">Edit</button>` :
-        '';
-    
-    songElement.innerHTML = `
+            (this.showUnfavoriteButtons ?
+                `<button class="favorite-btn" data-song-id="${song.id}">
+                   <i class="fa fa-star-o"></i>
+               </button>` :
+                '');
+
+        const deleteBtn = this.showDeleteButtons ?
+            `<button class="remove-btn" data-song-id="${song.id}">Remove</button>` :
+            '';
+
+        const editBtn = this.showEditButtons ?
+            `<button class="edit-btn" data-song-id="${song.id}">Edit</button>` :
+            '';
+
+        songElement.innerHTML = `
         <span class="song-name" data-song-id="${song.id}">
             ${this.escapeHtml(song.name)}
             ${song.author
@@ -1110,33 +1108,10 @@ class AdvancedMusicPlayer {
             ${editBtn}
         </div>
     `;
-    
-    return songElement;
-}
 
-setupSongLibraryDelegation() {
-    // ONE listener for the entire library instead of 5000+
-    this.elements.songLibrary.addEventListener('click', (e) => {
-        const target = e.target.closest('button, .song-name');
-        if (!target) return;
-        
-        const songId = target.dataset.songId;
-        if (!songId) return;
-        
-        // Handle different button types
-        if (target.classList.contains('favorite-btn')) {
-            this.toggleFavorite(parseInt(songId));
-        } else if (target.classList.contains('play-btn')) {
-            this.playSong(parseInt(songId));
-        } else if (target.classList.contains('remove-btn')) {
-            this.removeSong(parseInt(songId));
-        } else if (target.classList.contains('edit-btn')) {
-            this.openSongEditModal(parseInt(songId));
-        } else if (target.classList.contains('song-name')) {
-            this.playSong(parseInt(songId));
-        }
-    });
-}
+        this.attachSongElementListeners(songElement, song);
+        return songElement;
+    }
     escapeHtml(text) {
         const div = document.createElement("div");
         div.textContent = text;
@@ -1168,44 +1143,36 @@ setupSongLibraryDelegation() {
         });
     }
     filterLibrarySongs() {
-    const searchTerm = this.elements.librarySearch.value.toLowerCase().trim();
-    const songItems = this.elements.songLibrary.querySelectorAll(".song-item");
-    let resultsFound = false;
-    
-    const videoId = this.extractYouTubeId(searchTerm);
-    if (videoId) {
-        this.showAddToLibrarySuggestion(searchTerm);
-        // Use CSS class instead of inline styles for better performance
-        songItems.forEach((item) => {
-            item.classList.add('hidden');
-        });
-        return;
-    }
-    
-    // Batch DOM updates using DocumentFragment
-    songItems.forEach((item) => {
-        const songElement = item.querySelector("span");
-        const songName = songElement.textContent.toLowerCase();
-        const songId = songElement.dataset.songId;
-        const song = this.songLibrary.find((s) => s.id == songId);
-        
-        const authorMatch = song && song.author && song.author.toLowerCase().includes(searchTerm);
-        const isVisible = songName.includes(searchTerm) || authorMatch;
-        
-        // Use CSS classes instead of inline styles
-        item.classList.toggle('hidden', !isVisible);
-        
-        if (isVisible) {
-            resultsFound = true;
+        const searchTerm = this.elements.librarySearch.value.toLowerCase().trim();
+        const songItems = this.elements.songLibrary.querySelectorAll(".song-item");
+        let resultsFound = false;
+        const videoId = this.extractYouTubeId(searchTerm);
+        if (videoId) {
+            this.showAddToLibrarySuggestion(searchTerm);
+            songItems.forEach((item) => {
+                item.style.display = "none";
+            });
+            return;
         }
-    });
-    
-    if (!resultsFound && searchTerm !== "") {
-        this.showYouTubeSearchSuggestion(searchTerm);
-    } else {
-        this.hideYouTubeSearchSuggestion();
+        songItems.forEach((item) => {
+            const songElement = item.querySelector("span");
+            const songName = songElement.textContent.toLowerCase();
+            const songId = songElement.dataset.songId;
+            const song = this.songLibrary.find((s) => s.id == songId);
+            const authorMatch =
+                song && song.author && song.author.toLowerCase().includes(searchTerm);
+            const isVisible = songName.includes(searchTerm) || authorMatch;
+            item.style.display = isVisible ? "flex" : "none";
+            if (isVisible) {
+                resultsFound = true;
+            }
+        });
+        if (!resultsFound && searchTerm !== "") {
+            this.showYouTubeSearchSuggestion(searchTerm);
+        } else {
+            this.hideYouTubeSearchSuggestion();
+        }
     }
-}
     showAddToLibrarySuggestion(youtubeUrl) {
         const querySpan = this.elements.youtubeSearchSuggestion.querySelector(".search-query");
         querySpan.textContent = `Add this song to library`;
@@ -2031,32 +1998,30 @@ setupSongLibraryDelegation() {
     }
 }
     togglePlayPause() {
-    if (!this.ytPlayer) {
-        console.warn("YouTube player not initialized");
-        return;
-    }
-    try {
-        const playerState = this.ytPlayer.getPlayerState();
-        if (playerState === YT.PlayerState.PLAYING) {
-            this.ytPlayer.pauseVideo();
-            this.isPlaying = false;
-            if (this.titleScrollInterval) {
-                clearInterval(this.titleScrollInterval);
-                this.titleScrollInterval = null;
-                document.title = "Music Player";
-            }
-        } else {
-            this.ytPlayer.playVideo();
-            this.isPlaying = true;
-            this.updatePageTitle();
+        if (!this.ytPlayer) {
+            console.warn("YouTube player not initialized");
+            return;
         }
-        
-        // CHANGED: Use debounced version to prevent lag when spam clicking
-        this.debouncedUpdatePlayerUI();
-    } catch (error) {
-        console.error("Error toggling play/pause:", error);
+        try {
+            const playerState = this.ytPlayer.getPlayerState();
+            if (playerState === YT.PlayerState.PLAYING) {
+                this.ytPlayer.pauseVideo();
+                this.isPlaying = false;
+                if (this.titleScrollInterval) {
+                    clearInterval(this.titleScrollInterval);
+                    this.titleScrollInterval = null;
+                    document.title = "Music Player";
+                }
+            } else {
+                this.ytPlayer.playVideo();
+                this.isPlaying = true;
+                this.updatePageTitle();
+            }
+            this.updatePlayerUI();
+        } catch (error) {
+            console.error("Error toggling play/pause:", error);
+        }
     }
-}
     // Complete playNextSong method with Discord RPC
 playNextSong() {
     if (this.songQueue.length > 0) {
@@ -2637,32 +2602,26 @@ playSongFromPlaylist(index) {
         }
     }
     savePlaylists() {
-    return new Promise((resolve, reject) => {
-        if (!this.db) {
-            reject("Database not initialized");
-            return;
-        }
-        
-        const transaction = this.db.transaction(["playlists"], "readwrite");
-        const store = transaction.objectStore("playlists");
-        
-        // Use put() instead of clear() + add()
-        this.playlists.forEach((playlist) => {
-            store.put(playlist); // Updates existing or adds new
+        return new Promise((resolve, reject) => {
+            if (!this.db) {
+                reject("Database not initialized");
+                return;
+            }
+            const transaction = this.db.transaction(["playlists"], "readwrite");
+            const store = transaction.objectStore("playlists");
+            store.clear();
+            this.playlists.forEach((playlist) => {
+                store.add(playlist);
+            });
+            transaction.oncomplete = () => {
+                resolve();
+            };
+            transaction.onerror = (event) => {
+                console.error("Error saving playlists:", event.target.error);
+                reject("Could not save playlists");
+            };
         });
-        
-        transaction.oncomplete = () => {
-            console.log(`Updated ${this.playlists.length} playlists`);
-            resolve();
-        };
-        
-        transaction.onerror = (event) => {
-            console.error("Error saving playlists:", event.target.error);
-            reject("Could not save playlists");
-        };
-    });
-}
-
+    }
     saveSetting(name, value) {
         return new Promise((resolve, reject) => {
             if (!this.db) {
@@ -2690,25 +2649,30 @@ playSongFromPlaylist(index) {
                 reject(new Error("Database not initialized"));
                 return;
             }
-            
             try {
                 const transaction = this.db.transaction(["songLibrary"], "readwrite");
                 const store = transaction.objectStore("songLibrary");
-                
-                // Only clear if doing a full refresh
-                // For updates, use put() instead of clear + add
-                this.songLibrary.forEach((song) => {
-                    store.put(song); // Updates existing or adds new
-                });
-                
+                const clearRequest = store.clear();
+                clearRequest.onsuccess = () => {
+                    console.log("Song library cleared successfully");
+                    let addedCount = 0;
+                    for (const song of this.songLibrary) {
+                        store.add(song);
+                        addedCount++;
+                    }
+                    console.log(`Added ${addedCount} songs to library`);
+                };
                 transaction.oncomplete = () => {
-                    console.log(`Updated ${this.songLibrary.length} songs in library`);
+                    console.log("Transaction completed successfully");
                     resolve();
                 };
-                
                 transaction.onerror = (event) => {
                     console.error("Error saving song library:", event.target.error);
-                    reject(new Error("Failed to save song library: " + event.target.error.message));
+                    reject(
+                        new Error(
+                            "Failed to save song library: " + event.target.error.message
+                        )
+                    );
                 };
             } catch (error) {
                 console.error("Exception in saveSongLibrary:", error);
@@ -10330,33 +10294,6 @@ syncVisualizerUI() {
         }
     }
 }
-debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func.apply(this, args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
 
 
 
