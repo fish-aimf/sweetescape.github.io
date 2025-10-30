@@ -341,3 +341,4 @@
 - made DOM not update to save power consumption and battery when the website tab is not focused. so visualizer and bar will stop moving until tab is refocused v45.0.0
 - fixed annoying bug when holding the progress bar will cause you to focus on it, causing the hotkeys to fail to register. now it will autounfocus and still work when focused. v45.1.0
 - huge overhaul: Optimized startup performance by loading settings values before initializing UI elements, no more error from undefined element references and reducing redundant library rendering. loading speed is 20 times faster. v45.2.0
+- fixed all console bugs. v45.2.1
