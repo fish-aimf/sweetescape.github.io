@@ -662,13 +662,20 @@ class AdvancedMusicPlayer {
     }
     setupKeyboardControls() {
         document.addEventListener("keydown", (e) => {
-            if (document.activeElement.tagName === "INPUT" ||
-                document.activeElement.tagName === "TEXTAREA" ||
+            // Allow keybinds for progress bar and volume slider (range inputs) but block for text inputs
+            if (document.activeElement.tagName === "INPUT") {
+                const inputType = document.activeElement.type;
+                // Only block text-based inputs, allow range/checkbox/radio
+                if (inputType !== "range" && inputType !== "checkbox" && inputType !== "radio") {
+                    return;
+                }
+            }
+            
+            if (document.activeElement.tagName === "TEXTAREA" ||
                 document.activeElement.isContentEditable) {
                 return;
             }
-
-
+            
             if (e.key.toLowerCase() === "n" && this.currentKeybinds.toggleWebEmbed === 'KeyN') {
                 if (e.shiftKey) {
                     this.cycleWebEmbedSite();
@@ -677,12 +684,10 @@ class AdvancedMusicPlayer {
                 }
                 return;
             }
-
             const preventDefaultCodes = Object.values(this.currentKeybinds);
             if (preventDefaultCodes.includes(e.code)) {
                 e.preventDefault();
             }
-
             this.handleKeybind(e.code);
         });
     }
@@ -822,15 +827,28 @@ class AdvancedMusicPlayer {
         });
     }
     setupProgressBar() {
-        if (!this.elements.progressBar) return;
-        this.elements.progressBar.addEventListener('touchstart', this.handleTouchStart.bind(this), {
-            passive: false
-        });
-        this.elements.progressBar.addEventListener('touchmove', this.handleTouchMove.bind(this), {
-            passive: false
-        });
-        this.elements.progressBar.addEventListener('touchend', this.handleTouchEnd.bind(this));
-    }
+            if (!this.elements.progressBar) return;
+            
+            this.elements.progressBar.addEventListener('touchstart', this.handleTouchStart.bind(this), {
+                passive: false
+            });
+            this.elements.progressBar.addEventListener('touchmove', this.handleTouchMove.bind(this), {
+                passive: false
+            });
+            this.elements.progressBar.addEventListener('touchend', this.handleTouchEnd.bind(this));
+
+            this.elements.progressBar.addEventListener('mouseup', () => {
+                this.elements.progressBar.blur();
+            });
+            
+            this.elements.progressBar.addEventListener('touchend', () => {
+                this.elements.progressBar.blur();
+            });
+            
+            this.elements.progressBar.addEventListener('change', () => {
+                this.elements.progressBar.blur();
+            });
+        }
     updateProgressBar() {
             if (!this.ytPlayer || !this.elements.progressBar) return;
             
