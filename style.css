@@ -6605,4 +6605,6 @@ body:has(#ytPlayer.fullscreen-video) {
     transform: scale(0.95);
 }
 
-
+.song-item.hidden {
+    display: none !important;
+}
