@@ -1,5 +1,6 @@
 class AdvancedMusicPlayer {
     constructor() {
+        
         this.playlists = [];
         this.songLibrary = [];
         this.songQueue = [];
@@ -191,6 +192,9 @@ class AdvancedMusicPlayer {
                     this.loadSettings(),
                     this.loadRecentlyPlayed(),
                     this.loadDiscoverMoreSettingsOnStartup(),
+                    this.loadVisualizerSettings(),
+                    this.loadLibrarySortSetting(),
+                    this.loadLibraryReverseSetting(),
                     this.loadKeybinds(),
                     this.loadLibraryDisplaySettings(),
                     this.loadDiscordSettings()
@@ -212,8 +216,6 @@ class AdvancedMusicPlayer {
                 this.initializeAdvertisementSettings();
                 this.initializeVisualizer();
                 this.loadVisualizerSettings();
-                this.loadLibrarySortSetting();
-                this.loadLibraryReverseSetting();
                 this.initializeGlobalLibrary();
             })
             .catch((error) => {
