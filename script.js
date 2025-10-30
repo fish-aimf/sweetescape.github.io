@@ -687,7 +687,8 @@ class AdvancedMusicPlayer {
                 return;
             }
             
-            if (e.key.toLowerCase() === "n" && this.currentKeybinds.toggleWebEmbed === 'KeyN') {
+            // Safety check: ensure e.key exists before calling toLowerCase()
+            if (e.key && e.key.toLowerCase() === "n" && this.currentKeybinds.toggleWebEmbed === 'KeyN') {
                 if (e.shiftKey) {
                     this.cycleWebEmbedSite();
                 } else {
@@ -695,6 +696,7 @@ class AdvancedMusicPlayer {
                 }
                 return;
             }
+            
             const preventDefaultCodes = Object.values(this.currentKeybinds);
             if (preventDefaultCodes.includes(e.code)) {
                 e.preventDefault();
