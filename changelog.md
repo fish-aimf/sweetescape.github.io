@@ -342,3 +342,4 @@
 - fixed annoying bug when holding the progress bar will cause you to focus on it, causing the hotkeys to fail to register. now it will autounfocus and still work when focused. v45.1.0
 - huge overhaul: Optimized startup performance by loading settings values before initializing UI elements, no more error from undefined element references and reducing redundant library rendering. loading speed is 20 times faster. v45.2.0
 - fixed all console bugs. v45.2.1
+- added debounce to playpause so it will feel lesslaggy v45.2.2
