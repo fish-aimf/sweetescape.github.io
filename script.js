@@ -1026,53 +1026,61 @@ class AdvancedMusicPlayer {
         });
     }
     renderSongLibrary() {
-        try {
-            if (!this.elements.songLibrary) return;
-            let sortedLibrary;
-            if (this.librarySortAlphabetically !== false) {
-                sortedLibrary = [...this.songLibrary].sort((a, b) => {
-                    if (a.favorite !== b.favorite) {
-                        return a.favorite ? -1 : 1;
-                    }
-                    const result = a.name.localeCompare(b.name);
-                    return this.libraryReverseOrder ? -result : result;
-                });
-            } else {
-                sortedLibrary = [...this.songLibrary].sort((a, b) => {
-                    if (a.favorite !== b.favorite) {
-                        return a.favorite ? -1 : 1;
-                    }
-                    return this.libraryReverseOrder ? -1 : 0;
-                });
-            }
-            const fragment = document.createDocumentFragment();
-            if (sortedLibrary.length === 0) {
-                const emptyMessage = document.createElement("div");
-                emptyMessage.classList.add("empty-library-message");
-                emptyMessage.textContent = "Your library is empty.";
-                const addSongsButton = document.createElement("button");
-                addSongsButton.classList.add("add-songs-button");
-                addSongsButton.textContent = "Add Songs";
-                addSongsButton.addEventListener("click", () => {
-                    this.openFindSongs();
-                });
-                emptyMessage.appendChild(document.createElement("br"));
-                emptyMessage.appendChild(addSongsButton);
-                fragment.appendChild(emptyMessage);
-            } else {
-                sortedLibrary.forEach((song) => {
-                    const songElement = this.createSongElement(song);
-                    fragment.appendChild(songElement);
-                });
-            }
-            this.elements.songLibrary.innerHTML = "";
-            this.elements.songLibrary.appendChild(fragment);
-        } catch (error) {
-            console.error("Error rendering song library:", error);
-            this.elements.songLibrary.innerHTML =
-                '<div class="error-message">Failed to display song library</div>';
+    try {
+        if (!this.elements.songLibrary) return;
+        
+        let sortedLibrary;
+        if (this.librarySortAlphabetically !== false) {
+            sortedLibrary = [...this.songLibrary].sort((a, b) => {
+                if (a.favorite !== b.favorite) {
+                    return a.favorite ? -1 : 1;
+                }
+                const result = a.name.localeCompare(b.name);
+                return this.libraryReverseOrder ? -result : result;
+            });
+        } else {
+            sortedLibrary = [...this.songLibrary].sort((a, b) => {
+                if (a.favorite !== b.favorite) {
+                    return a.favorite ? -1 : 1;
+                }
+                return this.libraryReverseOrder ? -1 : 0;
+            });
         }
+        
+        const fragment = document.createDocumentFragment();
+        
+        if (sortedLibrary.length === 0) {
+            const emptyMessage = document.createElement("div");
+            emptyMessage.classList.add("empty-library-message");
+            emptyMessage.textContent = "Your library is empty.";
+            const addSongsButton = document.createElement("button");
+            addSongsButton.classList.add("add-songs-button");
+            addSongsButton.textContent = "Add Songs";
+            addSongsButton.addEventListener("click", () => {
+                this.openFindSongs();
+            });
+            emptyMessage.appendChild(document.createElement("br"));
+            emptyMessage.appendChild(addSongsButton);
+            fragment.appendChild(emptyMessage);
+        } else {
+            sortedLibrary.forEach((song) => {
+                const songElement = this.createSongElement(song);
+                fragment.appendChild(songElement);
+            });
+        }
+        
+        this.elements.songLibrary.innerHTML = "";
+        this.elements.songLibrary.appendChild(fragment);
+        if (this.elements.librarySearch && this.elements.librarySearch.value.trim() !== "") {
+            this.filterLibrarySongs();
+        }
+        
+    } catch (error) {
+        console.error("Error rendering song library:", error);
+        this.elements.songLibrary.innerHTML =
+            '<div class="error-message">Failed to display song library</div>';
     }
+}
     createSongElement(song) {
         const songElement = document.createElement("div");
         songElement.classList.add("song-item");
