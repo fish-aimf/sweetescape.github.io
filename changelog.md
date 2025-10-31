@@ -344,3 +344,4 @@
 - fixed all console bugs. v45.2.1
 - added debounce to playpause so it will feel lesslaggy v45.2.2
 - made save library and save playlists 30% faster from more efficient practices. v45.2.3
+- fixed search filter resetting after modifying the library so search terms now persist when adding, removing or editing songs v45.2.4
