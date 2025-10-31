@@ -3855,85 +3855,77 @@ playSongFromPlaylist(index) {
     
     let cleanTitle = title.trim();
     
-    // STEP 1: Handle quoted song titles (e.g., Crystal Castles "PLAGUE" Official)
-    // This must happen FIRST before other processing
+    // STEP 1: Handle quoted song titles FIRST
+    // Example: Crystal Castles "PLAGUE" Official
     const quotedPattern = /^(.+?)\s*[""](.+?)[""](.*)$/;
     const quotedMatch = cleanTitle.match(quotedPattern);
     
     if (quotedMatch) {
         const author = quotedMatch[1].trim();
         const songName = quotedMatch[2].trim();
-        // quotedMatch[3] contains the rest (like "Official") which we'll ignore
         return { author, songName };
     }
     
-    // STEP 2: Handle colon format (e.g., twenty one pilots: Stressed Out [OFFICIAL VIDEO])
-    const colonPattern = /^(.+?):\s*(.+?)(?:\s*[\[\(].*)?$/;
+    // STEP 2: Handle colon format
+    // Example: twenty one pilots: Stressed Out [OFFICIAL VIDEO]
+    const colonPattern = /^(.+?):\s*(.+)$/;
     const colonMatch = cleanTitle.match(colonPattern);
     
     if (colonMatch) {
         const author = colonMatch[1].trim();
-        let songName = colonMatch[2].trim();
-        
-        // Remove noise from song name
-        songName = this.removeNoisePatterns(songName);
-        
+        const songName = this.removeNoisePatterns(colonMatch[2].trim());
         return { author, songName };
     }
     
-    // STEP 3: Remove all noise patterns for standard formats
+    // STEP 3: Remove noise patterns BEFORE splitting by hyphen
     cleanTitle = this.removeNoisePatterns(cleanTitle);
     
-    // STEP 4: Handle standard separators
-    
-    // Pattern A: "Artist - Song (feat. X)" or "Artist - Song"
+    // STEP 4: Handle "Artist - Song" format
     const hyphenMatch = cleanTitle.match(/^(.+?)\s*-\s*(.+)$/);
     if (hyphenMatch) {
         let author = hyphenMatch[1].trim();
         let songName = hyphenMatch[2].trim();
         
         // Extract featured artists from song name
-        const ftFromSong = this.extractFeaturedArtists(songName);
-        if (ftFromSong.featured) {
-            songName = ftFromSong.cleanName;
-            author = `${author} ${ftFromSong.featured}`;
+        const ftResult = this.extractFeaturedArtists(songName);
+        if (ftResult.featured) {
+            songName = ftResult.cleanName;
+            author = `${author} ${ftResult.featured}`;
         }
         
         return { author, songName };
     }
     
-    // Pattern B: "Song Title by Artist"
+    // STEP 5: Handle "Song by Artist" format
     const byMatch = cleanTitle.match(/^(.+?)\s+by\s+(.+)$/i);
     if (byMatch) {
         let songName = byMatch[1].trim();
         let author = byMatch[2].trim();
         
-        // Extract featured artists from author
-        const ftFromAuthor = this.extractFeaturedArtists(author);
-        if (ftFromAuthor.featured) {
-            author = `${ftFromAuthor.cleanName} ${ftFromAuthor.featured}`;
+        const ftResult = this.extractFeaturedArtists(author);
+        if (ftResult.featured) {
+            author = `${ftResult.cleanName} ${ftResult.featured}`;
         }
         
         return { author, songName };
     }
     
-    // Pattern C: All caps artist name at start
+    // STEP 6: Handle all-caps artist at start
     const allCapsMatch = cleanTitle.match(/^([A-Z][A-Z\s&]+[A-Z])\s+(.+)$/);
     if (allCapsMatch && allCapsMatch[1].length < 50) {
         let author = allCapsMatch[1].trim();
         let songName = allCapsMatch[2].trim();
         
-        // Extract featured artists
-        const ftFromSong = this.extractFeaturedArtists(songName);
-        if (ftFromSong.featured) {
-            songName = ftFromSong.cleanName;
-            author = `${author} ${ftFromSong.featured}`;
+        const ftResult = this.extractFeaturedArtists(songName);
+        if (ftResult.featured) {
+            songName = ftResult.cleanName;
+            author = `${author} ${ftResult.featured}`;
         }
         
         return { author, songName };
     }
     
-    // STEP 5: No clear pattern - return as song name only
+    // STEP 7: No pattern found - return as song only
     return {
         author: "",
         songName: cleanTitle
