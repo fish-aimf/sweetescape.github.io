@@ -3932,9 +3932,13 @@ playSongFromPlaylist(index) {
     };
 }
 
-    removeNoisePatterns(text) {
+    // ============================================
+// ADD THIS NEW METHOD TO YOUR CLASS
+// ============================================
+
+removeNoisePatterns(text) {
     const patterns = [
-        // Official variations (parentheses/brackets)
+        // Official variations (with parentheses/brackets)
         /\(official\s+music\s+video\)/gi,
         /\[official\s+music\s+video\]/gi,
         /\(official\s+video\)/gi,
@@ -3947,14 +3951,14 @@ playSongFromPlaylist(index) {
         /\[official\s+lyrics\s+video\]/gi,
         /\(official\s+visualizer\)/gi,
         /\[official\s+visualizer\]/gi,
+        /\(official\s+mv\)/gi,
+        /\[official\s+mv\]/gi,
         /\(music\s+video\)/gi,
         /\[music\s+video\]/gi,
         /\(lyric\s+video\)/gi,
         /\[lyric\s+video\]/gi,
         /\(lyrics\s+video\)/gi,
         /\[lyrics\s+video\]/gi,
-        /\(official\s+mv\)/gi,
-        /\[official\s+mv\]/gi,
         /\(official\)/gi,
         /\[official\]/gi,
         /\(lyrics\)/gi,
@@ -3966,7 +3970,7 @@ playSongFromPlaylist(index) {
         /\(mv\)/gi,
         /\[mv\]/gi,
         
-        // Without parentheses (at end)
+        // Without parentheses (at end of string only)
         /\s+official\s+music\s+video$/gi,
         /\s+official\s+video$/gi,
         /\s+official\s+audio$/gi,
@@ -3981,7 +3985,7 @@ playSongFromPlaylist(index) {
         /\s+audio$/gi,
         /\s+lyrics$/gi,
         
-        // Quality/Format
+        // Quality indicators
         /\(4k\)/gi,
         /\[4k\]/gi,
         /\(8k\)/gi,
@@ -4002,7 +4006,6 @@ playSongFromPlaylist(index) {
         /\(remix\)/gi,
         /\[remix\]/gi,
         /\s+remastered$/gi,
-        /\s+remaster$/gi,
         
         // Live/Performance
         /\(live\s+performance\)/gi,
@@ -4015,48 +4018,53 @@ playSongFromPlaylist(index) {
         /\(explicit\)/gi,
         /\[explicit\]/gi,
         
-        // Empty parentheses/brackets
+        // Empty parentheses/brackets left behind
         /\(\s*\)/g,
         /\[\s*\]/g,
-        
-        // Multiple spaces
-        /\s+/g
     ];
     
     let cleaned = text;
+    
+    // Apply all patterns
     patterns.forEach(pattern => {
-        if (pattern.source === '\\s+') {
-            cleaned = cleaned.replace(pattern, ' ');
-        } else {
-            cleaned = cleaned.replace(pattern, '');
-        }
+        cleaned = cleaned.replace(pattern, '');
     });
     
-    return cleaned.trim();
+    // Clean up multiple spaces
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    
+    return cleaned;
 }
 
 extractFeaturedArtists(text) {
-    // Matches: ft. / feat. / featuring / with / & / x
-    const ftPatterns = [
-        /\s+(ft\.?|feat\.?|featuring)\s+(.+?)$/i,
-        /\s+(&|x)\s+([^&x]+)$/i,
-        /\s+with\s+(.+?)$/i
+    // Patterns for featured artists
+    const patterns = [
+        // ft. / feat. / featuring
+        { regex: /\s+(ft\.?|feat\.?|featuring)\s+(.+)$/i, captureGroup: 2 },
+        // with
+        { regex: /\s+with\s+(.+)$/i, captureGroup: 1 },
+        // &, x (but only if followed by artist name)
+        { regex: /\s+(&|x)\s+([A-Z].+)$/i, captureGroup: 2 }
     ];
     
-    for (const pattern of ftPatterns) {
-        const match = text.match(pattern);
+    for (const pattern of patterns) {
+        const match = text.match(pattern.regex);
         if (match) {
-            const cleanName = text.replace(pattern, '').trim();
-            const featuredPart = match[2] || match[1];
+            const cleanName = text.replace(pattern.regex, '').trim();
+            const featuredArtists = match[pattern.captureGroup].trim();
             
             return {
-                cleanName,
-                featured: `ft. ${featuredPart.trim()}`
+                cleanName: cleanName,
+                featured: `ft. ${featuredArtists}`
             };
         }
     }
     
-    return { cleanName: text, featured: null };
+    // No featured artists found
+    return {
+        cleanName: text,
+        featured: null
+    };
 }
 
     handleAutofill() {
