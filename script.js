@@ -2664,28 +2664,26 @@ playSongFromPlaylist(index) {
             }
             try {
                 const transaction = this.db.transaction(["songLibrary"], "readwrite");
-                const store = transaction.objectStore("songLibrary");
+                const store = transaction.objectStore("songLibrary");  // FIXED!
+                
+                // Clear first to remove deleted songs
                 const clearRequest = store.clear();
+                
                 clearRequest.onsuccess = () => {
-                    console.log("Song library cleared successfully");
-                    let addedCount = 0;
-                    for (const song of this.songLibrary) {
-                        store.add(song);
-                        addedCount++;
-                    }
-                    console.log(`Added ${addedCount} songs to library`);
+                    // Then use put() instead of add() (faster and safer)
+                    this.songLibrary.forEach((song) => {
+                        store.put(song);
+                    });
                 };
+                
                 transaction.oncomplete = () => {
-                    console.log("Transaction completed successfully");
+                    console.log(`Saved ${this.songLibrary.length} songs to library`);
                     resolve();
                 };
+                
                 transaction.onerror = (event) => {
                     console.error("Error saving song library:", event.target.error);
-                    reject(
-                        new Error(
-                            "Failed to save song library: " + event.target.error.message
-                        )
-                    );
+                    reject(new Error("Failed to save song library: " + event.target.error.message));
                 };
             } catch (error) {
                 console.error("Exception in saveSongLibrary:", error);
