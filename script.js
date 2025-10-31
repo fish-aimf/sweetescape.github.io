@@ -2615,26 +2615,36 @@ playSongFromPlaylist(index) {
         }
     }
     savePlaylists() {
-        return new Promise((resolve, reject) => {
-            if (!this.db) {
-                reject("Database not initialized");
-                return;
-            }
-            const transaction = this.db.transaction(["playlists"], "readwrite");
-            const store = transaction.objectStore("playlists");
-            store.clear();
-            this.playlists.forEach((playlist) => {
-                store.add(playlist);
+            return new Promise((resolve, reject) => {
+                if (!this.db) {
+                    reject("Database not initialized");
+                    return;
+                }
+                
+                const transaction = this.db.transaction(["playlists"], "readwrite");
+                const store = transaction.objectStore("playlists");
+                
+                // Clear first to remove deleted playlists
+                const clearRequest = store.clear();
+                
+                clearRequest.onsuccess = () => {
+                    // Then use put() instead of add()
+                    this.playlists.forEach((playlist) => {
+                        store.put(playlist);
+                    });
+                };
+                
+                transaction.oncomplete = () => {
+                    console.log(`Saved ${this.playlists.length} playlists`);
+                    resolve();
+                };
+                
+                transaction.onerror = (event) => {
+                    console.error("Error saving playlists:", event.target.error);
+                    reject("Could not save playlists");
+                };
             });
-            transaction.oncomplete = () => {
-                resolve();
-            };
-            transaction.onerror = (event) => {
-                console.error("Error saving playlists:", event.target.error);
-                reject("Could not save playlists");
-            };
-        });
-    }
+        }
     saveSetting(name, value) {
         return new Promise((resolve, reject) => {
             if (!this.db) {
@@ -2664,28 +2674,26 @@ playSongFromPlaylist(index) {
             }
             try {
                 const transaction = this.db.transaction(["songLibrary"], "readwrite");
-                const store = transaction.objectStore("songLibrary");
+                const store = transaction.objectStore("settings");
+                
+                // Clear first to remove deleted songs
                 const clearRequest = store.clear();
+                
                 clearRequest.onsuccess = () => {
-                    console.log("Song library cleared successfully");
-                    let addedCount = 0;
-                    for (const song of this.songLibrary) {
-                        store.add(song);
-                        addedCount++;
-                    }
-                    console.log(`Added ${addedCount} songs to library`);
+                    // Then use put() instead of add() (faster and safer)
+                    this.songLibrary.forEach((song) => {
+                        store.put(song);
+                    });
                 };
+                
                 transaction.oncomplete = () => {
-                    console.log("Transaction completed successfully");
+                    console.log(`Saved ${this.songLibrary.length} songs to library`);
                     resolve();
                 };
+                
                 transaction.onerror = (event) => {
                     console.error("Error saving song library:", event.target.error);
-                    reject(
-                        new Error(
-                            "Failed to save song library: " + event.target.error.message
-                        )
-                    );
+                    reject(new Error("Failed to save song library: " + event.target.error.message));
                 };
             } catch (error) {
                 console.error("Exception in saveSongLibrary:", error);
