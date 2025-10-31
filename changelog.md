@@ -348,3 +348,4 @@
 - added event listener delegation. much lower memory usage. 5000+ event listeners -> 1 event listener in library. 99.9%+ more efficient. v45.2.5
 - Optimized library search to only render matching songs instead of rendering all songs then hiding non matches. thus it will be 98% faster in filtering songs. measurements shown 10ms : 550ms for 1000 songs sample size. Search filters before rendering thus - dom operations. v45.2.6
 -added debounce to library search. will prevent excessive rendering quickly when search terms are typed fast. v45.2.7
+- added more cases for the autofill so it will be more accurate. v45.2.8
