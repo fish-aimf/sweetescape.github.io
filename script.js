@@ -671,6 +671,7 @@ class AdvancedMusicPlayer {
                 console.warn(`Settings element not found for event binding at index ${index}`);
             }
         });
+        this.setupSongLibraryDelegation();
     }
     setupKeyboardControls() {
         document.addEventListener("keydown", (e) => {
@@ -1118,8 +1119,35 @@ class AdvancedMusicPlayer {
         </div>
     `;
 
-        this.attachSongElementListeners(songElement, song);
         return songElement;
+    }
+    setupSongLibraryDelegation() {
+        // Single delegated event listener for entire song library
+        this.elements.songLibrary.addEventListener('click', (e) => {
+            // Find the clicked button/element
+            const target = e.target.closest('button, .song-name');
+            if (!target) return; // Not a clickable element
+            
+            // Extract song ID from data attribute
+            const songId = target.dataset.songId;
+            if (!songId) return; // No song ID found
+            
+            // Convert to number for consistency with your existing code
+            const songIdNum = parseInt(songId, 10);
+            
+            // Determine which action to take based on button class
+            if (target.classList.contains('favorite-btn')) {
+                this.toggleFavorite(songIdNum);
+            } else if (target.classList.contains('play-btn')) {
+                this.playSong(songIdNum);
+            } else if (target.classList.contains('remove-btn')) {
+                this.removeSong(songIdNum);
+            } else if (target.classList.contains('edit-btn')) {
+                this.openSongEditModal(songIdNum);
+            } else if (target.classList.contains('song-name')) {
+                this.playSong(songIdNum);
+            }
+        });
     }
     escapeHtml(text) {
         const div = document.createElement("div");
@@ -1138,31 +1166,7 @@ class AdvancedMusicPlayer {
         };
     }
     
-    attachSongElementListeners(songElement, song) {
-        const favoriteBtn = songElement.querySelector(".favorite-btn");
-        const playBtn = songElement.querySelector(".play-btn");
-        const removeBtn = songElement.querySelector(".remove-btn");
-        const editBtn = songElement.querySelector(".edit-btn");
-        const songNameSpan = songElement.querySelector(".song-name");
-
-        if (favoriteBtn) {
-            favoriteBtn.addEventListener("click", () => this.toggleFavorite(song.id));
-        }
-
-        playBtn.addEventListener("click", () => this.playSong(song.id));
-
-        if (removeBtn) {
-            removeBtn.addEventListener("click", () => this.removeSong(song.id));
-        }
-
-        if (editBtn) {
-            editBtn.addEventListener("click", () => this.openSongEditModal(song.id));
-        }
-
-        songNameSpan.addEventListener("click", () => {
-            this.playSong(song.id);
-        });
-    }
+    
     filterLibrarySongs() {
         const searchTerm = this.elements.librarySearch.value.toLowerCase().trim();
         const songItems = this.elements.songLibrary.querySelectorAll(".song-item");
