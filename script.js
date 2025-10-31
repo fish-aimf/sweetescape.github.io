@@ -53,6 +53,7 @@ class AdvancedMusicPlayer {
         this.globalLibraryCurrentUser = null;
         this.globalLibraryArtists = [];
         this.debouncedUpdatePlayerUI = this.debounce(this.updatePlayerUI.bind(this), 50);
+        this.debouncedFilterLibrary = this.debounce(this.filterLibrarySongs.bind(this), 123);
 
         this.GEMINI_API_KEY = 'AIzaSyBk6siv7qqObbOnpvq-nzpeeM7GmZIYcQA';
         this.YOUTUBE_API_KEYS = [
@@ -627,7 +628,7 @@ class AdvancedMusicPlayer {
             [this.elements.themeToggle, "click", this.handleToggleTheme],
             [this.elements.autoplayBtn, "click", this.handleToggleAutoplay],
             [this.elements.speedBtn, "click", this.handleToggleSpeedOptions],
-            [this.elements.librarySearch, "input", this.handleFilterLibrary],
+            [this.elements.librarySearch, "input", this.handleLibrarySearchInput.bind(this)],
             [this.elements.librarySearch, "keydown", this.handleLibrarySearchKeydown],
             [this.elements.songUrlInput, "input", this.handleSongUrlInput],
             [this.elements.songUrlInput, "keydown", this.handleSongUrlKeydown],
@@ -1188,7 +1189,21 @@ class AdvancedMusicPlayer {
             timeout = setTimeout(later, wait);
         };
     }
-    
+    handleLibrarySearchInput() {
+        const searchTerm = this.elements.librarySearch.value.trim();
+        
+        // Check for YouTube URL immediately (no debounce needed)
+        const videoId = this.extractYouTubeId(searchTerm);
+        if (videoId) {
+            this.showAddToLibrarySuggestion(searchTerm);
+            // Clear library immediately for YouTube URLs
+            this.elements.songLibrary.innerHTML = '<div class="empty-library-message">YouTube URL detected - press Enter to add</div>';
+            return;
+        }
+        
+        // For regular search, debounce the heavy rendering
+        this.debouncedFilterLibrary();
+    }
     
     filterLibrarySongs() {
             const searchTerm = this.elements.librarySearch.value.toLowerCase().trim();
