@@ -52,6 +52,7 @@ class AdvancedMusicPlayer {
         this.globalLibrarySupabase = null;
         this.globalLibraryCurrentUser = null;
         this.globalLibraryArtists = [];
+        this.debouncedUpdatePlayerUI = this.debounce(this.updatePlayerUI.bind(this), 50);
 
         this.GEMINI_API_KEY = 'AIzaSyBk6siv7qqObbOnpvq-nzpeeM7GmZIYcQA';
         this.YOUTUBE_API_KEYS = [
@@ -1117,7 +1118,17 @@ class AdvancedMusicPlayer {
         div.textContent = text;
         return div.innerHTML;
     }
-    
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func.apply(this, args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
     
     attachSongElementListeners(songElement, song) {
         const favoriteBtn = songElement.querySelector(".favorite-btn");
@@ -2019,7 +2030,7 @@ class AdvancedMusicPlayer {
                 this.isPlaying = true;
                 this.updatePageTitle();
             }
-            this.updatePlayerUI();
+            this.debouncedUpdatePlayerUI();
         } catch (error) {
             console.error("Error toggling play/pause:", error);
         }
