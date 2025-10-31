@@ -3851,57 +3851,161 @@ playSongFromPlaylist(index) {
         });
     }
     parseVideoTitle(title) {
-        if (!title) return {
-            author: "",
-            songName: ""
-        };
+        if (!title) return { author: "", songName: "" };
+        
         let cleanTitle = title.trim();
-        const removePatterns = [
+        
+        // STEP 1: Remove common noise patterns (must be done BEFORE splitting)
+        const noisePatterns = [
+            // Official variations (with parentheses/brackets)
+            /\(official\s+music\s+video\)/gi,
+            /\[official\s+music\s+video\]/gi,
             /\(official\s+video\)/gi,
-            /\(official\s+audio\)/gi,
-            /\(official\)/gi,
-            /\(music\s+video\)/gi,
-            /\(lyric\s+video\)/gi,
-            /\(lyrics\)/gi,
             /\[official\s+video\]/gi,
+            /\(official\s+audio\)/gi,
             /\[official\s+audio\]/gi,
-            /\[official\]/gi,
+            /\(official\s+lyric\s+video\)/gi,
+            /\[official\s+lyric\s+video\]/gi,
+            /\(official\s+lyrics\s+video\)/gi,
+            /\[official\s+lyrics\s+video\]/gi,
+            /\(music\s+video\)/gi,
             /\[music\s+video\]/gi,
+            /\(lyric\s+video\)/gi,
             /\[lyric\s+video\]/gi,
+            /\(lyrics\s+video\)/gi,
+            /\[lyrics\s+video\]/gi,
+            /\(official\)/gi,
+            /\[official\]/gi,
+            /\(lyrics\)/gi,
             /\[lyrics\]/gi,
-            /official\s+video/gi,
-            /official\s+audio/gi,
-            /music\s+video/gi,
-            /lyric\s+video/gi,
-            /\(hd\)/gi,
-            /\[hd\]/gi,
+            
+            // Without parentheses (at end of string)
+            /official\s+music\s+video$/gi,
+            /official\s+video$/gi,
+            /official\s+audio$/gi,
+            /music\s+video$/gi,
+            /lyric\s+video$/gi,
+            /lyrics\s+video$/gi,
+            /official\s+visualizer$/gi,
+            /visualizer$/gi,
+            
+            // Quality indicators
             /\(4k\)/gi,
             /\[4k\]/gi,
+            /\(hd\)/gi,
+            /\[hd\]/gi,
+            /\(uhd\)/gi,
+            /\[uhd\]/gi,
+            /\(8k\)/gi,
+            /\[8k\]/gi,
+            /4k$/gi,
+            /hd$/gi,
+            
+            // Remaster/Version info
             /\(remastered\)/gi,
-            /\[remastered\]/gi
+            /\[remastered\]/gi,
+            /\(remaster\)/gi,
+            /\[remaster\]/gi,
+            /\(remix\)/gi,
+            /\[remix\]/gi,
+            /remastered$/gi,
+            
+            // Audio specific
+            /\(audio\)/gi,
+            /\[audio\]/gi,
+            /audio\s+only$/gi,
+            
+            // Live/Performance
+            /\(live\)/gi,
+            /\[live\]/gi,
+            /\(live\s+performance\)/gi,
+            /\[live\s+performance\]/gi,
+            
+            // Explicit content
+            /\(explicit\)/gi,
+            /\[explicit\]/gi,
+            
+            // Video/Visualizer
+            /\(video\)/gi,
+            /\[video\]/gi,
+            /video$/gi,
+            
+            // Empty parentheses/brackets
+            /\(\s*\)/g,
+            /\[\s*\]/g,
         ];
-        removePatterns.forEach(pattern => {
+        
+        // Apply all noise removal patterns
+        noisePatterns.forEach(pattern => {
             cleanTitle = cleanTitle.replace(pattern, "");
         });
+        
+        // Clean up extra whitespace and trim
         cleanTitle = cleanTitle.replace(/\s+/g, " ").trim();
-        const hyphenIndex = cleanTitle.indexOf(" - ");
-        if (hyphenIndex !== -1) {
-            const author = cleanTitle.substring(0, hyphenIndex).trim();
-            const songName = cleanTitle.substring(hyphenIndex + 3).trim();
+        
+        // STEP 2: Try to split artist from song name
+        
+        // Pattern 1: "Artist - Song Title" (most common)
+        const hyphenMatch = cleanTitle.match(/^(.+?)\s*-\s*(.+)$/);
+        if (hyphenMatch) {
+            let author = hyphenMatch[1].trim();
+            let songName = hyphenMatch[2].trim();
+            
+            // Extract featured artists from song name
+            const ftPattern = /\s+(ft\.?|feat\.?|featuring|with)\s+(.+?)$/i;
+            const ftMatch = songName.match(ftPattern);
+            
+            if (ftMatch) {
+                const featuredArtists = ftMatch[2].trim();
+                songName = songName.replace(ftPattern, "").trim();
+                author = `${author} ft. ${featuredArtists}`;
+            }
+            
+            return { author, songName };
+        }
+        
+        // Pattern 2: "Song Title by Artist"
+        const byMatch = cleanTitle.match(/^(.+?)\s+by\s+(.+)$/i);
+        if (byMatch) {
+            let songName = byMatch[1].trim();
+            let author = byMatch[2].trim();
+            
+            // Extract featured artists from author
+            const ftPattern = /\s+(ft\.?|feat\.?|featuring|with)\s+(.+?)$/i;
+            const ftMatch = author.match(ftPattern);
+            
+            if (ftMatch) {
+                const featuredArtists = ftMatch[2].trim();
+                author = author.replace(ftPattern, "").trim();
+                author = `${author} ft. ${featuredArtists}`;
+            }
+            
+            return { author, songName };
+        }
+        
+        // Pattern 3: Extract featured artists even without clear separator
+        // "Artist ft. Other Artist - Song Name"
+        const ftBeforeHyphen = cleanTitle.match(/^(.+?)\s+(ft\.?|feat\.?|featuring)\s+(.+?)\s*-\s*(.+)$/i);
+        if (ftBeforeHyphen) {
+            const mainArtist = ftBeforeHyphen[1].trim();
+            const featuredArtists = ftBeforeHyphen[3].trim();
+            const songName = ftBeforeHyphen[4].trim();
+            const author = `${mainArtist} ft. ${featuredArtists}`;
+            
+            return { author, songName };
+        }
+        
+        // Pattern 4: No clear separator - check if starts with common artist format
+        // "ARTIST NAME (ALL CAPS) Song Title"
+        const allCapsMatch = cleanTitle.match(/^([A-Z][A-Z\s&]+[A-Z])\s+(.+)$/);
+        if (allCapsMatch && allCapsMatch[1].length < 50) {
             return {
-                author,
-                songName
+                author: allCapsMatch[1].trim(),
+                songName: allCapsMatch[2].trim()
             };
         }
-        const byIndex = cleanTitle.toLowerCase().indexOf(" by ");
-        if (byIndex !== -1) {
-            const songName = cleanTitle.substring(0, byIndex).trim();
-            const author = cleanTitle.substring(byIndex + 4).trim();
-            return {
-                author,
-                songName
-            };
-        }
+        
+        // STEP 3: If no pattern matches, return entire title as song name
         return {
             author: "",
             songName: cleanTitle
