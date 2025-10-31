@@ -53,7 +53,7 @@ class AdvancedMusicPlayer {
         this.globalLibraryCurrentUser = null;
         this.globalLibraryArtists = [];
         this.debouncedUpdatePlayerUI = this.debounce(this.updatePlayerUI.bind(this), 50);
-        this.debouncedFilterLibrary = this.debounce(this.filterLibrarySongs.bind(this), 123);
+        this.debouncedFilterLibrary = this.debounce(this.filterLibrarySongs.bind(this), 96);
 
         this.GEMINI_API_KEY = 'AIzaSyBk6siv7qqObbOnpvq-nzpeeM7GmZIYcQA';
         this.YOUTUBE_API_KEYS = [
