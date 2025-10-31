@@ -1026,62 +1026,85 @@ class AdvancedMusicPlayer {
                 });
         });
     }
-    renderSongLibrary() {
-    try {
-        if (!this.elements.songLibrary) return;
-        
-        let sortedLibrary;
-        if (this.librarySortAlphabetically !== false) {
-            sortedLibrary = [...this.songLibrary].sort((a, b) => {
-                if (a.favorite !== b.favorite) {
-                    return a.favorite ? -1 : 1;
+    renderSongLibrary(searchTerm = null) {
+            try {
+                if (!this.elements.songLibrary) return;
+                
+                // Get search term from input if not provided
+                if (searchTerm === null && this.elements.librarySearch) {
+                    searchTerm = this.elements.librarySearch.value.toLowerCase().trim();
                 }
-                const result = a.name.localeCompare(b.name);
-                return this.libraryReverseOrder ? -result : result;
-            });
-        } else {
-            sortedLibrary = [...this.songLibrary].sort((a, b) => {
-                if (a.favorite !== b.favorite) {
-                    return a.favorite ? -1 : 1;
+                
+                // Filter library based on search term
+                let filteredLibrary = this.songLibrary;
+                if (searchTerm && searchTerm !== "") {
+                    filteredLibrary = this.songLibrary.filter(song => {
+                        const nameMatch = song.name.toLowerCase().includes(searchTerm);
+                        const authorMatch = song.author && song.author.toLowerCase().includes(searchTerm);
+                        return nameMatch || authorMatch;
+                    });
                 }
-                return this.libraryReverseOrder ? -1 : 0;
-            });
+                
+                // Sort the filtered library
+                let sortedLibrary;
+                if (this.librarySortAlphabetically !== false) {
+                    sortedLibrary = [...filteredLibrary].sort((a, b) => {
+                        if (a.favorite !== b.favorite) {
+                            return a.favorite ? -1 : 1;
+                        }
+                        const result = a.name.localeCompare(b.name);
+                        return this.libraryReverseOrder ? -result : result;
+                    });
+                } else {
+                    sortedLibrary = [...filteredLibrary].sort((a, b) => {
+                        if (a.favorite !== b.favorite) {
+                            return a.favorite ? -1 : 1;
+                        }
+                        return this.libraryReverseOrder ? -1 : 0;
+                    });
+                }
+                
+                const fragment = document.createDocumentFragment();
+                
+                // Handle empty library
+                if (this.songLibrary.length === 0) {
+                    const emptyMessage = document.createElement("div");
+                    emptyMessage.classList.add("empty-library-message");
+                    emptyMessage.textContent = "Your library is empty.";
+                    const addSongsButton = document.createElement("button");
+                    addSongsButton.classList.add("add-songs-button");
+                    addSongsButton.textContent = "Add Songs";
+                    addSongsButton.addEventListener("click", () => {
+                        this.openFindSongs();
+                    });
+                    emptyMessage.appendChild(document.createElement("br"));
+                    emptyMessage.appendChild(addSongsButton);
+                    fragment.appendChild(emptyMessage);
+                } 
+                // Handle no search results
+                else if (searchTerm && sortedLibrary.length === 0) {
+                    const noResultsMessage = document.createElement("div");
+                    noResultsMessage.classList.add("empty-library-message");
+                    noResultsMessage.textContent = `No songs found matching "${searchTerm}"`;
+                    fragment.appendChild(noResultsMessage);
+                }
+                // Render songs
+                else {
+                    sortedLibrary.forEach((song) => {
+                        const songElement = this.createSongElement(song);
+                        fragment.appendChild(songElement);
+                    });
+                }
+                
+                this.elements.songLibrary.innerHTML = "";
+                this.elements.songLibrary.appendChild(fragment);
+                
+            } catch (error) {
+                console.error("Error rendering song library:", error);
+                this.elements.songLibrary.innerHTML =
+                    '<div class="error-message">Failed to display song library</div>';
+            }
         }
-        
-        const fragment = document.createDocumentFragment();
-        
-        if (sortedLibrary.length === 0) {
-            const emptyMessage = document.createElement("div");
-            emptyMessage.classList.add("empty-library-message");
-            emptyMessage.textContent = "Your library is empty.";
-            const addSongsButton = document.createElement("button");
-            addSongsButton.classList.add("add-songs-button");
-            addSongsButton.textContent = "Add Songs";
-            addSongsButton.addEventListener("click", () => {
-                this.openFindSongs();
-            });
-            emptyMessage.appendChild(document.createElement("br"));
-            emptyMessage.appendChild(addSongsButton);
-            fragment.appendChild(emptyMessage);
-        } else {
-            sortedLibrary.forEach((song) => {
-                const songElement = this.createSongElement(song);
-                fragment.appendChild(songElement);
-            });
-        }
-        
-        this.elements.songLibrary.innerHTML = "";
-        this.elements.songLibrary.appendChild(fragment);
-        if (this.elements.librarySearch && this.elements.librarySearch.value.trim() !== "") {
-            this.filterLibrarySongs();
-        }
-        
-    } catch (error) {
-        console.error("Error rendering song library:", error);
-        this.elements.songLibrary.innerHTML =
-            '<div class="error-message">Failed to display song library</div>';
-    }
-}
     createSongElement(song) {
         const songElement = document.createElement("div");
         songElement.classList.add("song-item");
@@ -1168,36 +1191,30 @@ class AdvancedMusicPlayer {
     
     
     filterLibrarySongs() {
-        const searchTerm = this.elements.librarySearch.value.toLowerCase().trim();
-        const songItems = this.elements.songLibrary.querySelectorAll(".song-item");
-        let resultsFound = false;
-        const videoId = this.extractYouTubeId(searchTerm);
-        if (videoId) {
-            this.showAddToLibrarySuggestion(searchTerm);
-            songItems.forEach((item) => {
-                item.style.display = "none";
-            });
-            return;
-        }
-        songItems.forEach((item) => {
-            const songElement = item.querySelector("span");
-            const songName = songElement.textContent.toLowerCase();
-            const songId = songElement.dataset.songId;
-            const song = this.songLibrary.find((s) => s.id == songId);
-            const authorMatch =
-                song && song.author && song.author.toLowerCase().includes(searchTerm);
-            const isVisible = songName.includes(searchTerm) || authorMatch;
-            item.style.display = isVisible ? "flex" : "none";
-            if (isVisible) {
-                resultsFound = true;
+            const searchTerm = this.elements.librarySearch.value.toLowerCase().trim();
+            
+            // Check if it's a YouTube URL
+            const videoId = this.extractYouTubeId(searchTerm);
+            if (videoId) {
+                this.showAddToLibrarySuggestion(searchTerm);
+                this.renderSongLibrary(searchTerm); // Re-render with empty results
+                return;
             }
-        });
-        if (!resultsFound && searchTerm !== "") {
-            this.showYouTubeSearchSuggestion(searchTerm);
-        } else {
-            this.hideYouTubeSearchSuggestion();
+            
+            // Re-render library with search filter applied
+            this.renderSongLibrary(searchTerm);
+            
+            // Check if any results were found
+            const songItems = this.elements.songLibrary.querySelectorAll(".song-item");
+            const resultsFound = songItems.length > 0;
+            
+            // Show/hide YouTube search suggestion
+            if (!resultsFound && searchTerm !== "") {
+                this.showYouTubeSearchSuggestion(searchTerm);
+            } else {
+                this.hideYouTubeSearchSuggestion();
+            }
         }
-    }
     showAddToLibrarySuggestion(youtubeUrl) {
         const querySpan = this.elements.youtubeSearchSuggestion.querySelector(".search-query");
         querySpan.textContent = `Add this song to library`;
