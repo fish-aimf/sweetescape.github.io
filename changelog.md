@@ -343,3 +343,4 @@
 - huge overhaul: Optimized startup performance by loading settings values before initializing UI elements, no more error from undefined element references and reducing redundant library rendering. loading speed is 20 times faster. v45.2.0
 - fixed all console bugs. v45.2.1
 - added debounce to playpause so it will feel lesslaggy v45.2.2
+- made save library and save playlists 30% faster from more efficient practices. v45.2.3
