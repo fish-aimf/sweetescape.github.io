@@ -199,15 +199,15 @@ class AdvancedMusicPlayer {
                     this.loadKeybinds(),
                     this.loadLibraryDisplaySettings(),
                     this.loadDiscordSettings(),
-                    this.loadLibrarySortValue(),      // Load value only
-                    this.loadLibraryReverseValue(),   // Load value only
-                    this.loadVisualizerValue()        // Load value only
+                    this.loadLibrarySortValue(),
+                    this.loadLibraryReverseValue(),
+                    this.loadVisualizerValue()
                 ]);
             })
             .then(() => {
-                this.initializeElements();
+                const shouldShowWelcome = this.songLibrary.length === 0;
                 
-                // Now sync UI with loaded values (no re-render needed)
+                this.initializeElements();
                 if (this.elements.librarySortToggle) {
                     this.elements.librarySortToggle.checked = this.librarySortAlphabetically;
                 }
@@ -222,14 +222,18 @@ class AdvancedMusicPlayer {
                 this.initializeTheme();
                 this.initializeAutoplay();
                 this.setupKeyboardControls();
-                this.renderInitialState();  // This renders library ONCE with correct settings
+                this.renderInitialState();
                 this.renderAdditionalDetails();
                 this.setupLyricsTabContextMenu();
                 this.initializeFullscreenLyrics();
                 this.initializeAdvertisementSettings();
                 this.initializeVisualizer();
-                this.syncVisualizerUI();  // Sync visualizer UI after elements exist
+                this.syncVisualizerUI();
                 this.initializeGlobalLibrary();
+            
+                if (shouldShowWelcome) {
+                    this.showWelcomeModal();
+                }
             })
             .catch((error) => {
                 console.error("Error initializing music player:", error);
@@ -2736,49 +2740,50 @@ playSongFromPlaylist(index) {
         });
     }
     renderInitialState() {
-            this.renderPlaylists();
-            this.renderSongLibrary();
-            this.updatePlaylistSelection();
-            this.updateListeningTimeDisplay();
-            this.renderAdditionalDetails();
-            document.title = "Music";
-            this.elements.speedBtn.textContent = this.currentSpeed + "x";
-            
-            const controlBarVisible = localStorage.getItem("controlBarVisible");
-            const spacerDiv = document.getElementById("controlBarSpacer");
-            
-            if (controlBarVisible === "false") {
-                setTimeout(() => {
-                    const controlBar =
-                        document
-                        .querySelector(".player-controls")
-                        .closest(".player-container") ||
-                        document.querySelector(".player-controls").parentElement;
-                    if (controlBar) {
-                        controlBar.style.visibility = "hidden";
-                        controlBar.style.position = "absolute";
-                        controlBar.style.pointerEvents = "none";
-                    }
-                    if (spacerDiv) spacerDiv.style.display = "none";
-                    const toggleBtn = document.getElementById("toggleControlBarBtn");
-                }, 100);
-            } else {
-                if (spacerDiv) spacerDiv.style.display = "block";
-            }
-            this.updateDiscordButtonUI();
-            if (this.discordEnabled) {
-                setTimeout(() => {
-                    this.initDiscordConnection();
-                }, 1500);
-            }
-            
-            // ADD THIS LINE:
-            this.initializeVisibilityTracking();
-            
-            setTimeout(() => {
-                this.showWelcomeModal();
-            }, 1000);
+        this.renderPlaylists();
+        this.renderSongLibrary();
+        this.updatePlaylistSelection();
+        this.updateListeningTimeDisplay();
+        this.renderAdditionalDetails();
+        document.title = "Music";
+        this.elements.speedBtn.textContent = this.currentSpeed + "x";
+        
+        const controlBarVisible = localStorage.getItem("controlBarVisible");
+        const spacerDiv = document.getElementById("controlBarSpacer");
+        
+        if (controlBarVisible === "false") {
+            // Use requestAnimationFrame instead of setTimeout for better performance
+            requestAnimationFrame(() => {
+                const controlBar =
+                    document
+                    .querySelector(".player-controls")
+                    .closest(".player-container") ||
+                    document.querySelector(".player-controls").parentElement;
+                if (controlBar) {
+                    controlBar.style.visibility = "hidden";
+                    controlBar.style.position = "absolute";
+                    controlBar.style.pointerEvents = "none";
+                }
+                if (spacerDiv) spacerDiv.style.display = "none";
+            });
+        } else {
+            if (spacerDiv) spacerDiv.style.display = "block";
         }
+        
+        this.updateDiscordButtonUI();
+        
+        // Discord connection with idle callback for better performance
+        if (this.discordEnabled) {
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(() => this.initDiscordConnection(), { timeout: 2000 });
+            } else {
+                setTimeout(() => this.initDiscordConnection(), 1500);
+            }
+        }
+        
+        this.initializeVisibilityTracking();
+        
+    }
     extractYouTubeId(url) {
         if (!url) return null;
         const patterns = [
