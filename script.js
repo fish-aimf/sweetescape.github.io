@@ -680,10 +680,10 @@ class AdvancedMusicPlayer {
 	}
 	setupKeyboardControls() {
 		document.addEventListener("keydown", (e) => {
-
+			// Allow keybinds for progress bar and volume slider (range inputs) but block for text inputs
 			if (document.activeElement.tagName === "INPUT") {
 				const inputType = document.activeElement.type;
-
+				// Only block text-based inputs, allow range/checkbox/radio
 				if (inputType !== "range" && inputType !== "checkbox" && inputType !== "radio") {
 					return;
 				}
@@ -694,6 +694,7 @@ class AdvancedMusicPlayer {
 				return;
 			}
 
+			// Safety check: ensure e.key exists before calling toLowerCase()
 			if (e.key && e.key.toLowerCase() === "n" && this.currentKeybinds.toggleWebEmbed === 'KeyN') {
 				if (e.shiftKey) {
 					this.cycleWebEmbedSite();
@@ -871,6 +872,7 @@ class AdvancedMusicPlayer {
 	updateProgressBar() {
 		if (!this.ytPlayer || !this.elements.progressBar) return;
 
+		// Don't start if tab is hidden
 		if (!this.isTabVisible) {
 			return;
 		}
@@ -881,7 +883,7 @@ class AdvancedMusicPlayer {
 		}
 
 		this.progressInterval = setInterval(() => {
-
+			// Skip updates when tab is hidden
 			if (!this.isTabVisible) {
 				return;
 			}
@@ -1012,7 +1014,7 @@ class AdvancedMusicPlayer {
 	}
 	fetchYouTubeTitle(videoId) {
 		return new Promise((resolve, reject) => {
-			const url = `https:
+			const url = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
 			fetch(url)
 				.then((response) => {
 					if (!response.ok) {
@@ -1033,10 +1035,12 @@ class AdvancedMusicPlayer {
 		try {
 			if (!this.elements.songLibrary) return;
 
+			// Get search term from input if not provided
 			if (searchTerm === null && this.elements.librarySearch) {
 				searchTerm = this.elements.librarySearch.value.toLowerCase().trim();
 			}
 
+			// Filter library based on search term
 			let filteredLibrary = this.songLibrary;
 			if (searchTerm && searchTerm !== "") {
 				filteredLibrary = this.songLibrary.filter(song => {
@@ -1046,6 +1050,7 @@ class AdvancedMusicPlayer {
 				});
 			}
 
+			// Sort the filtered library
 			let sortedLibrary;
 			if (this.librarySortAlphabetically !== false) {
 				sortedLibrary = [...filteredLibrary].sort((a, b) => {
@@ -1066,6 +1071,7 @@ class AdvancedMusicPlayer {
 
 			const fragment = document.createDocumentFragment();
 
+			// Handle empty library
 			if (this.songLibrary.length === 0) {
 				const emptyMessage = document.createElement("div");
 				emptyMessage.classList.add("empty-library-message");
@@ -1080,14 +1086,14 @@ class AdvancedMusicPlayer {
 				emptyMessage.appendChild(addSongsButton);
 				fragment.appendChild(emptyMessage);
 			}
-
+			// Handle no search results
 			else if (searchTerm && sortedLibrary.length === 0) {
 				const noResultsMessage = document.createElement("div");
 				noResultsMessage.classList.add("empty-library-message");
 				noResultsMessage.textContent = `No songs found matching "${searchTerm}"`;
 				fragment.appendChild(noResultsMessage);
 			}
-
+			// Render songs
 			else {
 				sortedLibrary.forEach((song) => {
 					const songElement = this.createSongElement(song);
@@ -1144,17 +1150,20 @@ class AdvancedMusicPlayer {
 		return songElement;
 	}
 	setupSongLibraryDelegation() {
-
+		// Single delegated event listener for entire song library
 		this.elements.songLibrary.addEventListener('click', (e) => {
-
+			// Find the clicked button/element
 			const target = e.target.closest('button, .song-name');
-			if (!target) return; 
+			if (!target) return; // Not a clickable element
 
+			// Extract song ID from data attribute
 			const songId = target.dataset.songId;
-			if (!songId) return; 
+			if (!songId) return; // No song ID found
 
+			// Convert to number for consistency with your existing code
 			const songIdNum = parseInt(songId, 10);
 
+			// Determine which action to take based on button class
 			if (target.classList.contains('favorite-btn')) {
 				this.toggleFavorite(songIdNum);
 			} else if (target.classList.contains('play-btn')) {
@@ -1187,32 +1196,38 @@ class AdvancedMusicPlayer {
 	handleLibrarySearchInput() {
 		const searchTerm = this.elements.librarySearch.value.trim();
 
+		// Check for YouTube URL immediately (no debounce needed)
 		const videoId = this.extractYouTubeId(searchTerm);
 		if (videoId) {
 			this.showAddToLibrarySuggestion(searchTerm);
-
+			// Clear library immediately for YouTube URLs
 			this.elements.songLibrary.innerHTML = '<div class="empty-library-message">YouTube URL detected - press Enter to add</div>';
 			return;
 		}
 
+		// For regular search, debounce the heavy rendering
 		this.debouncedFilterLibrary();
 	}
 
 	filterLibrarySongs() {
 		const searchTerm = this.elements.librarySearch.value.toLowerCase().trim();
 
+		// Check if it's a YouTube URL
 		const videoId = this.extractYouTubeId(searchTerm);
 		if (videoId) {
 			this.showAddToLibrarySuggestion(searchTerm);
-			this.renderSongLibrary(searchTerm); 
+			this.renderSongLibrary(searchTerm); // Re-render with empty results
 			return;
 		}
 
+		// Re-render library with search filter applied
 		this.renderSongLibrary(searchTerm);
 
+		// Check if any results were found
 		const songItems = this.elements.songLibrary.querySelectorAll(".song-item");
 		const resultsFound = songItems.length > 0;
 
+		// Show/hide YouTube search suggestion
 		if (!resultsFound && searchTerm !== "") {
 			this.showYouTubeSearchSuggestion(searchTerm);
 		} else {
@@ -1250,7 +1265,7 @@ class AdvancedMusicPlayer {
 	}
 	searchYouTube(searchTerm) {
 		this.elements.songNameInput.value = searchTerm;
-		const searchUrl = `https:
+		const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(
       searchTerm
     )}`;
 		window.open(searchUrl, "_blank");
@@ -1990,6 +2005,7 @@ class AdvancedMusicPlayer {
 			return;
 		}
 
+		// Check if player is ready
 		if (!this.ytPlayerReady) {
 			console.log("Player not ready yet, please wait a moment...");
 			return;
@@ -2067,7 +2083,7 @@ class AdvancedMusicPlayer {
 			console.error("Error toggling play/pause:", error);
 		}
 	}
-
+	// Complete playNextSong method with Discord RPC
 	playNextSong() {
 		if (this.songQueue.length > 0) {
 			const nextSong = this.songQueue.shift();
@@ -2084,6 +2100,7 @@ class AdvancedMusicPlayer {
 			this.updatePlayerUI();
 			this.updateCurrentSongDisplay();
 
+			// Send Discord RPC update
 			if (this.discordEnabled && this.discordConnected) {
 				this.sendDiscordRPC();
 			}
@@ -2114,11 +2131,13 @@ class AdvancedMusicPlayer {
 		}
 		this.updateCurrentSongDisplay();
 
+		// Send Discord RPC update
 		if (this.discordEnabled && this.discordConnected) {
 			this.sendDiscordRPC();
 		}
 	}
 
+	// Complete playPreviousSong method with Discord RPC
 	playPreviousSong() {
 		const source = this.currentPlaylist ?
 			this.currentPlaylist.songs :
@@ -2140,6 +2159,7 @@ class AdvancedMusicPlayer {
 			this.playSongById(source[this.currentSongIndex].videoId);
 			this.updateCurrentSongDisplay();
 
+			// Send Discord RPC update
 			if (this.discordEnabled && this.discordConnected) {
 				this.sendDiscordRPC();
 			}
@@ -2157,11 +2177,13 @@ class AdvancedMusicPlayer {
 		}
 		this.updateCurrentSongDisplay();
 
+		// Send Discord RPC update
 		if (this.discordEnabled && this.discordConnected) {
 			this.sendDiscordRPC();
 		}
 	}
 
+	// Complete playCurrentSong method with Discord RPC
 	playCurrentSong() {
 		if (!this.songLibrary.length) return;
 		const currentSong = this.songLibrary[this.currentSongIndex];
@@ -2174,11 +2196,13 @@ class AdvancedMusicPlayer {
 		}
 		this.updateCurrentSongDisplay();
 
+		// Send Discord RPC update
 		if (this.discordEnabled && this.discordConnected) {
 			this.sendDiscordRPC();
 		}
 	}
 
+	// Complete playSongFromPlaylist method with Discord RPC
 	playSongFromPlaylist(index) {
 		if (!this.currentPlaylist || index >= this.currentPlaylist.songs.length)
 			return;
@@ -2193,6 +2217,7 @@ class AdvancedMusicPlayer {
 		this.playSongById(song.videoId);
 		this.updateCurrentSongDisplay();
 
+		// Send Discord RPC update
 		if (this.discordEnabled && this.discordConnected) {
 			this.sendDiscordRPC();
 		}
@@ -2403,11 +2428,12 @@ class AdvancedMusicPlayer {
 		}
 	}
 	loadYouTubeAPI() {
-
+		// Check if API is already loaded
 		if (window.YT && window.YT.Player) {
 			return;
 		}
 
+		// Check if script is already being loaded
 		if (document.querySelector('script[src*="youtube.com/iframe_api"]')) {
 			return;
 		}
@@ -2441,7 +2467,7 @@ class AdvancedMusicPlayer {
 			events: {
 				onReady: (event) => {
 					this.onPlayerReady(event);
-					this.ytPlayerReady = true; 
+					this.ytPlayerReady = true; // SET READY FLAG
 					console.log("YouTube player is ready");
 				},
 				onStateChange: this.onPlayerStateChange.bind(this),
@@ -2481,7 +2507,7 @@ class AdvancedMusicPlayer {
 			console.log("Song ended - taking immediate action");
 			setTimeout(() => {
 				if (this.isLooping) {
-
+					// Efficient loop - just restart the video
 					if (this.ytPlayer) {
 						this.ytPlayer.seekTo(0, true);
 					}
@@ -2522,6 +2548,7 @@ class AdvancedMusicPlayer {
 				this.ytPlayer.setPlaybackRate(this.currentSpeed);
 			}
 
+			// Only start progress bar if tab is visible
 			if (this.isTabVisible) {
 				this.updateProgressBar();
 			}
@@ -2536,7 +2563,7 @@ class AdvancedMusicPlayer {
 		}
 		if (event.data === YT.PlayerState.PLAYING) {
 			this.visualizer.isActive = true;
-
+			// Only start visualizer if tab is visible
 			if (this.isTabVisible) {
 				this.animateVisualizer();
 			}
@@ -2685,12 +2712,13 @@ class AdvancedMusicPlayer {
 			}
 			try {
 				const transaction = this.db.transaction(["songLibrary"], "readwrite");
-				const store = transaction.objectStore("songLibrary"); 
+				const store = transaction.objectStore("songLibrary"); // FIXED!
 
+				// Clear first to remove deleted songs
 				const clearRequest = store.clear();
 
 				clearRequest.onsuccess = () => {
-
+					// Then use put() instead of add() (faster and safer)
 					this.songLibrary.forEach((song) => {
 						store.put(song);
 					});
@@ -2724,7 +2752,7 @@ class AdvancedMusicPlayer {
 		const spacerDiv = document.getElementById("controlBarSpacer");
 
 		if (controlBarVisible === "false") {
-
+			// Use requestAnimationFrame instead of setTimeout for better performance
 			requestAnimationFrame(() => {
 				const controlBar =
 					document
@@ -2744,6 +2772,7 @@ class AdvancedMusicPlayer {
 
 		this.updateDiscordButtonUI();
 
+		// Discord connection with idle callback for better performance
 		if (this.discordEnabled) {
 			if ('requestIdleCallback' in window) {
 				requestIdleCallback(() => this.initDiscordConnection(), {
@@ -2835,7 +2864,7 @@ class AdvancedMusicPlayer {
 		let exportText = "";
 		this.songLibrary.forEach((song) => {
 			const author = song.author ? `, ${song.author}` : "";
-			exportText += `${song.name}, https:
+			exportText += `${song.name}, https://www.youtube.com/watch?v=${song.videoId}${author}\n`;
 		});
 		this.copyToClipboardWithFallback(
 			exportText,
@@ -2859,7 +2888,7 @@ class AdvancedMusicPlayer {
 				libraryMatch.author :
 				playlistSong.author || "";
 			const authorText = author ? `, ${author}` : "";
-			exportText += `    ${songName}, https:
+			exportText += `    ${songName}, https://www.youtube.com/watch?v=${playlistSong.videoId}${authorText}\n`;
 		});
 		exportText += "}\n";
 		this.copyToClipboardWithFallback(
@@ -3049,7 +3078,7 @@ class AdvancedMusicPlayer {
 		let exportText = "";
 		this.songLibrary.forEach((song) => {
 			const author = song.author ? `, ${song.author}` : "";
-			exportText += `${song.name}, https:
+			exportText += `${song.name}, https://www.youtube.com/watch?v=${song.videoId}${author}\n`;
 		});
 		exportText += "\n";
 		this.playlists.forEach((playlist) => {
@@ -3063,7 +3092,7 @@ class AdvancedMusicPlayer {
 					libraryMatch.author :
 					playlistSong.author || "";
 				const authorText = author ? `, ${author}` : "";
-				exportText += `    ${songName}, https:
+				exportText += `    ${songName}, https://www.youtube.com/watch?v=${playlistSong.videoId}${authorText}\n`;
 			});
 			exportText += "}\n";
 		});
@@ -3772,7 +3801,7 @@ class AdvancedMusicPlayer {
 		previewContainer.id = "thumbnailPreview";
 		previewContainer.classList.add("thumbnail-preview");
 		const thumbnail = document.createElement("img");
-		thumbnail.src = `https:
+		thumbnail.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
 		thumbnail.alt = "Video thumbnail";
 		const videoTitle = document.createElement("div");
 		videoTitle.classList.add("video-title");
@@ -3836,6 +3865,8 @@ class AdvancedMusicPlayer {
 
 		let cleanTitle = title.trim();
 
+		// STEP 1: Handle quoted song titles FIRST
+		// Example: Crystal Castles "PLAGUE" Official
 		const quotedPattern = /^(.+?)\s*[""](.+?)[""](.*)$/;
 		const quotedMatch = cleanTitle.match(quotedPattern);
 
@@ -3848,6 +3879,8 @@ class AdvancedMusicPlayer {
 			};
 		}
 
+		// STEP 2: Handle colon format
+		// Example: twenty one pilots: Stressed Out [OFFICIAL VIDEO]
 		const colonPattern = /^(.+?):\s*(.+)$/;
 		const colonMatch = cleanTitle.match(colonPattern);
 
@@ -3860,13 +3893,16 @@ class AdvancedMusicPlayer {
 			};
 		}
 
+		// STEP 3: Remove noise patterns BEFORE splitting by hyphen
 		cleanTitle = this.removeNoisePatterns(cleanTitle);
 
+		// STEP 4: Handle "Artist - Song" format
 		const hyphenMatch = cleanTitle.match(/^(.+?)\s*-\s*(.+)$/);
 		if (hyphenMatch) {
 			let author = hyphenMatch[1].trim();
 			let songName = hyphenMatch[2].trim();
 
+			// Extract featured artists from song name
 			const ftResult = this.extractFeaturedArtists(songName);
 			if (ftResult.featured) {
 				songName = ftResult.cleanName;
@@ -3879,6 +3915,7 @@ class AdvancedMusicPlayer {
 			};
 		}
 
+		// STEP 5: Handle "Song by Artist" format
 		const byMatch = cleanTitle.match(/^(.+?)\s+by\s+(.+)$/i);
 		if (byMatch) {
 			let songName = byMatch[1].trim();
@@ -3895,6 +3932,7 @@ class AdvancedMusicPlayer {
 			};
 		}
 
+		// STEP 6: Handle all-caps artist at start
 		const allCapsMatch = cleanTitle.match(/^([A-Z][A-Z\s&]+[A-Z])\s+(.+)$/);
 		if (allCapsMatch && allCapsMatch[1].length < 50) {
 			let author = allCapsMatch[1].trim();
@@ -3912,15 +3950,20 @@ class AdvancedMusicPlayer {
 			};
 		}
 
+		// STEP 7: No pattern found - return as song only
 		return {
 			author: "",
 			songName: cleanTitle
 		};
 	}
 
+	// ============================================
+	// ADD THIS NEW METHOD TO YOUR CLASS
+	// ============================================
+
 	removeNoisePatterns(text) {
 		const patterns = [
-
+			// Official variations (with parentheses/brackets)
 			/\(official\s+music\s+video\)/gi,
 			/\[official\s+music\s+video\]/gi,
 			/\(official\s+video\)/gi,
@@ -3952,6 +3995,7 @@ class AdvancedMusicPlayer {
 			/\(mv\)/gi,
 			/\[mv\]/gi,
 
+			// Without parentheses (at end of string only)
 			/\s+official\s+music\s+video$/gi,
 			/\s+official\s+video$/gi,
 			/\s+official\s+audio$/gi,
@@ -3966,6 +4010,7 @@ class AdvancedMusicPlayer {
 			/\s+audio$/gi,
 			/\s+lyrics$/gi,
 
+			// Quality indicators
 			/\(4k\)/gi,
 			/\[4k\]/gi,
 			/\(8k\)/gi,
@@ -3978,6 +4023,7 @@ class AdvancedMusicPlayer {
 			/\s+8k$/gi,
 			/\s+hd$/gi,
 
+			// Version info
 			/\(remastered\)/gi,
 			/\[remastered\]/gi,
 			/\(remaster\)/gi,
@@ -3986,44 +4032,49 @@ class AdvancedMusicPlayer {
 			/\[remix\]/gi,
 			/\s+remastered$/gi,
 
+			// Live/Performance
 			/\(live\s+performance\)/gi,
 			/\[live\s+performance\]/gi,
 			/\(live\)/gi,
 			/\[live\]/gi,
 			/\s+live$/gi,
 
+			// Explicit
 			/\(explicit\)/gi,
 			/\[explicit\]/gi,
 
+			// Empty parentheses/brackets left behind
 			/\(\s*\)/g,
 			/\[\s*\]/g,
 		];
 
 		let cleaned = text;
 
+		// Apply all patterns
 		patterns.forEach(pattern => {
 			cleaned = cleaned.replace(pattern, '');
 		});
 
+		// Clean up multiple spaces
 		cleaned = cleaned.replace(/\s+/g, ' ').trim();
 
 		return cleaned;
 	}
 
 	extractFeaturedArtists(text) {
-
+		// Patterns for featured artists
 		const patterns = [
-
+			// ft. / feat. / featuring
 			{
 				regex: /\s+(ft\.?|feat\.?|featuring)\s+(.+)$/i,
 				captureGroup: 2
 			},
-
+			// with
 			{
 				regex: /\s+with\s+(.+)$/i,
 				captureGroup: 1
 			},
-
+			// &, x (but only if followed by artist name)
 			{
 				regex: /\s+(&|x)\s+([A-Z].+)$/i,
 				captureGroup: 2
@@ -4043,6 +4094,7 @@ class AdvancedMusicPlayer {
 			}
 		}
 
+		// No featured artists found
 		return {
 			cleanName: text,
 			featured: null
@@ -4213,7 +4265,7 @@ class AdvancedMusicPlayer {
 		urlLabel.style.color = "var(--text-primary)";
 		const urlInput = document.createElement("input");
 		urlInput.type = "text";
-		urlInput.value = `https:
+		urlInput.value = `https://www.youtube.com/watch?v=${song.videoId}`;
 		urlInput.style.padding = "8px";
 		urlInput.style.borderRadius = "4px";
 		urlInput.style.border = "1px solid var(--border-color)";
@@ -4232,7 +4284,7 @@ class AdvancedMusicPlayer {
 		thumbnailContainer.style.textAlign = "center";
 		thumbnailContainer.style.gridColumn = "span 2";
 		const thumbnail = document.createElement("img");
-		thumbnail.src = `https:
+		thumbnail.src = `https://img.youtube.com/vi/${song.videoId}/mqdefault.jpg`;
 		thumbnail.alt = "Video thumbnail";
 		thumbnail.style.maxWidth = "200px";
 		thumbnail.style.height = "auto";
@@ -4241,7 +4293,7 @@ class AdvancedMusicPlayer {
 		urlInput.addEventListener("input", () => {
 			const videoId = this.extractYouTubeId(urlInput.value);
 			if (videoId) {
-				thumbnail.src = `https:
+				thumbnail.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
 				thumbnail.style.display = "block";
 			} else {
 				thumbnail.style.display = "none";
@@ -4931,18 +4983,20 @@ class AdvancedMusicPlayer {
 	saveRecentlyPlayedSong(song) {
 		if (!this.db || !song) return;
 
+		// Check if currently playing from a playlist
 		if (this.currentPlaylist) {
-
+			// Save as playlist instead of individual song
 			this.saveRecentlyPlayedPlaylist(this.currentPlaylist);
 			return;
 		}
 
+		// Continue with regular song saving
 		const songData = {
 			id: song.id,
 			name: song.name,
 			videoId: song.videoId,
 			thumbnailUrl: song.thumbnailUrl ||
-				`https:
+				`https://img.youtube.com/vi/${song.videoId}/default.jpg`,
 			timestamp: Date.now(),
 		};
 
@@ -4986,7 +5040,7 @@ class AdvancedMusicPlayer {
 			timestamp: Date.now(),
 			currentSongName: currentSong ? currentSong.name : '',
 			thumbnailUrl: currentSong ?
-				(currentSong.thumbnailUrl || `https:
+				(currentSong.thumbnailUrl || `https://img.youtube.com/vi/${currentSong.videoId}/default.jpg`) : ''
 		};
 
 		try {
@@ -5029,12 +5083,14 @@ class AdvancedMusicPlayer {
 	renderAdditionalDetails() {
 		if (!this.elements.additionalDetails) return;
 
+		// Check if hidden - if so, skip rendering to save resources
 		if (this.isAdditionalDetailsHidden) {
 			return;
 		}
 
 		this.elements.additionalDetails.innerHTML = '';
 
+		// Create header container with hide button
 		const headerContainer = document.createElement('div');
 		headerContainer.style.display = 'flex';
 		headerContainer.style.justifyContent = 'space-between';
@@ -5088,6 +5144,7 @@ class AdvancedMusicPlayer {
 		headerContainer.appendChild(hideBtn);
 		this.elements.additionalDetails.appendChild(headerContainer);
 
+		// Create current song section
 		const currentSongDiv = document.createElement('div');
 		currentSongDiv.id = 'currentSongSection';
 		currentSongDiv.className = 'current-song-section';
@@ -5171,7 +5228,7 @@ class AdvancedMusicPlayer {
 		const authorElement = document.getElementById('currentSongAuthor');
 		if (thumbnailElement) {
 			thumbnailElement.src = this.currentSong.thumbnailUrl ||
-				`https:
+				`https://img.youtube.com/vi/${this.currentSong.videoId}/default.jpg`;
 			thumbnailElement.alt = this.currentSong.name || 'Current Song';
 		}
 		if (nameElement) {
@@ -5287,7 +5344,7 @@ class AdvancedMusicPlayer {
 				const thumbnailImg = document.createElement("img");
 				thumbnailImg.src =
 					item.thumbnailUrl ||
-					`https:
+					`https://img.youtube.com/vi/${item.videoId}/default.jpg`;
 				thumbnailImg.alt = item.name;
 				thumbnailImg.onerror = function() {
 					this.src = "https://placehold.it/120x90/333/fff?text=No+Image";
@@ -5382,7 +5439,7 @@ class AdvancedMusicPlayer {
 				const thumbnailImg = document.createElement("img");
 				thumbnailImg.src =
 					item.thumbnailUrl ||
-					`https:
+					`https://img.youtube.com/vi/${item.videoId}/default.jpg`;
 				thumbnailImg.alt = item.name;
 				thumbnailImg.onerror = function() {
 					this.src = "https://placehold.it/120x90/333/fff?text=No+Image";
@@ -5421,6 +5478,7 @@ class AdvancedMusicPlayer {
 		});
 	}
 
+
 	toggleAdditionalDetails() {
 		const additionalDetails = document.getElementById('additionalDetails');
 		if (!additionalDetails) return;
@@ -5428,13 +5486,16 @@ class AdvancedMusicPlayer {
 		if (additionalDetails.style.display === 'none') {
 			additionalDetails.style.display = 'flex';
 			this.isAdditionalDetailsHidden = false;
-
+			// Re-render when showing
 			this.renderAdditionalDetails();
 		} else {
 			additionalDetails.style.display = 'none';
 			this.isAdditionalDetailsHidden = true;
 		}
 	}
+
+
+
 
 	refreshSuggestedSongs() {
 		if (this.songLibrary.length > 0) {
@@ -5520,7 +5581,7 @@ class AdvancedMusicPlayer {
 			songItem.classList.add("recently-played-item");
 
 			const thumbnail = document.createElement("img");
-			thumbnail.src = song.thumbnailUrl || `https:
+			thumbnail.src = song.thumbnailUrl || `https://img.youtube.com/vi/${song.videoId}/default.jpg`;
 			thumbnail.alt = song.name;
 			thumbnail.classList.add("recently-played-thumbnail");
 			thumbnail.onerror = function() {
@@ -5590,6 +5651,7 @@ class AdvancedMusicPlayer {
 			}
 		}
 	}
+
 
 	getTimeAgo(timestamp) {
 		const now = Date.now();
@@ -6009,7 +6071,7 @@ class AdvancedMusicPlayer {
 		const titleElement = document.getElementById('lyricsTitle');
 		const youtubeLink = document.getElementById('youtubeLink');
 		titleElement.textContent = `Lyrics Maker for: ${song.name}`;
-		youtubeLink.value = `https:
+		youtubeLink.value = `https://www.youtube.com/watch?v=${song.videoId}`;
 		modal.classList.remove('hidden');
 		this.initLyricMaker(song);
 	}
@@ -6134,25 +6196,25 @@ class AdvancedMusicPlayer {
 		const searchAZLyrics = () => {
 			const songName = song.name ? song.name.replace(/\s+/g, '+') : '';
 			const author = song.author ? '+' + song.author.replace(/\s+/g, '+') : '';
-			const url = `https:
+			const url = `https://search.azlyrics.com/search.php?q=${songName}${author}&x=acc029721e541ef4da92207eb06ba181719a67575dcaefe50b401ab43356fc32`;
 			window.open(url, '_blank');
 		};
 		const searchLetras = () => {
 			const songName = song.name ? song.name.replace(/\s+/g, '%20') : '';
 			const author = song.author ? '%20' + song.author.replace(/\s+/g, '%20') : '';
-			const url = `https:
+			const url = `https://www.letras.com/?q=${songName}${author}`;
 			window.open(url, '_blank');
 		};
 		const searchGenius = () => {
 			const songName = song.name ? song.name.replace(/\s+/g, '%20') : '';
 			const author = song.author ? '%20' + song.author.replace(/\s+/g, '%20') : '';
-			const url = `https:
+			const url = `https://genius.com/search?q=${songName}${author}`;
 			window.open(url, '_blank');
 		};
 		const searchGoogle = () => {
 			const songName = song.name ? song.name.replace(/\s+/g, '%20') : '';
 			const author = song.author ? '%20' + song.author.replace(/\s+/g, '%20') : '';
-			const url = `https:
+			const url = `https://www.google.com/search?q=${songName}${author}%20lyrics`;
 			window.open(url, '_blank');
 		};
 		const prepareLyrics = () => {
@@ -7381,8 +7443,10 @@ class AdvancedMusicPlayer {
 			document.documentElement.setAttribute("data-theme", "custom");
 			this.updateThemeIcon("custom");
 
+
 		});
 	}
+
 
 	loadCustomThemeColors() {
 		if (!this.db) return;
@@ -7524,6 +7588,7 @@ class AdvancedMusicPlayer {
 			this.elements.customThemeSection.style.display = newTheme === "custom" ? "block" : "none";
 		}
 	}
+
 
 	updateFaviconThemeFromDB() {
 		const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -8175,7 +8240,7 @@ class AdvancedMusicPlayer {
 		autoFetchBtn.addEventListener('click', () => this.autoFetchTranscript());
 		openYouTubeBtn.addEventListener('click', () => {
 			if (this.currentSongForImport) {
-				window.open(`https:
+				window.open(`https://www.youtube.com/watch?v=${this.currentSongForImport.videoId}`, '_blank');
 			}
 		});
 		convertBtn.addEventListener('click', () => this.convertTranscriptToLyricsHandler());
@@ -8317,8 +8382,8 @@ class AdvancedMusicPlayer {
 			loadingIndicator.style.display = 'flex';
 			autoFetchBtn.disabled = true;
 			autoFetchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching...';
-			const videoUrl = `https:
-			const apiUrl = `https:
+			const videoUrl = `https://www.youtube.com/watch?v=${this.currentSongForImport.videoId}`;
+			const apiUrl = `https://api.supadata.ai/v1/youtube/transcript?url=${encodeURIComponent(videoUrl)}&text=false`;
 			const response = await fetch(apiUrl, {
 				method: 'GET',
 				headers: {
@@ -8453,7 +8518,7 @@ class AdvancedMusicPlayer {
 		this.animateVisualizer();
 	}
 	animateVisualizer() {
-
+		// Don't animate if tab is hidden or visualizer inactive
 		if (!this.visualizer.isActive || !this.isTabVisible) {
 			return;
 		}
@@ -8461,6 +8526,7 @@ class AdvancedMusicPlayer {
 		this.animateBars();
 		this.animateParticles();
 
+		// Only request next frame if tab is visible and visualizer is active
 		if (this.isTabVisible && this.visualizer.isActive) {
 			this.visualizer.animationId = requestAnimationFrame(() => this.animateVisualizer());
 		}
@@ -9403,7 +9469,7 @@ Song list:`;
 					songsWithLinks.push({
 						title: title,
 						artist: artist,
-						url: `https:
+						url: `https://www.youtube.com/watch?v=${bestMatch.id.videoId}`
 					});
 				} else {
 					console.log(`No suitable YouTube video found for: "${title}" by ${artist}`);
@@ -9669,7 +9735,7 @@ Song list:`;
 	}
 	getYouTubeThumbnail(youtubeUrl) {
 		const videoId = this.extractYouTubeId(youtubeUrl);
-		return videoId ? `https:
+		return videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : '';
 	}
 	async loadTopSongsManagement() {
 		if (!this.globalLibraryCurrentUser) return;
@@ -9770,6 +9836,9 @@ Song list:`;
 		await this.loadRandomRecommendations();
 	}
 
+
+
+
 	loadKeybinds() {
 		return new Promise((resolve) => {
 			if (!this.db) {
@@ -9818,7 +9887,7 @@ Song list:`;
 		if (code === k.cycleFavicon && k.cycleFavicon !== '') {
 			this.cycleFaviconAndTitle();
 		} else if (code === k.toggleWebEmbed && k.toggleWebEmbed !== '') {
-
+			// Your web embed logic
 		} else if ((code === k.togglePlayPause && k.togglePlayPause !== '') ||
 			(code === k.togglePlayPause2 && k.togglePlayPause2 !== '')) {
 			this.togglePlayPause();
@@ -9950,7 +10019,7 @@ Song list:`;
 			showQueue: 'Show Queue',
 			cycleFavicon: 'Cycle Favicon',
 			toggleWebEmbed: 'Toggle Web Embed',
-			toggleMusicExplorer: 'Toggle Music Explorer' 
+			toggleMusicExplorer: 'Toggle Music Explorer' // NEW: Add this line
 		};
 
 		return actionNames[action] || action;
@@ -10083,6 +10152,7 @@ Song list:`;
 		});
 	}
 
+
 	syncLibraryDisplayUI() {
 		if (this.elements && this.elements.showDeleteBtn) {
 			this.elements.showDeleteBtn.checked = this.showDeleteButtons;
@@ -10090,6 +10160,8 @@ Song list:`;
 			this.elements.showEditBtn.checked = this.showEditButtons;
 		}
 	}
+
+
 
 	async loadDiscordSettings() {
 		try {
@@ -10179,7 +10251,7 @@ Song list:`;
 	}
 
 	closeDiscordConnection() {
-
+		// Send clear signal before closing
 		if (this.discordWs && this.discordWs.readyState === WebSocket.OPEN) {
 			try {
 				this.discordWs.send(JSON.stringify({
@@ -10198,7 +10270,7 @@ Song list:`;
 		}
 
 		if (this.discordWs) {
-
+			// Give the clear message time to send before closing
 			setTimeout(() => {
 				if (this.discordWs) {
 					this.discordWs.close();
@@ -10215,7 +10287,7 @@ Song list:`;
 	buildYouTubeUrl(videoId) {
 		if (!videoId) return '';
 		const extractedId = this.extractYouTubeId(videoId);
-		return `https:
+		return `https://www.youtube.com/watch?v=${extractedId || videoId}`;
 	}
 
 	sendDiscordRPC() {
@@ -10346,18 +10418,18 @@ Song list:`;
 			this.isTabVisible = !document.hidden;
 
 			if (!wasVisible && this.isTabVisible) {
-
+				// Tab became visible - resume operations
 				console.log('Tab visible - resuming DOM updates');
 				if (this.isPlaying) {
 					this.updateProgressBar();
 					if (this.visualizer.isActive) {
 						this.animateVisualizer();
 					}
-
+					// Sync UI immediately
 					this.syncUIWithCurrentState();
 				}
 			} else if (wasVisible && !this.isTabVisible) {
-
+				// Tab hidden - operations will auto-pause via checks
 				console.log('Tab hidden - pausing DOM updates');
 			}
 		};
@@ -10471,6 +10543,98 @@ Song list:`;
 			}
 		}
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
 
 	cleanup() {
 		console.log("Starting cleanup process");
