@@ -8,23 +8,30 @@
     <priority>1.0</priority>
   </url>
 
+  <!-- Changelog -->
+  <url>
+    <loc>https://sweetescape.vercel.app/changelog.md</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.33</priority>
+  </url>
+
   <!-- Supporting pages (minimal importance) -->
   <url>
     <loc>https://sweetescape.vercel.app/lyric-maker.html</loc>
     <changefreq>yearly</changefreq>
-    <priority>0.1</priority>
+    <priority>0.02</priority>
   </url>
 
   <url>
     <loc>https://sweetescape.vercel.app/lyric-player.html</loc>
     <changefreq>yearly</changefreq>
-    <priority>0.1</priority>
+    <priority>0.02</priority>
   </url>
 
   <url>
     <loc>https://sweetescape.vercel.app/ping.html</loc>
     <changefreq>yearly</changefreq>
-    <priority>0.1</priority>
+    <priority>0.01</priority>
   </url>
 
 </urlset>
